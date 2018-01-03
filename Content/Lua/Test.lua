@@ -14,34 +14,43 @@ for i=1,10 do
 end
 
 local Button = import('Button');
-local ButtonStyle = import('ButtonStyle');
-local TextBlock = import('TextBlock');
+-- local ButtonStyle = import('ButtonStyle');
+-- local TextBlock = import('TextBlock');
 local btn=Button();
-local txt=TextBlock();
+-- local txt=TextBlock();
 local ui=loadUI('/Game/Panel.Panel');
 ui:AddToViewport(0);
-local seq=ui.ActiveSequencePlayers;
-print('seq',seq:Num());
+-- local seq=ui.ActiveSequencePlayers;
+-- print('seq',seq:Num());
 local tree=ui.WidgetTree;
 local btn2=tree:FindWidget('Button1');
-btn2.OnClicked:Add(function() print('fuck') end);
+local index = 1
+
+btn2.OnClicked:Add(function() 
+    index=index+1
+    print('fuck',index) 
+end);
 local edit=tree:FindWidget('TextBox_0');
-local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
-edit.OnTextChanged:Remove(evt);
-txt:SetText('fuck button');
-local style=ButtonStyle();
-btn:SetStyle(style);
-btn:AddChild(txt);
-print(btn:IsPressed(),btn.OnClicked);
-local event=btn.OnClicked;
-event:Add(function() print('fuck') end);
+-- local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
+-- edit.OnTextChanged:Remove(evt);
+-- txt:SetText('fuck button');
+-- local style=ButtonStyle();
+-- btn:SetStyle(style);
+-- btn:AddChild(txt);
+-- print(btn:IsPressed(),btn.OnClicked);
+-- local event=btn.OnClicked;
+-- local index=1
+-- event:Add(function() 
+--     index=index+1
+--     print('fuck',index) 
+-- end);
 
 function update(dt)
     -- test memory leak?
     local arr=t:GetArray();
-    print("arr len",arr:Num())
+    -- print("arr len",arr:Num())
     for i=0,arr:Num()-1 do
-        print("arr item",i,arr:Get(i))
+         -- print("arr item",i,arr:Get(i))
     end
 
     local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);

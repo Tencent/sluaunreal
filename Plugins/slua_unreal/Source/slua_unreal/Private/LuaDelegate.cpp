@@ -69,6 +69,8 @@ namespace slua {
 
         auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(),ULuaDelegate::StaticClass());
         obj->bindFunction(L,2,UD->ufunc);
+        obj->AddToRoot();
+
         FScriptDelegate* Delegate = new FScriptDelegate();
         Delegate->BindUFunction(obj, TEXT("OnClicked"));
         UD->delegate->AddUnique(*Delegate);
@@ -79,12 +81,18 @@ namespace slua {
     int LuaDelegate::Remove(lua_State* L) {
         CheckUD(LuaDelegateWrap,L,1);
         CheckUDEX(FScriptDelegate,d,L,2);
-        FScriptDelegate* sd = d->ud;
-        // remove delegate
-        UD->delegate->Remove(*sd);
-        UObject* obj = sd->GetUObject();
-        // free uobject
-        obj->ConditionalBeginDestroy();
+        if(sd) {
+            FScriptDelegate* sd = d->ud;
+            // remove delegate
+            UD->delegate->Remove(*sd);
+            UObject* obj = sd->GetUObject();
+            // free uobject
+            obj->RemoveFromRoot();
+            obj->ConditionalBeginDestroy();
+            delete sd;
+            // set ud is null
+            d->ud = nullptr;
+        }
         return 0;
     }
 

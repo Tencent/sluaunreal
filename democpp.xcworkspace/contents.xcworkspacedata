@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <Group
+      location = "container:"      name = "Engine">
+      <FileRef
+         location = "group:Intermediate/ProjectFiles/UE4.xcodeproj">
+      </FileRef>
+   </Group>
+   <Group
+      location = "container:"      name = "Games">
+      <FileRef
+         location = "group:Intermediate/ProjectFiles/democpp.xcodeproj">
+      </FileRef>
+   </Group>
+</Workspace>

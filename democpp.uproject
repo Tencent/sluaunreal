@@ -1,0 +1,16 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "{35B191A6-5541-76CA-136C-8AA01891D47A}",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "democpp",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
+			]
+		}
+	]
+}

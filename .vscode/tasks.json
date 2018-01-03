@@ -9,7 +9,7 @@
 				"democpp",
 				"Mac",
 				"Debug",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -26,7 +26,7 @@
 				"democpp",
 				"Mac",
 				"Debug",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -44,7 +44,7 @@
 				"democpp",
 				"Mac",
 				"DebugGame",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -61,7 +61,7 @@
 				"democpp",
 				"Mac",
 				"DebugGame",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -79,7 +79,7 @@
 				"democpp",
 				"Mac",
 				"Development",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -96,7 +96,7 @@
 				"democpp",
 				"Mac",
 				"Development",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -114,7 +114,7 @@
 				"democpp",
 				"Mac",
 				"Shipping",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -131,7 +131,7 @@
 				"democpp",
 				"Mac",
 				"Shipping",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -149,7 +149,7 @@
 				"democpp",
 				"Mac",
 				"Test",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -166,7 +166,7 @@
 				"democpp",
 				"Mac",
 				"Test",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -184,7 +184,7 @@
 				"democpp",
 				"IOS",
 				"Debug",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -201,7 +201,7 @@
 				"democpp",
 				"IOS",
 				"Debug",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -219,7 +219,7 @@
 				"democpp",
 				"IOS",
 				"DebugGame",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -236,7 +236,7 @@
 				"democpp",
 				"IOS",
 				"DebugGame",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -254,7 +254,7 @@
 				"democpp",
 				"IOS",
 				"Development",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -271,7 +271,7 @@
 				"democpp",
 				"IOS",
 				"Development",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -289,7 +289,7 @@
 				"democpp",
 				"IOS",
 				"Shipping",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -306,7 +306,7 @@
 				"democpp",
 				"IOS",
 				"Shipping",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -324,7 +324,7 @@
 				"democpp",
 				"IOS",
 				"Test",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -341,7 +341,7 @@
 				"democpp",
 				"IOS",
 				"Test",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -359,7 +359,7 @@
 				"democpp",
 				"Android",
 				"Debug",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -376,7 +376,7 @@
 				"democpp",
 				"Android",
 				"Debug",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -394,7 +394,7 @@
 				"democpp",
 				"Android",
 				"DebugGame",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -411,7 +411,7 @@
 				"democpp",
 				"Android",
 				"DebugGame",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -429,7 +429,7 @@
 				"democpp",
 				"Android",
 				"Development",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -446,7 +446,7 @@
 				"democpp",
 				"Android",
 				"Development",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -464,7 +464,7 @@
 				"democpp",
 				"Android",
 				"Shipping",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -481,7 +481,7 @@
 				"democpp",
 				"Android",
 				"Shipping",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -499,7 +499,7 @@
 				"democpp",
 				"Android",
 				"Test",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -516,7 +516,7 @@
 				"democpp",
 				"Android",
 				"Test",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -534,7 +534,7 @@
 				"democpp",
 				"HTML5",
 				"Debug",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -551,7 +551,7 @@
 				"democpp",
 				"HTML5",
 				"Debug",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -569,7 +569,7 @@
 				"democpp",
 				"HTML5",
 				"DebugGame",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -586,7 +586,7 @@
 				"democpp",
 				"HTML5",
 				"DebugGame",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -604,7 +604,7 @@
 				"democpp",
 				"HTML5",
 				"Development",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -621,7 +621,7 @@
 				"democpp",
 				"HTML5",
 				"Development",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -639,7 +639,7 @@
 				"democpp",
 				"HTML5",
 				"Shipping",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -656,7 +656,7 @@
 				"democpp",
 				"HTML5",
 				"Shipping",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -674,7 +674,7 @@
 				"democpp",
 				"HTML5",
 				"Test",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -691,7 +691,7 @@
 				"democpp",
 				"HTML5",
 				"Test",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -709,7 +709,7 @@
 				"democpp",
 				"TVOS",
 				"Debug",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -726,7 +726,7 @@
 				"democpp",
 				"TVOS",
 				"Debug",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -744,7 +744,7 @@
 				"democpp",
 				"TVOS",
 				"DebugGame",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -761,7 +761,7 @@
 				"democpp",
 				"TVOS",
 				"DebugGame",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -779,7 +779,7 @@
 				"democpp",
 				"TVOS",
 				"Development",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -796,7 +796,7 @@
 				"democpp",
 				"TVOS",
 				"Development",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -814,7 +814,7 @@
 				"democpp",
 				"TVOS",
 				"Shipping",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -831,7 +831,7 @@
 				"democpp",
 				"TVOS",
 				"Shipping",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -849,7 +849,7 @@
 				"democpp",
 				"TVOS",
 				"Test",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -866,7 +866,7 @@
 				"democpp",
 				"TVOS",
 				"Test",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -884,7 +884,7 @@
 				"democppEditor",
 				"Mac",
 				"Debug",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -901,7 +901,7 @@
 				"democppEditor",
 				"Mac",
 				"Debug",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -919,7 +919,7 @@
 				"democppEditor",
 				"Mac",
 				"DebugGame",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -936,7 +936,7 @@
 				"democppEditor",
 				"Mac",
 				"DebugGame",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],
@@ -954,7 +954,7 @@
 				"democppEditor",
 				"Mac",
 				"Development",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex"
 			],
 			"problemMatcher": "$msCompile",
@@ -971,7 +971,7 @@
 				"democppEditor",
 				"Mac",
 				"Development",
-				"'/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject'",
+				"'/Users/siney/slua-unreal/democpp.uproject'",
 				"-waitmutex",
 				"-clean"
 			],

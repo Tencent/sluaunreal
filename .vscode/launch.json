@@ -5,7 +5,7 @@
 			"name": "democpp (Debug)",
 			"request": "launch",
 			"preLaunchTask": "democpp Mac Debug Build",
-			"program": "/Users/siney/Documents/Unreal Projects/democpp 4.18/Binaries/Mac/democpp-Mac-Debug.app/Contents/MacOS/democpp-Mac-Debug",
+			"program": "/Users/siney/slua-unreal/Binaries/Mac/democpp-Mac-Debug.app/Contents/MacOS/democpp-Mac-Debug",
 			"args": [
 			],
 			"cwd": "/Users/siney/UE-4.18",
@@ -15,7 +15,7 @@
 			"name": "democpp (DebugGame)",
 			"request": "launch",
 			"preLaunchTask": "democpp Mac DebugGame Build",
-			"program": "/Users/siney/Documents/Unreal Projects/democpp 4.18/Binaries/Mac/democpp-Mac-DebugGame.app/Contents/MacOS/democpp-Mac-DebugGame",
+			"program": "/Users/siney/slua-unreal/Binaries/Mac/democpp-Mac-DebugGame.app/Contents/MacOS/democpp-Mac-DebugGame",
 			"args": [
 			],
 			"cwd": "/Users/siney/UE-4.18",
@@ -25,7 +25,7 @@
 			"name": "democpp (Development)",
 			"request": "launch",
 			"preLaunchTask": "democpp Mac Development Build",
-			"program": "/Users/siney/Documents/Unreal Projects/democpp 4.18/Binaries/Mac/democpp.app/Contents/MacOS/democpp",
+			"program": "/Users/siney/slua-unreal/Binaries/Mac/democpp.app/Contents/MacOS/democpp",
 			"args": [
 			],
 			"cwd": "/Users/siney/UE-4.18",
@@ -35,7 +35,7 @@
 			"name": "democpp (Shipping)",
 			"request": "launch",
 			"preLaunchTask": "democpp Mac Shipping Build",
-			"program": "/Users/siney/Documents/Unreal Projects/democpp 4.18/Binaries/Mac/democpp-Mac-Shipping.app/Contents/MacOS/democpp-Mac-Shipping",
+			"program": "/Users/siney/slua-unreal/Binaries/Mac/democpp-Mac-Shipping.app/Contents/MacOS/democpp-Mac-Shipping",
 			"args": [
 			],
 			"cwd": "/Users/siney/UE-4.18",
@@ -45,7 +45,7 @@
 			"name": "democpp (Test)",
 			"request": "launch",
 			"preLaunchTask": "democpp Mac Test Build",
-			"program": "/Users/siney/Documents/Unreal Projects/democpp 4.18/Binaries/Mac/democpp-Mac-Test.app/Contents/MacOS/democpp-Mac-Test",
+			"program": "/Users/siney/slua-unreal/Binaries/Mac/democpp-Mac-Test.app/Contents/MacOS/democpp-Mac-Test",
 			"args": [
 			],
 			"cwd": "/Users/siney/UE-4.18",
@@ -57,7 +57,7 @@
 			"preLaunchTask": "democppEditor Mac Debug Build",
 			"program": "/Users/siney/UE-4.18/Engine/Binaries/Mac/UE4Editor-Mac-Debug.app/Contents/MacOS/UE4Editor-Mac-Debug",
 			"args": [
-				"/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject",
+				"/Users/siney/slua-unreal/democpp.uproject",
 				"-debug"
 			],
 			"cwd": "/Users/siney/UE-4.18",
@@ -69,7 +69,7 @@
 			"preLaunchTask": "democppEditor Mac DebugGame Build",
 			"program": "/Users/siney/UE-4.18/Engine/Binaries/Mac/UE4Editor.app/Contents/MacOS/UE4Editor",
 			"args": [
-				"/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject",
+				"/Users/siney/slua-unreal/democpp.uproject",
 				"-debug"
 			],
 			"cwd": "/Users/siney/UE-4.18",
@@ -81,7 +81,7 @@
 			"preLaunchTask": "democppEditor Mac Development Build",
 			"program": "/Users/siney/UE-4.18/Engine/Binaries/Mac/UE4Editor.app/Contents/MacOS/UE4Editor",
 			"args": [
-				"/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.uproject"
+				"/Users/siney/slua-unreal/democpp.uproject"
 			],
 			"cwd": "/Users/siney/UE-4.18",
 			"type": "lldb"

@@ -100,20 +100,14 @@ namespace slua {
         static int pushStruct(lua_State* L,UScriptStruct* cls) {
             return pushType<UScriptStruct*>(L,cls,"UScriptStruct",setupStructMT);
         }
-        
+
         static int push(lua_State* L, UObject* obj) {
-            return pushType<UObject*>(L,obj,"UObject",setupInstanceMT);
+            obj->AddToRoot();
+            return pushType<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject);
         }
 
         static int push(lua_State* L, FScriptDelegate* obj) {
             return pushType<FScriptDelegate*>(L,obj,"FScriptDelegate");
-        }
-
-        static int gcStruct(lua_State* L) {
-            CheckUD(LuaStruct,L,1);
-            FMemory::Free(UD->buf);
-            delete UD;
-            return 0;
         }
 
         static int push(lua_State* L, LuaStruct* ls) {
@@ -157,6 +151,19 @@ namespace slua {
         static int setupClassMT(lua_State* L);
         static int setupInstanceMT(lua_State* L);
         static int setupStructMT(lua_State* L);
+
+        static int gcObject(lua_State* L) {
+            CheckUD(UObject,L,1);
+            UD->RemoveFromRoot();
+            return 0;
+        }
+
+        static int gcStruct(lua_State* L) {
+            CheckUD(LuaStruct,L,1);
+            FMemory::Free(UD->buf);
+            delete UD;
+            return 0;
+        }
     };
 
     template<>

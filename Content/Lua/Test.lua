@@ -37,5 +37,13 @@ local event=btn.OnClicked;
 event:Add(function() print('fuck') end);
 
 function update(dt)
-    print("delta time",dt,foo())
+    -- test memory leak?
+    local arr=t:GetArray();
+    print("arr len",arr:Num())
+    for i=0,arr:Num()-1 do
+        print("arr item",i,arr:Get(i))
+    end
+
+    local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
+    edit.OnTextChanged:Remove(evt);
 end

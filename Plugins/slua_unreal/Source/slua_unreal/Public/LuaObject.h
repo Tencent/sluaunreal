@@ -94,11 +94,13 @@ namespace slua {
         }
         
         static int pushClass(lua_State* L,UClass* cls) {
-            return pushType<UClass*>(L,cls,"UClass",setupClassMT);
+            cls->AddToRoot();
+            return pushType<UClass*>(L,cls,"UClass",setupClassMT,gcClass);
         }
 
         static int pushStruct(lua_State* L,UScriptStruct* cls) {
-            return pushType<UScriptStruct*>(L,cls,"UScriptStruct",setupStructMT);
+            cls->AddToRoot();            
+            return pushType<UScriptStruct*>(L,cls,"UScriptStruct",setupStructMT,gcStructClass);
         }
 
         static int push(lua_State* L, UObject* obj) {
@@ -154,6 +156,18 @@ namespace slua {
 
         static int gcObject(lua_State* L) {
             CheckUD(UObject,L,1);
+            UD->RemoveFromRoot();
+            return 0;
+        }
+
+        static int gcClass(lua_State* L) {
+            CheckUD(UClass,L,1);
+            UD->RemoveFromRoot();
+            return 0;
+        }
+
+        static int gcStructClass(lua_State* L) {
+            CheckUD(UScriptStruct,L,1);
             UD->RemoveFromRoot();
             return 0;
         }

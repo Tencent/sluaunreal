@@ -94,7 +94,7 @@ namespace slua {
     // used to create number n of tuple
     // it used for return value from lua
     // don't call it to create n element of tuple
-    LuaVar::LuaVar(lua_State* L,size_t n) {
+    LuaVar::LuaVar(lua_State* L,size_t n):LuaVar() {
         
     }
 
@@ -111,12 +111,21 @@ namespace slua {
         case LV_STRING:
             set(lua_tostring(l,p));
             break;
-        case LV_FUNCTION: this->L = l;
+        case LV_FUNCTION: 
+            this->L = l;
             ensure(lua_type(L,p)==LUA_TFUNCTION);
             alloc(1);
             lua_pushvalue(l,p);
             vars[0].ref=luaL_ref(l,LUA_REGISTRYINDEX);
             vars[0].luatype=LV_FUNCTION;
+            break;
+        case LV_TABLE:
+            this->L = l;
+            ensure(lua_type(L,p)==LUA_TTABLE);
+            alloc(1);
+            lua_pushvalue(l,p);
+            vars[0].ref=luaL_ref(l,LUA_REGISTRYINDEX);
+            vars[0].luatype=LV_TABLE;
             break;
         default:
             break;
@@ -134,7 +143,9 @@ namespace slua {
             else if(vars[n].luatype==LV_STRING)
                 ::free(vars[n].s);
         }
+        numOfVar = 0;
         delete[] vars;
+        vars = nullptr;
     }
 
     void LuaVar::alloc(int n) {

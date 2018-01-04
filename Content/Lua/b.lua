@@ -2,7 +2,7 @@
 local mt={}
 
 function mt.foo()
-    print"foo"
+    return "foo"
 end
 
 return mt

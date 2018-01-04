@@ -41,17 +41,19 @@ namespace slua {
         LuaVar(lua_State* L,lua_Number v);
         LuaVar(lua_State* L,const char* v);
 
-        LuaVar(const LuaVar& other) {
+        LuaVar(const LuaVar& other):LuaVar() {
             clone(other);
         }
-        LuaVar(LuaVar&& other) {
+        LuaVar(LuaVar&& other):LuaVar() {
             move(std::move(other));
         }
 
         void operator=(const LuaVar& other) {
+            free();
             clone(other);
         }
         void operator=(LuaVar&& other) {
+            free();
             move(std::move(other));
         }
 
@@ -135,11 +137,39 @@ namespace slua {
         int pushArgByParms(UProperty* prop,uint8* parms);
 
         void clone(const LuaVar& other) {
-
+            L = other.L;
+            numOfVar = other.numOfVar;
+            if(numOfVar>0 && other.vars) {
+                vars = new lua_var[numOfVar];
+                for(int n=0;n<numOfVar;n++) {
+                    switch(other.vars[n].luatype) {
+                    case LV_INT:
+                        vars[n].i = other.vars[n].i;
+                        break;
+                    case LV_NUMBER:
+                        vars[n].d = other.vars[n].d;
+                        break;
+                    case LV_STRING:
+                        vars[n].s = strdup(other.vars[n].s);
+                        break;
+                    case LV_FUNCTION:
+                    case LV_TABLE:
+                        lua_geti(L,LUA_REGISTRYINDEX,other.vars[n].ref);
+                        vars[n].ref=luaL_ref(L,LUA_REGISTRYINDEX);
+                        break;
+                    }
+                    vars[n].luatype = other.vars[n].luatype;
+                }
+            }
         }
 
         void move(LuaVar&& other) {
+            L = other.L;
+            numOfVar = other.numOfVar;
+            vars = other.vars;
 
+            other.numOfVar = 0;
+            other.vars = nullptr;
         }
     };
 }

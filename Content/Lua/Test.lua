@@ -1,5 +1,7 @@
 
-require 'b'
+local B=require 'b'
+
+print("test require",B.foo())
 
 local Test=import('SluaTestCase');
 local t=Test();

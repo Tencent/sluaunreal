@@ -235,6 +235,13 @@ namespace {
         return LuaObject::push(L,*text);
     }    
 
+    int pushUStrProperty(lua_State* L,UProperty* prop,uint8* parms) {
+        auto p = Cast<UStrProperty>(prop);
+        ensure(p);
+        FString* str = p->GetPropertyValuePtr_InContainer(parms);
+        return LuaObject::push(L,*str);
+    }   
+
     int pushUMulticastDelegateProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p = Cast<UMulticastDelegateProperty>(prop);
         ensure(p);   
@@ -292,6 +299,13 @@ namespace {
         return 0;
     }
 
+    int checkUStrProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
+        auto p = Cast<UStrProperty>(prop);
+        ensure(p);
+        p->SetPropertyValue_InContainer(parms,LuaObject::checkValue<FString>(L,i));
+        return 0;
+    }
+
     int checkUObjectProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UObjectProperty>(prop);
         ensure(p);
@@ -304,6 +318,40 @@ namespace {
 
 
 namespace slua {
+
+
+    int LuaObject::pushClass(lua_State* L,UClass* cls) {
+        cls->AddToRoot();
+        return pushType<UClass*>(L,cls,"UClass",setupClassMT,gcClass);
+    }
+
+    int LuaObject::pushStruct(lua_State* L,UScriptStruct* cls) {
+        cls->AddToRoot();            
+        return pushType<UScriptStruct*>(L,cls,"UScriptStruct",setupStructMT,gcStructClass);
+    }
+
+    int LuaObject::gcObject(lua_State* L) {
+        CheckUD(UObject,L,1);
+        UD->RemoveFromRoot();
+        return 0;
+    }
+
+    int LuaObject::gcClass(lua_State* L) {
+        CheckUD(UClass,L,1);
+        UD->RemoveFromRoot();
+        return 0;
+    }
+
+    int LuaObject::gcStructClass(lua_State* L) {
+        CheckUD(UScriptStruct,L,1);
+        UD->RemoveFromRoot();
+        return 0;
+    }
+
+    int LuaObject::push(lua_State* L, UObject* obj) {
+        obj->AddToRoot();
+        return pushType<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject);
+    }
 
     template<>
     UClass* LuaObject::checkValue(lua_State* L,int p)
@@ -361,6 +409,12 @@ namespace slua {
         return FText::FromString( UTF8_TO_TCHAR(s) );
     }
 
+    template<>
+    FString LuaObject::checkValue(lua_State* L,int p) {
+        const char* s = luaL_checkstring(L,p);
+        return FString( UTF8_TO_TCHAR(s) );
+    }
+
     void LuaObject::init(lua_State* L) {
         regPusher(UIntProperty::StaticClass(),pushUIntProperty);
         regPusher(UTextProperty::StaticClass(),pushUTextProperty);
@@ -368,6 +422,7 @@ namespace slua {
         regPusher(UObjectProperty::StaticClass(),pushUObjectProperty);
         regPusher(UBoolProperty::StaticClass(),pushUBoolProperty);
         regPusher(UArrayProperty::StaticClass(),pushUArrayProperty);
+        regPusher(UStrProperty::StaticClass(),pushUStrProperty);
 
         regChecker(UIntProperty::StaticClass(),checkUIntProperty);
         regChecker(UBoolProperty::StaticClass(),checkUBoolProperty);
@@ -375,6 +430,7 @@ namespace slua {
         regChecker(UStructProperty::StaticClass(),checkUStructProperty);
         regChecker(UTextProperty::StaticClass(),checkUTextProperty);
         regChecker(UObjectProperty::StaticClass(),checkUObjectProperty);
+        regChecker(UStrProperty::StaticClass(),checkUStrProperty);
     }
 
     int LuaObject::push(lua_State* L,UFunction* func)  {

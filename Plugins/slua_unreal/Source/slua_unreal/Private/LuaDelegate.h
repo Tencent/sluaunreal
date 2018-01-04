@@ -27,7 +27,7 @@
 #include "LuaDelegate.generated.h"
 
 namespace slua {
-    class LuaFunction;
+    class LuaVar;
 }
 
 UCLASS()
@@ -40,7 +40,7 @@ public:
     virtual void ProcessEvent( UFunction* Function, void* Parms );
     void bindFunction(lua_State* L,int p,UFunction* func);
 private:
-    slua::LuaFunction* luafunction;
+    slua::LuaVar* luafunction;
     UFunction* ufunction;
 };
 

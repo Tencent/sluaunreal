@@ -93,20 +93,9 @@ namespace slua {
             return 1;
         }
         
-        static int pushClass(lua_State* L,UClass* cls) {
-            cls->AddToRoot();
-            return pushType<UClass*>(L,cls,"UClass",setupClassMT,gcClass);
-        }
-
-        static int pushStruct(lua_State* L,UScriptStruct* cls) {
-            cls->AddToRoot();            
-            return pushType<UScriptStruct*>(L,cls,"UScriptStruct",setupStructMT,gcStructClass);
-        }
-
-        static int push(lua_State* L, UObject* obj) {
-            obj->AddToRoot();
-            return pushType<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject);
-        }
+        static int pushClass(lua_State* L,UClass* cls);
+        static int pushStruct(lua_State* L,UScriptStruct* cls);
+        static int push(lua_State* L, UObject* obj);
 
         static int push(lua_State* L, FScriptDelegate* obj) {
             return pushType<FScriptDelegate*>(L,obj,"FScriptDelegate");
@@ -141,6 +130,11 @@ namespace slua {
             lua_pushstring(L,TCHAR_TO_UTF8(*str));
             return 1;
         }
+
+        static int push(lua_State* L, const FString& str) {
+            lua_pushstring(L,TCHAR_TO_UTF8(*str));
+            return 1;
+        }
         
         static int push(lua_State* L, FScriptArray* array);
 
@@ -154,23 +148,9 @@ namespace slua {
         static int setupInstanceMT(lua_State* L);
         static int setupStructMT(lua_State* L);
 
-        static int gcObject(lua_State* L) {
-            CheckUD(UObject,L,1);
-            UD->RemoveFromRoot();
-            return 0;
-        }
-
-        static int gcClass(lua_State* L) {
-            CheckUD(UClass,L,1);
-            UD->RemoveFromRoot();
-            return 0;
-        }
-
-        static int gcStructClass(lua_State* L) {
-            CheckUD(UScriptStruct,L,1);
-            UD->RemoveFromRoot();
-            return 0;
-        }
+        static int gcObject(lua_State* L);
+        static int gcClass(lua_State* L);
+        static int gcStructClass(lua_State* L);
 
         static int gcStruct(lua_State* L) {
             CheckUD(LuaStruct,L,1);
@@ -207,6 +187,7 @@ namespace slua {
     template<>
     FText LuaObject::checkValue(lua_State* L,int p);
 
-    
+    template<>
+    FString LuaObject::checkValue(lua_State* L,int p);
 
 }

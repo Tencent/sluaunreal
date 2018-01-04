@@ -53,7 +53,7 @@ void ULuaDelegate::ProcessEvent( UFunction* f, void* Parms ) {
 
 void ULuaDelegate::bindFunction(lua_State* L,int p,UFunction* ufunc) {
     luaL_checktype(L,p,LUA_TFUNCTION);
-    luafunction = new LuaFunction(L,p);
+    luafunction = new LuaVar(L,p,LuaVar::LV_FUNCTION);
     ufunction = ufunc;
 }
 

@@ -50,35 +50,23 @@ namespace slua {
 
         template<typename RET,typename ...ARGS>
         RET call(const char* key,ARGS ...args) {
-            std::unique_ptr<LuaVar> v(get(key));
-            if(v->isFunction()) {
-                LuaFunction* f = static_cast<LuaFunction*>(v.get());
-                RET r = f->call<RET>(args...);
-                return LuaObject::push(L,std::move(r));
-            }
-            return RET();
+            LuaVar f = get(key);
+            RET r = f.call<RET>(args...);
+            return LuaObject::push(L,r);
         }
 
         template<typename ...ARGS>
         void call(const char* key,ARGS ...args) {
-            std::unique_ptr<LuaVar> v(get(key));
-            if(v->isFunction()) {
-                LuaFunction* f = static_cast<LuaFunction*>(v.get());
-                f->call<void>(args...);
-            }
+            LuaVar f=get(key);
+            f.call<void>(args...);
         }
 
-        LuaVar* get(const char* key) {
-
+        LuaVar get(const char* key) {
+            AutoStack g(L);
+            // TODO, search full path of key
             lua_getglobal(L,key);
-            if(lua_isnil(L,-1)) {
-                lua_pop(L,1);
-                return new LuaVar();
-            }
-            else if(lua_type(L,-1)==LUA_TFUNCTION) {
-                return new LuaFunction(L,-1,true);
-            }
-            return new LuaVar();    
+            return LuaVar(L,-1);
+
         }
 
         void setLoadFileDelegate(LoadFileDelegate func) {

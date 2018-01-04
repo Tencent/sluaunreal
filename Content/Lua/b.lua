@@ -1,5 +1,8 @@
 
+local mt={}
 
-function foo()
+function mt.foo()
     print"foo"
 end
+
+return mt

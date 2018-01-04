@@ -81,8 +81,9 @@ namespace slua {
     int LuaDelegate::Remove(lua_State* L) {
         CheckUD(LuaDelegateWrap,L,1);
         CheckUDEX(FScriptDelegate,d,L,2);
+        
+        FScriptDelegate* sd = d->ud;
         if(sd) {
-            FScriptDelegate* sd = d->ud;
             // remove delegate
             UD->delegate->Remove(*sd);
             UObject* obj = sd->GetUObject();

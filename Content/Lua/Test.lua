@@ -55,4 +55,6 @@ function update(dt)
 
     local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
     edit.OnTextChanged:Remove(evt);
+    -- test free event twice
+    edit.OnTextChanged:Remove(evt);
 end

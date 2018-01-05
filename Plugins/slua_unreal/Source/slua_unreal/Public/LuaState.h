@@ -31,7 +31,7 @@ struct lua_State;
 
 namespace slua {
 
-    class LuaState
+    class SLUA_UNREAL_API LuaState
     {
     public:
         LuaState();

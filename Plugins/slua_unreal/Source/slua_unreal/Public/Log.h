@@ -26,10 +26,10 @@
 namespace slua {
     namespace Log {
 
-        void Error(const char* fmt,...);
-        void Log(const char* fmt,...);
+        void SLUA_UNREAL_API Error(const char* fmt,...);
+        void SLUA_UNREAL_API Log(const char* fmt,...);
         
-        void Error(const TCHAR* fmt,...);
-        void Log(const TCHAR* fmt,...);
+        void SLUA_UNREAL_API Error(const TCHAR* fmt,...);
+        void SLUA_UNREAL_API Log(const TCHAR* fmt,...);
     }
 }

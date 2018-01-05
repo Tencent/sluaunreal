@@ -29,7 +29,7 @@
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class USluaComponent : public USceneComponent
+class SLUA_UNREAL_API USluaComponent : public USceneComponent
 {
 	GENERATED_BODY()
 

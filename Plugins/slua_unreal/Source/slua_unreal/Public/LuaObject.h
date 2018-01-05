@@ -63,7 +63,7 @@ namespace slua {
         T ud;
     };
 
-    class LuaObject
+    class SLUA_UNREAL_API LuaObject
     {
     public:
 

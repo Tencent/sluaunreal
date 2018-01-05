@@ -30,7 +30,7 @@ struct lua_State;
 
 namespace slua {
 
-    class LuaVar {
+    class SLUA_UNREAL_API LuaVar {
     public:
         enum Type {LV_NIL,LV_INT,LV_NUMBER,LV_STRING,LV_FUNCTION,LV_TABLE,LV_TUPLE};
         LuaVar();

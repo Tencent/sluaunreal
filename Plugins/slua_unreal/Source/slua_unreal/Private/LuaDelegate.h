@@ -31,7 +31,7 @@ namespace slua {
 }
 
 UCLASS()
-class ULuaDelegate : public UObject {
+class SLUA_UNREAL_API ULuaDelegate : public UObject {
     GENERATED_UCLASS_BODY()
 public:
     UFUNCTION(BlueprintCallable, Category="Lua|Delegate")

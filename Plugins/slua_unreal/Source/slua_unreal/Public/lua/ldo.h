@@ -12,7 +12,6 @@
 #include "lstate.h"
 #include "lzio.h"
 
-
 /*
 ** Macro to check stack size and grow stack if needed.  Parameters
 ** 'pre'/'pos' allow the macro to preserve a pointer into the
@@ -32,6 +31,7 @@
 #define savestack(L,p)		((char *)(p) - (char *)L->stack)
 #define restorestack(L,n)	((TValue *)((char *)L->stack + (n)))
 
+extern "C" namespace NS_SLUA {
 
 /* type of protected functions, to be ran by 'runprotected' */
 typedef void (*Pfunc) (lua_State *L, void *ud);
@@ -53,6 +53,8 @@ LUAI_FUNC void luaD_inctop (lua_State *L);
 
 LUAI_FUNC l_noret luaD_throw (lua_State *L, int errcode);
 LUAI_FUNC int luaD_rawrunprotected (lua_State *L, Pfunc f, void *ud);
+
+} // end NS_SLUA
 
 #endif
 

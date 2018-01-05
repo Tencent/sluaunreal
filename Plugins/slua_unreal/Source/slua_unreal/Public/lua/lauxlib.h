@@ -8,13 +8,10 @@
 #ifndef lauxlib_h
 #define lauxlib_h
 
-
 #include <stddef.h>
 #include <stdio.h>
 
 #include "lua.h"
-
-
 
 /* extra error code for 'luaL_loadfilex' */
 #define LUA_ERRFILE     (LUA_ERRERR+1)
@@ -27,6 +24,7 @@
 /* key, in the registry, for table of preloaded loaders */
 #define LUA_PRELOAD_TABLE	"_PRELOAD"
 
+extern "C" namespace NS_SLUA {
 
 typedef struct luaL_Reg {
   const char *name;
@@ -257,7 +255,7 @@ LUALIB_API void (luaL_openlib) (lua_State *L, const char *libname,
 #endif
 /* }============================================================ */
 
-
+} // end NS_SLUA
 
 #endif
 

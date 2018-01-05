@@ -22,7 +22,6 @@
 
 
 #include "LuaState.h"
-#include "lua/lua.hpp"
 #include "LuaObject.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/Package.h"
@@ -30,6 +29,7 @@
 #include "Misc/AssertionMacros.h"
 #include "Log.h"
 #include "Util.h"
+#include "lua/lua.hpp"
 #include <map>
 
 namespace slua {
@@ -50,7 +50,6 @@ namespace slua {
                 LuaObject::pushStruct(L,ustruct);
                 return 1;
             }
-
             
             luaL_error(L,"Can't find class named %s",name);
         }

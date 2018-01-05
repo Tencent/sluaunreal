@@ -12,13 +12,13 @@
 #include "lopcodes.h"
 #include "lparser.h"
 
-
 /*
 ** Marks the end of a patch list. It is an invalid value both as an absolute
 ** address, and as a list link (would link an element to itself).
 */
 #define NO_JUMP (-1)
 
+extern "C" namespace NS_SLUA {
 
 /*
 ** grep "ORDER OPR" if you change these enums  (ORDER OP)
@@ -84,5 +84,6 @@ LUAI_FUNC void luaK_posfix (FuncState *fs, BinOpr op, expdesc *v1,
                             expdesc *v2, int line);
 LUAI_FUNC void luaK_setlist (FuncState *fs, int base, int nelems, int tostore);
 
+} // end NS_SLUA
 
 #endif

@@ -8,11 +8,9 @@
 #define lstate_h
 
 #include "lua.h"
-
 #include "lobject.h"
 #include "ltm.h"
 #include "lzio.h"
-
 
 /*
 
@@ -29,8 +27,11 @@
 
 */
 
+extern "C" namespace NS_SLUA {
 
 struct lua_longjmp;  /* defined in ldo.c */
+
+} // end NS_SLUA
 
 
 /*
@@ -54,6 +55,7 @@ struct lua_longjmp;  /* defined in ldo.c */
 #define KGC_NORMAL	0
 #define KGC_EMERGENCY	1	/* gc was forced by an allocation failure */
 
+extern "C" namespace NS_SLUA {
 
 typedef struct stringtable {
   TString **hash;
@@ -230,6 +232,7 @@ LUAI_FUNC CallInfo *luaE_extendCI (lua_State *L);
 LUAI_FUNC void luaE_freeCI (lua_State *L);
 LUAI_FUNC void luaE_shrinkCI (lua_State *L);
 
+} // end NS_SLUA
 
 #endif
 

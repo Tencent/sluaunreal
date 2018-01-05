@@ -11,7 +11,6 @@
 #include "lobject.h"
 #include "lstate.h"
 
-
 #define sizelstring(l)  (sizeof(union UTString) + ((l) + 1) * sizeof(char))
 
 #define sizeludata(l)	(sizeof(union UUdata) + (l))
@@ -32,6 +31,7 @@
 */
 #define eqshrstr(a,b)	check_exp((a)->tt == LUA_TSHRSTR, (a) == (b))
 
+extern "C" namespace NS_SLUA {
 
 LUAI_FUNC unsigned int luaS_hash (const char *str, size_t l, unsigned int seed);
 LUAI_FUNC unsigned int luaS_hashlongstr (TString *ts);
@@ -45,5 +45,6 @@ LUAI_FUNC TString *luaS_newlstr (lua_State *L, const char *str, size_t l);
 LUAI_FUNC TString *luaS_new (lua_State *L, const char *str);
 LUAI_FUNC TString *luaS_createlngstrobj (lua_State *L, size_t l);
 
+} // end NS_SLUA
 
 #endif

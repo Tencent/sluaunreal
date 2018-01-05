@@ -24,9 +24,6 @@
 #include "LuaObject.h"
 #include "LuaVar.h"
 
-using namespace slua;
-
-
 ULuaDelegate::ULuaDelegate(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -51,9 +48,9 @@ void ULuaDelegate::ProcessEvent( UFunction* f, void* Parms ) {
     }
 }
 
-void ULuaDelegate::bindFunction(lua_State* L,int p,UFunction* ufunc) {
+void ULuaDelegate::bindFunction(slua::lua_State* L,int p,UFunction* ufunc) {
     luaL_checktype(L,p,LUA_TFUNCTION);
-    luafunction = new LuaVar(L,p,LuaVar::LV_FUNCTION);
+    luafunction = new slua::LuaVar(L,p,slua::LuaVar::LV_FUNCTION);
     ufunction = ufunc;
 }
 

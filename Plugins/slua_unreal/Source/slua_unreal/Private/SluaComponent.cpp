@@ -23,8 +23,6 @@
 #include "SluaComponent.h"
 #include "LuaObject.h"
 
-using namespace slua;
-
 // Sets default values for this component's properties
 USluaComponent::USluaComponent()
 {

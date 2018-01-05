@@ -11,6 +11,7 @@
 #include "lobject.h"
 #include "lzio.h"
 
+extern "C" namespace NS_SLUA {
 
 /*
 ** Expression and variable descriptor.
@@ -129,5 +130,6 @@ typedef struct FuncState {
 LUAI_FUNC LClosure *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff,
                                  Dyndata *dyd, const char *name, int firstchar);
 
+} // end NS_SLUA
 
 #endif

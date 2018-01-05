@@ -9,6 +9,7 @@
 
 #include "lobject.h"
 
+extern "C" namespace NS_SLUA {
 
 #define gnode(t,i)	(&(t)->node[i])
 #define gval(n)		(&(n)->i_val)
@@ -62,5 +63,6 @@ LUAI_FUNC Node *luaH_mainposition (const Table *t, const TValue *key);
 LUAI_FUNC int luaH_isdummy (const Table *t);
 #endif
 
+} // end NS_SLUA
 
 #endif

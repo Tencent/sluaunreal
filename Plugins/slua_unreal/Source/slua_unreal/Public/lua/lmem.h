@@ -13,6 +13,7 @@
 #include "llimits.h"
 #include "lua.h"
 
+extern "C" namespace NS_SLUA {
 
 /*
 ** This macro reallocs a vector 'b' from 'on' to 'n' elements, where
@@ -64,6 +65,8 @@ LUAI_FUNC void *luaM_realloc_ (lua_State *L, void *block, size_t oldsize,
 LUAI_FUNC void *luaM_growaux_ (lua_State *L, void *block, int *size,
                                size_t size_elem, int limit,
                                const char *what);
+
+} // end NS_SLUA
 
 #endif
 

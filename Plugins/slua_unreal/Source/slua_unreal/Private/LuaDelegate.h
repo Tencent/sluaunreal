@@ -38,8 +38,8 @@ public:
 	void OnClicked();
 
     virtual void ProcessEvent( UFunction* Function, void* Parms );
-    void bindFunction(lua_State* L,int p,UFunction* func);
-private:
+    void bindFunction(slua::lua_State *L, int p, UFunction *func);
+  private:
     slua::LuaVar* luafunction;
     UFunction* ufunction;
 };

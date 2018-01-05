@@ -10,6 +10,7 @@
 
 #include "lua.h"
 
+extern "C" namespace NS_SLUA {
 
 /* version suffix for environment variable names */
 #define LUA_VERSUFFIX          "_" LUA_VERSION_MAJOR "_" LUA_VERSION_MINOR
@@ -57,5 +58,6 @@ LUALIB_API void (luaL_openlibs) (lua_State *L);
 #define lua_assert(x)	((void)0)
 #endif
 
+} // end NS_SLUA
 
 #endif

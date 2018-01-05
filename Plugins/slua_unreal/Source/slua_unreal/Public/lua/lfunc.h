@@ -7,9 +7,7 @@
 #ifndef lfunc_h
 #define lfunc_h
 
-
 #include "lobject.h"
-
 
 #define sizeCclosure(n)	(cast(int, sizeof(CClosure)) + \
                          cast(int, sizeof(TValue)*((n)-1)))
@@ -28,6 +26,7 @@
 */
 #define MAXUPVAL	255
 
+extern "C" namespace NS_SLUA {
 
 /*
 ** Upvalues for Lua closures
@@ -57,5 +56,6 @@ LUAI_FUNC void luaF_freeproto (lua_State *L, Proto *f);
 LUAI_FUNC const char *luaF_getlocalname (const Proto *func, int local_number,
                                          int pc);
 
+} // end NS_SLUA
 
 #endif

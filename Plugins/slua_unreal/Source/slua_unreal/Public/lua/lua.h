@@ -12,9 +12,10 @@
 #include <stdarg.h>
 #include <stddef.h>
 
-
 #include "luaconf.h"
 
+#define _LUAC
+#define NS_SLUA slua
 
 #define LUA_VERSION_MAJOR	"5"
 #define LUA_VERSION_MINOR	"3"
@@ -52,6 +53,7 @@
 #define LUA_ERRGCMM	5
 #define LUA_ERRERR	6
 
+extern "C" namespace NS_SLUA {
 
 typedef struct lua_State lua_State;
 
@@ -482,5 +484,6 @@ struct lua_Debug {
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ******************************************************************************/
 
+} // end NS_SLUA
 
 #endif

@@ -7,12 +7,12 @@
 #ifndef llimits_h
 #define llimits_h
 
-
 #include <limits.h>
 #include <stddef.h>
 
-
 #include "lua.h"
+
+extern "C" namespace NS_SLUA {
 
 /*
 ** 'lu_mem' and 'l_mem' are unsigned/signed integers big enough to count
@@ -319,5 +319,7 @@ typedef unsigned long Instruction;
 #define condchangemem(L,pre,pos)  \
 	{ if (G(L)->gcrunning) { pre; luaC_fullgc(L, 0); pos; } }
 #endif
+
+} // end NS_SLUA
 
 #endif

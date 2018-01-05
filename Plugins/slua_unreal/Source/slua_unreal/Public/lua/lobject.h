@@ -8,13 +8,12 @@
 #ifndef lobject_h
 #define lobject_h
 
-
 #include <stdarg.h>
-
 
 #include "llimits.h"
 #include "lua.h"
 
+extern "C" namespace NS_SLUA {
 
 /*
 ** Extra tags for non-values
@@ -515,7 +514,7 @@ typedef struct Table {
 	(check_exp((size&(size-1))==0, (cast(int, (s) & ((size)-1)))))
 
 
-#define twoto(x)	(1<<(x))
+#define twoto(x)	(1i64<<(x))
 #define sizenode(t)	(twoto((t)->lsizenode))
 
 
@@ -544,6 +543,7 @@ LUAI_FUNC const char *luaO_pushvfstring (lua_State *L, const char *fmt,
 LUAI_FUNC const char *luaO_pushfstring (lua_State *L, const char *fmt, ...);
 LUAI_FUNC void luaO_chunkid (char *out, const char *source, size_t len);
 
+} // end NS_SLUA
 
 #endif
 

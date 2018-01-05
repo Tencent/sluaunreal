@@ -27,7 +27,7 @@
 
 namespace slua {
 
-    class LuaArray {
+    class SLUA_UNREAL_API LuaArray {
     public:
         static int push(lua_State* L,UArrayProperty* prop,FScriptArray* array);
 

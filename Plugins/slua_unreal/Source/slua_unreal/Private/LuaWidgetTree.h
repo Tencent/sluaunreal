@@ -28,7 +28,7 @@ class UWidgetTree;
 
 namespace slua {
 
-    class LuaWidgetTree {
+    class SLUA_UNREAL_API LuaWidgetTree {
     public:
         static int push(lua_State* L,UWidgetTree* tree);
     private:

@@ -31,7 +31,7 @@
 #define L_MODEEXT	"b"
 #endif
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /* Check whether 'mode' matches '[rwa]%+?[L_MODEEXT]*' */
 static int l_checkmode (const char *mode) {
@@ -131,7 +131,7 @@ static int l_checkmode (const char *mode) {
 
 /* }====================================================== */
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 #define IO_PREFIX	"_IO_"
 #define IOPREF_LEN	(sizeof(IO_PREFIX)/sizeof(char) - 1)

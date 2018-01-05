@@ -131,7 +131,7 @@
 	(iscollectable((uv)->v) && !upisopen(uv)) ? \
          luaC_upvalbarrier_(L,uv) : cast_void(0))
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 LUAI_FUNC void luaC_fix (lua_State *L, GCObject *o);
 LUAI_FUNC void luaC_freeallobjects (lua_State *L);

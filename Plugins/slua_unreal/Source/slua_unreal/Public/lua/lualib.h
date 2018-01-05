@@ -10,7 +10,7 @@
 
 #include "lua.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /* version suffix for environment variable names */
 #define LUA_VERSUFFIX          "_" LUA_VERSION_MAJOR "_" LUA_VERSION_MINOR

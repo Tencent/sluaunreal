@@ -23,7 +23,7 @@
 
 #define iscont(p)	((*(p) & 0xC0) == 0x80)
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /* from strlib */
 /* translate a relative string position: negative means back from end */

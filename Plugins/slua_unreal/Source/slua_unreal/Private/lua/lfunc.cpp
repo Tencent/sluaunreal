@@ -18,7 +18,7 @@
 #include "lobject.h"
 #include "lstate.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 CClosure *luaF_newCclosure (lua_State *L, int n) {
   GCObject *o = luaC_newobj(L, LUA_TCCL, sizeCclosure(n));

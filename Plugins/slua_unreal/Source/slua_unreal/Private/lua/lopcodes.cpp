@@ -12,7 +12,7 @@
 
 #include <stddef.h>
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /* ORDER OP */
 

@@ -26,7 +26,7 @@
 #include "lstring.h"
 #include "lvm.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 LUAI_DDEF const TValue luaO_nilobject_ = {NILCONSTANT};
 

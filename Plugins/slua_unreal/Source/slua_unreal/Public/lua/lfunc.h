@@ -26,7 +26,7 @@
 */
 #define MAXUPVAL	255
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** Upvalues for Lua closures

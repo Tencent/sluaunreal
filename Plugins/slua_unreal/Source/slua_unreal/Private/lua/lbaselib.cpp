@@ -18,7 +18,7 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 static int luaB_print (lua_State *L) {
   int n = lua_gettop(L);  /* number of arguments */

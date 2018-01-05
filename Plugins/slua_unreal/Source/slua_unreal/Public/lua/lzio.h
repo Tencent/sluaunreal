@@ -11,7 +11,7 @@
 #include "lua.h"
 #include "lmem.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 #define EOZ	(-1)			/* end of stream */
 

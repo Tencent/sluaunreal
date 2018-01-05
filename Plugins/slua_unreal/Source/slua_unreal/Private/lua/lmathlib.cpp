@@ -16,7 +16,7 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 #undef PI
 #define PI	(l_mathop(3.141592653589793238462643383279502884))

@@ -15,7 +15,7 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 static lua_State *getco (lua_State *L) {
   lua_State *co = lua_tothread(L, 1);

@@ -11,7 +11,7 @@
 #include "lobject.h"
 #include "lzio.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** Expression and variable descriptor.

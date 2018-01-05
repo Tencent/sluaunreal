@@ -27,7 +27,7 @@
 
 */
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 struct lua_longjmp;  /* defined in ldo.c */
 
@@ -55,7 +55,7 @@ struct lua_longjmp;  /* defined in ldo.c */
 #define KGC_NORMAL	0
 #define KGC_EMERGENCY	1	/* gc was forced by an allocation failure */
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 typedef struct stringtable {
   TString **hash;

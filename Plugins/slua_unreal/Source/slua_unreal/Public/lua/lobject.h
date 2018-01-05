@@ -13,7 +13,7 @@
 #include "llimits.h"
 #include "lua.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** Extra tags for non-values

@@ -9,7 +9,7 @@
 
 #include "lstate.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 #define pcRel(pc, p)	(cast(int, (pc) - (p)->code) - 1)
 

@@ -9,7 +9,7 @@
 
 #include "llimits.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*===========================================================================
   We assume that instructions are unsigned numbers.

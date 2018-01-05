@@ -21,7 +21,7 @@
 #include "lstring.h"
 #include "lzio.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 #if !defined(luai_verifycode)
 #define luai_verifycode(L,b,f)  /* empty */

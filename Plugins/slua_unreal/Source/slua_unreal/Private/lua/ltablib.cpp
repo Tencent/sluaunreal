@@ -18,7 +18,7 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** Operations that an object must define to mimic a table

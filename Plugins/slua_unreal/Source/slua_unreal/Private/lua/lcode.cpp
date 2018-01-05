@@ -32,7 +32,7 @@
 
 #define hasjumps(e)	((e)->t != (e)->f)
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** If expression is a numeric constant, fills 'v' with its value

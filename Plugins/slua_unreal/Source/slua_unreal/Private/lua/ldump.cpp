@@ -16,7 +16,7 @@
 #include "lstate.h"
 #include "lundump.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 typedef struct {
   lua_State *L;

@@ -36,7 +36,7 @@
 #include "lstring.h"
 #include "lvm.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** Maximum size of array part (MAXASIZE) is 2^MAXABITS. MAXABITS is

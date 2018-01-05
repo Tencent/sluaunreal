@@ -10,7 +10,7 @@
 #include "lobject.h"
 #include "lzio.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 #define FIRST_RESERVED	257
 

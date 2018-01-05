@@ -65,7 +65,7 @@
 */
 #define ltolower(c)	((c) | ('A' ^ 'a'))
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /* two more entries for 0 and -1 (EOZ) */
 LUAI_DDEC const lu_byte luai_ctype_[UCHAR_MAX + 2];

@@ -17,7 +17,7 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** The hook table at registry[&HOOKKEY] maps threads to their current

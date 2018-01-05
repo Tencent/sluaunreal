@@ -46,7 +46,7 @@
 	(sizeof(size_t) < sizeof(int) ? MAX_SIZET : (size_t)(INT_MAX))
 
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 static int str_len (lua_State *L) {
   size_t l;
@@ -208,7 +208,7 @@ static int str_dump (lua_State *L) {
 #define CAP_UNFINISHED	(-1)
 #define CAP_POSITION	(-2)
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 typedef struct MatchState {
   const char *src_init;  /* init of source string */
@@ -827,7 +827,7 @@ static int str_gsub (lua_State *L) {
 */
 #define L_NBFD		((l_mathlim(MANT_DIG) - 1)%4 + 1)
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** Add integer part of 'x' to buffer and return new 'x'
@@ -1098,7 +1098,7 @@ static int str_format (lua_State *L) {
 
 /* }====================================================== */
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** {======================================================

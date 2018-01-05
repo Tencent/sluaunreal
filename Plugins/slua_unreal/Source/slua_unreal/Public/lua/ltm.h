@@ -10,7 +10,7 @@
 
 #include "lobject.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 * WARNING: if you change the order of this enumeration,

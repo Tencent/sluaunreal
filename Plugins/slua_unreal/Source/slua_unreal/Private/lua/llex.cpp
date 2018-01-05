@@ -25,7 +25,7 @@
 #include "ltable.h"
 #include "lzio.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 #define next_tk(ls) (ls->current = zgetc(ls->z))
 

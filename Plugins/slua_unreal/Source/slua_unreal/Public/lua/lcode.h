@@ -18,7 +18,7 @@
 */
 #define NO_JUMP (-1)
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** grep "ORDER OPR" if you change these enums  (ORDER OP)

@@ -53,7 +53,7 @@
 #define LUA_ERRGCMM	5
 #define LUA_ERRERR	6
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 typedef struct lua_State lua_State;
 

@@ -74,7 +74,7 @@
 
 #endif							/* } */
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /* chain list of long jump buffers */
 struct lua_longjmp {

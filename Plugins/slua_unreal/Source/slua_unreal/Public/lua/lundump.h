@@ -11,7 +11,7 @@
 #include "lobject.h"
 #include "lzio.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /* data to catch conversion errors */
 #define LUAC_DATA	"\x19\x93\r\n\x1a\n"

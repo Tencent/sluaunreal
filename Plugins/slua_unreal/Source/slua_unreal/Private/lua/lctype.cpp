@@ -14,7 +14,7 @@
 
 #include <limits.h>
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 LUAI_DDEF const lu_byte luai_ctype_[UCHAR_MAX + 2] = {
   0x00,  /* EOZ */

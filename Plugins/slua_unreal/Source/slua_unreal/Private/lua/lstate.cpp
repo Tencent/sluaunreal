@@ -43,7 +43,7 @@
 #define luai_makeseed()		cast(unsigned int, time(NULL))
 #endif
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** thread state + extra space

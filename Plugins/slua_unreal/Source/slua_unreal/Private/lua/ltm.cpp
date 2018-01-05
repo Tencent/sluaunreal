@@ -21,7 +21,7 @@
 #include "ltable.h"
 #include "lvm.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 static const char udatatypename[] = "userdata";
 

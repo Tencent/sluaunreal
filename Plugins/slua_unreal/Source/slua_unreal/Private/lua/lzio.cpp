@@ -17,7 +17,7 @@
 #include "lmem.h"
 #include "lstate.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 int luaZ_fill (ZIO *z) {
   size_t size;

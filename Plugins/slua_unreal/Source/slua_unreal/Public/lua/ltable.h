@@ -9,7 +9,7 @@
 
 #include "lobject.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 #define gnode(t,i)	(&(t)->node[i])
 #define gval(n)		(&(n)->i_val)

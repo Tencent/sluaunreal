@@ -33,7 +33,7 @@
 #define LEVELS1	10	/* size of the first part of the stack */
 #define LEVELS2	11	/* size of the second part of the stack */
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** search for 'objidx' in table at index -1.
@@ -267,7 +267,7 @@ LUALIB_API int luaL_fileresult (lua_State *L, int stat, const char *fname) {
 
 #endif				/* } */
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 LUALIB_API int luaL_execresult (lua_State *L, int stat) {
   const char *what = "exit";  /* type of termination */

@@ -23,7 +23,7 @@
 #include "ltable.h"
 #include "ltm.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** internal state for collector while inside the atomic phase. The

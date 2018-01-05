@@ -25,7 +25,7 @@
 #include "lstring.h"
 #include "ltable.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /* maximum number of local variables per function (must be smaller
    than 250, due to the bytecode format) */

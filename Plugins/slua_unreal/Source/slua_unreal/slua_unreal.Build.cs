@@ -7,8 +7,11 @@ public class slua_unreal : ModuleRules
 	public slua_unreal(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
-		PublicIncludePaths.AddRange(
+
+        if(Target.Platform == UnrealTargetPlatform.Win64)
+            Definitions.Add("LUA_BUILD_AS_DLL");
+
+        PublicIncludePaths.AddRange(
 			new string[] {
 				"slua_unreal/Public",
 				"slua_unreal/Private",

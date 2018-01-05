@@ -32,7 +32,7 @@
 #include "lualib.h"
 #include "lauxlib.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** these libs are loaded by lua.c and are readily available to any Lua

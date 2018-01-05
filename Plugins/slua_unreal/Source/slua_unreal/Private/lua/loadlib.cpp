@@ -21,7 +21,7 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** LUA_IGMARK is a mark to ignore all before it when building the
@@ -105,7 +105,7 @@ static lua_CFunction lsys_sym (lua_State *L, void *lib, const char *sym);
 
 #include <dlfcn.h>
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** Macro to convert pointer-to-void* to pointer-to-function. This cast
@@ -152,7 +152,7 @@ static lua_CFunction lsys_sym (lua_State *L, void *lib, const char *sym) {
 
 #include <windows.h>
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** optional flags for LoadLibraryEx

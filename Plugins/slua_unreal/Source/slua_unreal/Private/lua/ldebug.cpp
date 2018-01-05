@@ -27,7 +27,7 @@
 #include "ltm.h"
 #include "lvm.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 #define noLuaClosure(f)		((f) == NULL || (f)->c.tt == LUA_TCCL)
 

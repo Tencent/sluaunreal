@@ -29,7 +29,7 @@
 #include "ltable.h"
 #include "ltm.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /* limit for table tag-method chains (to avoid loops) */
 #define MAXTAGLOOP	2000

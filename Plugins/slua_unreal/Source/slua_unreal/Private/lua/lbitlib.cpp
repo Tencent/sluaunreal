@@ -13,7 +13,7 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 #if defined(LUA_COMPAT_BITLIB)		/* { */
 

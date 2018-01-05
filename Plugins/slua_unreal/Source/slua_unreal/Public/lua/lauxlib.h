@@ -24,7 +24,7 @@
 /* key, in the registry, for table of preloaded loaders */
 #define LUA_PRELOAD_TABLE	"_PRELOAD"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 typedef struct luaL_Reg {
   const char *name;

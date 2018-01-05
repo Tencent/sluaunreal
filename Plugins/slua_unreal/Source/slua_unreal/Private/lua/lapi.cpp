@@ -27,7 +27,7 @@
 #include "lundump.h"
 #include "lvm.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 const char lua_ident[] =
   "$LuaVersion: " LUA_COPYRIGHT " $"

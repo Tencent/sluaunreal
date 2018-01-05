@@ -19,7 +19,7 @@
 #include "lobject.h"
 #include "lstate.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 #define MEMERRMSG       "not enough memory"
 

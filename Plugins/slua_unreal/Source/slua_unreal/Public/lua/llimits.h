@@ -12,7 +12,7 @@
 
 #include "lua.h"
 
-extern "C" namespace NS_SLUA {
+namespace NS_SLUA {
 
 /*
 ** 'lu_mem' and 'l_mem' are unsigned/signed integers big enough to count

@@ -235,13 +235,4 @@ namespace slua {
         }
         docall(n);
     }
-
-    template<>
-    inline void LuaVar::call() {
-        int err = LuaState::pushErrorHandler(L);
-        lua_geti(L,LUA_REGISTRYINDEX,vars[0].ref);
-        if(lua_pcallk(L,0,0,err,NULL,NULL))
-            lua_pop(L,1);
-        lua_pop(L,1); // pop err handler
-    }
 }

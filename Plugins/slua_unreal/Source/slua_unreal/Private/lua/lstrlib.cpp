@@ -195,8 +195,6 @@ static int str_dump (lua_State *L) {
   return 1;
 }
 
-} // end NS_SLUA
-
 
 /*
 ** {======================================================
@@ -207,8 +205,6 @@ static int str_dump (lua_State *L) {
 
 #define CAP_UNFINISHED	(-1)
 #define CAP_POSITION	(-2)
-
-namespace NS_SLUA {
 
 typedef struct MatchState {
   const char *src_init;  /* init of source string */
@@ -796,8 +792,6 @@ static int str_gsub (lua_State *L) {
   return 2;
 }
 
-} // end NS_SLUA
-
 /* }====================================================== */
 
 
@@ -826,8 +820,6 @@ static int str_gsub (lua_State *L) {
 ** multiple of 4.
 */
 #define L_NBFD		((l_mathlim(MANT_DIG) - 1)%4 + 1)
-
-namespace NS_SLUA {
 
 /*
 ** Add integer part of 'x' to buffer and return new 'x'
@@ -1094,11 +1086,7 @@ static int str_format (lua_State *L) {
   return 1;
 }
 
-} // end NS_SLUA
-
 /* }====================================================== */
-
-namespace NS_SLUA {
 
 /*
 ** {======================================================

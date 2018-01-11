@@ -40,8 +40,6 @@ static int l_checkmode (const char *mode) {
          (strspn(mode, L_MODEEXT) == strlen(mode)));  /* check extensions */
 }
 
-} // end NS_SLUA
-
 #endif
 
 /*
@@ -130,8 +128,6 @@ static int l_checkmode (const char *mode) {
 #endif				/* } */
 
 /* }====================================================== */
-
-namespace NS_SLUA {
 
 #define IO_PREFIX	"_IO_"
 #define IOPREF_LEN	(sizeof(IO_PREFIX)/sizeof(char) - 1)

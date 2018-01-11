@@ -90,8 +90,6 @@ static void *lsys_load (lua_State *L, const char *path, int seeglb);
 */
 static lua_CFunction lsys_sym (lua_State *L, void *lib, const char *sym);
 
-} // end NS_SLUA
-
 
 #if defined(LUA_USE_DLOPEN)	/* { */
 /*
@@ -104,8 +102,6 @@ static lua_CFunction lsys_sym (lua_State *L, void *lib, const char *sym);
 */
 
 #include <dlfcn.h>
-
-namespace NS_SLUA {
 
 /*
 ** Macro to convert pointer-to-void* to pointer-to-function. This cast
@@ -137,8 +133,6 @@ static lua_CFunction lsys_sym (lua_State *L, void *lib, const char *sym) {
   return f;
 }
 
-} // end NS_SLUA
-
 /* }====================================================== */
 
 
@@ -151,8 +145,6 @@ static lua_CFunction lsys_sym (lua_State *L, void *lib, const char *sym) {
 */
 
 #include <windows.h>
-
-namespace NS_SLUA {
 
 /*
 ** optional flags for LoadLibraryEx

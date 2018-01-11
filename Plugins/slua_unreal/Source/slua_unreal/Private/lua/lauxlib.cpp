@@ -18,6 +18,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+namespace NS_SLUA {
+
 /*
 ** This file uses only the official API of Lua.
 ** Any function declared here could be written as an application function.
@@ -32,8 +34,6 @@
 
 #define LEVELS1	10	/* size of the first part of the stack */
 #define LEVELS2	11	/* size of the second part of the stack */
-
-namespace NS_SLUA {
 
 /*
 ** search for 'objidx' in table at index -1.
@@ -244,8 +244,6 @@ LUALIB_API int luaL_fileresult (lua_State *L, int stat, const char *fname) {
   }
 }
 
-} // end NS_SLUA
-
 #if !defined(l_inspectstat)	/* { */
 
 #if defined(LUA_USE_POSIX)
@@ -266,8 +264,6 @@ LUALIB_API int luaL_fileresult (lua_State *L, int stat, const char *fname) {
 #endif
 
 #endif				/* } */
-
-namespace NS_SLUA {
 
 LUALIB_API int luaL_execresult (lua_State *L, int stat) {
   const char *what = "exit";  /* type of termination */

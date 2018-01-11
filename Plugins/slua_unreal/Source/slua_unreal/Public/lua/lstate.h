@@ -31,8 +31,6 @@ namespace NS_SLUA {
 
 struct lua_longjmp;  /* defined in ldo.c */
 
-} // end NS_SLUA
-
 
 /*
 ** Atomic type (relative to signals) to better ensure that 'lua_sethook'
@@ -54,8 +52,6 @@ struct lua_longjmp;  /* defined in ldo.c */
 /* kinds of Garbage Collection */
 #define KGC_NORMAL	0
 #define KGC_EMERGENCY	1	/* gc was forced by an allocation failure */
-
-namespace NS_SLUA {
 
 typedef struct stringtable {
   TString **hash;

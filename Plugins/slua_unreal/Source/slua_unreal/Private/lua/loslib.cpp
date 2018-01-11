@@ -98,8 +98,6 @@ static time_t l_checktime (lua_State *L, int arg) {
 
 /* }================================================================== */
 
-} // end NS_SLUA
-
 
 /*
 ** {==================================================================
@@ -136,8 +134,6 @@ static time_t l_checktime (lua_State *L, int arg) {
 
 #endif				/* } */
 /* }================================================================== */
-
-namespace NS_SLUA {
 
 static int os_execute (lua_State *L) {
   const char *cmd = luaL_optstring(L, 1, NULL);

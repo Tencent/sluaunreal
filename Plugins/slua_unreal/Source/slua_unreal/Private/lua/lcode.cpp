@@ -26,13 +26,13 @@
 #include "ltable.h"
 #include "lvm.h"
 
+namespace NS_SLUA {
+
 /* Maximum number of registers in a Lua function (must fit in 8 bits) */
 #define MAXREGS		255
 
 
 #define hasjumps(e)	((e)->t != (e)->f)
-
-namespace NS_SLUA {
 
 /*
 ** If expression is a numeric constant, fills 'v' with its value

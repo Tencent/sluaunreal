@@ -31,3 +31,7 @@ TArray<int> USluaTestCase::GetArray() {
     TArray<int> array={1,0,2,4,2,0,4,8};
     return array;
 }
+
+UUserWidget* USluaTestCase::GetWidget() {
+    return nullptr;
+}

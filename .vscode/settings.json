@@ -1,13 +1,6 @@
 {
 	"typescript.tsc.autoDetect": "off",
 	"files.exclude": {
-		"/Users/siney/Documents/Unreal Projects/democpp 4.18/.git": true,
-		"/Users/siney/Documents/Unreal Projects/democpp 4.18/.vscode": true,
-		"/Users/siney/Documents/Unreal Projects/democpp 4.18/Content": true,
-		"/Users/siney/Documents/Unreal Projects/democpp 4.18/DerivedDataCache": true,
-		"/Users/siney/Documents/Unreal Projects/democpp 4.18/Intermediate": true,
-		"/Users/siney/Documents/Unreal Projects/democpp 4.18/Saved": true,
-		"/Users/siney/Documents/Unreal Projects/democpp 4.18/democpp.xcworkspace": true
 	},
 	"files.associations": {
 		"locale": "cpp",

@@ -326,11 +326,19 @@ namespace slua {
 
 
     int LuaObject::pushClass(lua_State* L,UClass* cls) {
+        if(!cls) {
+            lua_pushnil(L);
+            return 1;
+        }
         cls->AddToRoot();
         return pushType<UClass*>(L,cls,"UClass",setupClassMT,gcClass);
     }
 
     int LuaObject::pushStruct(lua_State* L,UScriptStruct* cls) {
+        if(!cls) {
+            lua_pushnil(L);
+            return 1;
+        }
         cls->AddToRoot();            
         return pushType<UScriptStruct*>(L,cls,"UScriptStruct",setupStructMT,gcStructClass);
     }
@@ -354,6 +362,10 @@ namespace slua {
     }
 
     int LuaObject::push(lua_State* L, UObject* obj) {
+        if(!obj) {
+            lua_pushnil(L);
+            return 1;
+        }
         obj->AddToRoot();
         return pushType<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject);
     }

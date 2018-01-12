@@ -95,7 +95,7 @@ namespace slua {
     // it used for return value from lua
     // don't call it to create n element of tuple
     LuaVar::LuaVar(lua_State* L,size_t n):LuaVar() {
-        
+        init(L,n,LV_TUPLE);
     }
 
     void LuaVar::init(lua_State* l,int p,LuaVar::Type type) {
@@ -127,8 +127,57 @@ namespace slua {
             vars[0].ref=luaL_ref(l,LUA_REGISTRYINDEX);
             vars[0].luatype=LV_TABLE;
             break;
+        case LV_TUPLE:
+            this->L = l;
+            ensure(p>0 && lua_gettop(L)>=p);
+            initTuple(p);
+            break;
         default:
             break;
+        }
+    }
+
+    void LuaVar::initTuple(size_t n) {
+        ensure(lua_gettop(L)>=n);
+        alloc(n);
+        int f = lua_gettop(L)-n+1;
+        for(int i=0;i<n;i++) {
+            
+            int p = i+f;
+            int t = lua_type(L,p);
+
+            switch(t) {
+            case LUA_TNUMBER:
+                {
+                    if(lua_isinteger(L,p)) {
+                        vars[i].luatype = LV_INT;
+                        vars[i].i = lua_tointeger(L,p);
+                    }
+                    else {
+                        vars[i].luatype = LV_NUMBER;
+                        vars[i].d = lua_tonumber(L,p);
+                    }
+                }
+                break;
+            case LUA_TSTRING:
+                vars[i].luatype = LV_STRING;
+                vars[i].s = strdup(lua_tostring(L,p));
+                break;
+            case LUA_TFUNCTION:
+                vars[i].luatype = LV_FUNCTION;
+                lua_pushvalue(L,p);
+                vars[i].ref=luaL_ref(L,LUA_REGISTRYINDEX);
+                break;
+            case LUA_TTABLE:
+                vars[i].luatype = LV_TABLE;
+                lua_pushvalue(L,p);
+                vars[i].ref=luaL_ref(L,LUA_REGISTRYINDEX);
+                break;
+            case LUA_TNIL:
+            default:
+                vars[i].luatype = LV_NIL;
+                break;
+            }
         }
     }
 
@@ -153,6 +202,10 @@ namespace slua {
             vars = new lua_var[n];
             numOfVar = n;
         }
+    }
+
+    size_t LuaVar::count() const {
+        return numOfVar;
     }
 
     void LuaVar::set(lua_Integer v) {

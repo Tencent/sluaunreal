@@ -6,6 +6,8 @@ print("test require",B.foo())
 local Test=import('SluaTestCase');
 local t=Test();
 
+print(t:GetWidget())
+
 -- test
 for i=1,10 do
     local arr=t:GetArray();

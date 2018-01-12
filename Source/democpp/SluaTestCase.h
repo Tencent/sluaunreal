@@ -31,4 +31,7 @@ class USluaTestCase : public UObject {
 public:
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     TArray<int> GetArray();
+
+    UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
+    UUserWidget* GetWidget();    
 };

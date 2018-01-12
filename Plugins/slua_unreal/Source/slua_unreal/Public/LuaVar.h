@@ -69,6 +69,8 @@ namespace slua {
         bool isFunction() const;
         Type type() const;
 
+        size_t count() const;
+
         template<class RET,class ...ARGS>
         RET call(ARGS ...args) {
             if(!isFunction()) {
@@ -100,7 +102,7 @@ namespace slua {
         LuaVar(lua_State* L,size_t n);
 
         void init(lua_State* L,int p,Type t);
-
+        void initTuple(size_t n);
 
         void free();
         void alloc(int n);

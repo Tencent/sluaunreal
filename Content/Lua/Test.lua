@@ -61,6 +61,8 @@ function update(dt)
     edit.OnTextChanged:Remove(evt);
     -- test free event twice
     edit.OnTextChanged:Remove(evt);
+
+    return 1024,2,"s",{},function() end
 end
 
 

@@ -61,6 +61,9 @@ void ASluaActor::Tick(float DeltaTime)
 
 	auto slua = FindComponentByClass<USluaComponent>();
 	auto state = slua->State();
-	state->call("update",DeltaTime);
+	slua::LuaVar v = state->call("update",DeltaTime);
+	ensure(v.isTuple());
+	ensure(v.count()==5);
+	ensure(v.getAt(0).asInt()==1024);
 }
 

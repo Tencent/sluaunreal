@@ -95,26 +95,16 @@ namespace slua {
         size_t count() const;
         LuaVar getAt(size_t index) const;
 
-        template<class RET,class ...ARGS>
-        RET call(ARGS ...args) {
+        template<class ...ARGS>
+        LuaVar call(ARGS ...args) {
             if(!isFunction()) {
                 Log::Error("LuaVar is not a function, can't be called");
-                return RET();
+                return LuaVar();
             }
 
             int n = pushArg(args...);
             int ret = docall(n);
-            return getReturn<RET>(ret);
-        }
-
-        template<class ...ARGS>
-        void call(ARGS ...args) {
-            if(!isFunction()) {
-                Log::Error("LuaVar is not a function, can't be called");
-                return;
-            }        
-            int n = pushArg(args...);
-            int ret = docall(n);
+            return LuaVar::wrapReturn(L,ret);
         }
 
         void callByUFunction(UFunction* ufunc,uint8* parms);
@@ -155,10 +145,16 @@ namespace slua {
             return 0;
         }
 
-        template<class RET>
-        RET getReturn(int n) {
-
+        static LuaVar wrapReturn(lua_State* L,int n) {
+            ensure(n>=0);
+            if(n==0)
+                return LuaVar();
+            else if (n==1)
+                return LuaVar(L,-1);
+            else
+                return LuaVar(L,(size_t) n);
         }
+
         int docall(int argn);
         int pushArgByParms(UProperty* prop,uint8* parms);
 

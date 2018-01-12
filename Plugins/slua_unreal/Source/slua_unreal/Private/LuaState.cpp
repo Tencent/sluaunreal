@@ -206,14 +206,7 @@ namespace slua {
         
         if(!lua_pcall(L, 0, LUA_MULTRET, errfunc)) {
             int n = lua_gettop(L) - errfunc;
-            ensure(n>=0);
-
-            if(n==0)
-                return LuaVar();
-            else if (n==1)
-                return LuaVar(L,-1);
-            else
-                return LuaVar(L,(size_t) n);
+            return LuaVar::wrapReturn(L,n);
         }
         return LuaVar();
     }

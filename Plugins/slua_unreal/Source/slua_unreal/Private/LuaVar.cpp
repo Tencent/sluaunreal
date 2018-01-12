@@ -351,8 +351,8 @@ namespace slua {
         // top is err handler
         if(lua_pcallk(L,argn,LUA_MULTRET,top,NULL,NULL))
             lua_pop(L,1);
-        lua_pop(L,1); // pop err handler
-        return lua_gettop(L)-top;
+        lua_remove(L,top); // remove err handler;
+        return lua_gettop(L)-top+1;
     }
 
     int LuaVar::pushArgByParms(UProperty* prop,uint8* parms) {

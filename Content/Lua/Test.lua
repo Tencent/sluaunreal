@@ -64,4 +64,4 @@ function update(dt)
 end
 
 
-return 1,2,"s",{},function() end
+return 1024,2,"s",{},function() end

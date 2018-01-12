@@ -208,6 +208,56 @@ namespace slua {
         return numOfVar;
     }
 
+    int LuaVar::asInt() const {
+        ensure(numOfVar==1);
+        switch(vars[0].luatype) {
+        case LV_INT:
+            return vars[0].i;
+        case LV_NUMBER:
+            return vars[0].d;
+        default:
+            throw LuaVarBadCastException();
+        }
+    }
+
+    float LuaVar::asFloat() const {
+        ensure(numOfVar==1);
+        switch(vars[0].luatype) {
+        case LV_INT:
+            return vars[0].i;
+        case LV_NUMBER:
+            return vars[0].d;
+        default:
+            throw LuaVarBadCastException();
+        }
+    }
+
+    double LuaVar::asDouble() const {
+        ensure(numOfVar==1);
+        switch(vars[0].luatype) {
+        case LV_INT:
+            return vars[0].i;
+        case LV_NUMBER:
+            return vars[0].d;
+        default:
+            throw LuaVarBadCastException();
+        }
+    }
+
+    const char* LuaVar::asString() const {
+        ensure(numOfVar==1 && vars[0].luatype==LV_STRING);
+        return vars[0].s;
+    }
+
+    LuaVar LuaVar::getAt(size_t index) const {
+        ensure(numOfVar>index);
+        LuaVar r(1);
+        r.L = this->L;
+        varClone(r.vars[0],vars[index]);
+        return r;
+    }
+
+
     void LuaVar::set(lua_Integer v) {
         free();
         alloc(1);
@@ -229,21 +279,58 @@ namespace slua {
         vars[0].luatype = LV_STRING;
     }
 
+    void LuaVar::pushVar(lua_State* l,const lua_var& ov) const {
+        switch(ov.luatype) {
+        case LV_INT:
+            lua_pushinteger(l,ov.i);
+            break;
+        case LV_NUMBER:
+            lua_pushnumber(l,ov.d);
+            break;
+        case LV_STRING:
+            lua_pushstring(l,ov.s);
+            break;
+        case LV_FUNCTION:
+        case LV_TABLE:
+            lua_geti(l,LUA_REGISTRYINDEX,ov.ref);
+            break;
+        default:
+            lua_pushnil(l);
+            break;
+        }
+    }
+
     int LuaVar::push(lua_State* l) const {
         if(l==nullptr) l=L;
-        lua_geti(l,LUA_REGISTRYINDEX,vars[0].ref);
-        return 1;
+        if(vars==nullptr || numOfVar==0) {
+            lua_pushnil(l);
+            return 1;
+        }
+        
+        if(numOfVar==1) {
+            const lua_var& ov = vars[0];
+            pushVar(l,ov);
+            return 1;
+        }
+        else for(int n=0;n<numOfVar;n++) {
+            const lua_var& ov = vars[n];
+            pushVar(l,ov);
+            return numOfVar;
+        }
+        return 0;
     }
 
     bool LuaVar::isNil() const {
-        return vars==nullptr && numOfVar==0;
+        return vars==nullptr || numOfVar==0;
     }
 
     bool LuaVar::isFunction() const {
         return numOfVar==1 && vars[0].luatype==LV_FUNCTION;
     }
 
-
+    bool LuaVar::isTuple() const {
+        return numOfVar>1;
+    }
 
     LuaVar::Type LuaVar::type() const {
         if(numOfVar==0)
@@ -287,5 +374,45 @@ namespace slua {
             n++;
         }
         docall(n);
+    }
+
+    void LuaVar::varClone(lua_var& tv,const lua_var& ov) const {
+        switch(ov.luatype) {
+        case LV_INT:
+            tv.i = ov.i;
+            break;
+        case LV_NUMBER:
+            tv.d = ov.d;
+            break;
+        case LV_STRING:
+            tv.s = strdup(ov.s);
+            break;
+        case LV_FUNCTION:
+        case LV_TABLE:
+            lua_geti(L,LUA_REGISTRYINDEX,ov.ref);
+            tv.ref=luaL_ref(L,LUA_REGISTRYINDEX);
+            break;
+        }
+        tv.luatype = ov.luatype;
+    }
+
+    void LuaVar::clone(const LuaVar& other) {
+        L = other.L;
+        numOfVar = other.numOfVar;
+        if(numOfVar>0 && other.vars) {
+            vars = new lua_var[numOfVar];
+            for(int n=0;n<numOfVar;n++) {
+                varClone( vars[n], other.vars[n] );
+            }
+        }
+    }
+
+    void LuaVar::move(LuaVar&& other) {
+        L = other.L;
+        numOfVar = other.numOfVar;
+        vars = other.vars;
+
+        other.numOfVar = 0;
+        other.vars = nullptr;
     }
 }

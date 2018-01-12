@@ -25,10 +25,27 @@
 #include "LuaObject.h"
 #include "lua/lua.hpp"
 #include "Log.h"
+#include <string>
+#include <exception>
 
 struct lua_State;
 
 namespace slua {
+
+    class SLUA_UNREAL_API LuaVarExcetpion : public std::exception {
+    public:
+        LuaVarExcetpion(const std::string& err):errormsg(err) {}
+        virtual const char* what() const _NOEXCEPT {
+            return errormsg.c_str();
+        }
+    private:
+        std::string errormsg;
+    };
+
+    class SLUA_UNREAL_API LuaVarBadCastException : public LuaVarExcetpion {
+    public:
+        LuaVarBadCastException():LuaVarExcetpion("bad cast") {}
+    };
 
     class SLUA_UNREAL_API LuaVar {
     public:
@@ -67,9 +84,16 @@ namespace slua {
 
         bool isNil() const;
         bool isFunction() const;
+        bool isTuple() const;
         Type type() const;
 
+        int asInt() const;
+        float asFloat() const;
+        double asDouble() const;
+        const char* asString() const;
+
         size_t count() const;
+        LuaVar getAt(size_t index) const;
 
         template<class RET,class ...ARGS>
         RET call(ARGS ...args) {
@@ -138,40 +162,9 @@ namespace slua {
         int docall(int argn);
         int pushArgByParms(UProperty* prop,uint8* parms);
 
-        void clone(const LuaVar& other) {
-            L = other.L;
-            numOfVar = other.numOfVar;
-            if(numOfVar>0 && other.vars) {
-                vars = new lua_var[numOfVar];
-                for(int n=0;n<numOfVar;n++) {
-                    switch(other.vars[n].luatype) {
-                    case LV_INT:
-                        vars[n].i = other.vars[n].i;
-                        break;
-                    case LV_NUMBER:
-                        vars[n].d = other.vars[n].d;
-                        break;
-                    case LV_STRING:
-                        vars[n].s = strdup(other.vars[n].s);
-                        break;
-                    case LV_FUNCTION:
-                    case LV_TABLE:
-                        lua_geti(L,LUA_REGISTRYINDEX,other.vars[n].ref);
-                        vars[n].ref=luaL_ref(L,LUA_REGISTRYINDEX);
-                        break;
-                    }
-                    vars[n].luatype = other.vars[n].luatype;
-                }
-            }
-        }
-
-        void move(LuaVar&& other) {
-            L = other.L;
-            numOfVar = other.numOfVar;
-            vars = other.vars;
-
-            other.numOfVar = 0;
-            other.vars = nullptr;
-        }
+        void clone(const LuaVar& other);
+        void move(LuaVar&& other);
+        void varClone(lua_var& tv,const lua_var& ov) const;
+        void pushVar(lua_State* l,const lua_var& ov) const;
     };
 }

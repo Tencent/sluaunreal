@@ -116,7 +116,7 @@ namespace slua {
             ensure(lua_type(L,p)==LUA_TFUNCTION);
             alloc(1);
             lua_pushvalue(l,p);
-            vars[0].ref=luaL_ref(l,LUA_REGISTRYINDEX);
+            vars[0].ref = new RefRef(l);
             vars[0].luatype=LV_FUNCTION;
             break;
         case LV_TABLE:
@@ -124,7 +124,7 @@ namespace slua {
             ensure(lua_type(L,p)==LUA_TTABLE);
             alloc(1);
             lua_pushvalue(l,p);
-            vars[0].ref=luaL_ref(l,LUA_REGISTRYINDEX);
+            vars[0].ref = new RefRef(l);
             vars[0].luatype=LV_TABLE;
             break;
         case LV_TUPLE:
@@ -161,17 +161,17 @@ namespace slua {
                 break;
             case LUA_TSTRING:
                 vars[i].luatype = LV_STRING;
-                vars[i].s = strdup(lua_tostring(L,p));
+                vars[i].s = new RefStr(lua_tostring(L,p));
                 break;
             case LUA_TFUNCTION:
                 vars[i].luatype = LV_FUNCTION;
                 lua_pushvalue(L,p);
-                vars[i].ref=luaL_ref(L,LUA_REGISTRYINDEX);
+                vars[i].ref = new RefRef(L);
                 break;
             case LUA_TTABLE:
                 vars[i].luatype = LV_TABLE;
                 lua_pushvalue(L,p);
-                vars[i].ref=luaL_ref(L,LUA_REGISTRYINDEX);
+                vars[i].ref = new RefRef(L);
                 break;
             case LUA_TNIL:
             default:
@@ -187,10 +187,11 @@ namespace slua {
 
     void LuaVar::free() {
         for(int n=0;n<numOfVar;n++) {
-            if(( vars[n].luatype==LV_FUNCTION || vars[n].luatype==LV_TABLE) && vars[n].ref!=LUA_NOREF)
-                luaL_unref(L,LUA_REGISTRYINDEX,vars[0].ref);
+            if( (vars[n].luatype==LV_FUNCTION || vars[n].luatype==LV_TABLE) 
+                && vars[n].ref->isValid() )
+                vars[n].ref->release();
             else if(vars[n].luatype==LV_STRING)
-                ::free(vars[n].s);
+                vars[n].s->release();
         }
         numOfVar = 0;
         delete[] vars;
@@ -246,7 +247,7 @@ namespace slua {
 
     const char* LuaVar::asString() const {
         ensure(numOfVar==1 && vars[0].luatype==LV_STRING);
-        return vars[0].s;
+        return vars[0].s->str;
     }
 
     LuaVar LuaVar::getAt(size_t index) const {
@@ -275,7 +276,7 @@ namespace slua {
     void LuaVar::set(const char* v) {
         free();
         alloc(1);
-        vars[0].s = strdup(v);
+        vars[0].s = new RefStr(v);
         vars[0].luatype = LV_STRING;
     }
 
@@ -288,11 +289,11 @@ namespace slua {
             lua_pushnumber(l,ov.d);
             break;
         case LV_STRING:
-            lua_pushstring(l,ov.s);
+            lua_pushstring(l,ov.s->str);
             break;
         case LV_FUNCTION:
         case LV_TABLE:
-            lua_geti(l,LUA_REGISTRYINDEX,ov.ref);
+            ov.ref->push(l);
             break;
         default:
             lua_pushnil(l);
@@ -346,7 +347,7 @@ namespace slua {
         top=top-argn+1;
         LuaState::pushErrorHandler(L);
         lua_insert(L,top);
-        lua_geti(L,LUA_REGISTRYINDEX,vars[0].ref);
+        vars[0].ref->push(L);
         lua_insert(L,top+1);
         // top is err handler
         if(lua_pcallk(L,argn,LUA_MULTRET,top,NULL,NULL))
@@ -385,12 +386,13 @@ namespace slua {
             tv.d = ov.d;
             break;
         case LV_STRING:
-            tv.s = strdup(ov.s);
+            tv.s = ov.s;
+            tv.s->addRef();
             break;
         case LV_FUNCTION:
         case LV_TABLE:
-            lua_geti(L,LUA_REGISTRYINDEX,ov.ref);
-            tv.ref=luaL_ref(L,LUA_REGISTRYINDEX);
+            tv.ref = ov.ref;
+            tv.ref->addRef();
             break;
         }
         tv.luatype = ov.luatype;

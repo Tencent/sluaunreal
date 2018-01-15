@@ -121,13 +121,57 @@ namespace slua {
         void free();
         void alloc(int n);
 
+        struct Ref {
+            Ref():ref(1) {}
+            virtual ~Ref() {}
+            void addRef() {
+                ref++;
+            }
+            void release() {
+                ensure(ref>0);
+                if(--ref==0) {
+                    delete this;
+                }
+            }
+            int ref;
+        };
+
+        struct RefStr : public Ref {
+            RefStr(const char* s)
+                :Ref()
+                ,str(strdup(s))
+            {}
+            virtual ~RefStr() {
+                ::free(str);
+            }
+            char* str;
+        };
+
+        struct RefRef: public Ref {
+            RefRef(lua_State* L):Ref() {
+                this->L = L;
+                ref=luaL_ref(L,LUA_REGISTRYINDEX);
+            }
+            virtual ~RefRef() {
+                luaL_unref(L,LUA_REGISTRYINDEX,ref);
+            }
+            bool isValid() {
+                return ref != LUA_NOREF;
+            }
+            void push(lua_State* l) {
+                lua_geti(l,LUA_REGISTRYINDEX,ref);
+            }
+            int ref;
+            lua_State* L;
+        };
+
         lua_State* L;
         typedef struct {
             union {
-                int ref;
+                RefRef* ref;
                 lua_Integer i;
                 lua_Number d;
-                char* s;
+                RefStr* s;
             };
             Type luatype;
         } lua_var;

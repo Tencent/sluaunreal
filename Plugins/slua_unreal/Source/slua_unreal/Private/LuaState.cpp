@@ -204,16 +204,9 @@ namespace slua {
             return LuaVar();
         }
         
-        if(lua_pcall(L, 0, LUA_MULTRET, errfunc)) {
+        if(!lua_pcall(L, 0, LUA_MULTRET, errfunc)) {
             int n = lua_gettop(L) - errfunc;
-            ensure(n>=0);
-
-            if(n==0)
-                return LuaVar();
-            else if (n==1)
-                return LuaVar(L,-1);
-            else
-                return LuaVar(L,(size_t) n);
+            return LuaVar::wrapReturn(L,n);
         }
         return LuaVar();
     }
@@ -228,7 +221,7 @@ namespace slua {
             char chunk[256];
             snprintf(chunk,256,"@%s",fn);
 
-            const LuaVar& r = doBuffer( buf,len,chunk );
+            LuaVar r = doBuffer( buf,len,chunk );
             delete[] buf;
             return r;
         }

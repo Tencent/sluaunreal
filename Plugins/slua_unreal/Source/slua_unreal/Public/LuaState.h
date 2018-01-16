@@ -48,17 +48,10 @@ namespace slua {
         LuaVar doBuffer(const uint8* buf,uint32 len, const char* chunk);
         LuaVar doFile(const char* fn);
 
-        template<typename RET,typename ...ARGS>
-        RET call(const char* key,ARGS ...args) {
-            LuaVar f = get(key);
-            RET r = f.call<RET>(args...);
-            return LuaObject::push(L,r);
-        }
-
         template<typename ...ARGS>
-        void call(const char* key,ARGS ...args) {
-            LuaVar f=get(key);
-            f.call<void>(args...);
+        LuaVar call(const char* key,ARGS ...args) {
+            LuaVar f = get(key);
+            return f.call(args...);
         }
 
         LuaVar get(const char* key) {

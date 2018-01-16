@@ -47,7 +47,11 @@ void ASluaActor::BeginPlay()
 
 		return nullptr;
 	});
-	state->doFile("Test");
+	slua::LuaVar v = state->doFile("Test");
+	ensure(v.isTuple());
+	ensure(v.count()==5);
+	ensure(v.getAt(0).asInt()==1024);
+	slua::Log::Log("first return value is %d",v.getAt(0).asInt());
 }
 
 // Called every frame
@@ -57,6 +61,12 @@ void ASluaActor::Tick(float DeltaTime)
 
 	auto slua = FindComponentByClass<USluaComponent>();
 	auto state = slua->State();
-	state->call("update",DeltaTime);
+	slua::LuaVar v = state->call("update",DeltaTime);
+	// test copy constructor
+	slua::LuaVar v2 = v;
+	slua::LuaVar v3 = v2;
+	ensure(v.isTuple());
+	ensure(v.count()==5);
+	ensure(v.getAt(0).asInt()==1024);
 }
 

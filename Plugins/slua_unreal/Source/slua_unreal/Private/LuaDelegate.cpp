@@ -42,7 +42,7 @@ void ULuaDelegate::ProcessEvent( UFunction* f, void* Parms ) {
 
 	const bool bHasReturnParam = ufunction->ReturnValueOffset != MAX_uint16;
     if(ufunction->ParmsSize==0 && !bHasReturnParam)
-        luafunction->call<void>();
+        luafunction->call();
     else {
         luafunction->callByUFunction(ufunction,reinterpret_cast<uint8*>(Parms));
     }

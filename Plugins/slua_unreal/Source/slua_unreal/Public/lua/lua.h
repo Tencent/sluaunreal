@@ -14,7 +14,6 @@
 
 #include "luaconf.h"
 
-#define _LUAC
 #define NS_SLUA slua
 
 #define LUA_VERSION_MAJOR	"5"

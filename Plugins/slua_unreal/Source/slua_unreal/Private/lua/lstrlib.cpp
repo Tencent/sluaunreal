@@ -184,6 +184,7 @@ static int writer (lua_State *L, const void *b, size_t size, void *B) {
 
 
 static int str_dump (lua_State *L) {
+#ifdef _LUAC
   luaL_Buffer b;
   int strip = lua_toboolean(L, 2);
   luaL_checktype(L, 1, LUA_TFUNCTION);
@@ -192,6 +193,7 @@ static int str_dump (lua_State *L) {
   if (lua_dump(L, writer, &b, strip) != 0)
     return luaL_error(L, "unable to dump given function");
   luaL_pushresult(&b);
+#endif
   return 1;
 }
 
@@ -1535,7 +1537,6 @@ static int str_unpack (lua_State *L) {
 static const luaL_Reg strlib[] = {
   {"byte", str_byte},
   {"char", str_char},
-  {"dump", str_dump},
   {"find", str_find},
   {"format", str_format},
   {"gmatch", gmatch},
@@ -1550,6 +1551,9 @@ static const luaL_Reg strlib[] = {
   {"pack", str_pack},
   {"packsize", str_packsize},
   {"unpack", str_unpack},
+#ifdef _LUAC
+  { "dump", str_dump },
+#endif
   {NULL, NULL}
 };
 

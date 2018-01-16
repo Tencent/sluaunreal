@@ -200,6 +200,7 @@ static void DumpHeader (DumpState *D) {
 */
 int luaU_dump(lua_State *L, const Proto *f, lua_Writer w, void *data,
               int strip) {
+#ifdef _LUAC
   DumpState D;
   D.L = L;
   D.writer = w;
@@ -210,6 +211,9 @@ int luaU_dump(lua_State *L, const Proto *f, lua_Writer w, void *data,
   DumpByte(f->sizeupvalues, &D);
   DumpFunction(f, NULL, &D);
   return D.status;
+#else
+  return 0;
+#endif
 }
 
 } // end NS_SLUA

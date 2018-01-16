@@ -28,8 +28,6 @@
 #include <string>
 #include <exception>
 
-struct lua_State;
-
 namespace slua {
 
     class SLUA_UNREAL_API LuaVarExcetpion : public std::exception {

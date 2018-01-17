@@ -1010,8 +1010,8 @@ LUA_API int lua_load (lua_State *L, lua_Reader reader, void *data,
 }
 
 
-LUA_API int lua_dump (lua_State *L, lua_Writer writer, void *data, int strip) {
 #ifdef _LUAC
+LUA_API int lua_dump (lua_State *L, lua_Writer writer, void *data, int strip) {
   int status;
   TValue *o;
   lua_lock(L);
@@ -1023,10 +1023,8 @@ LUA_API int lua_dump (lua_State *L, lua_Writer writer, void *data, int strip) {
     status = 1;
   lua_unlock(L);
   return status;
-#else
-  return 1;
-#endif
 }
+#endif // end _LUAC
 
 
 LUA_API int lua_status (lua_State *L) {

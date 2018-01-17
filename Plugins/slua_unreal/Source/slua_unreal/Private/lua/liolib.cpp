@@ -20,6 +20,46 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+
+/*
+** {======================================================
+** l_fseek: configuration for longer offsets
+** =======================================================
+*/
+
+#if !defined(l_fseek)		/* { */
+
+#if defined(LUA_USE_POSIX)	/* { */
+
+#include <sys/types.h>
+
+#define l_fseek(f,o,w)		fseeko(f,o,w)
+#define l_ftell(f)		ftello(f)
+#define l_seeknum		off_t
+
+#elif defined(LUA_USE_WINDOWS) && !defined(_CRTIMP_TYPEINFO) \
+   && defined(_MSC_VER) && (_MSC_VER >= 1400)	/* }{ */
+
+/* Windows (but not DDK) and Visual C++ 2005 or higher */
+#define l_fseek(f,o,w)		_fseeki64(f,o,w)
+#define l_ftell(f)		_ftelli64(f)
+#define l_seeknum		__int64
+
+#else				/* }{ */
+
+/* ISO C definitions */
+#define l_fseek(f,o,w)		fseek(f,o,w)
+#define l_ftell(f)		ftell(f)
+#define l_seeknum		long
+
+#endif				/* } */
+
+#endif				/* } */
+
+/* }====================================================== */
+
+
+namespace NS_SLUA {
 /*
 ** Change this macro to accept other modes for 'fopen' besides
 ** the standard ones.
@@ -30,8 +70,6 @@
 #if !defined(L_MODEEXT)
 #define L_MODEEXT	"b"
 #endif
-
-namespace NS_SLUA {
 
 /* Check whether 'mode' matches '[rwa]%+?[L_MODEEXT]*' */
 static int l_checkmode (const char *mode) {
@@ -90,44 +128,6 @@ static int l_checkmode (const char *mode) {
 #endif
 
 #endif				/* } */
-
-
-/*
-** {======================================================
-** l_fseek: configuration for longer offsets
-** =======================================================
-*/
-
-#if !defined(l_fseek)		/* { */
-
-#if defined(LUA_USE_POSIX)	/* { */
-
-#include <sys/types.h>
-
-#define l_fseek(f,o,w)		fseeko(f,o,w)
-#define l_ftell(f)		ftello(f)
-#define l_seeknum		off_t
-
-#elif defined(LUA_USE_WINDOWS) && !defined(_CRTIMP_TYPEINFO) \
-   && defined(_MSC_VER) && (_MSC_VER >= 1400)	/* }{ */
-
-/* Windows (but not DDK) and Visual C++ 2005 or higher */
-#define l_fseek(f,o,w)		_fseeki64(f,o,w)
-#define l_ftell(f)		_ftelli64(f)
-#define l_seeknum		__int64
-
-#else				/* }{ */
-
-/* ISO C definitions */
-#define l_fseek(f,o,w)		fseek(f,o,w)
-#define l_ftell(f)		ftell(f)
-#define l_seeknum		long
-
-#endif				/* } */
-
-#endif				/* } */
-
-/* }====================================================== */
 
 #define IO_PREFIX	"_IO_"
 #define IOPREF_LEN	(sizeof(IO_PREFIX)/sizeof(char) - 1)

@@ -22,6 +22,11 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+
+#if !defined(lua_number2strx)
+#include <math.h>
+#endif
+
 /*
 ** maximum number of captures that a pattern can do during
 ** pattern-matching. This limit is arbitrary, but must fit in
@@ -183,8 +188,8 @@ static int writer (lua_State *L, const void *b, size_t size, void *B) {
 }
 
 
-static int str_dump (lua_State *L) {
 #ifdef _LUAC
+static int str_dump (lua_State *L) {
   luaL_Buffer b;
   int strip = lua_toboolean(L, 2);
   luaL_checktype(L, 1, LUA_TFUNCTION);
@@ -193,9 +198,8 @@ static int str_dump (lua_State *L) {
   if (lua_dump(L, writer, &b, strip) != 0)
     return luaL_error(L, "unable to dump given function");
   luaL_pushresult(&b);
-#endif
-  return 1;
 }
+#endif // end _LUAC
 
 
 /*
@@ -809,8 +813,6 @@ static int str_gsub (lua_State *L) {
 /*
 ** Hexadecimal floating-point formatter
 */
-
-#include <math.h>
 
 #define SIZELENMOD	(sizeof(LUA_NUMBER_FRMLEN)/sizeof(char))
 
@@ -1553,7 +1555,7 @@ static const luaL_Reg strlib[] = {
   {"unpack", str_unpack},
 #ifdef _LUAC
   { "dump", str_dump },
-#endif
+#endif // end _LUAC
   {NULL, NULL}
 };
 

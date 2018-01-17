@@ -18,6 +18,8 @@
 
 namespace NS_SLUA {
 
+#ifdef _LUAC
+
 typedef struct {
   lua_State *L;
   lua_Writer writer;
@@ -194,13 +196,11 @@ static void DumpHeader (DumpState *D) {
   DumpNumber(LUAC_NUM, D);
 }
 
-
 /*
 ** dump Lua function as precompiled chunk
 */
 int luaU_dump(lua_State *L, const Proto *f, lua_Writer w, void *data,
               int strip) {
-#ifdef _LUAC
   DumpState D;
   D.L = L;
   D.writer = w;
@@ -211,9 +211,8 @@ int luaU_dump(lua_State *L, const Proto *f, lua_Writer w, void *data,
   DumpByte(f->sizeupvalues, &D);
   DumpFunction(f, NULL, &D);
   return D.status;
-#else
-  return 0;
-#endif
 }
+
+#endif // end _LUAC
 
 } // end NS_SLUA

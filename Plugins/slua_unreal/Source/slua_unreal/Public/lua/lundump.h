@@ -26,9 +26,10 @@ namespace NS_SLUA {
 /* load one chunk; from lundump.c */
 LUAI_FUNC LClosure* luaU_undump (lua_State* L, ZIO* Z, const char* name);
 
+#ifdef _LUAC
 /* dump one chunk; from ldump.c */
-LUAI_FUNC int luaU_dump (lua_State* L, const Proto* f, lua_Writer w,
-                         void* data, int strip);
+LUAI_FUNC int luaU_dump (lua_State* L, const Proto* f, lua_Writer w, void* data, int strip);
+#endif // end _LUAC
 
 } // end NS_SLUA
 

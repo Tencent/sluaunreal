@@ -18,7 +18,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-namespace NS_SLUA {
+
+#if !defined(l_inspectstat)	/* { */
+#if defined(LUA_USE_POSIX)
+#include <sys/wait.h>
+/*
+** use appropriate macros to interpret 'pclose' return status
+*/
+#define l_inspectstat(stat,what)  \
+   if (WIFEXITED(stat)) { stat = WEXITSTATUS(stat); } \
+   else if (WIFSIGNALED(stat)) { stat = WTERMSIG(stat); what = "signal"; }
+#else
+#define l_inspectstat(stat,what)  /* no op */
+#endif
+#endif				/* } */
 
 /*
 ** This file uses only the official API of Lua.
@@ -34,6 +47,8 @@ namespace NS_SLUA {
 
 #define LEVELS1	10	/* size of the first part of the stack */
 #define LEVELS2	11	/* size of the second part of the stack */
+
+namespace NS_SLUA {
 
 /*
 ** search for 'objidx' in table at index -1.
@@ -243,27 +258,6 @@ LUALIB_API int luaL_fileresult (lua_State *L, int stat, const char *fname) {
     return 3;
   }
 }
-
-#if !defined(l_inspectstat)	/* { */
-
-#if defined(LUA_USE_POSIX)
-
-#include <sys/wait.h>
-
-/*
-** use appropriate macros to interpret 'pclose' return status
-*/
-#define l_inspectstat(stat,what)  \
-   if (WIFEXITED(stat)) { stat = WEXITSTATUS(stat); } \
-   else if (WIFSIGNALED(stat)) { stat = WTERMSIG(stat); what = "signal"; }
-
-#else
-
-#define l_inspectstat(stat,what)  /* no op */
-
-#endif
-
-#endif				/* } */
 
 LUALIB_API int luaL_execresult (lua_State *L, int stat) {
   const char *what = "exit";  /* type of termination */

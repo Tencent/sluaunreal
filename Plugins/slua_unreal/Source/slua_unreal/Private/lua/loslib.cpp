@@ -20,7 +20,42 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-namespace NS_SLUA {
+
+/*
+** {==================================================================
+** Configuration for 'tmpnam':
+** By default, Lua uses tmpnam except when POSIX is available, where
+** it uses mkstemp.
+** ===================================================================
+*/
+#if !defined(lua_tmpnam)	/* { */
+
+#if defined(LUA_USE_POSIX)	/* { */
+
+#include <unistd.h>
+
+#define LUA_TMPNAMBUFSIZE	32
+
+#if !defined(LUA_TMPNAMTEMPLATE)
+#define LUA_TMPNAMTEMPLATE	"/tmp/lua_XXXXXX"
+#endif
+
+#define lua_tmpnam(b,e) { \
+        strcpy(b, LUA_TMPNAMTEMPLATE); \
+        e = mkstemp(b); \
+        if (e != -1) close(e); \
+        e = (e == -1); }
+
+#else				/* }{ */
+
+/* ISO C definitions */
+#define LUA_TMPNAMBUFSIZE	L_tmpnam
+#define lua_tmpnam(b,e)		{ e = (tmpnam(b) == NULL); }
+
+#endif				/* } */
+
+#endif				/* } */
+/* }================================================================== */
 
 /*
 ** {==================================================================
@@ -51,6 +86,9 @@ namespace NS_SLUA {
 
 #endif					/* } */
 /* }================================================================== */
+
+
+namespace NS_SLUA {
 
 
 /*
@@ -96,43 +134,6 @@ static time_t l_checktime (lua_State *L, int arg) {
 
 #endif				/* } */
 
-/* }================================================================== */
-
-
-/*
-** {==================================================================
-** Configuration for 'tmpnam':
-** By default, Lua uses tmpnam except when POSIX is available, where
-** it uses mkstemp.
-** ===================================================================
-*/
-#if !defined(lua_tmpnam)	/* { */
-
-#if defined(LUA_USE_POSIX)	/* { */
-
-#include <unistd.h>
-
-#define LUA_TMPNAMBUFSIZE	32
-
-#if !defined(LUA_TMPNAMTEMPLATE)
-#define LUA_TMPNAMTEMPLATE	"/tmp/lua_XXXXXX"
-#endif
-
-#define lua_tmpnam(b,e) { \
-        strcpy(b, LUA_TMPNAMTEMPLATE); \
-        e = mkstemp(b); \
-        if (e != -1) close(e); \
-        e = (e == -1); }
-
-#else				/* }{ */
-
-/* ISO C definitions */
-#define LUA_TMPNAMBUFSIZE	L_tmpnam
-#define lua_tmpnam(b,e)		{ e = (tmpnam(b) == NULL); }
-
-#endif				/* } */
-
-#endif				/* } */
 /* }================================================================== */
 
 static int os_execute (lua_State *L) {

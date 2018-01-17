@@ -33,7 +33,11 @@ namespace slua {
     class SLUA_UNREAL_API LuaVarExcetpion : public std::exception {
     public:
         LuaVarExcetpion(const std::string& err):errormsg(err) {}
-        virtual const char* what() const _NOEXCEPT {
+#if PLATFORM_WINDOWS
+		virtual const char* what() const _NOEXCEPT {
+#else
+        virtual const char* what() const _GLIBCXX_NOEXCEPT {
+#endif
             return errormsg.c_str();
         }
     private:

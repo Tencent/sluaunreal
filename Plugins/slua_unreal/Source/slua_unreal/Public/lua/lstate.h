@@ -27,10 +27,6 @@
 
 */
 
-namespace NS_SLUA {
-
-struct lua_longjmp;  /* defined in ldo.c */
-
 
 /*
 ** Atomic type (relative to signals) to better ensure that 'lua_sethook'
@@ -41,6 +37,9 @@ struct lua_longjmp;  /* defined in ldo.c */
 #define l_signalT	sig_atomic_t
 #endif
 
+namespace NS_SLUA {
+
+struct lua_longjmp; /* defined in ldo.c */
 
 /* extra stack space to handle TM calls and some other extras */
 #define EXTRA_STACK   5
@@ -182,11 +181,12 @@ struct lua_State {
   int onlyluac;
 };
 
+// #define G(L)	(L->l_G)
+inline global_State* G(lua_State* L) {
+  return L->l_G;
+}
 
-#define G(L)	(L->l_G)
-
-
-/*
+    /*
 ** Union of all collectable objects (only for conversions)
 */
 union GCUnion {

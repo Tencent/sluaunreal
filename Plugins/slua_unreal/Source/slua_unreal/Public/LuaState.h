@@ -23,7 +23,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "lua/lua.hpp"
 #include "LuaVar.h"
 #include <string>
 #include <memory>

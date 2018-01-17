@@ -27,7 +27,6 @@
 #include "UObject/Stack.h"
 #include "Blueprint/WidgetTree.h"
 #include "LuaState.h"
-#include "lobject.h"
 
 namespace slua {
 

@@ -31,15 +31,11 @@
 #include "LuaArray.h"
 #include "Log.h"
 #include "LuaCppBinding.h"
+#include "LuaObject.h"
 #include <map>
 
 namespace { 
-    typedef slua::lua_State lua_State;
-    typedef slua::LuaObject LuaObject;
-    typedef slua::LuaStruct LuaStruct;
-    typedef slua::LuaArray LuaArray;
-    typedef slua::LuaWidgetTree LuaWidgetTree;
-    typedef slua::LuaDelegate LuaDelegate;
+	using namespace slua;
 
     typedef int (*PushPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms);
     typedef int (*CheckPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms,int i);

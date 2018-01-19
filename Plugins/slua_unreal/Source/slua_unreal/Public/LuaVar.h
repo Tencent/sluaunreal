@@ -28,16 +28,20 @@
 #include <string>
 #include <exception>
 
+#if defined(_NOEXCEPT)
+#define __NOEXCEPT _NOEXCEPT
+#elif defined(_GLIBCXX_NOEXCEPT)
+#define __NOEXCEPT _GLIBCXX_NOEXCEPT
+#else
+#define __NOEXCEPT noexcept
+#endif
+
 namespace slua {
 
     class SLUA_UNREAL_API LuaVarExcetpion : public std::exception {
     public:
         LuaVarExcetpion(const std::string& err):errormsg(err) {}
-#if PLATFORM_WINDOWS
-		virtual const char* what() const _NOEXCEPT {
-#else
-        virtual const char* what() const _GLIBCXX_NOEXCEPT {
-#endif
+        virtual const char* what() const __NOEXCEPT {
             return errormsg.c_str();
         }
     private:

@@ -21,6 +21,13 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+#if defined(LUA_USE_DLOPEN)
+#include <dlfcn.h>
+#elif defined(LUA_DL_DLL)
+#include <windows.h>
+#endif
+
+
 namespace NS_SLUA {
 
 /*
@@ -101,8 +108,6 @@ static lua_CFunction lsys_sym (lua_State *L, void *lib, const char *sym);
 ** =========================================================================
 */
 
-#include <dlfcn.h>
-
 /*
 ** Macro to convert pointer-to-void* to pointer-to-function. This cast
 ** is undefined according to ISO C, but POSIX assumes that it works.
@@ -143,8 +148,6 @@ static lua_CFunction lsys_sym (lua_State *L, void *lib, const char *sym) {
 ** This is an implementation of loadlib for Windows using native functions.
 ** =======================================================================
 */
-
-#include <windows.h>
 
 /*
 ** optional flags for LoadLibraryEx

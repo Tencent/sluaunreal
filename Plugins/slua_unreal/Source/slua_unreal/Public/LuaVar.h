@@ -28,14 +28,20 @@
 #include <string>
 #include <exception>
 
-struct lua_State;
+#if defined(_NOEXCEPT)
+#define __NOEXCEPT _NOEXCEPT
+#elif defined(_GLIBCXX_NOEXCEPT)
+#define __NOEXCEPT _GLIBCXX_NOEXCEPT
+#else
+#define __NOEXCEPT noexcept
+#endif
 
 namespace slua {
 
     class SLUA_UNREAL_API LuaVarExcetpion : public std::exception {
     public:
         LuaVarExcetpion(const std::string& err):errormsg(err) {}
-        virtual const char* what() const _NOEXCEPT {
+        virtual const char* what() const __NOEXCEPT {
             return errormsg.c_str();
         }
     private:

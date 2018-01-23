@@ -14,7 +14,6 @@
 
 #include "luaconf.h"
 
-#define _LUAC
 #define NS_SLUA slua
 
 #define LUA_VERSION_MAJOR	"5"
@@ -282,7 +281,9 @@ LUA_API int   (lua_pcallk) (lua_State *L, int nargs, int nresults, int errfunc,
 LUA_API int   (lua_load) (lua_State *L, lua_Reader reader, void *dt,
                           const char *chunkname, const char *mode);
 
+#ifdef _LUAC
 LUA_API int (lua_dump) (lua_State *L, lua_Writer writer, void *data, int strip);
+#endif // end _LUAC
 
 
 /*

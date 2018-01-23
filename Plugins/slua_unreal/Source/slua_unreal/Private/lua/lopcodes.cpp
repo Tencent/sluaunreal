@@ -15,75 +15,11 @@
 namespace NS_SLUA {
 
 /* ORDER OP */
-
-LUAI_DDEF const char *const luaP_opnames[NUM_OPCODES+1] = {
-  "MOVE",
-  "LOADK",
-  "LOADKX",
-  "LOADBOOL",
-  "LOADNIL",
-  "GETUPVAL",
-  "GETTABUP",
-  "GETTABLE",
-  "SETTABUP",
-  "SETUPVAL",
-  "SETTABLE",
-  "NEWTABLE",
-  "SELF",
-  "ADD",
-  "SUB",
-  "MUL",
-  "MOD",
-  "POW",
-  "DIV",
-  "IDIV",
-  "BAND",
-  "BOR",
-  "BXOR",
-  "SHL",
-  "SHR",
-  "UNM",
-  "BNOT",
-  "NOT",
-  "LEN",
-  "CONCAT",
-  "JMP",
-  "EQ",
-  "LT",
-  "LE",
-  "TEST",
-  "TESTSET",
-  "CALL",
-  "TAILCALL",
-  "RETURN",
-  "FORLOOP",
-  "FORPREP",
-  "TFORCALL",
-  "TFORLOOP",
-  "SETLIST",
-  "CLOSURE",
-  "VARARG",
-  "EXTRAARG",
-  NULL
-};
-
-
 #define opmode(t,a,b,c,m) (((t)<<7) | ((a)<<6) | ((b)<<4) | ((c)<<2) | (m))
 
 LUAI_DDEF const lu_byte luaP_opmodes[NUM_OPCODES] = {
 /*       T  A    B       C     mode		   opcode	*/
   opmode(0, 1, OpArgR, OpArgN, iABC)		/* OP_MOVE */
- ,opmode(0, 1, OpArgK, OpArgN, iABx)		/* OP_LOADK */
- ,opmode(0, 1, OpArgN, OpArgN, iABx)		/* OP_LOADKX */
- ,opmode(0, 1, OpArgU, OpArgU, iABC)		/* OP_LOADBOOL */
- ,opmode(0, 1, OpArgU, OpArgN, iABC)		/* OP_LOADNIL */
- ,opmode(0, 1, OpArgU, OpArgN, iABC)		/* OP_GETUPVAL */
- ,opmode(0, 1, OpArgU, OpArgK, iABC)		/* OP_GETTABUP */
- ,opmode(0, 1, OpArgR, OpArgK, iABC)		/* OP_GETTABLE */
- ,opmode(0, 0, OpArgK, OpArgK, iABC)		/* OP_SETTABUP */
- ,opmode(0, 0, OpArgU, OpArgN, iABC)		/* OP_SETUPVAL */
- ,opmode(0, 0, OpArgK, OpArgK, iABC)		/* OP_SETTABLE */
- ,opmode(0, 1, OpArgU, OpArgU, iABC)		/* OP_NEWTABLE */
  ,opmode(0, 1, OpArgR, OpArgK, iABC)		/* OP_SELF */
  ,opmode(0, 1, OpArgK, OpArgK, iABC)		/* OP_ADD */
  ,opmode(0, 1, OpArgK, OpArgK, iABC)		/* OP_SUB */
@@ -118,6 +54,17 @@ LUAI_DDEF const lu_byte luaP_opmodes[NUM_OPCODES] = {
  ,opmode(0, 0, OpArgU, OpArgU, iABC)		/* OP_SETLIST */
  ,opmode(0, 1, OpArgU, OpArgN, iABx)		/* OP_CLOSURE */
  ,opmode(0, 1, OpArgU, OpArgN, iABC)		/* OP_VARARG */
+ ,opmode(0, 1, OpArgK, OpArgN, iABx)		/* OP_LOADK */
+ ,opmode(0, 1, OpArgN, OpArgN, iABx)		/* OP_LOADKX */
+ ,opmode(0, 1, OpArgU, OpArgU, iABC)		/* OP_LOADBOOL */
+ ,opmode(0, 1, OpArgU, OpArgN, iABC)		/* OP_LOADNIL */
+ ,opmode(0, 1, OpArgU, OpArgN, iABC)		/* OP_GETUPVAL */
+ ,opmode(0, 1, OpArgU, OpArgK, iABC)		/* OP_GETTABUP */
+ ,opmode(0, 1, OpArgR, OpArgK, iABC)		/* OP_GETTABLE */
+ ,opmode(0, 0, OpArgK, OpArgK, iABC)		/* OP_SETTABUP */
+ ,opmode(0, 0, OpArgU, OpArgN, iABC)		/* OP_SETUPVAL */
+ ,opmode(0, 0, OpArgK, OpArgK, iABC)		/* OP_SETTABLE */
+ ,opmode(0, 1, OpArgU, OpArgU, iABC)		/* OP_NEWTABLE */
  ,opmode(0, 0, OpArgU, OpArgU, iAx)		/* OP_EXTRAARG */
 };
 

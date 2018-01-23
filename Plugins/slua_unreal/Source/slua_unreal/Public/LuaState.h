@@ -28,8 +28,6 @@
 #include <string>
 #include <memory>
 
-struct lua_State;
-
 namespace slua {
 
     class SLUA_UNREAL_API LuaState
@@ -66,7 +64,14 @@ namespace slua {
         void setLoadFileDelegate(LoadFileDelegate func) {
             loadFileDelegate = func;
         }
-
+		lua_State* getLuaState()
+		{
+			return L;
+		}
+		operator lua_State*()
+		{
+			return L;
+		}
         static int pushErrorHandler(lua_State* L);
     protected:
         LoadFileDelegate loadFileDelegate;

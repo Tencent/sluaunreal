@@ -216,7 +216,7 @@ static void f_luaopen (lua_State *L, void *ud) {
 ** any memory (to avoid errors)
 */
 static void preinit_thread (lua_State *L, global_State *g) {
-  G(L) = g;
+  L->l_G = g;
   L->stack = NULL;
   L->ci = NULL;
   L->nci = 0;
@@ -233,6 +233,7 @@ static void preinit_thread (lua_State *L, global_State *g) {
   L->nny = 1;
   L->status = LUA_OK;
   L->errfunc = 0;
+  L->onlyluac = 0;
 }
 
 

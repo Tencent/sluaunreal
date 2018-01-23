@@ -18,6 +18,11 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+
+#if !defined(l_randomizePivot)
+#include <time.h>
+#endif
+
 namespace NS_SLUA {
 
 /*
@@ -243,8 +248,6 @@ typedef unsigned int IdxT;
 ** good choice.)
 */
 #if !defined(l_randomizePivot)		/* { */
-
-#include <time.h>
 
 /* size of 'e' measured in number of 'unsigned int's */
 #define sof(e)		(sizeof(e) / sizeof(unsigned int))

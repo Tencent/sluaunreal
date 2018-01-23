@@ -21,6 +21,23 @@
 // THE SOFTWARE.
 
 #include "SluaTestCase.h"
+#include "lua/lua.hpp"
+#include "LuaObject.h"
+#include "LuaCppBinding.h"
+
+namespace slua {
+
+class Foo {
+public:
+    void bar(const char*,int) {}
+    std::string getStr() { return "some text"; }
+};
+
+DefLuaClass(Foo)
+    DefLuaMethod(bar,&Foo::bar)
+    DefLuaMethod(getStr,&Foo::getStr)
+EndDef()
+}
 
 USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

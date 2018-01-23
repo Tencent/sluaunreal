@@ -43,7 +43,7 @@ void USluaComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-    state.init(GetWorld());
+    state.init(this);
 }
 
 

@@ -34,9 +34,6 @@
 
 namespace slua {
 
-    static UWorld* world = nullptr;
-    std::map<lua_State*,LuaState*> stateMap;
-
     int import(lua_State *L) {
         const char* name = LuaObject::checkValue<const char*>(L,1);
         if(name) {
@@ -76,7 +73,7 @@ namespace slua {
         return 0;
     }
 
-    int loadUI(lua_State* L) {
+    int LuaState::loadUI(lua_State* L) {
         const char* ui = luaL_checkstring(L,1);
 
         TArray<FStringFormatArg> Args;
@@ -87,8 +84,12 @@ namespace slua {
         TSubclassOf<UUserWidget> uclass = LoadClass<UUserWidget>(NULL, *cui);
         if(uclass==nullptr)
             luaL_error(L,"Can't find ui named %s",ui);
-
-        UUserWidget* widget = CreateWidget<UUserWidget>(world,uclass);
+        
+        auto ls = LuaState::get(L);
+        UWorld* wld = ls->sluaComponent?ls->sluaComponent->GetWorld():nullptr;
+        if(!wld)
+            luaL_error(L,"World missed");
+        UUserWidget* widget = CreateWidget<UUserWidget>(wld,uclass);
         return LuaObject::push(L,widget);
     }
 
@@ -125,6 +126,7 @@ namespace slua {
     LuaState::LuaState()
         :loadFileDelegate(nullptr)
         ,L(nullptr)
+        ,cacheObjRef(LUA_NOREF)
     {
     }
 
@@ -134,32 +136,42 @@ namespace slua {
     }
 
     LuaState* LuaState::get(lua_State* L) {
-        auto it = stateMap.find(L);
-        if(it!=stateMap.end())
-            return it->second;
-        else
-            return nullptr;
+        void* extraspace = lua_getextraspace(L);
+        LuaState* ls = *(LuaState**)extraspace;
+        
+        return ls;
     }
 
     void LuaState::close() {
         if(L) {
-            stateMap.erase(L);
             lua_close(L);
             L=nullptr;
         }
-        world=nullptr;
+        sluaComponent=nullptr;
     }
 
 
-    bool LuaState::init(UWorld* wld) {
+    bool LuaState::init(USceneComponent* comp) {
 
-        if(!wld)
+        if(!comp)
             return false;
 
-        world = wld;
+        sluaComponent = comp;
 
         L = luaL_newstate();
-        stateMap[L]=this;
+        void* extraspace = lua_getextraspace(L);
+        *((LuaState**)extraspace) = this;
+
+        // init obj cache table
+        lua_newtable(L);
+        lua_newtable(L);
+        lua_pushstring(L,"kv");
+        lua_setfield(L,-2,"__mode");
+        lua_setmetatable(L,-2);
+        // register it
+        cacheObjRef = luaL_ref(L,LUA_REGISTRYINDEX);
+
+        ensure(lua_gettop(L)==0);
         
         luaL_openlibs(L);
         
@@ -229,10 +241,8 @@ namespace slua {
     }
 
     int LuaState::pushErrorHandler(lua_State* L) {
-        auto it = stateMap.find(L);
-        ensure(it!=stateMap.end());
-
-        auto ls = it->second;
+        auto ls = get(L);
+        ensure(ls!=nullptr);
         return ls->_pushErrorHandler(L);
     }
 

@@ -91,6 +91,36 @@ namespace slua {
         }
     };
 
+    template <typename... Args,
+          void (*target)(lua_State * L, void*, Args...),int Offset>
+    struct FunctionBind<void (*)(lua_State * L, void* ,Args...), target, Offset> {
+        
+        template <typename X>
+        struct Functor;
+
+        template <int... index>
+        struct Functor<IntList<index...>> {
+
+            template <typename AT>
+            static AT readArg(lua_State * L, int p) {
+                return LuaObject::checkValue<AT>(L,p);
+            }
+
+            // index is int-list based 0, so should plus Offset to get first arg 
+            // (not include obj ptr if it's a member function)
+            static void invoke(lua_State * L,void* ptr) noexcept {
+                target(L, ptr, readArg<Args>(L, index + Offset)...);
+            }
+        };
+
+        static int invoke(lua_State * L,void* ptr) {
+            // make int list for arg index
+            using I = MakeIntList<sizeof...(Args)>;
+            Functor<I>::invoke(L,ptr);
+            return 0;
+        }
+    };
+
     template<typename T>
     struct TypeName {
         static const char* value();
@@ -125,6 +155,42 @@ namespace slua {
             void* p = luaL_checkudata(L,1,TypeName<T>::value());
             if(!p) luaL_error(L,"expect userdata %s",TypeName<T>::value());
             using f = FunctionBind<RET (*)(lua_State *, void*, ARG...), invoke, 2>;
+            return f::invoke(L,p);
+        }
+    };
+
+    template<typename T,typename RET,typename ...ARG,RET (T::*func)(ARG...)>
+    struct LuaCppBinding< RET (T::*)(ARG...), func> {
+
+        static RET invoke(lua_State* L,void* ptr,ARG... args) {
+            UserData<T*>* ud = reinterpret_cast<UserData<T*>*>(ptr);
+            T* thisptr = ud->ud;
+            return (thisptr->*func)( std::forward<ARG>(args)... );
+        }
+
+        static int LuaCFunction(lua_State* L) {
+            // check and get obj ptr;
+            void* p = luaL_checkudata(L,1,TypeName<T>::value());
+            if(!p) luaL_error(L,"expect userdata %s",TypeName<T>::value());
+            using f = FunctionBind<RET (*)(lua_State *, void*, ARG...), invoke, 2>;
+            return f::invoke(L,p);
+        }
+    };
+
+    template<typename T,typename ...ARG,void (T::*func)(ARG...)>
+    struct LuaCppBinding< void (T::*)(ARG...), func> {
+
+        static void invoke(lua_State* L,void* ptr,ARG... args) {
+            UserData<T*>* ud = reinterpret_cast<UserData<T*>*>(ptr);
+            T* thisptr = ud->ud;
+            (thisptr->*func)( std::forward<ARG>(args)... );
+        }
+
+        static int LuaCFunction(lua_State* L) {
+            // check and get obj ptr;
+            void* p = luaL_checkudata(L,1,TypeName<T>::value());
+            if(!p) luaL_error(L,"expect userdata %s",TypeName<T>::value());
+            using f = FunctionBind<void (*)(lua_State *, void*, ARG...), invoke, 2>;
             return f::invoke(L,p);
         }
     };

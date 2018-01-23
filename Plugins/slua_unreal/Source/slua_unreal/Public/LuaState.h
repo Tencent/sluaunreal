@@ -23,6 +23,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/SceneComponent.h"
 #include "LuaVar.h"
 #include <string>
 #include <memory>
@@ -41,7 +42,7 @@ namespace slua {
 
         static LuaState* get(lua_State* L);
         
-        bool init(UWorld* wld);
+        bool init(USceneComponent* wld);
         void close();
 
         LuaVar doString(const char* str);
@@ -72,7 +73,12 @@ namespace slua {
         uint8* loadFile(const char* fn,uint32& len);
         static int loader(lua_State* L);
     private:
+        friend class LuaObject;
         lua_State* L;
+        USceneComponent* sluaComponent;
+        int cacheObjRef;
         int _pushErrorHandler(lua_State* L);
+
+        static int loadUI(lua_State* L);
     };
 }

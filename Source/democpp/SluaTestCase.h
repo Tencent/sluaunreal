@@ -23,7 +23,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include <string>
 #include "SluaTestCase.generated.h"
+
 
 UCLASS()
 class USluaTestCase : public UObject {

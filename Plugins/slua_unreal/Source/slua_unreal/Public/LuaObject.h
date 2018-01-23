@@ -25,6 +25,7 @@
 #include "CoreMinimal.h"
 #include "lua/lua.hpp"
 #include "UObject/WeakObjectPtr.h"
+#include <string>
 
 #define CheckUD(Type,L,P) UserData<Type*>* ud = reinterpret_cast<UserData<Type*>*>(luaL_checkudata(L, P,#Type)); \
     if(!ud) { luaL_error(L, "checkValue error at %d",P); } \
@@ -56,6 +57,11 @@ namespace slua {
     struct LuaStruct {
         uint8* buf;
         uint32 size;
+
+        ~LuaStruct() {
+            FMemory::Free(buf);
+            buf = nullptr;
+        }
     };
 
     template<class T>
@@ -72,6 +78,7 @@ namespace slua {
         template<class T>
         static T checkValue(lua_State* L,int p);
 
+        typedef void SetupMetaTableFunc(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc);
 
         template<class T>
         static int pushType(lua_State* L,T cls,const char* tn,lua_CFunction setupmt=NULL,lua_CFunction gc=NULL) {
@@ -81,16 +88,24 @@ namespace slua {
             UserData<T>* ud = reinterpret_cast< UserData<T>* >(lua_newuserdata(L, sizeof(UserData<T>)));
             ud->ud = cls;
             
-            if(luaL_newmetatable(L, tn)) {
-                if(setupmt)
-                    setupmt(L);
-                if(gc) {
-                    lua_pushcfunction(L,gc);
-                    lua_setfield(L,-2,"__gc");
-                }
-            }
-            lua_setmetatable(L, -2);
+            setupMetaTable(L,tn,setupmt,gc);
             return 1;
+        }
+
+        template<class T>
+        static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt=NULL,lua_CFunction gc=NULL) {
+            if(getFromCache(L,obj))
+                return 1;
+            obj->AddToRoot();
+            lua_pushcclosure(L,gc,0);
+            lua_pushcclosure(L,removeFromCacheGC,1);
+            int f = lua_gettop(L);
+            int r = pushType<T>(L,obj,tn,setupmt,f);
+            lua_remove(L,f); // remove wraped gc function
+            if(r) {
+                cacheObj(L,obj);
+            }
+            return r;
         }
         
         static int pushClass(lua_State* L,UClass* cls);
@@ -125,6 +140,11 @@ namespace slua {
             return 1;
         }
 
+        static int push(lua_State* L, const std::string& v) {
+            lua_pushlstring(L,v.c_str(),v.size());
+            return 1;
+        }
+
         static int push(lua_State* L, const FText& v) {
             FString str = v.ToString();
             lua_pushstring(L,TCHAR_TO_UTF8(*str));
@@ -154,10 +174,51 @@ namespace slua {
 
         static int gcStruct(lua_State* L) {
             CheckUD(LuaStruct,L,1);
-            FMemory::Free(UD->buf);
             delete UD;
             return 0;
         }
+
+        static void setupMetaTable(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc) {
+            if(luaL_newmetatable(L, tn)) {
+                if(setupmt)
+                    setupmt(L);
+                if(gc) {
+                    lua_pushcfunction(L,gc);
+                    lua_setfield(L,-2,"__gc");
+                }
+            }
+            lua_setmetatable(L, -2);
+        }
+
+        static void setupMetaTable(lua_State* L,const char* tn,lua_CFunction setupmt,int gc) {
+            if(luaL_newmetatable(L, tn)) {
+                if(setupmt)
+                    setupmt(L);
+                if(gc) {
+                    lua_pushvalue(L,gc);
+                    lua_setfield(L,-2,"__gc");
+                }
+            }
+            lua_setmetatable(L, -2);
+        }
+
+
+        template<class T>
+        static int pushType(lua_State* L,T cls,const char* tn,lua_CFunction setupmt,int gc) {
+            if(!cls)
+                lua_pushnil(L);
+                
+            UserData<T>* ud = reinterpret_cast< UserData<T>* >(lua_newuserdata(L, sizeof(UserData<T>)));
+            ud->ud = cls;
+            
+            setupMetaTable(L,tn,setupmt,gc);
+            return 1;
+        }
+
+        static int removeFromCacheGC(lua_State* L);
+
+        static bool getFromCache(lua_State* L,void* obj);
+        static void cacheObj(lua_State* L,void* obj);
     };
 
     template<>

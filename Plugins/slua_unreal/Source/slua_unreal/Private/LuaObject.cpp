@@ -31,20 +31,19 @@
 #include "LuaArray.h"
 #include "Log.h"
 #include "LuaCppBinding.h"
+#include "LuaState.h"
 #include <map>
 
-namespace { 
-    typedef slua::lua_State lua_State;
-    typedef slua::LuaObject LuaObject;
-    typedef slua::LuaStruct LuaStruct;
-    typedef slua::LuaArray LuaArray;
-    typedef slua::LuaWidgetTree LuaWidgetTree;
-    typedef slua::LuaDelegate LuaDelegate;
-
+namespace slua { 
     typedef int (*PushPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms);
     typedef int (*CheckPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms,int i);
     std::map<UClass*,PushPropertyFunction> pusherMap;
     std::map<UClass*,CheckPropertyFunction> checkerMap;
+
+    // Grab the special case structs that use their own literal path
+	static UScriptStruct* VectorStruct = TBaseStructure<FVector>::Get();
+	static UScriptStruct* RotatorStruct = TBaseStructure<FRotator>::Get();
+	static UScriptStruct* TransformStruct = TBaseStructure<FTransform>::Get();
 
 
     PushPropertyFunction getPusher(UClass* cls) {
@@ -95,7 +94,6 @@ namespace {
         UScriptStruct* uss = LuaObject::checkValue<UScriptStruct*>(L, 1);
         if(uss) {
             uint32 size = uss->GetStructureSize() ? uss->GetStructureSize() : 1;
-            //UE_LOG(LogClass, Log, TEXT("construct struct that size is %d"),size);
             
             uint8* buf = (uint8*)FMemory::Malloc(size);
             uss->InitializeStruct(buf);
@@ -154,12 +152,28 @@ namespace {
 		const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
 		uint8* ReturnValueAddress = bHasReturnParam ? (params + func->ReturnValueOffset) : nullptr;
 
+        int ret = 0;
+        int offset= 0;
         if(bHasReturnParam) {
             UProperty* p = func->GetReturnProperty();
-            return LuaObject::push(L,p,params);
+            ret += LuaObject::push(L,p,ReturnValueAddress);
+        }
+
+        // push out parms
+        for(TFieldIterator<UProperty> it(func);it;++it) {
+            UProperty* p = *it;
+            uint64 propflag = p->GetPropertyFlags();
+            // skit return param
+            if(propflag&CPF_ReturnParm)
+                continue;
+
+            if((propflag&CPF_OutParm)) {
+                ret += LuaObject::push(L,p,params+offset);
+            }
+            offset += p->GetSize();
         }
         
-        return 0;
+        return ret;
     }
     
     int ufuncClosure(lua_State* L) {
@@ -245,7 +259,56 @@ namespace {
         ensure(p);
         FString* str = p->GetPropertyValuePtr_InContainer(parms);
         return LuaObject::push(L,*str);
-    }   
+    }
+
+    int pushVector(lua_State* L,uint8* buf,uint32 size) {
+        ensure(size==sizeof(FVector));
+        lua_createtable(L,3,0);
+        FVector* v = (FVector*) buf;
+        lua_pushnumber(L,v->X);
+        lua_rawseti(L,-2,1);
+        lua_pushnumber(L,v->Y);
+        lua_rawseti(L,-2,2);
+        lua_pushnumber(L,v->Z);
+        lua_rawseti(L,-2,3);
+        return 1;
+    }
+
+    FVector checkVector(lua_State* L,int i) {
+        FVector v;
+        luaL_checktype(L,i,LUA_TTABLE);
+        lua_rawgeti(L,i,1);
+        v.X = lua_tonumber(L,-1);
+        lua_rawgeti(L,i,2);
+        v.Y = lua_tonumber(L,-1);
+        lua_rawgeti(L,i,3);
+        v.Z = lua_tonumber(L,-1);
+        lua_pop(L,3);
+        return v;
+    }
+
+    int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms) {
+
+        auto p = Cast<UStructProperty>(prop);
+        ensure(p);
+        auto uss = p->Struct;
+
+        uint32 size = uss->GetStructureSize() ? uss->GetStructureSize() : 1;
+        
+        if(uss==VectorStruct) {
+            uint8* buf = (uint8*)FMemory_Alloca(size);
+            p->CopyValuesInternal(buf,parms,1);
+            return pushVector(L,buf,size);
+        }
+        else {
+            uint8* buf = (uint8*)FMemory::Malloc(size);
+            p->CopyValuesInternal(buf,parms,1);
+
+            LuaStruct* ls;
+            ls = new LuaStruct{buf,size};
+            return LuaObject::push(L,ls);
+        }
+    }  
 
     int pushUMulticastDelegateProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p = Cast<UMulticastDelegateProperty>(prop);
@@ -289,11 +352,18 @@ namespace {
     int checkUStructProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UStructProperty>(prop);
         ensure(p);
+        auto uss = p->Struct;
 
-        LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L,i);
-        if(p->GetSize()!=ls->size)
-            luaL_error(L,"expect struct size == %d, but got %d",p->GetSize(),ls->size);
-        p->CopyValuesInternal(parms,ls->buf,1);
+        if(uss==VectorStruct) {
+            FVector v = checkVector(L,i);
+            p->CopyValuesInternal(parms,&v,1);
+        }
+        else {
+            LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L,i);
+            if(p->GetSize()!=ls->size)
+                luaL_error(L,"expect struct size == %d, but got %d",p->GetSize(),ls->size);
+            p->CopyValuesInternal(parms,ls->buf,1);
+        }
         return 0;
     }
 
@@ -318,11 +388,56 @@ namespace {
         return 0;
     }
 
-}
-   
 
+    // search obj from registry, push cached obj and return true if find it
+    bool LuaObject::getFromCache(lua_State* L,void* obj) {
+        LuaState* ls = LuaState::get(L);
+        ensure(ls->cacheObjRef!=LUA_NOREF);
+        lua_geti(L,LUA_REGISTRYINDEX,ls->cacheObjRef);
+        // should be a table
+        ensure(lua_type(L,-1)==LUA_TTABLE);
+        // push obj as key
+        lua_pushlightuserdata(L,obj);
+        // get key from table
+        lua_rawget(L,-2);
+        bool ret = true;
+        lua_remove(L,-2); // remove cache table
+        
+        if(lua_isnil(L,-1)) {
+            ret = false;
+            lua_pop(L,1);
+        }
+        return ret;
+    }
 
-namespace slua {
+    void LuaObject::cacheObj(lua_State* L,void* obj) {
+        LuaState* ls = LuaState::get(L);
+        lua_geti(L,LUA_REGISTRYINDEX,ls->cacheObjRef);
+        lua_pushlightuserdata(L,obj);
+        lua_pushvalue(L,-3); // obj userdata
+        lua_rawset(L,-3);
+        lua_pop(L,1); // pop cache table        
+    }
+
+    int LuaObject::removeFromCacheGC(lua_State* L) {
+        int p = lua_upvalueindex(1);
+        // get real gc function
+        lua_CFunction gc = lua_tocfunction(L,p);
+        gc(L);
+        // get cache table
+        LuaState* ls = LuaState::get(L);
+        lua_geti(L,LUA_REGISTRYINDEX,ls->cacheObjRef);
+        ensure(lua_type(L,-1)==LUA_TTABLE);
+        // check UD as light userdata
+        UserData<void*>* ud = reinterpret_cast<UserData<void*>*>(lua_touserdata(L,1));
+        lua_pushlightuserdata(L,ud->ud);
+        lua_pushnil(L);
+        // cache[obj] = nil
+        lua_rawset(L,-3);
+        // pop cache table;
+        lua_pop(L,1);
+        return 0;
+    }
 
 
     int LuaObject::pushClass(lua_State* L,UClass* cls) {
@@ -330,17 +445,15 @@ namespace slua {
             lua_pushnil(L);
             return 1;
         }
-        cls->AddToRoot();
-        return pushType<UClass*>(L,cls,"UClass",setupClassMT,gcClass);
+        return pushGCObject<UClass*>(L,cls,"UClass",setupClassMT,gcClass);
     }
 
     int LuaObject::pushStruct(lua_State* L,UScriptStruct* cls) {
         if(!cls) {
             lua_pushnil(L);
             return 1;
-        }
-        cls->AddToRoot();            
-        return pushType<UScriptStruct*>(L,cls,"UScriptStruct",setupStructMT,gcStructClass);
+        }          
+        return pushGCObject<UScriptStruct*>(L,cls,"UScriptStruct",setupStructMT,gcStructClass);
     }
 
     int LuaObject::gcObject(lua_State* L) {
@@ -366,8 +479,7 @@ namespace slua {
             lua_pushnil(L);
             return 1;
         }
-        obj->AddToRoot();
-        return pushType<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject);
+        return pushGCObject<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject);
     }
 
     template<>
@@ -440,6 +552,7 @@ namespace slua {
         regPusher(UBoolProperty::StaticClass(),pushUBoolProperty);
         regPusher(UArrayProperty::StaticClass(),pushUArrayProperty);
         regPusher(UStrProperty::StaticClass(),pushUStrProperty);
+        regPusher(UStructProperty::StaticClass(),pushUStructProperty);
 
         regChecker(UIntProperty::StaticClass(),checkUIntProperty);
         regChecker(UBoolProperty::StaticClass(),checkUBoolProperty);

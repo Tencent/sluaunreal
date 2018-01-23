@@ -49,7 +49,15 @@ local edit=tree:FindWidget('TextBox_0');
 --     print('fuck',index) 
 -- end);
 
-function update(dt)
+
+local HitResult = import('HitResult');
+
+function update(dt,actor)
+    local p = actor:K2_GetActorLocation()
+    --print("actor pos",p[1])
+    local h = HitResult()
+    local ok,h=actor:K2_SetActorLocation({20,0,0},true,h,true)
+    --print("hit info",h)
     -- test memory leak?
     local arr=t:GetArray();
     -- print("arr len",arr:Num())

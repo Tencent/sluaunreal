@@ -45,7 +45,6 @@ namespace slua {
 	static UScriptStruct* RotatorStruct = TBaseStructure<FRotator>::Get();
 	static UScriptStruct* TransformStruct = TBaseStructure<FTransform>::Get();
 
-
     PushPropertyFunction getPusher(UClass* cls) {
         auto it = pusherMap.find(cls);
         if(it!=pusherMap.end())
@@ -480,68 +479,6 @@ namespace slua {
             return 1;
         }
         return pushGCObject<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject);
-    }
-
-    template<>
-    UClass* LuaObject::checkValue(lua_State* L,int p)
-    {
-        CheckUD(UClass,L,p);
-        return UD;
-    }
-
-    template<>
-    UObject* LuaObject::checkValue(lua_State* L,int p)
-    {
-        CheckUD(UObject,L,p);
-        return UD;
-    }
-
-    template<>
-    UScriptStruct* LuaObject::checkValue(lua_State* L,int p)
-    {
-        CheckUD(UScriptStruct,L,p);
-        return UD;
-    }
-
-    template<>
-    LuaStruct* LuaObject::checkValue(lua_State* L,int p)
-    {
-        CheckUD(LuaStruct,L,p);
-        return UD;
-    }
-
-
-    template<>
-    const char* LuaObject::checkValue(lua_State* L,int p) {
-        return luaL_checkstring(L,p);
-    }
-
-    template<>
-    float LuaObject::checkValue(lua_State* L,int p) {
-        return (float)luaL_checknumber(L,p);
-    }
-
-    template<>
-    int LuaObject::checkValue(lua_State* L,int p) {
-        return (float)luaL_checkinteger(L,p);
-    }
-
-    template<>
-    bool LuaObject::checkValue(lua_State* L,int p) {
-        luaL_checktype(L,p,LUA_TBOOLEAN);
-        return !!lua_toboolean(L,p);
-    }
-
-    template<>
-    FText LuaObject::checkValue(lua_State* L,int p) {
-        const char* s = luaL_checkstring(L,p);
-        return FText::FromString( UTF8_TO_TCHAR(s) );
-    }
-
-    template<>
-    FString LuaObject::checkValue(lua_State* L,int p) {
-        const char* s = luaL_checkstring(L,p);
-        return FString( UTF8_TO_TCHAR(s) );
     }
 
     void LuaObject::init(lua_State* L) {

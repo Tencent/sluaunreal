@@ -22,7 +22,7 @@ local Button = import('Button');
 -- local TextBlock = import('TextBlock');
 local btn=Button();
 -- local txt=TextBlock();
-local ui=loadUI('/Game/Panel.Panel');
+local ui=slua.loadUI('/Game/Panel.Panel');
 ui:AddToViewport(0);
 -- local seq=ui.ActiveSequencePlayers;
 -- print('seq',seq:Num());

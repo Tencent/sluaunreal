@@ -79,11 +79,10 @@ namespace slua {
         static int loader(lua_State* L);
     private:
         friend class LuaObject;
+        friend class SluaUtil;
         lua_State* L;
         USceneComponent* sluaComponent;
         int cacheObjRef;
         int _pushErrorHandler(lua_State* L);
-
-        static int loadUI(lua_State* L);
     };
 }

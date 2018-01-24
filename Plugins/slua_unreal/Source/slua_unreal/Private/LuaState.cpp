@@ -23,6 +23,7 @@
 
 #include "LuaState.h"
 #include "LuaObject.h"
+#include "SluaLib.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/Package.h"
 #include "Blueprint/UserWidget.h"
@@ -71,26 +72,6 @@ namespace slua {
         const char* err = lua_tostring(L,1);
         Log::Error("%s",err);
         return 0;
-    }
-
-    int LuaState::loadUI(lua_State* L) {
-        const char* ui = luaL_checkstring(L,1);
-
-        TArray<FStringFormatArg> Args;
-		Args.Add(UTF8_TO_TCHAR(ui));
-
-        // load blueprint widget from cpp, need add '_C' tail
-        auto cui = FString::Format(TEXT("Blueprint'{0}_C'"),Args);
-        TSubclassOf<UUserWidget> uclass = LoadClass<UUserWidget>(NULL, *cui);
-        if(uclass==nullptr)
-            luaL_error(L,"Can't find ui named %s",ui);
-        
-        auto ls = LuaState::get(L);
-        UWorld* wld = ls->sluaComponent?ls->sluaComponent->GetWorld():nullptr;
-        if(!wld)
-            luaL_error(L,"World missed");
-        UUserWidget* widget = CreateWidget<UUserWidget>(wld,uclass);
-        return LuaObject::push(L,widget);
     }
 
     int LuaState::loader(lua_State* L) {
@@ -181,9 +162,6 @@ namespace slua {
         lua_pushcfunction(L,print);
         lua_setglobal(L, "print");
 
-        lua_pushcfunction(L,loadUI);
-        lua_setglobal(L, "loadUI");
-
         lua_pushcfunction(L,loader);
         int loaderFunc = lua_gettop(L);
 
@@ -200,6 +178,7 @@ namespace slua {
         lua_rawseti(L,loaderTable,2);
 
         LuaObject::init(L);
+        SluaUtil::openLib(L);
 
         lua_settop(L,0);
 

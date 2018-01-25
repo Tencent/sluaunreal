@@ -24,6 +24,11 @@
 #include "lua/lua.hpp"
 #include "LuaObject.h"
 #include "LuaCppBinding.h"
+#include "SluaActor.h"
+#include "UObject/UObjectGlobals.h"
+#include "UObject/Package.h"
+#include "Blueprint/UserWidget.h"
+#include "Misc/AssertionMacros.h"
 
 namespace slua {
 
@@ -49,6 +54,20 @@ TArray<int> USluaTestCase::GetArray() {
     return array;
 }
 
-UUserWidget* USluaTestCase::GetWidget() {
-    return nullptr;
+UUserWidget* USluaTestCase::GetWidget(FString ui) {
+    TArray<FStringFormatArg> Args;
+    Args.Add(ui);
+
+    // load blueprint widget from cpp, need add '_C' tail
+    auto cui = FString::Format(TEXT("Blueprint'{0}_C'"),Args);
+    TSubclassOf<UUserWidget> uclass = LoadClass<UUserWidget>(NULL, *cui);
+    if(uclass==nullptr)
+        return nullptr;
+    if(!ASluaActor::instance)
+        return nullptr;
+    UWorld* wld = ASluaActor::instance->GetWorld();
+    if(!wld)
+        return nullptr;
+    UUserWidget* widget = CreateWidget<UUserWidget>(wld,uclass);
+    return widget;
 }

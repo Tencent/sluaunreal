@@ -109,8 +109,10 @@ namespace slua {
             }
 
             int n = pushArg(args...);
-            int ret = docall(n);
-            return LuaVar::wrapReturn(L,ret);
+            int nret = docall(n);
+            auto ret = LuaVar::wrapReturn(L,nret);
+            lua_pop(L,nret);
+            return ret;
         }
 
         void callByUFunction(UFunction* ufunc,uint8* parms);

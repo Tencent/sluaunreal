@@ -35,5 +35,5 @@ public:
     TArray<int> GetArray();
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
-    UUserWidget* GetWidget();    
+    UUserWidget* GetWidget(FString name);    
 };

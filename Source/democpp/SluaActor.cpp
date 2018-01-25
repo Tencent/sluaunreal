@@ -7,12 +7,14 @@
 #include "Misc/Paths.h"
 
 
+ASluaActor* ASluaActor::instance=nullptr;
+
 // Sets default values
 ASluaActor::ASluaActor()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	instance = this;
 }
 
 // Called when the game starts or when spawned
@@ -70,5 +72,7 @@ void ASluaActor::Tick(float DeltaTime)
 		ensure(v.count()==5);
 		ensure(v.getAt(0).asInt()==1024);
 	}
+
+	// slua::Log::Log("lua stack top %d",lua_gettop(*state));
 }
 

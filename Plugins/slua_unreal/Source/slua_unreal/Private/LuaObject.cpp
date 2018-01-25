@@ -155,7 +155,7 @@ namespace slua {
         int offset= 0;
         if(bHasReturnParam) {
             UProperty* p = func->GetReturnProperty();
-            ret += LuaObject::push(L,p,ReturnValueAddress);
+            ret += LuaObject::push(L,p,params);
         }
 
         // push out parms
@@ -302,10 +302,7 @@ namespace slua {
         else {
             uint8* buf = (uint8*)FMemory::Malloc(size);
             p->CopyValuesInternal(buf,parms,1);
-
-            LuaStruct* ls;
-            ls = new LuaStruct{buf,size};
-            return LuaObject::push(L,ls);
+            return LuaObject::push(L,new LuaStruct{buf,size});
         }
     }  
 

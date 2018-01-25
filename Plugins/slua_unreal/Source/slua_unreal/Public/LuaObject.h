@@ -78,63 +78,6 @@ namespace slua {
         template<class T>
         static T checkValue(lua_State* L,int p);
 
-		template<>
-		static inline UClass* checkValue(lua_State* L, int p) {
-			CheckUD(UClass, L, p);
-			return UD;
-		}
-
-		template<>
-		static inline UObject* checkValue(lua_State* L, int p) {
-			CheckUD(UObject, L, p);
-			return UD;
-		}
-
-		template<>
-		static inline UScriptStruct* checkValue(lua_State* L, int p) {
-			CheckUD(UScriptStruct, L, p);
-			return UD;
-		}
-
-		template<>
-		static inline LuaStruct* checkValue(lua_State* L, int p) {
-			CheckUD(LuaStruct, L, p);
-			return UD;
-		}
-
-		template<>
-		static inline const char* checkValue(lua_State* L, int p) {
-			return luaL_checkstring(L, p);
-		}
-
-		template<>
-		static inline float checkValue(lua_State* L, int p) {
-			return (float)luaL_checknumber(L, p);
-		}
-
-		template<>
-		static inline int checkValue(lua_State* L, int p) {
-			return (float)luaL_checkinteger(L, p);
-		}
-
-		template<>
-		static inline bool checkValue(lua_State* L, int p) {
-			luaL_checktype(L, p, LUA_TBOOLEAN);
-			return !!lua_toboolean(L, p);
-		}
-
-		template<>
-		static inline FText checkValue(lua_State* L, int p) {
-			const char* s = luaL_checkstring(L, p);
-			return FText::FromString(UTF8_TO_TCHAR(s));
-		}
-
-		template<>
-		static inline FString checkValue(lua_State* L, int p) {
-			const char* s = luaL_checkstring(L, p);
-			return FString(UTF8_TO_TCHAR(s));
-		}
-
         typedef void SetupMetaTableFunc(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc);
 
         template<class T>
@@ -279,33 +222,59 @@ namespace slua {
     };
 
     template<>
-    UClass* LuaObject::checkValue(lua_State* L,int p);
+    inline UClass* LuaObject::checkValue(lua_State* L, int p) {
+        CheckUD(UClass, L, p);
+        return UD;
+    }
 
     template<>
-    UObject* LuaObject::checkValue(lua_State* L,int p);
+    inline UObject* LuaObject::checkValue(lua_State* L, int p) {
+        CheckUD(UObject, L, p);
+        return UD;
+    }
 
     template<>
-    UScriptStruct* LuaObject::checkValue(lua_State* L,int p);
+    inline UScriptStruct* LuaObject::checkValue(lua_State* L, int p) {
+        CheckUD(UScriptStruct, L, p);
+        return UD;
+    }
 
     template<>
-    LuaStruct* LuaObject::checkValue(lua_State* L,int p);
+    inline LuaStruct* LuaObject::checkValue(lua_State* L, int p) {
+        CheckUD(LuaStruct, L, p);
+        return UD;
+    }
 
     template<>
-    const char* LuaObject::checkValue(lua_State* L,int p);
+    inline const char* LuaObject::checkValue(lua_State* L, int p) {
+        return luaL_checkstring(L, p);
+    }
 
     template<>
-    float LuaObject::checkValue(lua_State* L,int p);
+    inline float LuaObject::checkValue(lua_State* L, int p) {
+        return (float)luaL_checknumber(L, p);
+    }
 
     template<>
-    int LuaObject::checkValue(lua_State* L,int p);
+    inline int LuaObject::checkValue(lua_State* L, int p) {
+        return (float)luaL_checkinteger(L, p);
+    }
 
     template<>
-    bool LuaObject::checkValue(lua_State* L,int p);
+    inline bool LuaObject::checkValue(lua_State* L, int p) {
+        luaL_checktype(L, p, LUA_TBOOLEAN);
+        return !!lua_toboolean(L, p);
+    }
 
     template<>
-    FText LuaObject::checkValue(lua_State* L,int p);
+    inline FText LuaObject::checkValue(lua_State* L, int p) {
+        const char* s = luaL_checkstring(L, p);
+        return FText::FromString(UTF8_TO_TCHAR(s));
+    }
 
     template<>
-    FString LuaObject::checkValue(lua_State* L,int p);
-
+    inline FString LuaObject::checkValue(lua_State* L, int p) {
+        const char* s = luaL_checkstring(L, p);
+        return FString(UTF8_TO_TCHAR(s));
+    }
 }

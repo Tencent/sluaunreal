@@ -149,7 +149,6 @@ namespace slua {
 
         // check is function has return value
 		const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
-		uint8* ReturnValueAddress = bHasReturnParam ? (params + func->ReturnValueOffset) : nullptr;
 
         int ret = 0;
         int offset= 0;

@@ -222,7 +222,16 @@ namespace slua {
         lua_getfield(L,-1,name);
         lua_remove(L,-2); // remove mt of ud
         return 1;
-    } 
+    }
+
+	int pushEnumProperty(lua_State* L, UProperty* prop, uint8* parms) {
+		auto p = Cast<UEnumProperty>(prop);
+		ensure(p);
+		auto p2 = p->GetUnderlyingProperty();
+		ensure(p2);
+		int i = p2->GetSignedIntPropertyValue(parms);
+		return LuaObject::push(L, i);
+	}
 
     int pushUIntProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto ip=Cast<UIntProperty>(prop);
@@ -369,6 +378,15 @@ namespace slua {
         return 0;
     }
 
+	int checkEnumProperty(lua_State* L, UProperty* prop, uint8* parms, int i) {
+		auto p = Cast<UEnumProperty>(prop);
+		ensure(p);
+		auto p2 = p->GetUnderlyingProperty();
+		ensure(p2);
+		p2->SetIntPropertyValue(parms, (int64)LuaObject::checkValue<int>(L, i));
+		return 0;
+	}
+
     int checkUStrProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UStrProperty>(prop);
         ensure(p);
@@ -486,6 +504,7 @@ namespace slua {
         regPusher(UArrayProperty::StaticClass(),pushUArrayProperty);
         regPusher(UStrProperty::StaticClass(),pushUStrProperty);
         regPusher(UStructProperty::StaticClass(),pushUStructProperty);
+		regPusher(UEnumProperty::StaticClass(), pushEnumProperty);
 
         regChecker(UIntProperty::StaticClass(),checkUIntProperty);
         regChecker(UBoolProperty::StaticClass(),checkUBoolProperty);
@@ -494,6 +513,7 @@ namespace slua {
         regChecker(UTextProperty::StaticClass(),checkUTextProperty);
         regChecker(UObjectProperty::StaticClass(),checkUObjectProperty);
         regChecker(UStrProperty::StaticClass(),checkUStrProperty);
+		regChecker(UEnumProperty::StaticClass(), checkEnumProperty);
     }
 
     int LuaObject::push(lua_State* L,UFunction* func)  {

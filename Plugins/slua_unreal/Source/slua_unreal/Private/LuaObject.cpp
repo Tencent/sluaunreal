@@ -45,6 +45,17 @@ namespace slua {
 	static UScriptStruct* RotatorStruct = TBaseStructure<FRotator>::Get();
 	static UScriptStruct* TransformStruct = TBaseStructure<FTransform>::Get();
 
+    // construct lua struct
+    LuaStruct::LuaStruct(uint8* buf,uint32 size,UScriptStruct* uss):buf(buf),size(size),uss(uss) {
+        this->uss->AddToRoot();
+    }
+
+    LuaStruct::~LuaStruct() {
+        FMemory::Free(buf);
+        buf = nullptr;
+        uss->RemoveFromRoot();
+    }
+
     PushPropertyFunction getPusher(UClass* cls) {
         auto it = pusherMap.find(cls);
         if(it!=pusherMap.end())
@@ -96,7 +107,7 @@ namespace slua {
             
             uint8* buf = (uint8*)FMemory::Malloc(size);
             uss->InitializeStruct(buf);
-            LuaStruct* ls=new LuaStruct{buf,size};
+            LuaStruct* ls=new LuaStruct{buf,size,uss};
             LuaObject::push(L,ls);
             return 1;
         }
@@ -210,10 +221,22 @@ namespace slua {
             UProperty* up = cls->FindPropertyByName(wname);
             if(!up)
                 return 0;
-            return LuaObject::push(L,up,(uint8*)obj);
+            return LuaObject::push(L,up,((uint8*)obj)+up->GetOffset_ForInternal());
         }
         else   
             return LuaObject::push(L,func);
+    }
+
+    int instanceStructIndex(lua_State* L) {
+        LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L, 1);
+        const char* name = LuaObject::checkValue<const char*>(L, 2);
+        
+        auto* cls = ls->uss;
+        TCHAR* wname = UTF8_TO_TCHAR(name);
+        UProperty* up = cls->FindPropertyByName(wname);
+        if(!up)
+            return 0;
+        return LuaObject::push(L,up,ls->buf+up->GetOffset_ForInternal());
     }
 
     int instanceIndexSelf(lua_State* L) {
@@ -229,6 +252,13 @@ namespace slua {
         auto ip=Cast<UIntProperty>(prop);
         ensure(ip);
         int i = ip->GetSignedIntPropertyValue(parms);
+        return LuaObject::push(L,i);
+    }
+
+    int pushFloatProperty(lua_State* L,UProperty* prop,uint8* parms) {
+        auto ip=Cast<UFloatProperty>(prop);
+        ensure(ip);
+        float i = ip->GetFloatingPointPropertyValue(parms);
         return LuaObject::push(L,i);
     }
 
@@ -301,8 +331,9 @@ namespace slua {
         }
         else {
             uint8* buf = (uint8*)FMemory::Malloc(size);
-            p->CopyValuesInternal(buf,parms,1);
-            return LuaObject::push(L,new LuaStruct{buf,size});
+            FMemory::Memcpy(buf,parms,size);
+            //p->CopyValuesInternal(buf,parms,1);
+            return LuaObject::push(L,new LuaStruct{buf,size,uss});
         }
     }  
 
@@ -480,6 +511,7 @@ namespace slua {
 
     void LuaObject::init(lua_State* L) {
         regPusher(UIntProperty::StaticClass(),pushUIntProperty);
+        regPusher(UFloatProperty::StaticClass(),pushFloatProperty);
         regPusher(UTextProperty::StaticClass(),pushUTextProperty);
         regPusher(UMulticastDelegateProperty::StaticClass(),pushUMulticastDelegateProperty);
         regPusher(UObjectProperty::StaticClass(),pushUObjectProperty);
@@ -538,6 +570,12 @@ namespace slua {
 
     int LuaObject::setupInstanceMT(lua_State* L) {
         lua_pushcfunction(L,instanceIndex);
+        lua_setfield(L, -2, "__index");
+        return 0;
+    }
+
+    int LuaObject::setupInstanceStructMT(lua_State* L) {
+        lua_pushcfunction(L,instanceStructIndex);
         lua_setfield(L, -2, "__index");
         return 0;
     }

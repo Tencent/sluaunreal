@@ -57,11 +57,10 @@ namespace slua {
     struct LuaStruct {
         uint8* buf;
         uint32 size;
+        UScriptStruct* uss;
 
-        ~LuaStruct() {
-            FMemory::Free(buf);
-            buf = nullptr;
-        }
+        LuaStruct(uint8* buf,uint32 size,UScriptStruct* uss);
+        ~LuaStruct();
     };
 
     template<class T>
@@ -117,7 +116,7 @@ namespace slua {
         }
 
         static int push(lua_State* L, LuaStruct* ls) {
-            return pushType<LuaStruct*>(L,ls,"LuaStruct",setupInstanceMT,gcStruct);
+            return pushType<LuaStruct*>(L,ls,"LuaStruct",setupInstanceStructMT,gcStruct);
         }
 
         static int push(lua_State* L, double v) {
@@ -166,6 +165,7 @@ namespace slua {
     private:
         static int setupClassMT(lua_State* L);
         static int setupInstanceMT(lua_State* L);
+        static int setupInstanceStructMT(lua_State* L);
         static int setupStructMT(lua_State* L);
 
         static int gcObject(lua_State* L);

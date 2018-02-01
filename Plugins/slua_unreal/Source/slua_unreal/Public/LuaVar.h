@@ -53,6 +53,11 @@ namespace slua {
         LuaVarBadCastException():LuaVarExcetpion("bad cast") {}
     };
 
+    class SLUA_UNREAL_API LuaVarBadCall : public LuaVarExcetpion {
+    public:
+        LuaVarBadCall(const char* err):LuaVarExcetpion(err) {}
+    };
+
     class SLUA_UNREAL_API LuaVar {
     public:
         enum Type {LV_NIL,LV_INT,LV_NUMBER,LV_STRING,LV_FUNCTION,LV_TABLE,LV_TUPLE};

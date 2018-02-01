@@ -123,6 +123,10 @@ namespace slua {
         return ls;
     }
 
+    void LuaState::tick(float dtime) {
+        
+    }
+
     void LuaState::close() {
         if(L) {
             lua_close(L);

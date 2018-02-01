@@ -24,6 +24,7 @@
 #include "lua/lua.hpp"
 #include "LuaObject.h"
 #include "LuaCppBinding.h"
+#include "Log.h"
 #include "SluaActor.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/Package.h"
@@ -70,4 +71,8 @@ UUserWidget* USluaTestCase::GetWidget(FString ui) {
         return nullptr;
     UUserWidget* widget = CreateWidget<UUserWidget>(wld,uclass);
     return widget;
+}
+
+void USluaTestCase::SetButton(UUserWidget* widget) {
+    slua::Log::Log("Set Button %p",widget);
 }

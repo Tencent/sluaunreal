@@ -36,4 +36,10 @@ public:
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     UUserWidget* GetWidget(FString name);    
+
+    UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
+    void SetButton(UUserWidget* widget);
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance, meta=( DisplayName="Brush" ))
+    FSlateBrush Brush;
 };

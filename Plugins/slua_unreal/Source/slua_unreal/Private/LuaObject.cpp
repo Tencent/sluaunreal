@@ -220,7 +220,7 @@ namespace slua {
             UProperty* up = cls->FindPropertyByName(wname);
             if(!up)
                 return 0;
-            return LuaObject::push(L,up,((uint8*)obj)+up->GetOffset_ForInternal());
+            return LuaObject::push(L,up,(uint8*)obj);
         }
         else   
             return LuaObject::push(L,func);
@@ -235,7 +235,7 @@ namespace slua {
         UProperty* up = cls->FindPropertyByName(wname);
         if(!up)
             return 0;
-        return LuaObject::push(L,up,ls->buf+up->GetOffset_ForInternal());
+        return LuaObject::push(L,up,ls->buf);
     }
 
     int instanceIndexSelf(lua_State* L) {
@@ -324,11 +324,12 @@ namespace slua {
         return v;
     }
 
-    int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms) {
+    int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms_) {
 
         auto p = Cast<UStructProperty>(prop);
         ensure(p);
         auto uss = p->Struct;
+        uint8* parms = parms_+p->GetOffset_ForInternal();
 
         uint32 size = uss->GetStructureSize() ? uss->GetStructureSize() : 1;
         

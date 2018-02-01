@@ -76,3 +76,7 @@ UUserWidget* USluaTestCase::GetWidget(FString ui) {
 void USluaTestCase::SetButton(UUserWidget* widget) {
     slua::Log::Log("Set Button %p",widget);
 }
+
+FSlateBrush USluaTestCase::GetBrush() {
+    return FSlateBrush();
+}

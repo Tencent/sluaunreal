@@ -41,9 +41,9 @@ namespace slua {
     std::map<UClass*,CheckPropertyFunction> checkerMap;
 
     // Grab the special case structs that use their own literal path
-	static UScriptStruct* VectorStruct = TBaseStructure<FVector>::Get();
-	static UScriptStruct* RotatorStruct = TBaseStructure<FRotator>::Get();
-	static UScriptStruct* TransformStruct = TBaseStructure<FTransform>::Get();
+	static UScriptStruct* VectorStruct = nullptr;
+	static UScriptStruct* RotatorStruct = nullptr;
+	static UScriptStruct* TransformStruct = nullptr;
 
     // construct lua struct
     LuaStruct::LuaStruct(uint8* buf,uint32 size,UScriptStruct* uss):buf(buf),size(size),uss(uss) {
@@ -528,6 +528,11 @@ namespace slua {
     }
 
     void LuaObject::init(lua_State* L) {
+        
+        VectorStruct = TBaseStructure<FVector>::Get();
+	    RotatorStruct = TBaseStructure<FRotator>::Get();
+	    TransformStruct = TBaseStructure<FTransform>::Get();
+
         regPusher(UIntProperty::StaticClass(),pushUIntProperty);
         regPusher(UFloatProperty::StaticClass(),pushFloatProperty);
         regPusher(UTextProperty::StaticClass(),pushUTextProperty);

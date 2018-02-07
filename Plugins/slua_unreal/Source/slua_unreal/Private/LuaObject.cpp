@@ -44,13 +44,24 @@ namespace slua {
     std::map<UClass*,CheckPropertyFunction> checkerMap;
 
     // Grab the special case structs that use their own literal path
-	static UScriptStruct* VectorStruct = TBaseStructure<FVector>::Get();
-	static UScriptStruct* RotatorStruct = TBaseStructure<FRotator>::Get();
-	static UScriptStruct* TransformStruct = TBaseStructure<FTransform>::Get();
+	static UScriptStruct* VectorStruct = nullptr;
+	static UScriptStruct* RotatorStruct = nullptr;
+	static UScriptStruct* TransformStruct = nullptr;
 
 	std::map<std::string, std::string> typeMap;
 
 	void bindAll(lua_State* L);
+
+    // construct lua struct
+    LuaStruct::LuaStruct(uint8* buf,uint32 size,UScriptStruct* uss):buf(buf),size(size),uss(uss) {
+        this->uss->AddToRoot();
+    }
+
+    LuaStruct::~LuaStruct() {
+        FMemory::Free(buf);
+        buf = nullptr;
+        uss->RemoveFromRoot();
+    }
 
 	const char* LuaObject::__typeName(const std::type_info& ti) {
 		auto it = typeMap.find(ti.name());
@@ -227,7 +238,7 @@ namespace slua {
             
             uint8* buf = (uint8*)FMemory::Malloc(size);
             uss->InitializeStruct(buf);
-            LuaStruct* ls=new LuaStruct{buf,size};
+            LuaStruct* ls=new LuaStruct{buf,size,uss};
             LuaObject::push(L,ls);
             return 1;
         }
@@ -346,6 +357,18 @@ namespace slua {
             return LuaObject::push(L,func);
     }
 
+    int instanceStructIndex(lua_State* L) {
+        LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L, 1);
+        const char* name = LuaObject::checkValue<const char*>(L, 2);
+        
+        auto* cls = ls->uss;
+        TCHAR* wname = UTF8_TO_TCHAR(name);
+        UProperty* up = cls->FindPropertyByName(wname);
+        if(!up)
+            return 0;
+        return LuaObject::push(L,up,ls->buf);
+    }
+
     int instanceIndexSelf(lua_State* L) {
         lua_getmetatable(L,1);
         const char* name = LuaObject::checkValue<const char*>(L, 2);
@@ -368,6 +391,13 @@ namespace slua {
         auto ip=Cast<UIntProperty>(prop);
         ensure(ip);
         int i = ip->GetSignedIntPropertyValue(parms);
+        return LuaObject::push(L,i);
+    }
+
+    int pushFloatProperty(lua_State* L,UProperty* prop,uint8* parms) {
+        auto ip=Cast<UFloatProperty>(prop);
+        ensure(ip);
+        float i = ip->GetFloatingPointPropertyValue(parms);
         return LuaObject::push(L,i);
     }
 
@@ -425,11 +455,15 @@ namespace slua {
         return v;
     }
 
-    int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms) {
+    int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms_) {
+
         auto p = Cast<UStructProperty>(prop);
         ensure(p);
         auto uss = p->Struct;
+        uint8* parms = parms_+p->GetOffset_ForInternal();
+
         uint32 size = uss->GetStructureSize() ? uss->GetStructureSize() : 1;
+        
         if(uss==VectorStruct) {
             uint8* buf = (uint8*)FMemory_Alloca(size);
             p->CopyValuesInternal(buf,parms,1);
@@ -437,8 +471,9 @@ namespace slua {
         }
         else {
             uint8* buf = (uint8*)FMemory::Malloc(size);
-            p->CopyValuesInternal(buf,parms,1);
-            return LuaObject::push(L,new LuaStruct{buf,size});
+            FMemory::Memcpy(buf,parms,size);
+            //p->CopyValuesInternal(buf,parms,1);
+            return LuaObject::push(L,new LuaStruct{buf,size,uss});
         }
     }  
 
@@ -630,7 +665,13 @@ namespace slua {
     }
 
     void LuaObject::init(lua_State* L) {
+        
+        VectorStruct = TBaseStructure<FVector>::Get();
+	    RotatorStruct = TBaseStructure<FRotator>::Get();
+	    TransformStruct = TBaseStructure<FTransform>::Get();
+
         regPusher(UIntProperty::StaticClass(),pushUIntProperty);
+        regPusher(UFloatProperty::StaticClass(),pushFloatProperty);
         regPusher(UTextProperty::StaticClass(),pushUTextProperty);
         regPusher(UMulticastDelegateProperty::StaticClass(),pushUMulticastDelegateProperty);
         regPusher(UObjectProperty::StaticClass(),pushUObjectProperty);
@@ -735,6 +776,12 @@ namespace slua {
 
     int LuaObject::setupInstanceMT(lua_State* L) {
         lua_pushcfunction(L,instanceIndex);
+        lua_setfield(L, -2, "__index");
+        return 0;
+    }
+
+    int LuaObject::setupInstanceStructMT(lua_State* L) {
+        lua_pushcfunction(L,instanceStructIndex);
         lua_setfield(L, -2, "__index");
         return 0;
     }

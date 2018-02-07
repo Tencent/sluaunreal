@@ -34,14 +34,15 @@ namespace slua {
     {
     public:
         LuaState();
-        ~LuaState();
+        virtual ~LuaState();
 
         typedef uint8* (*LoadFileDelegate) (const char* fn, uint32& len);
 
         static LuaState* get(lua_State* L);
         
-        bool init(USceneComponent* wld);
-        void close();
+        virtual bool init(USceneComponent* wld);
+        virtual void tick(float dtime);
+        virtual void close();
 
         LuaVar doString(const char* str);
         LuaVar doBuffer(const uint8* buf,uint32 len, const char* chunk);

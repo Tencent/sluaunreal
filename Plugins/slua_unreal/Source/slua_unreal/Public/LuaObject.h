@@ -41,8 +41,8 @@
     lua_setfield(L,-2,#METHOD);
 
 #define NewUD(T, v) auto ud = lua_newuserdata(L, sizeof(UserData<T*>)); \
-	if (!ud) luaL_error(L, "out of memory to new ud")\
-	auto udptr = reinterpret_cast< UserData<T*>* >(ud);\
+	if (!ud) luaL_error(L, "out of memory to new ud"); \
+	auto udptr = reinterpret_cast< UserData<T*>* >(ud); \
 	udptr->ud = v
 
 namespace slua {
@@ -63,11 +63,10 @@ namespace slua {
     struct LuaStruct {
         uint8* buf;
         uint32 size;
+        UScriptStruct* uss;
 
-        ~LuaStruct() {
-            FMemory::Free(buf);
-            buf = nullptr;
-        }
+        LuaStruct(uint8* buf,uint32 size,UScriptStruct* uss);
+        ~LuaStruct();
     };
 
 	template<typename T>
@@ -191,6 +190,7 @@ namespace slua {
     private:
         static int setupClassMT(lua_State* L);
         static int setupInstanceMT(lua_State* L);
+        static int setupInstanceStructMT(lua_State* L);
         static int setupStructMT(lua_State* L);
 
         static int gcObject(lua_State* L);

@@ -50,10 +50,12 @@ void ASluaActor::BeginPlay()
 		return nullptr;
 	});
 	slua::LuaVar v = state->doFile("Test");
-	ensure(v.isTuple());
-	ensure(v.count()==5);
-	ensure(v.getAt(0).asInt()==1024);
-	slua::Log::Log("first return value is %d",v.getAt(0).asInt());
+	if(!v.isNil()) {
+		ensure(v.isTuple());
+		ensure(v.count()==5);
+		ensure(v.getAt(0).asInt()==1024);
+		slua::Log::Log("first return value is %d",v.getAt(0).asInt());
+	}
 }
 
 // Called every frame

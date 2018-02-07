@@ -73,5 +73,34 @@ function update(dt,actor)
     return 1024,2,"s",{},function() end
 end
 
+function print_table(t)
+    print("begin print table...")
+    for k,v in pairs(t) do
+        print(type(k),k,type(v),v)
+    end
+    print("end print table...")
+end
+
+print("=======================")
+print(FVector)
+local a = FVector()
+a:Set(100,200,300)
+print(a:GetMax())
+local b = FVector()
+b:Set(1,2,3)
+print(b:GetMax())
+
+print("=======================")
+
+local OneVector = FVector.OneVector
+print(OneVector)
+print(OneVector.X,OneVector.Y,OneVector.Z)
+print(OneVector:ToString())
+
+-- print(FVector)
+-- for k,v in pairs(FVector) do
+--     print(type(k),k,type(v),v)
+--     print_table(getmetatable(v))
+-- end
 
 return 1024,2,"s",{},function() end

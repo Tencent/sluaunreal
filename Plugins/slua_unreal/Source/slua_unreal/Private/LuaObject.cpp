@@ -34,7 +34,10 @@
 #include "LuaState.h"
 #include <map>
 
+#define str_concat(r,a,b) std::string __t(a); __t+=b; auto r=__t.c_str()
+
 namespace slua { 
+
     typedef int (*PushPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms);
     typedef int (*CheckPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms,int i);
     std::map<UClass*,PushPropertyFunction> pusherMap;
@@ -44,6 +47,134 @@ namespace slua {
 	static UScriptStruct* VectorStruct = TBaseStructure<FVector>::Get();
 	static UScriptStruct* RotatorStruct = TBaseStructure<FRotator>::Get();
 	static UScriptStruct* TransformStruct = TBaseStructure<FTransform>::Get();
+
+	std::map<std::string, std::string> typeMap;
+
+	void bindAll(lua_State* L);
+
+	const char* LuaObject::__typeName(const std::type_info& ti) {
+		auto it = typeMap.find(ti.name());
+		if (it != typeMap.end())
+			return it->second.c_str();
+		return nullptr;
+	}
+
+	void LuaObject::__initType(const std::type_info& ti, const char* tn) {
+		auto it = typeMap.lower_bound(ti.name());
+		if (it != typeMap.end() && !(typeMap.key_comp()(ti.name(), it->first))) {
+			return;
+		} else {
+			typeMap.insert(it, std::make_pair(ti.name(), tn));
+		}
+	}
+
+	int LuaObject::classIndex(lua_State* L) {
+		lua_getmetatable(L, 1);
+		const char* name = checkValue<const char*>(L, 2);
+		if (lua_getfield(L, -1, name) != 0) {
+			return 1;
+		} else if (lua_getfield(L, lua_upvalueindex(1)/*.get*/, name) != 0) {
+			lua_pushvalue(L, 1);
+			lua_call(L, 1, 1);
+			return 1;
+		} else {
+			lua_pushnil(L);
+			return 1;
+		}
+	}
+
+	int LuaObject::classNewindex(lua_State* L) {
+		lua_getmetatable(L, 1);
+		const char* name = checkValue<const char*>(L, 2);
+		if (lua_getfield(L, lua_upvalueindex(1)/*.set*/, name) != 0) {
+			lua_pushvalue(L, 1);
+			lua_pushvalue(L, 3);
+			lua_call(L, 2, 1);
+			return 1;
+		} else {
+			lua_pushnil(L);
+			return 1;
+		}
+	}
+
+	static void setMetaMethods(lua_State* L) {
+		lua_newtable(L);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -3, ".get"); // upvalue
+		lua_pushcclosure(L, LuaObject::classIndex, 1);
+		lua_setfield(L, -2, "__index");
+		lua_newtable(L);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -3, ".set"); // upvalue
+		lua_pushcclosure(L, LuaObject::classNewindex, 1);
+		lua_setfield(L, -2, "__newindex");
+	}
+
+	void LuaObject::newType(lua_State* L, const char* tn) {
+		lua_pushglobaltable(L);					// _G
+		lua_newtable(L);							// local t = {}
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -3, tn);					// _G[tn] = t
+		lua_remove(L, -2);						// remove global table;
+
+		luaL_newmetatable(L, tn);				// local mt = {}; _G[tn] = mt
+		lua_pushvalue(L, -1);
+		lua_setmetatable(L, -3);					// setmetatable(t, mt)
+		setMetaMethods(L);
+		
+		str_concat(s_inst, tn, "_inst");
+		luaL_newmetatable(L, s_inst);
+		setMetaMethods(L);
+	}
+
+	void LuaObject::addMethod(lua_State* L, const char* name, lua_CFunction func, bool isInstance) {
+		lua_pushcfunction(L, func);
+		lua_setfield(L, isInstance ? -2 : -3, name);
+	}
+
+	void LuaObject::addField(lua_State* L, const char* name, lua_CFunction getter, lua_CFunction setter, bool isInstance) {
+		lua_getfield(L, isInstance ? -1 : -2, ".get");
+		lua_pushcfunction(L, getter);
+		lua_setfield(L, -2, name);
+		lua_pop(L, 1);
+		lua_getfield(L, isInstance ? -1 : -2, ".set");
+		lua_pushcfunction(L, setter);
+		lua_setfield(L, -2, name);
+		lua_pop(L, 1);
+	}
+
+	void LuaObject::getStaticTypeTable(lua_State* L, const char* tn) {
+		str_concat(s_static, tn, "_static");
+		luaL_getmetatable(L, s_static);
+	}
+
+	void LuaObject::getInstanceTypeTable(lua_State* L, const char* tn) {
+		str_concat(s_inst, tn, "_inst");
+		luaL_getmetatable(L, s_inst);
+	}
+
+	void LuaObject::finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc) {
+		lua_pushcclosure(L, ctor, 0);
+		lua_setfield(L, -3, "__call");
+
+		// copy _inst table as _static table before add __gc method
+		lua_newtable(L);
+		lua_pushvalue(L, -2);
+		lua_pushnil(L);
+		while (lua_next(L, -2)) {
+			lua_pushvalue(L, -2);
+			lua_insert(L, -2);
+			lua_settable(L, -5);
+		}
+		lua_pop(L, 1);
+		str_concat(s_static, tn, "_static");
+		lua_setfield(L, LUA_REGISTRYINDEX, s_static);
+
+		lua_pushcclosure(L, gc, 0);
+		lua_setfield(L, -2, "__gc");
+
+		lua_pop(L, 3); // type table and mt table
+	}
 
     PushPropertyFunction getPusher(UClass* cls) {
         auto it = pusherMap.find(cls);
@@ -295,13 +426,10 @@ namespace slua {
     }
 
     int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms) {
-
         auto p = Cast<UStructProperty>(prop);
         ensure(p);
         auto uss = p->Struct;
-
         uint32 size = uss->GetStructureSize() ? uss->GetStructureSize() : 1;
-        
         if(uss==VectorStruct) {
             uint8* buf = (uint8*)FMemory_Alloca(size);
             p->CopyValuesInternal(buf,parms,1);
@@ -487,6 +615,12 @@ namespace slua {
         return 0;
     }
 
+	int LuaObject::gcStruct(lua_State* L) {
+		CheckUD(LuaStruct, L, 1);
+		delete UD;
+		return 0;
+	}
+
     int LuaObject::push(lua_State* L, UObject* obj) {
         if(!obj) {
             lua_pushnil(L);
@@ -514,6 +648,8 @@ namespace slua {
         regChecker(UObjectProperty::StaticClass(),checkUObjectProperty);
         regChecker(UStrProperty::StaticClass(),checkUStrProperty);
 		regChecker(UEnumProperty::StaticClass(), checkEnumProperty);
+
+		bindAll(L);
     }
 
     int LuaObject::push(lua_State* L,UFunction* func)  {
@@ -524,17 +660,59 @@ namespace slua {
     }
 
     int LuaObject::push(lua_State* L,UProperty* prop,uint8* parms) {
-
         auto pusher = getPusher(prop);
-        if(pusher)
+        if (pusher)
             return pusher(L,prop,parms);
         else {
             FString name = prop->GetClass()->GetName();
             luaL_error(L,"unsupport type %s to push",TCHAR_TO_UTF8(*name));
             return 0;
         }
-
     }
+
+	int LuaObject::push(lua_State* L, FScriptDelegate* obj) {
+		return pushType<FScriptDelegate*>(L, obj, "FScriptDelegate");
+	}
+
+	int LuaObject::push(lua_State* L, LuaStruct* ls) {
+		return pushType<LuaStruct*>(L, ls, "LuaStruct", setupInstanceMT, gcStruct);
+	}
+
+	int LuaObject::push(lua_State* L, double v) {
+		lua_pushnumber(L, v);
+		return 1;
+	}
+
+	int LuaObject::push(lua_State* L, float v) {
+		lua_pushnumber(L, v);
+		return 1;
+	}
+
+	int LuaObject::push(lua_State* L, int v) {
+		lua_pushinteger(L, v);
+		return 1;
+	}
+
+	int LuaObject::push(lua_State* L, uint32 v) {
+		lua_pushnumber(L, v);
+		return 1;
+	}
+
+	int LuaObject::push(lua_State* L, const std::string& v) {
+		lua_pushlstring(L, v.c_str(), v.size());
+		return 1;
+	}
+
+	int LuaObject::push(lua_State* L, const FText& v) {
+		FString str = v.ToString();
+		lua_pushstring(L, TCHAR_TO_UTF8(*str));
+		return 1;
+	}
+
+	int LuaObject::push(lua_State* L, const FString& str) {
+		lua_pushstring(L, TCHAR_TO_UTF8(*str));
+		return 1;
+	}
 
     int LuaObject::setupMTSelfSearch(lua_State* L) {
         lua_pushcfunction(L,instanceIndexSelf);

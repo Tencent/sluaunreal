@@ -20,11 +20,25 @@ namespace slua {
 	static UScriptStruct* FPrimaryAssetTypeStruct = nullptr;
 	static UScriptStruct* FPrimaryAssetIdStruct = nullptr;
 
+	std::map<UScriptStruct*, pushStructFunction> _pushStructMap;
+	std::map<UScriptStruct*, checkStructFunction> _checkStructMap;
+
 	static inline FRotator* __newFRotator() {
 #if defined(LUA_WRAPPER_DEBUG)
 		Log::Log(TEXT("new FRotator"));
 #endif
 		return new FRotator();
+	}
+
+	static void __pushFRotator(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFRotator();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::pushValue(L, ptr);
+	}
+
+	static void __checkFRotator(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FRotator*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
 	}
 
 	static inline FTransform* __newFTransform() {
@@ -34,11 +48,33 @@ namespace slua {
 		return new FTransform();
 	}
 
+	static void __pushFTransform(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFTransform();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::pushValue(L, ptr);
+	}
+
+	static void __checkFTransform(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FTransform*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
+	}
+
 	static inline FLinearColor* __newFLinearColor() {
 #if defined(LUA_WRAPPER_DEBUG)
 		Log::Log(TEXT("new FLinearColor"));
 #endif
 		return new FLinearColor();
+	}
+
+	static void __pushFLinearColor(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFLinearColor();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::pushValue(L, ptr);
+	}
+
+	static void __checkFLinearColor(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FLinearColor*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
 	}
 
 	static inline FColor* __newFColor() {
@@ -48,11 +84,33 @@ namespace slua {
 		return new FColor();
 	}
 
+	static void __pushFColor(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFColor();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::pushValue(L, ptr);
+	}
+
+	static void __checkFColor(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FColor*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
+	}
+
 	static inline FVector* __newFVector() {
 #if defined(LUA_WRAPPER_DEBUG)
 		Log::Log(TEXT("new FVector"));
 #endif
 		return new FVector();
+	}
+
+	static void __pushFVector(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFVector();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::pushValue(L, ptr);
+	}
+
+	static void __checkFVector(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FVector*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
 	}
 
 	static inline FVector2D* __newFVector2D() {
@@ -62,11 +120,33 @@ namespace slua {
 		return new FVector2D();
 	}
 
+	static void __pushFVector2D(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFVector2D();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::pushValue(L, ptr);
+	}
+
+	static void __checkFVector2D(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FVector2D*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
+	}
+
 	static inline FRandomStream* __newFRandomStream() {
 #if defined(LUA_WRAPPER_DEBUG)
 		Log::Log(TEXT("new FRandomStream"));
 #endif
 		return new FRandomStream();
+	}
+
+	static void __pushFRandomStream(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFRandomStream();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::pushValue(L, ptr);
+	}
+
+	static void __checkFRandomStream(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FRandomStream*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
 	}
 
 	static inline FGuid* __newFGuid() {
@@ -76,11 +156,33 @@ namespace slua {
 		return new FGuid();
 	}
 
+	static void __pushFGuid(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFGuid();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::pushValue(L, ptr);
+	}
+
+	static void __checkFGuid(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FGuid*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
+	}
+
 	static inline FBox2D* __newFBox2D() {
 #if defined(LUA_WRAPPER_DEBUG)
 		Log::Log(TEXT("new FBox2D"));
 #endif
 		return new FBox2D();
+	}
+
+	static void __pushFBox2D(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFBox2D();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::pushValue(L, ptr);
+	}
+
+	static void __checkFBox2D(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FBox2D*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
 	}
 
 	static inline FFloatRangeBound* __newFFloatRangeBound() {
@@ -90,11 +192,33 @@ namespace slua {
 		return new FFloatRangeBound();
 	}
 
+	static void __pushFFloatRangeBound(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFFloatRangeBound();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::pushValue(L, ptr);
+	}
+
+	static void __checkFFloatRangeBound(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FFloatRangeBound*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
+	}
+
 	static inline FFloatRange* __newFFloatRange() {
 #if defined(LUA_WRAPPER_DEBUG)
 		Log::Log(TEXT("new FFloatRange"));
 #endif
 		return new FFloatRange();
+	}
+
+	static void __pushFFloatRange(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFFloatRange();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::pushValue(L, ptr);
+	}
+
+	static void __checkFFloatRange(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FFloatRange*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
 	}
 
 	static inline FInt32RangeBound* __newFInt32RangeBound() {
@@ -104,11 +228,33 @@ namespace slua {
 		return new FInt32RangeBound();
 	}
 
+	static void __pushFInt32RangeBound(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFInt32RangeBound();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::pushValue(L, ptr);
+	}
+
+	static void __checkFInt32RangeBound(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FInt32RangeBound*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
+	}
+
 	static inline FInt32Range* __newFInt32Range() {
 #if defined(LUA_WRAPPER_DEBUG)
 		Log::Log(TEXT("new FInt32Range"));
 #endif
 		return new FInt32Range();
+	}
+
+	static void __pushFInt32Range(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFInt32Range();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::pushValue(L, ptr);
+	}
+
+	static void __checkFInt32Range(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FInt32Range*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
 	}
 
 	static inline FFloatInterval* __newFFloatInterval() {
@@ -118,11 +264,33 @@ namespace slua {
 		return new FFloatInterval();
 	}
 
+	static void __pushFFloatInterval(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFFloatInterval();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::pushValue(L, ptr);
+	}
+
+	static void __checkFFloatInterval(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FFloatInterval*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
+	}
+
 	static inline FInt32Interval* __newFInt32Interval() {
 #if defined(LUA_WRAPPER_DEBUG)
 		Log::Log(TEXT("new FInt32Interval"));
 #endif
 		return new FInt32Interval();
+	}
+
+	static void __pushFInt32Interval(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFInt32Interval();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::pushValue(L, ptr);
+	}
+
+	static void __checkFInt32Interval(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FInt32Interval*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
 	}
 
 	static inline FPrimaryAssetType* __newFPrimaryAssetType() {
@@ -132,11 +300,33 @@ namespace slua {
 		return new FPrimaryAssetType();
 	}
 
+	static void __pushFPrimaryAssetType(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFPrimaryAssetType();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::pushValue(L, ptr);
+	}
+
+	static void __checkFPrimaryAssetType(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FPrimaryAssetType*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
+	}
+
 	static inline FPrimaryAssetId* __newFPrimaryAssetId() {
 #if defined(LUA_WRAPPER_DEBUG)
 		Log::Log(TEXT("new FPrimaryAssetId"));
 #endif
 		return new FPrimaryAssetId();
+	}
+
+	static void __pushFPrimaryAssetId(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFPrimaryAssetId();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::pushValue(L, ptr);
+	}
+
+	static void __checkFPrimaryAssetId(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FPrimaryAssetId*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
 	}
 
 	struct FRotatorWrapper {
@@ -6204,198 +6394,23 @@ namespace slua {
 	};
 
 	int LuaWrapper::pushValue(lua_State* L, UStructProperty* p, UScriptStruct* uss, uint8* parms) {
-		if (uss == FRotatorStruct) {
-			auto ptr = __newFRotator();
-			p->CopyValuesInternal(ptr, parms, 1);
-			LuaObject::pushValue(L, ptr);
+		auto it = _pushStructMap.find(uss);
+		if (it != _pushStructMap.end()) {
+			it->second(L, p, parms);
 			return 1;
+		} else {
+			return 0;
 		}
-		if (uss == FTransformStruct) {
-			auto ptr = __newFTransform();
-			p->CopyValuesInternal(ptr, parms, 1);
-			LuaObject::pushValue(L, ptr);
-			return 1;
-		}
-		if (uss == FLinearColorStruct) {
-			auto ptr = __newFLinearColor();
-			p->CopyValuesInternal(ptr, parms, 1);
-			LuaObject::pushValue(L, ptr);
-			return 1;
-		}
-		if (uss == FColorStruct) {
-			auto ptr = __newFColor();
-			p->CopyValuesInternal(ptr, parms, 1);
-			LuaObject::pushValue(L, ptr);
-			return 1;
-		}
-		if (uss == FVectorStruct) {
-			auto ptr = __newFVector();
-			p->CopyValuesInternal(ptr, parms, 1);
-			LuaObject::pushValue(L, ptr);
-			return 1;
-		}
-		if (uss == FVector2DStruct) {
-			auto ptr = __newFVector2D();
-			p->CopyValuesInternal(ptr, parms, 1);
-			LuaObject::pushValue(L, ptr);
-			return 1;
-		}
-		if (uss == FRandomStreamStruct) {
-			auto ptr = __newFRandomStream();
-			p->CopyValuesInternal(ptr, parms, 1);
-			LuaObject::pushValue(L, ptr);
-			return 1;
-		}
-		if (uss == FGuidStruct) {
-			auto ptr = __newFGuid();
-			p->CopyValuesInternal(ptr, parms, 1);
-			LuaObject::pushValue(L, ptr);
-			return 1;
-		}
-		if (uss == FBox2DStruct) {
-			auto ptr = __newFBox2D();
-			p->CopyValuesInternal(ptr, parms, 1);
-			LuaObject::pushValue(L, ptr);
-			return 1;
-		}
-		if (uss == FFloatRangeBoundStruct) {
-			auto ptr = __newFFloatRangeBound();
-			p->CopyValuesInternal(ptr, parms, 1);
-			LuaObject::pushValue(L, ptr);
-			return 1;
-		}
-		if (uss == FFloatRangeStruct) {
-			auto ptr = __newFFloatRange();
-			p->CopyValuesInternal(ptr, parms, 1);
-			LuaObject::pushValue(L, ptr);
-			return 1;
-		}
-		if (uss == FInt32RangeBoundStruct) {
-			auto ptr = __newFInt32RangeBound();
-			p->CopyValuesInternal(ptr, parms, 1);
-			LuaObject::pushValue(L, ptr);
-			return 1;
-		}
-		if (uss == FInt32RangeStruct) {
-			auto ptr = __newFInt32Range();
-			p->CopyValuesInternal(ptr, parms, 1);
-			LuaObject::pushValue(L, ptr);
-			return 1;
-		}
-		if (uss == FFloatIntervalStruct) {
-			auto ptr = __newFFloatInterval();
-			p->CopyValuesInternal(ptr, parms, 1);
-			LuaObject::pushValue(L, ptr);
-			return 1;
-		}
-		if (uss == FInt32IntervalStruct) {
-			auto ptr = __newFInt32Interval();
-			p->CopyValuesInternal(ptr, parms, 1);
-			LuaObject::pushValue(L, ptr);
-			return 1;
-		}
-		if (uss == FPrimaryAssetTypeStruct) {
-			auto ptr = __newFPrimaryAssetType();
-			p->CopyValuesInternal(ptr, parms, 1);
-			LuaObject::pushValue(L, ptr);
-			return 1;
-		}
-		if (uss == FPrimaryAssetIdStruct) {
-			auto ptr = __newFPrimaryAssetId();
-			p->CopyValuesInternal(ptr, parms, 1);
-			LuaObject::pushValue(L, ptr);
-			return 1;
-		}
-		return 0;
 	}
 
 	int LuaWrapper::checkValue(lua_State* L, UStructProperty* p, UScriptStruct* uss, uint8* parms, int i) {
-		if (uss == FRotatorStruct) {
-			auto v = LuaObject::checkValue<FRotator*>(L, i);
-			p->CopyValuesInternal(parms, v, 1);
+		auto it = _checkStructMap.find(uss);
+		if (it != _checkStructMap.end()) {
+			it->second(L, p, parms, i);
 			return 1;
+		} else {
+			return 0;
 		}
-		if (uss == FTransformStruct) {
-			auto v = LuaObject::checkValue<FTransform*>(L, i);
-			p->CopyValuesInternal(parms, v, 1);
-			return 1;
-		}
-		if (uss == FLinearColorStruct) {
-			auto v = LuaObject::checkValue<FLinearColor*>(L, i);
-			p->CopyValuesInternal(parms, v, 1);
-			return 1;
-		}
-		if (uss == FColorStruct) {
-			auto v = LuaObject::checkValue<FColor*>(L, i);
-			p->CopyValuesInternal(parms, v, 1);
-			return 1;
-		}
-		if (uss == FVectorStruct) {
-			auto v = LuaObject::checkValue<FVector*>(L, i);
-			p->CopyValuesInternal(parms, v, 1);
-			return 1;
-		}
-		if (uss == FVector2DStruct) {
-			auto v = LuaObject::checkValue<FVector2D*>(L, i);
-			p->CopyValuesInternal(parms, v, 1);
-			return 1;
-		}
-		if (uss == FRandomStreamStruct) {
-			auto v = LuaObject::checkValue<FRandomStream*>(L, i);
-			p->CopyValuesInternal(parms, v, 1);
-			return 1;
-		}
-		if (uss == FGuidStruct) {
-			auto v = LuaObject::checkValue<FGuid*>(L, i);
-			p->CopyValuesInternal(parms, v, 1);
-			return 1;
-		}
-		if (uss == FBox2DStruct) {
-			auto v = LuaObject::checkValue<FBox2D*>(L, i);
-			p->CopyValuesInternal(parms, v, 1);
-			return 1;
-		}
-		if (uss == FFloatRangeBoundStruct) {
-			auto v = LuaObject::checkValue<FFloatRangeBound*>(L, i);
-			p->CopyValuesInternal(parms, v, 1);
-			return 1;
-		}
-		if (uss == FFloatRangeStruct) {
-			auto v = LuaObject::checkValue<FFloatRange*>(L, i);
-			p->CopyValuesInternal(parms, v, 1);
-			return 1;
-		}
-		if (uss == FInt32RangeBoundStruct) {
-			auto v = LuaObject::checkValue<FInt32RangeBound*>(L, i);
-			p->CopyValuesInternal(parms, v, 1);
-			return 1;
-		}
-		if (uss == FInt32RangeStruct) {
-			auto v = LuaObject::checkValue<FInt32Range*>(L, i);
-			p->CopyValuesInternal(parms, v, 1);
-			return 1;
-		}
-		if (uss == FFloatIntervalStruct) {
-			auto v = LuaObject::checkValue<FFloatInterval*>(L, i);
-			p->CopyValuesInternal(parms, v, 1);
-			return 1;
-		}
-		if (uss == FInt32IntervalStruct) {
-			auto v = LuaObject::checkValue<FInt32Interval*>(L, i);
-			p->CopyValuesInternal(parms, v, 1);
-			return 1;
-		}
-		if (uss == FPrimaryAssetTypeStruct) {
-			auto v = LuaObject::checkValue<FPrimaryAssetType*>(L, i);
-			p->CopyValuesInternal(parms, v, 1);
-			return 1;
-		}
-		if (uss == FPrimaryAssetIdStruct) {
-			auto v = LuaObject::checkValue<FPrimaryAssetId*>(L, i);
-			p->CopyValuesInternal(parms, v, 1);
-			return 1;
-		}
-		return 0;
 	}
 
 	void LuaWrapper::init(lua_State* L) {
@@ -6416,6 +6431,41 @@ namespace slua {
 		FInt32IntervalStruct = TBaseStructure<FInt32Interval>::Get();
 		FPrimaryAssetTypeStruct = TBaseStructure<FPrimaryAssetType>::Get();
 		FPrimaryAssetIdStruct = TBaseStructure<FPrimaryAssetId>::Get();
+
+		_pushStructMap[FRotatorStruct] = __pushFRotator;
+		_checkStructMap[FRotatorStruct] = __checkFRotator;
+		_pushStructMap[FTransformStruct] = __pushFTransform;
+		_checkStructMap[FTransformStruct] = __checkFTransform;
+		_pushStructMap[FLinearColorStruct] = __pushFLinearColor;
+		_checkStructMap[FLinearColorStruct] = __checkFLinearColor;
+		_pushStructMap[FColorStruct] = __pushFColor;
+		_checkStructMap[FColorStruct] = __checkFColor;
+		_pushStructMap[FVectorStruct] = __pushFVector;
+		_checkStructMap[FVectorStruct] = __checkFVector;
+		_pushStructMap[FVector2DStruct] = __pushFVector2D;
+		_checkStructMap[FVector2DStruct] = __checkFVector2D;
+		_pushStructMap[FRandomStreamStruct] = __pushFRandomStream;
+		_checkStructMap[FRandomStreamStruct] = __checkFRandomStream;
+		_pushStructMap[FGuidStruct] = __pushFGuid;
+		_checkStructMap[FGuidStruct] = __checkFGuid;
+		_pushStructMap[FBox2DStruct] = __pushFBox2D;
+		_checkStructMap[FBox2DStruct] = __checkFBox2D;
+		_pushStructMap[FFloatRangeBoundStruct] = __pushFFloatRangeBound;
+		_checkStructMap[FFloatRangeBoundStruct] = __checkFFloatRangeBound;
+		_pushStructMap[FFloatRangeStruct] = __pushFFloatRange;
+		_checkStructMap[FFloatRangeStruct] = __checkFFloatRange;
+		_pushStructMap[FInt32RangeBoundStruct] = __pushFInt32RangeBound;
+		_checkStructMap[FInt32RangeBoundStruct] = __checkFInt32RangeBound;
+		_pushStructMap[FInt32RangeStruct] = __pushFInt32Range;
+		_checkStructMap[FInt32RangeStruct] = __checkFInt32Range;
+		_pushStructMap[FFloatIntervalStruct] = __pushFFloatInterval;
+		_checkStructMap[FFloatIntervalStruct] = __checkFFloatInterval;
+		_pushStructMap[FInt32IntervalStruct] = __pushFInt32Interval;
+		_checkStructMap[FInt32IntervalStruct] = __checkFInt32Interval;
+		_pushStructMap[FPrimaryAssetTypeStruct] = __pushFPrimaryAssetType;
+		_checkStructMap[FPrimaryAssetTypeStruct] = __checkFPrimaryAssetType;
+		_pushStructMap[FPrimaryAssetIdStruct] = __pushFPrimaryAssetId;
+		_checkStructMap[FPrimaryAssetIdStruct] = __checkFPrimaryAssetId;
 
 		FRotatorWrapper::bind(L);
 		FTransformWrapper::bind(L);

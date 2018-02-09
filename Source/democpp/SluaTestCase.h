@@ -40,6 +40,9 @@ public:
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     void SetButton(UUserWidget* widget);
 
+	UFUNCTION(BlueprintCallable, Category = "Lua|TestCase")
+	void TestStruct(FVector v);
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance, meta=( DisplayName="Brush" ))
     FSlateBrush Brush;
 

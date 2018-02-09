@@ -32,6 +32,7 @@
 #include "Log.h"
 #include "LuaCppBinding.h"
 #include "LuaState.h"
+#include "LuaWrapper.h"
 #include <map>
 
 #define str_concat(r,a,b) std::string __t(a); __t+=b; auto r=__t.c_str()
@@ -40,17 +41,11 @@ namespace slua {
 
     typedef int (*PushPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms);
     typedef int (*CheckPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms,int i);
+
     std::map<UClass*,PushPropertyFunction> pusherMap;
     std::map<UClass*,CheckPropertyFunction> checkerMap;
 
-    // Grab the special case structs that use their own literal path
-	static UScriptStruct* VectorStruct = nullptr;
-	static UScriptStruct* RotatorStruct = nullptr;
-	static UScriptStruct* TransformStruct = nullptr;
-
 	std::map<std::string, std::string> typeMap;
-
-	void bindAll(lua_State* L);
 
     // construct lua struct
     LuaStruct::LuaStruct(uint8* buf,uint32 size,UScriptStruct* uss):buf(buf),size(size),uss(uss) {
@@ -257,7 +252,6 @@ namespace slua {
     }
 
     int fillParamFromState(lua_State* L,UProperty* prop,uint8* params,int i) {
-        
         auto checker = getChecker(prop);
         if(checker) {
             checker(L,prop,params,i);
@@ -463,18 +457,14 @@ namespace slua {
         uint8* parms = parms_+p->GetOffset_ForInternal();
 
         uint32 size = uss->GetStructureSize() ? uss->GetStructureSize() : 1;
-        
-        if(uss==VectorStruct) {
-            uint8* buf = (uint8*)FMemory_Alloca(size);
-            p->CopyValuesInternal(buf,parms,1);
-            return pushVector(L,buf,size);
-        }
-        else {
-            uint8* buf = (uint8*)FMemory::Malloc(size);
-            FMemory::Memcpy(buf,parms,size);
-            //p->CopyValuesInternal(buf,parms,1);
-            return LuaObject::push(L,new LuaStruct{buf,size,uss});
-        }
+
+		if (LuaWrapper::pushValue(L, p, uss, parms))  
+			return 1;
+
+		uint8* buf = (uint8*)FMemory::Malloc(size);
+		FMemory::Memcpy(buf, parms, size);
+		//p->CopyValuesInternal(buf,parms,1);
+		return LuaObject::push(L, new LuaStruct{ buf,size,uss });
     }  
 
     int pushUMulticastDelegateProperty(lua_State* L,UProperty* prop,uint8* parms) {
@@ -521,17 +511,14 @@ namespace slua {
         ensure(p);
         auto uss = p->Struct;
 
-        if(uss==VectorStruct) {
-            FVector v = checkVector(L,i);
-            p->CopyValuesInternal(parms,&v,1);
-        }
-        else {
-            LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L,i);
-            if(p->GetSize()!=ls->size)
-                luaL_error(L,"expect struct size == %d, but got %d",p->GetSize(),ls->size);
-            p->CopyValuesInternal(parms,ls->buf,1);
-        }
-        return 0;
+		if (LuaWrapper::checkValue(L, p, uss, parms, i))
+			return 0;
+
+		LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L, i);
+		if (p->GetSize() != ls->size)
+			luaL_error(L, "expect struct size == %d, but got %d", p->GetSize(), ls->size);
+		p->CopyValuesInternal(parms, ls->buf, 1);
+		return 0;
     }
 
     int checkUTextProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
@@ -665,11 +652,6 @@ namespace slua {
     }
 
     void LuaObject::init(lua_State* L) {
-        
-        VectorStruct = TBaseStructure<FVector>::Get();
-	    RotatorStruct = TBaseStructure<FRotator>::Get();
-	    TransformStruct = TBaseStructure<FTransform>::Get();
-
         regPusher(UIntProperty::StaticClass(),pushUIntProperty);
         regPusher(UFloatProperty::StaticClass(),pushFloatProperty);
         regPusher(UTextProperty::StaticClass(),pushUTextProperty);
@@ -690,7 +672,7 @@ namespace slua {
         regChecker(UStrProperty::StaticClass(),checkUStrProperty);
 		regChecker(UEnumProperty::StaticClass(), checkEnumProperty);
 
-		bindAll(L);
+		LuaWrapper::init(L);
     }
 
     int LuaObject::push(lua_State* L,UFunction* func)  {

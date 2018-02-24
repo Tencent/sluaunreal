@@ -3,10 +3,15 @@ local B=require 'b'
 
 print("test require",B.foo())
 
+local r = FRotator()
+
 local Test=import('SluaTestCase');
 local t=Test();
 
-print(t:GetWidget())
+local v = FVector(100,200,300)
+t:TestStruct(v)
+
+print(t:GetWidget("Button"))
 
 -- test
 for i=1,10 do
@@ -53,10 +58,13 @@ local edit=tree:FindWidget('TextBox_0');
 local HitResult = import('HitResult');
 
 function update(dt,actor)
+    print("call update")
     local p = actor:K2_GetActorLocation()
     --print("actor pos",p[1])
     local h = HitResult()
-    local ok,h=actor:K2_SetActorLocation({20,0,0},true,h,true)
+    --local ok,h=actor:K2_SetActorLocation({20,0,0},true,h,true)
+    local v = FVector(1,2,3)
+    local ok,h=actor:K2_SetActorLocation(v,true,h,true)
     --print("hit info",h)
     -- test memory leak?
     local arr=t:GetArray();
@@ -73,5 +81,34 @@ function update(dt,actor)
     return 1024,2,"s",{},function() end
 end
 
+function print_table(t)
+    print("begin print table...")
+    for k,v in pairs(t) do
+        print(type(k),k,type(v),v)
+    end
+    print("end print table...")
+end
+
+print("=======================")
+print(FVector)
+local a = FVector()
+a:Set(100,200,300)
+print(a:GetMax())
+local b = FVector()
+b:Set(1,2,3)
+print(b:GetMax())
+
+print("=======================")
+
+local OneVector = FVector.OneVector
+print(OneVector)
+print(OneVector.X,OneVector.Y,OneVector.Z)
+print(OneVector:ToString())
+
+-- print(FVector)
+-- for k,v in pairs(FVector) do
+--     print(type(k),k,type(v),v)
+--     print_table(getmetatable(v))
+-- end
 
 return 1024,2,"s",{},function() end

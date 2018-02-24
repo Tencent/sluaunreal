@@ -55,6 +55,10 @@ TArray<int> USluaTestCase::GetArray() {
     return array;
 }
 
+void USluaTestCase::TestStruct(FVector v) {
+	slua::Log::Log("v.X=%f, v.Y=%f, v.Z=%f", v.X, v.Y, v.Z);
+}
+
 UUserWidget* USluaTestCase::GetWidget(FString ui) {
     TArray<FStringFormatArg> Args;
     Args.Add(ui);

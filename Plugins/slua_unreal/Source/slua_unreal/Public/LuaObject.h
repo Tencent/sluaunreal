@@ -139,11 +139,6 @@ namespace slua {
             return 1;
         }
 
-        static int push(lua_State* L, const std::string& v) {
-            lua_pushlstring(L,v.c_str(),v.size());
-            return 1;
-        }
-
         static int push(lua_State* L, const FText& v) {
             FString str = v.ToString();
             lua_pushstring(L,TCHAR_TO_UTF8(*str));

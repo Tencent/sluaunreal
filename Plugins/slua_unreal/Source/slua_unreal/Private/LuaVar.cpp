@@ -216,7 +216,7 @@ namespace slua {
         case LV_NUMBER:
             return vars[0].d;
         default:
-            throw LuaVarBadCastException();
+            return 0;//throw LuaVarBadCastException();
         }
     }
 
@@ -228,7 +228,7 @@ namespace slua {
         case LV_NUMBER:
             return vars[0].d;
         default:
-            throw LuaVarBadCastException();
+            return 0.f;//throw LuaVarBadCastException();
         }
     }
 
@@ -240,7 +240,7 @@ namespace slua {
         case LV_NUMBER:
             return vars[0].d;
         default:
-            throw LuaVarBadCastException();
+            return 0;//throw LuaVarBadCastException();
         }
     }
 

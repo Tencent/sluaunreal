@@ -55,7 +55,7 @@ namespace slua {
     }
     
     int print(lua_State *L) {
-        std::string str;
+        FString str;
         int top = lua_gettop(L);
         for(int n=1;n<=top;n++) {
             size_t len;
@@ -64,7 +64,7 @@ namespace slua {
             if(s)
                 str+=s;
         }
-        Log::Log("%s",str.c_str());
+        Log::Log("%s",TCHAR_TO_UTF8(*str));
         return 0;
     }
 

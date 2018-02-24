@@ -46,7 +46,8 @@ namespace slua {
 	static UScriptStruct* TransformStruct = nullptr;
 
     // construct lua struct
-    LuaStruct::LuaStruct(uint8* buf,uint32 size,UScriptStruct* uss):buf(buf),size(size),uss(uss) {
+    LuaStruct::LuaStruct(uint8* buf,uint32 size,UScriptStruct* uss)
+        :buf(buf),size(size),uss(uss) {
         this->uss->AddToRoot();
     }
 
@@ -528,7 +529,7 @@ namespace slua {
     }
 
     void LuaObject::init(lua_State* L) {
-        
+
         VectorStruct = TBaseStructure<FVector>::Get();
 	    RotatorStruct = TBaseStructure<FRotator>::Get();
 	    TransformStruct = TBaseStructure<FTransform>::Get();

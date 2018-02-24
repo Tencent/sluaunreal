@@ -40,12 +40,12 @@ namespace slua {
 
     class SLUA_UNREAL_API LuaVarExcetpion : public std::exception {
     public:
-        LuaVarExcetpion(const std::string& err):errormsg(err) {}
+        LuaVarExcetpion(const char* err):errormsg(err) {}
         virtual const char* what() const __NOEXCEPT {
-            return errormsg.c_str();
+            return TCHAR_TO_UTF8(*errormsg);
         }
     private:
-        std::string errormsg;
+        FString errormsg;
     };
 
     class SLUA_UNREAL_API LuaVarBadCastException : public LuaVarExcetpion {

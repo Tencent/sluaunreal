@@ -35,15 +35,13 @@
 #include "LuaWrapper.h"
 #include <map>
 
-#define str_concat(r,a,b) std::string __t(a); __t+=b; auto r=__t.c_str()
-
 namespace slua { 
 
     typedef int (*PushPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms);
     typedef int (*CheckPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms,int i);
 
-    std::map<UClass*,PushPropertyFunction> pusherMap;
-    std::map<UClass*,CheckPropertyFunction> checkerMap;
+	TMap<UClass*,PushPropertyFunction> pusherMap;
+	TMap<UClass*,CheckPropertyFunction> checkerMap;
 
 	std::map<std::string, std::string> typeMap;
 
@@ -129,8 +127,9 @@ namespace slua {
 		lua_setmetatable(L, -3);					// setmetatable(t, mt)
 		setMetaMethods(L);
 		
-		str_concat(s_inst, tn, "_inst");
-		luaL_newmetatable(L, s_inst);
+		FString inst(UTF8_TO_TCHAR(tn));
+		inst += TEXT("_inst");
+		luaL_newmetatable(L, TCHAR_TO_UTF8(*inst));
 		setMetaMethods(L);
 	}
 
@@ -151,13 +150,15 @@ namespace slua {
 	}
 
 	void LuaObject::getStaticTypeTable(lua_State* L, const char* tn) {
-		str_concat(s_static, tn, "_static");
-		luaL_getmetatable(L, s_static);
+		FString stat(UTF8_TO_TCHAR(tn));
+		stat += TEXT("_static");
+		luaL_getmetatable(L, TCHAR_TO_UTF8(*stat));
 	}
 
 	void LuaObject::getInstanceTypeTable(lua_State* L, const char* tn) {
-		str_concat(s_inst, tn, "_inst");
-		luaL_getmetatable(L, s_inst);
+		FString inst(UTF8_TO_TCHAR(tn));
+		inst += TEXT("_inst");
+		luaL_getmetatable(L, TCHAR_TO_UTF8(*inst));
 	}
 
 	void LuaObject::finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc) {
@@ -174,8 +175,10 @@ namespace slua {
 			lua_settable(L, -5);
 		}
 		lua_pop(L, 1);
-		str_concat(s_static, tn, "_static");
-		lua_setfield(L, LUA_REGISTRYINDEX, s_static);
+
+		FString stat(UTF8_TO_TCHAR(tn));
+		stat += TEXT("_static");
+		lua_setfield(L, LUA_REGISTRYINDEX, TCHAR_TO_UTF8(*stat));
 
 		lua_pushcclosure(L, gc, 0);
 		lua_setfield(L, -2, "__gc");
@@ -184,19 +187,11 @@ namespace slua {
 	}
 
     PushPropertyFunction getPusher(UClass* cls) {
-        auto it = pusherMap.find(cls);
-        if(it!=pusherMap.end())
-            return it->second;
-        else
-            return nullptr;
+        return *(pusherMap.Find(cls));
     }
 
     CheckPropertyFunction getChecker(UClass* cls) {
-        auto it = checkerMap.find(cls);
-        if(it!=checkerMap.end())
-            return it->second;
-        else
-            return nullptr;
+        return *(checkerMap.Find(cls));
     }
 
     PushPropertyFunction getPusher(UProperty* prop) {

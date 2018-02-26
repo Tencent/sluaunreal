@@ -26,7 +26,6 @@
 #include "lua/lua.hpp"
 #include "UObject/UnrealType.h"
 #include "UObject/WeakObjectPtr.h"
-#include <string>
 
 #define CheckUD(Type,L,P) UserData<Type*>* ud = reinterpret_cast<UserData<Type*>*>(luaL_checkudata(L, P,#Type)); \
     if(!ud) { luaL_error(L, "checkValue error at %d",P); } \

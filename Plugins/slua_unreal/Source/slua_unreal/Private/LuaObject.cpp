@@ -33,7 +33,6 @@
 #include "LuaCppBinding.h"
 #include "LuaState.h"
 #include "LuaWrapper.h"
-#include <map>
 
 namespace slua { 
 

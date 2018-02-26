@@ -92,6 +92,7 @@ end
 print("=======================")
 print(FVector)
 local a = FVector()
+print_table(getmetatable(a))
 a:Set(100,200,300)
 print(a:GetMax())
 local b = FVector()

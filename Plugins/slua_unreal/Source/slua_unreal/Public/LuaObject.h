@@ -89,22 +89,6 @@ namespace slua {
     class SLUA_UNREAL_API LuaObject
     {
     public:
-		static const char* __typeName(const std::type_info& ti);
-
-		template<class T>
-		static const char* typeName() {
-			const std::type_info& ti = typeid(typename remove_pointer<T>::type);
-			return __typeName(ti);
-		}
-
-		static void __initType(const std::type_info& ti, const char* tn);
-
-		template<class T>
-		static void initType(const char* tn) {
-			const std::type_info& ti = typeid(T);
-			__initType(ti, tn);
-		}
-
 		static void getInstanceTypeTable(lua_State* L, const char* tn);
 		static void getStaticTypeTable(lua_State* L, const char* tn);
 
@@ -129,18 +113,16 @@ namespace slua {
 		}
 
 		template<class T>
-		static void pushValue(lua_State* L, T* v) {
+		static void pushValue(lua_State* L, const char* fn, T* v) {
 			NewUD(T, v);
-			const char* tn = typeName<T>();
-			getInstanceTypeTable(L, tn);
+			getInstanceTypeTable(L, fn);
 			lua_setmetatable(L, -2);
 		}
 
 		template<class T>
-		static void pushStatic(lua_State* L, T* v) {
+		static void pushStatic(lua_State* L, const char* fn, T* v) {
 			NewUD(T, v);
-			const char* tn = typeName<T>();
-			getStaticTypeTable(L, tn);
+			getStaticTypeTable(L, fn);
 			lua_setmetatable(L, -2);
 		}
 

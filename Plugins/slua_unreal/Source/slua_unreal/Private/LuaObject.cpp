@@ -43,8 +43,6 @@ namespace slua {
 	TMap<UClass*,PushPropertyFunction> pusherMap;
 	TMap<UClass*,CheckPropertyFunction> checkerMap;
 
-	std::map<std::string, std::string> typeMap;
-
     // construct lua struct
     LuaStruct::LuaStruct(uint8* buf,uint32 size,UScriptStruct* uss)
         :buf(buf),size(size),uss(uss) {
@@ -56,22 +54,6 @@ namespace slua {
         buf = nullptr;
         uss->RemoveFromRoot();
     }
-
-	const char* LuaObject::__typeName(const std::type_info& ti) {
-		auto it = typeMap.find(ti.name());
-		if (it != typeMap.end())
-			return it->second.c_str();
-		return nullptr;
-	}
-
-	void LuaObject::__initType(const std::type_info& ti, const char* tn) {
-		auto it = typeMap.lower_bound(ti.name());
-		if (it != typeMap.end() && !(typeMap.key_comp()(ti.name(), it->first))) {
-			return;
-		} else {
-			typeMap.insert(it, std::make_pair(ti.name(), tn));
-		}
-	}
 
 	int LuaObject::classIndex(lua_State* L) {
 		lua_getmetatable(L, 1);
@@ -203,11 +185,11 @@ namespace slua {
     }
 
     void regPusher(UClass* cls,PushPropertyFunction func) {
-        pusherMap[cls]=func;
+		pusherMap.Add(cls, func);
     }
 
     void regChecker(UClass* cls,CheckPropertyFunction func) {
-        checkerMap[cls]=func;
+		checkerMap.Add(cls, func);
     }
 
     int classConstruct(lua_State* L) {
@@ -446,7 +428,6 @@ namespace slua {
     }
 
     int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms_) {
-
         auto p = Cast<UStructProperty>(prop);
         ensure(p);
         auto uss = p->Struct;

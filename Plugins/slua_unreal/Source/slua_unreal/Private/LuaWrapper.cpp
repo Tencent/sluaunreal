@@ -5001,7 +5001,8 @@ namespace slua {
 			}
 			if (argc == 2) {
 				auto _a0 = LuaObject::checkValue<int>(L, 2);
-				auto self = new FBox2D(_a0);
+				auto _a02 = (EForceInit)_a0;
+				auto self = new FBox2D(_a02);
 				LuaObject::push<FBox2D>(L, "FBox2D", self);
 				return 1;
 			}

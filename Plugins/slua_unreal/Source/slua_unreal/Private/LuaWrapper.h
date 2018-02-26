@@ -1,6 +1,7 @@
+#pragma once
+
 #include "LuaObject.h"
 #include "Log.h"
-#include <map>
 
 #define LUA_WRAPPER_DEBUG
 

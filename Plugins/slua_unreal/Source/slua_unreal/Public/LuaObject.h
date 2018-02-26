@@ -26,7 +26,6 @@
 #include "lua/lua.hpp"
 #include "UObject/UnrealType.h"
 #include "UObject/WeakObjectPtr.h"
-#include <string>
 
 #define CheckUD(Type,L,P) UserData<Type*>* ud = reinterpret_cast<UserData<Type*>*>(luaL_checkudata(L, P,#Type)); \
     if(!ud) { luaL_error(L, "checkValue error at %d",P); } \
@@ -161,7 +160,6 @@ namespace slua {
 		static int push(lua_State* L, float v);
 		static int push(lua_State* L, int v);
 		static int push(lua_State* L, uint32 v);
-		static int push(lua_State* L, const std::string& v);
 		static int push(lua_State* L, const FText& v);
 		static int push(lua_State* L, const FString& str);
         static int push(lua_State* L, UFunction* func);

@@ -33,7 +33,6 @@
 #include "LuaCppBinding.h"
 #include "LuaState.h"
 #include "LuaWrapper.h"
-#include <map>
 
 namespace slua { 
 
@@ -698,10 +697,10 @@ namespace slua {
 		return 1;
 	}
 
-	int LuaObject::push(lua_State* L, const std::string& v) {
-		lua_pushlstring(L, v.c_str(), v.size());
-		return 1;
-	}
+	// int LuaObject::push(lua_State* L, const std::string& v) {
+	// 	lua_pushlstring(L, v.c_str(), v.size());
+	// 	return 1;
+	// }
 
 	int LuaObject::push(lua_State* L, const FText& v) {
 		FString str = v.ToString();

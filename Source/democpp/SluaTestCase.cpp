@@ -36,7 +36,7 @@ namespace slua {
 class Foo {
 public:
     void bar(const char*,int) {}
-    std::string getStr() { return "some text"; }
+    FString getStr() { return FString(UTF8_TO_TCHAR("some text")); }
 };
 
 DefLuaClass(Foo)

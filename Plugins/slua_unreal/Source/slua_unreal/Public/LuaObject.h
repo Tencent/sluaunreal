@@ -113,15 +113,16 @@ namespace slua {
 		}
 
 		template<class T>
-		static void pushValue(lua_State* L, const char* fn, T* v) {
+		static void push(lua_State* L, const char* fn, T* v) {
 			NewUD(T, v);
 			getInstanceTypeTable(L, fn);
 			lua_setmetatable(L, -2);
 		}
 
 		template<class T>
-		static void pushStatic(lua_State* L, const char* fn, T* v) {
-			NewUD(T, v);
+		static void push(lua_State* L, const char* fn, const T* v) {
+			auto v2 = const_cast<T*>(v);
+			NewUD(T, v2);
 			getStaticTypeTable(L, fn);
 			lua_setmetatable(L, -2);
 		}
@@ -161,7 +162,6 @@ namespace slua {
 		static int push(lua_State* L, float v);
 		static int push(lua_State* L, int v);
 		static int push(lua_State* L, uint32 v);
-		static int push(lua_State* L, const std::string& v);
 		static int push(lua_State* L, const FText& v);
 		static int push(lua_State* L, const FString& str);
         static int push(lua_State* L, UFunction* func);

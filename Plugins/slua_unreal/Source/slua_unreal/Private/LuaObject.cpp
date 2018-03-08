@@ -108,9 +108,8 @@ namespace slua {
 		lua_setmetatable(L, -3);					// setmetatable(t, mt)
 		setMetaMethods(L);
 		
-		FString inst(UTF8_TO_TCHAR(tn));
-		inst += TEXT("_inst");
-		luaL_newmetatable(L, TCHAR_TO_UTF8(*inst));
+		auto _inst  = FString::Printf(TEXT("%s_inst"), UTF8_TO_TCHAR(tn));
+		luaL_newmetatable(L, TCHAR_TO_UTF8(*_inst));
 		setMetaMethods(L);
 	}
 
@@ -131,15 +130,13 @@ namespace slua {
 	}
 
 	void LuaObject::getStaticTypeTable(lua_State* L, const char* tn) {
-		FString stat(UTF8_TO_TCHAR(tn));
-		stat += TEXT("_static");
-		luaL_getmetatable(L, TCHAR_TO_UTF8(*stat));
+		auto _static = FString::Printf(TEXT("%s_static"), UTF8_TO_TCHAR(tn));
+		luaL_getmetatable(L, TCHAR_TO_UTF8(*_static));
 	}
 
 	void LuaObject::getInstanceTypeTable(lua_State* L, const char* tn) {
-		FString inst(UTF8_TO_TCHAR(tn));
-		inst += TEXT("_inst");
-		luaL_getmetatable(L, TCHAR_TO_UTF8(*inst));
+		auto _inst = FString::Printf(TEXT("%s_inst"), UTF8_TO_TCHAR(tn));
+		luaL_getmetatable(L, TCHAR_TO_UTF8(*_inst));
 	}
 
 	void LuaObject::finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc) {
@@ -157,9 +154,8 @@ namespace slua {
 		}
 		lua_pop(L, 1);
 
-		FString stat(UTF8_TO_TCHAR(tn));
-		stat += TEXT("_static");
-		lua_setfield(L, LUA_REGISTRYINDEX, TCHAR_TO_UTF8(*stat));
+		auto _static = FString::Printf(TEXT("%s_static"), UTF8_TO_TCHAR(tn));
+		lua_setfield(L, LUA_REGISTRYINDEX, TCHAR_TO_UTF8(*_static));
 
 		lua_pushcclosure(L, gc, 0);
 		lua_setfield(L, -2, "__gc");

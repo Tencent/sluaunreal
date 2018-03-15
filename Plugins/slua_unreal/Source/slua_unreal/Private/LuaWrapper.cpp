@@ -24,6 +24,7 @@
 
 namespace slua {
 
+	static UScriptStruct* FMarginStruct = nullptr;
 	static UScriptStruct* FRotatorStruct = nullptr;
 	static UScriptStruct* FTransformStruct = nullptr;
 	static UScriptStruct* FLinearColorStruct = nullptr;
@@ -47,6 +48,21 @@ namespace slua {
 
 	TMap<UScriptStruct*, pushStructFunction> _pushStructMap;
 	TMap<UScriptStruct*, checkStructFunction> _checkStructMap;
+
+	static inline FMargin* __newFMargin() {
+		return new FMargin();
+	}
+
+	static void __pushFMargin(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFMargin();
+		p->CopyValuesInternal(ptr, parms, 1);
+		LuaObject::push<FMargin>(L, "FMargin", ptr);
+	}
+
+	static void __checkFMargin(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FMargin*>(L, i);
+		p->CopyValuesInternal(parms, v, 1);
+	}
 
 	static inline FRotator* __newFRotator() {
 		return new FRotator();
@@ -302,6 +318,128 @@ namespace slua {
 		auto v = LuaObject::checkValue<FPrimaryAssetId*>(L, i);
 		p->CopyValuesInternal(parms, v, 1);
 	}
+
+	struct FMarginWrapper {
+
+		static int __ctor(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = new FMargin();
+				LuaObject::push<FMargin>(L, "FMargin", self);
+				return 1;
+			}
+			if (argc == 2) {
+				auto UniformMargin = LuaObject::checkValue<float>(L, 2);
+				auto self = new FMargin(UniformMargin);
+				LuaObject::push<FMargin>(L, "FMargin", self);
+				return 1;
+			}
+			if (argc == 3) {
+				auto Horizontal = LuaObject::checkValue<float>(L, 2);
+				auto Vertical = LuaObject::checkValue<float>(L, 3);
+				auto self = new FMargin(Horizontal, Vertical);
+				LuaObject::push<FMargin>(L, "FMargin", self);
+				return 1;
+			}
+			if (argc == 5) {
+				auto InLeft = LuaObject::checkValue<float>(L, 2);
+				auto InTop = LuaObject::checkValue<float>(L, 3);
+				auto InRight = LuaObject::checkValue<float>(L, 4);
+				auto InBottom = LuaObject::checkValue<float>(L, 5);
+				auto self = new FMargin(InLeft, InTop, InRight, InBottom);
+				LuaObject::push<FMargin>(L, "FMargin", self);
+				return 1;
+			}
+			luaL_error(L, "call FMargin() error, argc=%d", argc);
+			return 0;
+		}
+
+		static int __gc(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			delete self;
+			return 0;
+		}
+
+		static int get_Left(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			LuaObject::push(L, self->Left);
+			return 1;
+		}
+
+		static int set_Left(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			auto a1 = LuaObject::checkValue<float>(L, 2);
+			self->Left = a1;
+			LuaObject::push(L, a1);
+			return 1;
+		}
+
+		static int get_Top(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			LuaObject::push(L, self->Top);
+			return 1;
+		}
+
+		static int set_Top(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			auto a1 = LuaObject::checkValue<float>(L, 2);
+			self->Top = a1;
+			LuaObject::push(L, a1);
+			return 1;
+		}
+
+		static int get_Right(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			LuaObject::push(L, self->Right);
+			return 1;
+		}
+
+		static int set_Right(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			auto a1 = LuaObject::checkValue<float>(L, 2);
+			self->Right = a1;
+			LuaObject::push(L, a1);
+			return 1;
+		}
+
+		static int get_Bottom(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			LuaObject::push(L, self->Bottom);
+			return 1;
+		}
+
+		static int set_Bottom(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			auto a1 = LuaObject::checkValue<float>(L, 2);
+			self->Bottom = a1;
+			LuaObject::push(L, a1);
+			return 1;
+		}
+
+		static int GetDesiredSize(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = LuaObject::checkValue<FMargin*>(L, 1);
+				auto ret = __newFVector2D();
+				*ret = self->GetDesiredSize();
+				LuaObject::push<FVector2D>(L, "FVector2D", ret);
+				return 1;
+			}
+			luaL_error(L, "call FMargin::GetDesiredSize error, argc=%d", argc);
+			return 0;
+		}
+
+		static void bind(lua_State* L) {
+			LuaObject::newType(L, "FMargin");
+			LuaObject::addField(L, "Left", get_Left, set_Left, true);
+			LuaObject::addField(L, "Top", get_Top, set_Top, true);
+			LuaObject::addField(L, "Right", get_Right, set_Right, true);
+			LuaObject::addField(L, "Bottom", get_Bottom, set_Bottom, true);
+			LuaObject::addMethod(L, "GetDesiredSize", GetDesiredSize, true);
+			LuaObject::finishType(L, "FMargin", __ctor, __gc);
+		}
+
+	};
 
 	struct FRotatorWrapper {
 
@@ -5938,6 +6076,9 @@ namespace slua {
 	}
 
 	void LuaWrapper::init(lua_State* L) {
+		FMarginStruct = FMargin::StaticStruct();
+		_pushStructMap.Add(FMarginStruct, __pushFMargin);
+		_checkStructMap.Add(FMarginStruct, __checkFMargin);
 		FRotatorStruct = TBaseStructure<FRotator>::Get();
 		_pushStructMap.Add(FRotatorStruct, __pushFRotator);
 		_checkStructMap.Add(FRotatorStruct, __checkFRotator);
@@ -5990,6 +6131,7 @@ namespace slua {
 		_pushStructMap.Add(FPrimaryAssetIdStruct, __pushFPrimaryAssetId);
 		_checkStructMap.Add(FPrimaryAssetIdStruct, __checkFPrimaryAssetId);
 
+		FMarginWrapper::bind(L);
 		FRotatorWrapper::bind(L);
 		FTransformWrapper::bind(L);
 		FLinearColorWrapper::bind(L);

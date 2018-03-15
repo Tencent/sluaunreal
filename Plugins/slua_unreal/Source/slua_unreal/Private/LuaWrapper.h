@@ -22,7 +22,7 @@
 
 #pragma once
 #include "LuaObject.h"
-#include "Log.h"
+#include "Margin.h"
 
 #define LUA_WRAPPER_DEBUG
 

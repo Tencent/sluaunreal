@@ -396,32 +396,6 @@ namespace slua {
         return LuaObject::push(L,*str);
     }
 
-    int pushVector(lua_State* L,uint8* buf,uint32 size) {
-        ensure(size==sizeof(FVector));
-        lua_createtable(L,3,0);
-        FVector* v = (FVector*) buf;
-        lua_pushnumber(L,v->X);
-        lua_rawseti(L,-2,1);
-        lua_pushnumber(L,v->Y);
-        lua_rawseti(L,-2,2);
-        lua_pushnumber(L,v->Z);
-        lua_rawseti(L,-2,3);
-        return 1;
-    }
-
-    FVector checkVector(lua_State* L,int i) {
-        FVector v;
-        luaL_checktype(L,i,LUA_TTABLE);
-        lua_rawgeti(L,i,1);
-        v.X = lua_tonumber(L,-1);
-        lua_rawgeti(L,i,2);
-        v.Y = lua_tonumber(L,-1);
-        lua_rawgeti(L,i,3);
-        v.Z = lua_tonumber(L,-1);
-        lua_pop(L,3);
-        return v;
-    }
-
     int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms_) {
         auto p = Cast<UStructProperty>(prop);
         ensure(p);
@@ -445,7 +419,7 @@ namespace slua {
         FMulticastScriptDelegate* delegate = p->GetPropertyValuePtr_InContainer(parms);
         return LuaDelegate::push(L,delegate,p->SignatureFunction);
     }
-
+	 
     int pushUObjectProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p = Cast<UObjectProperty>(prop);
         ensure(p);   
@@ -650,7 +624,6 @@ namespace slua {
     int LuaObject::push(lua_State* L,UFunction* func)  {
         lua_pushlightuserdata(L, func);
         lua_pushcclosure(L, ufuncClosure, 1);
-        
         return 1;
     }
 

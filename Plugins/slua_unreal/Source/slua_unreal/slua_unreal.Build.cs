@@ -7,6 +7,9 @@ public class slua_unreal : ModuleRules
 	public slua_unreal(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+        // enable exception
+        bEnableExceptions = true;
+        bEnforceIWYU = false;
 
         if(Target.Platform == UnrealTargetPlatform.Win64)
             Definitions.Add("LUA_BUILD_AS_DLL");

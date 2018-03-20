@@ -7,11 +7,12 @@ local r = FRotator()
 
 local Test=import('SluaTestCase');
 local t=Test();
+local bb = t:GetWidget("Button");
 
 local v = FVector(100,200,300)
 t:TestStruct(v)
 
-print(t:GetWidget("Button"))
+print(bb)
 
 -- test
 for i=1,10 do
@@ -28,6 +29,7 @@ local Button = import('Button');
 local btn=Button();
 -- local txt=TextBlock();
 local ui=slua.loadUI('/Game/Panel.Panel');
+t:TwoArgs("fuck",100,1717,"1024",ui)
 ui:AddToViewport(0);
 -- local seq=ui.ActiveSequencePlayers;
 -- print('seq',seq:Num());

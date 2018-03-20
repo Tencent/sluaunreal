@@ -24,6 +24,7 @@
 
 #include "CoreMinimal.h"
 #include <string>
+#include "Styling/SlateBrush.h"
 #include "SluaTestCase.generated.h"
 
 
@@ -35,7 +36,11 @@ public:
     TArray<int> GetArray();
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
-    UUserWidget* GetWidget(FString name);    
+    UUserWidget* GetWidget(FString name);
+
+
+    UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
+    void TwoArgs(FString a,int b,float c,FString d,UUserWidget* widget);   
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     void SetButton(UUserWidget* widget);

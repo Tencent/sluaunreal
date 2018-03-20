@@ -244,15 +244,13 @@ namespace slua {
 
     void fillParam(lua_State* L,UFunction* func,uint8* params) {
         int i=2;
-        int offset=0;
         for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
             UProperty* prop = *it;
             uint64 propflag = prop->GetPropertyFlags();
             if((propflag&CPF_ReturnParm))
                 continue;
 
-            offset += fillParamFromState(L,prop,params+offset,i);
-            //UE_LOG(LogClass, Log, TEXT("fill param at %d"),i);
+            fillParamFromState(L,prop,params,i);
             i++;
         }
     }

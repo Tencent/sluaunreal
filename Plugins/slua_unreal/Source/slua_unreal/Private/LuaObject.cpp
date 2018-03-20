@@ -108,9 +108,8 @@ namespace slua {
 		lua_setmetatable(L, -3);					// setmetatable(t, mt)
 		setMetaMethods(L);
 		
-		FString inst(UTF8_TO_TCHAR(tn));
-		inst += TEXT("_inst");
-		luaL_newmetatable(L, TCHAR_TO_UTF8(*inst));
+		auto _inst  = FString::Printf(TEXT("%s_inst"), UTF8_TO_TCHAR(tn));
+		luaL_newmetatable(L, TCHAR_TO_UTF8(*_inst));
 		setMetaMethods(L);
 	}
 
@@ -131,15 +130,13 @@ namespace slua {
 	}
 
 	void LuaObject::getStaticTypeTable(lua_State* L, const char* tn) {
-		FString stat(UTF8_TO_TCHAR(tn));
-		stat += TEXT("_static");
-		luaL_getmetatable(L, TCHAR_TO_UTF8(*stat));
+		auto _static = FString::Printf(TEXT("%s_static"), UTF8_TO_TCHAR(tn));
+		luaL_getmetatable(L, TCHAR_TO_UTF8(*_static));
 	}
 
 	void LuaObject::getInstanceTypeTable(lua_State* L, const char* tn) {
-		FString inst(UTF8_TO_TCHAR(tn));
-		inst += TEXT("_inst");
-		luaL_getmetatable(L, TCHAR_TO_UTF8(*inst));
+		auto _inst = FString::Printf(TEXT("%s_inst"), UTF8_TO_TCHAR(tn));
+		luaL_getmetatable(L, TCHAR_TO_UTF8(*_inst));
 	}
 
 	void LuaObject::finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc) {
@@ -157,9 +154,8 @@ namespace slua {
 		}
 		lua_pop(L, 1);
 
-		FString stat(UTF8_TO_TCHAR(tn));
-		stat += TEXT("_static");
-		lua_setfield(L, LUA_REGISTRYINDEX, TCHAR_TO_UTF8(*stat));
+		auto _static = FString::Printf(TEXT("%s_static"), UTF8_TO_TCHAR(tn));
+		lua_setfield(L, LUA_REGISTRYINDEX, TCHAR_TO_UTF8(*_static));
 
 		lua_pushcclosure(L, gc, 0);
 		lua_setfield(L, -2, "__gc");
@@ -398,32 +394,6 @@ namespace slua {
         return LuaObject::push(L,*str);
     }
 
-    int pushVector(lua_State* L,uint8* buf,uint32 size) {
-        ensure(size==sizeof(FVector));
-        lua_createtable(L,3,0);
-        FVector* v = (FVector*) buf;
-        lua_pushnumber(L,v->X);
-        lua_rawseti(L,-2,1);
-        lua_pushnumber(L,v->Y);
-        lua_rawseti(L,-2,2);
-        lua_pushnumber(L,v->Z);
-        lua_rawseti(L,-2,3);
-        return 1;
-    }
-
-    FVector checkVector(lua_State* L,int i) {
-        FVector v;
-        luaL_checktype(L,i,LUA_TTABLE);
-        lua_rawgeti(L,i,1);
-        v.X = lua_tonumber(L,-1);
-        lua_rawgeti(L,i,2);
-        v.Y = lua_tonumber(L,-1);
-        lua_rawgeti(L,i,3);
-        v.Z = lua_tonumber(L,-1);
-        lua_pop(L,3);
-        return v;
-    }
-
     int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms_) {
         auto p = Cast<UStructProperty>(prop);
         ensure(p);
@@ -447,7 +417,7 @@ namespace slua {
         FMulticastScriptDelegate* delegate = p->GetPropertyValuePtr_InContainer(parms);
         return LuaDelegate::push(L,delegate,p->SignatureFunction);
     }
-
+	 
     int pushUObjectProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p = Cast<UObjectProperty>(prop);
         ensure(p);   
@@ -652,7 +622,6 @@ namespace slua {
     int LuaObject::push(lua_State* L,UFunction* func)  {
         lua_pushlightuserdata(L, func);
         lua_pushcclosure(L, ufuncClosure, 1);
-        
         return 1;
     }
 

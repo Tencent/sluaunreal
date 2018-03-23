@@ -55,13 +55,13 @@ namespace slua {
 
 	static void __pushFMargin(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFMargin();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FMargin>(L, "FMargin", ptr);
 	}
 
 	static void __checkFMargin(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FMargin*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	static inline FRotator* __newFRotator() {
@@ -70,13 +70,13 @@ namespace slua {
 
 	static void __pushFRotator(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFRotator();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FRotator>(L, "FRotator", ptr);
 	}
 
 	static void __checkFRotator(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FRotator*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	static inline FTransform* __newFTransform() {
@@ -85,13 +85,13 @@ namespace slua {
 
 	static void __pushFTransform(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFTransform();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FTransform>(L, "FTransform", ptr);
 	}
 
 	static void __checkFTransform(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FTransform*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	static inline FLinearColor* __newFLinearColor() {
@@ -100,13 +100,13 @@ namespace slua {
 
 	static void __pushFLinearColor(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFLinearColor();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FLinearColor>(L, "FLinearColor", ptr);
 	}
 
 	static void __checkFLinearColor(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FLinearColor*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	static inline FColor* __newFColor() {
@@ -115,13 +115,13 @@ namespace slua {
 
 	static void __pushFColor(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFColor();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FColor>(L, "FColor", ptr);
 	}
 
 	static void __checkFColor(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FColor*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	static inline FVector* __newFVector() {
@@ -130,13 +130,13 @@ namespace slua {
 
 	static void __pushFVector(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFVector();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FVector>(L, "FVector", ptr);
 	}
 
 	static void __checkFVector(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FVector*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	static inline FVector2D* __newFVector2D() {
@@ -145,13 +145,13 @@ namespace slua {
 
 	static void __pushFVector2D(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFVector2D();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FVector2D>(L, "FVector2D", ptr);
 	}
 
 	static void __checkFVector2D(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FVector2D*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	static inline FRandomStream* __newFRandomStream() {
@@ -160,13 +160,13 @@ namespace slua {
 
 	static void __pushFRandomStream(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFRandomStream();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FRandomStream>(L, "FRandomStream", ptr);
 	}
 
 	static void __checkFRandomStream(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FRandomStream*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	static inline FGuid* __newFGuid() {
@@ -175,13 +175,13 @@ namespace slua {
 
 	static void __pushFGuid(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFGuid();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FGuid>(L, "FGuid", ptr);
 	}
 
 	static void __checkFGuid(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FGuid*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	static inline FBox2D* __newFBox2D() {
@@ -190,13 +190,13 @@ namespace slua {
 
 	static void __pushFBox2D(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFBox2D();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FBox2D>(L, "FBox2D", ptr);
 	}
 
 	static void __checkFBox2D(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FBox2D*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	static inline FFloatRangeBound* __newFFloatRangeBound() {
@@ -205,13 +205,13 @@ namespace slua {
 
 	static void __pushFFloatRangeBound(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFFloatRangeBound();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ptr);
 	}
 
 	static void __checkFFloatRangeBound(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FFloatRangeBound*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	static inline FFloatRange* __newFFloatRange() {
@@ -220,13 +220,13 @@ namespace slua {
 
 	static void __pushFFloatRange(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFFloatRange();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FFloatRange>(L, "FFloatRange", ptr);
 	}
 
 	static void __checkFFloatRange(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FFloatRange*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	static inline FInt32RangeBound* __newFInt32RangeBound() {
@@ -235,13 +235,13 @@ namespace slua {
 
 	static void __pushFInt32RangeBound(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFInt32RangeBound();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ptr);
 	}
 
 	static void __checkFInt32RangeBound(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FInt32RangeBound*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	static inline FInt32Range* __newFInt32Range() {
@@ -250,13 +250,13 @@ namespace slua {
 
 	static void __pushFInt32Range(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFInt32Range();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FInt32Range>(L, "FInt32Range", ptr);
 	}
 
 	static void __checkFInt32Range(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FInt32Range*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	static inline FFloatInterval* __newFFloatInterval() {
@@ -265,13 +265,13 @@ namespace slua {
 
 	static void __pushFFloatInterval(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFFloatInterval();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FFloatInterval>(L, "FFloatInterval", ptr);
 	}
 
 	static void __checkFFloatInterval(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FFloatInterval*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	static inline FInt32Interval* __newFInt32Interval() {
@@ -280,13 +280,13 @@ namespace slua {
 
 	static void __pushFInt32Interval(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFInt32Interval();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FInt32Interval>(L, "FInt32Interval", ptr);
 	}
 
 	static void __checkFInt32Interval(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FInt32Interval*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	static inline FPrimaryAssetType* __newFPrimaryAssetType() {
@@ -295,13 +295,13 @@ namespace slua {
 
 	static void __pushFPrimaryAssetType(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFPrimaryAssetType();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FPrimaryAssetType>(L, "FPrimaryAssetType", ptr);
 	}
 
 	static void __checkFPrimaryAssetType(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FPrimaryAssetType*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	static inline FPrimaryAssetId* __newFPrimaryAssetId() {
@@ -310,13 +310,13 @@ namespace slua {
 
 	static void __pushFPrimaryAssetId(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFPrimaryAssetId();
-		p->CopyValuesInternal(ptr, parms, 1);
+		p->CopyCompleteValue_InContainer(ptr, parms);
 		LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", ptr);
 	}
 
 	static void __checkFPrimaryAssetId(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FPrimaryAssetId*>(L, i);
-		p->CopyValuesInternal(parms, v, 1);
+		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
 	struct FMarginWrapper {
@@ -531,8 +531,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FRotator*>(L, 1);
 				auto Message = LuaObject::checkValue<const char*>(L, 2);
-				auto Message2 = UTF8_TO_TCHAR(Message);
-				self->DiagnosticCheckNaN(Message2);
+				auto Message_ = UTF8_TO_TCHAR(Message);
+				self->DiagnosticCheckNaN(Message_);
 				return 0;
 			}
 			luaL_error(L, "call FRotator::DiagnosticCheckNaN error, argc=%d", argc);
@@ -569,9 +569,9 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FRotator*>(L, 1);
 				auto R = LuaObject::checkValue<FRotator*>(L, 2);
-				auto R2 = *R;
+				auto R_ = *R;
 				auto Tolerance = LuaObject::checkValue<float>(L, 3);
-				auto ret = self->Equals(R2, Tolerance);
+				auto ret = self->Equals(R_, Tolerance);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -613,9 +613,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FRotator*>(L, 1);
 				auto RotGrid = LuaObject::checkValue<FRotator*>(L, 2);
-				auto RotGrid2 = *RotGrid;
+				auto RotGrid_ = *RotGrid;
 				auto ret = __newFRotator();
-				*ret = self->GridSnap(RotGrid2);
+				*ret = self->GridSnap(RotGrid_);
 				LuaObject::push<FRotator>(L, "FRotator", ret);
 				return 1;
 			}
@@ -654,9 +654,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FRotator*>(L, 1);
 				auto V = LuaObject::checkValue<FVector*>(L, 2);
-				auto V2 = *V;
+				auto V_ = *V;
 				auto ret = __newFVector();
-				*ret = self->RotateVector(V2);
+				*ret = self->RotateVector(V_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -669,9 +669,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FRotator*>(L, 1);
 				auto V = LuaObject::checkValue<FVector*>(L, 2);
-				auto V2 = *V;
+				auto V_ = *V;
 				auto ret = __newFVector();
-				*ret = self->UnrotateVector(V2);
+				*ret = self->UnrotateVector(V_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -723,8 +723,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FRotator*>(L, 1);
 				auto Axis = LuaObject::checkValue<int>(L, 2);
-				auto Axis2 = (EAxis::Type)Axis;
-				auto ret = self->GetComponentForAxis(Axis2);
+				auto Axis_ = (EAxis::Type)Axis;
+				auto ret = self->GetComponentForAxis(Axis_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -737,9 +737,9 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FRotator*>(L, 1);
 				auto Axis = LuaObject::checkValue<int>(L, 2);
-				auto Axis2 = (EAxis::Type)Axis;
+				auto Axis_ = (EAxis::Type)Axis;
 				auto Component = LuaObject::checkValue<float>(L, 3);
-				self->SetComponentForAxis(Axis2, Component);
+				self->SetComponentForAxis(Axis_, Component);
 				return 0;
 			}
 			luaL_error(L, "call FRotator::SetComponentForAxis error, argc=%d", argc);
@@ -762,10 +762,10 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FRotator*>(L, 1);
 				auto Winding = LuaObject::checkValue<FRotator*>(L, 2);
-				auto Winding2 = *Winding;
+				auto Winding_ = *Winding;
 				auto Remainder = LuaObject::checkValue<FRotator*>(L, 3);
-				auto Remainder2 = *Remainder;
-				self->GetWindingAndRemainder(Winding2, Remainder2);
+				auto Remainder_ = *Remainder;
+				self->GetWindingAndRemainder(Winding_, Remainder_);
 				LuaObject::push<FRotator>(L, "FRotator", Winding);
 				LuaObject::push<FRotator>(L, "FRotator", Remainder);
 				return 2;
@@ -863,8 +863,8 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 2) {
 				auto Angle = LuaObject::checkValue<int>(L, 2);
-				auto Angle2 = (unsigned short)Angle;
-				auto ret = FRotator::DecompressAxisFromByte(Angle2);
+				auto Angle_ = (unsigned short)Angle;
+				auto ret = FRotator::DecompressAxisFromByte(Angle_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -888,8 +888,8 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 2) {
 				auto Angle = LuaObject::checkValue<int>(L, 2);
-				auto Angle2 = (unsigned short)Angle;
-				auto ret = FRotator::DecompressAxisFromShort(Angle2);
+				auto Angle_ = (unsigned short)Angle;
+				auto ret = FRotator::DecompressAxisFromShort(Angle_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -901,9 +901,9 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 2) {
 				auto Euler = LuaObject::checkValue<FVector*>(L, 2);
-				auto Euler2 = *Euler;
+				auto Euler_ = *Euler;
 				auto ret = __newFRotator();
-				*ret = FRotator::MakeFromEuler(Euler2);
+				*ret = FRotator::MakeFromEuler(Euler_);
 				LuaObject::push<FRotator>(L, "FRotator", ret);
 				return 1;
 			}
@@ -962,32 +962,32 @@ namespace slua {
 			}
 			if (argc == 2) {
 				auto InTranslation = LuaObject::checkValue<FVector*>(L, 2);
-				auto InTranslation2 = *InTranslation;
-				auto self = new FTransform(InTranslation2);
+				auto InTranslation_ = *InTranslation;
+				auto self = new FTransform(InTranslation_);
 				LuaObject::push<FTransform>(L, "FTransform", self);
 				return 1;
 			}
 			if (argc == 4) {
 				auto InRotation = LuaObject::checkValue<FRotator*>(L, 2);
-				auto InRotation2 = *InRotation;
+				auto InRotation_ = *InRotation;
 				auto InTranslation = LuaObject::checkValue<FVector*>(L, 3);
-				auto InTranslation2 = *InTranslation;
+				auto InTranslation_ = *InTranslation;
 				auto InScale3D = LuaObject::checkValue<FVector*>(L, 4);
-				auto InScale3D2 = *InScale3D;
-				auto self = new FTransform(InRotation2, InTranslation2, InScale3D2);
+				auto InScale3D_ = *InScale3D;
+				auto self = new FTransform(InRotation_, InTranslation_, InScale3D_);
 				LuaObject::push<FTransform>(L, "FTransform", self);
 				return 1;
 			}
 			if (argc == 5) {
 				auto InX = LuaObject::checkValue<FVector*>(L, 2);
-				auto InX2 = *InX;
+				auto InX_ = *InX;
 				auto InY = LuaObject::checkValue<FVector*>(L, 3);
-				auto InY2 = *InY;
+				auto InY_ = *InY;
 				auto InZ = LuaObject::checkValue<FVector*>(L, 4);
-				auto InZ2 = *InZ;
+				auto InZ_ = *InZ;
 				auto InTranslation = LuaObject::checkValue<FVector*>(L, 5);
-				auto InTranslation2 = *InTranslation;
-				auto self = new FTransform(InX2, InY2, InZ2, InTranslation2);
+				auto InTranslation_ = *InTranslation;
+				auto self = new FTransform(InX_, InY_, InZ_, InTranslation_);
 				LuaObject::push<FTransform>(L, "FTransform", self);
 				return 1;
 			}
@@ -1127,11 +1127,11 @@ namespace slua {
 			if (argc == 4) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto Atom1 = LuaObject::checkValue<FTransform*>(L, 2);
-				auto Atom12 = *Atom1;
+				auto Atom1_ = *Atom1;
 				auto Atom2 = LuaObject::checkValue<FTransform*>(L, 3);
-				auto Atom22 = *Atom2;
+				auto Atom2_ = *Atom2;
 				auto Alpha = LuaObject::checkValue<float>(L, 4);
-				self->Blend(Atom12, Atom22, Alpha);
+				self->Blend(Atom1_, Atom2_, Alpha);
 				return 0;
 			}
 			luaL_error(L, "call FTransform::Blend error, argc=%d", argc);
@@ -1143,9 +1143,9 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto OtherAtom = LuaObject::checkValue<FTransform*>(L, 2);
-				auto OtherAtom2 = *OtherAtom;
+				auto OtherAtom_ = *OtherAtom;
 				auto Alpha = LuaObject::checkValue<float>(L, 3);
-				self->BlendWith(OtherAtom2, Alpha);
+				self->BlendWith(OtherAtom_, Alpha);
 				return 0;
 			}
 			luaL_error(L, "call FTransform::BlendWith error, argc=%d", argc);
@@ -1157,8 +1157,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto InScale3D = LuaObject::checkValue<FVector*>(L, 2);
-				auto InScale3D2 = *InScale3D;
-				self->ScaleTranslation(InScale3D2);
+				auto InScale3D_ = *InScale3D;
+				self->ScaleTranslation(InScale3D_);
 				return 0;
 			}
 			luaL_error(L, "call FTransform::ScaleTranslation error, argc=%d", argc);
@@ -1206,9 +1206,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto Other = LuaObject::checkValue<FTransform*>(L, 2);
-				auto Other2 = *Other;
+				auto Other_ = *Other;
 				auto ret = __newFTransform();
-				*ret = self->GetRelativeTransform(Other2);
+				*ret = self->GetRelativeTransform(Other_);
 				LuaObject::push<FTransform>(L, "FTransform", ret);
 				return 1;
 			}
@@ -1221,9 +1221,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto Other = LuaObject::checkValue<FTransform*>(L, 2);
-				auto Other2 = *Other;
+				auto Other_ = *Other;
 				auto ret = __newFTransform();
-				*ret = self->GetRelativeTransformReverse(Other2);
+				*ret = self->GetRelativeTransformReverse(Other_);
 				LuaObject::push<FTransform>(L, "FTransform", ret);
 				return 1;
 			}
@@ -1236,8 +1236,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto ParentTransform = LuaObject::checkValue<FTransform*>(L, 2);
-				auto ParentTransform2 = *ParentTransform;
-				self->SetToRelativeTransform(ParentTransform2);
+				auto ParentTransform_ = *ParentTransform;
+				self->SetToRelativeTransform(ParentTransform_);
 				return 0;
 			}
 			luaL_error(L, "call FTransform::SetToRelativeTransform error, argc=%d", argc);
@@ -1249,9 +1249,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto V = LuaObject::checkValue<FVector*>(L, 2);
-				auto V2 = *V;
+				auto V_ = *V;
 				auto ret = __newFVector();
-				*ret = self->TransformPosition(V2);
+				*ret = self->TransformPosition(V_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -1264,9 +1264,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto V = LuaObject::checkValue<FVector*>(L, 2);
-				auto V2 = *V;
+				auto V_ = *V;
 				auto ret = __newFVector();
-				*ret = self->TransformPositionNoScale(V2);
+				*ret = self->TransformPositionNoScale(V_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -1279,9 +1279,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto V = LuaObject::checkValue<FVector*>(L, 2);
-				auto V2 = *V;
+				auto V_ = *V;
 				auto ret = __newFVector();
-				*ret = self->InverseTransformPosition(V2);
+				*ret = self->InverseTransformPosition(V_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -1294,9 +1294,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto V = LuaObject::checkValue<FVector*>(L, 2);
-				auto V2 = *V;
+				auto V_ = *V;
 				auto ret = __newFVector();
-				*ret = self->InverseTransformPositionNoScale(V2);
+				*ret = self->InverseTransformPositionNoScale(V_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -1309,9 +1309,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto V = LuaObject::checkValue<FVector*>(L, 2);
-				auto V2 = *V;
+				auto V_ = *V;
 				auto ret = __newFVector();
-				*ret = self->TransformVector(V2);
+				*ret = self->TransformVector(V_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -1324,9 +1324,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto V = LuaObject::checkValue<FVector*>(L, 2);
-				auto V2 = *V;
+				auto V_ = *V;
 				auto ret = __newFVector();
-				*ret = self->TransformVectorNoScale(V2);
+				*ret = self->TransformVectorNoScale(V_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -1339,9 +1339,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto V = LuaObject::checkValue<FVector*>(L, 2);
-				auto V2 = *V;
+				auto V_ = *V;
 				auto ret = __newFVector();
-				*ret = self->InverseTransformVector(V2);
+				*ret = self->InverseTransformVector(V_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -1354,9 +1354,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto V = LuaObject::checkValue<FVector*>(L, 2);
-				auto V2 = *V;
+				auto V_ = *V;
 				auto ret = __newFVector();
-				*ret = self->InverseTransformVectorNoScale(V2);
+				*ret = self->InverseTransformVectorNoScale(V_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -1383,9 +1383,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto InAxis = LuaObject::checkValue<int>(L, 2);
-				auto InAxis2 = (EAxis::Type)InAxis;
+				auto InAxis_ = (EAxis::Type)InAxis;
 				auto ret = __newFVector();
-				*ret = self->GetScaledAxis(InAxis2);
+				*ret = self->GetScaledAxis(InAxis_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -1398,9 +1398,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto InAxis = LuaObject::checkValue<int>(L, 2);
-				auto InAxis2 = (EAxis::Type)InAxis;
+				auto InAxis_ = (EAxis::Type)InAxis;
 				auto ret = __newFVector();
-				*ret = self->GetUnitAxis(InAxis2);
+				*ret = self->GetUnitAxis(InAxis_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -1413,10 +1413,10 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto MirrorAxis = LuaObject::checkValue<int>(L, 2);
-				auto MirrorAxis2 = (EAxis::Type)MirrorAxis;
+				auto MirrorAxis_ = (EAxis::Type)MirrorAxis;
 				auto FlipAxis = LuaObject::checkValue<int>(L, 3);
-				auto FlipAxis2 = (EAxis::Type)FlipAxis;
-				self->Mirror(MirrorAxis2, FlipAxis2);
+				auto FlipAxis_ = (EAxis::Type)FlipAxis;
+				self->Mirror(MirrorAxis_, FlipAxis_);
 				return 0;
 			}
 			luaL_error(L, "call FTransform::Mirror error, argc=%d", argc);
@@ -1466,8 +1466,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto Origin = LuaObject::checkValue<FVector*>(L, 2);
-				auto Origin2 = *Origin;
-				self->SetLocation(Origin2);
+				auto Origin_ = *Origin;
+				self->SetLocation(Origin_);
 				return 0;
 			}
 			luaL_error(L, "call FTransform::SetLocation error, argc=%d", argc);
@@ -1503,9 +1503,9 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto Other = LuaObject::checkValue<FTransform*>(L, 2);
-				auto Other2 = *Other;
+				auto Other_ = *Other;
 				auto Tolerance = LuaObject::checkValue<float>(L, 3);
-				auto ret = self->RotationEquals(Other2, Tolerance);
+				auto ret = self->RotationEquals(Other_, Tolerance);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -1518,9 +1518,9 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto Other = LuaObject::checkValue<FTransform*>(L, 2);
-				auto Other2 = *Other;
+				auto Other_ = *Other;
 				auto Tolerance = LuaObject::checkValue<float>(L, 3);
-				auto ret = self->TranslationEquals(Other2, Tolerance);
+				auto ret = self->TranslationEquals(Other_, Tolerance);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -1533,9 +1533,9 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto Other = LuaObject::checkValue<FTransform*>(L, 2);
-				auto Other2 = *Other;
+				auto Other_ = *Other;
 				auto Tolerance = LuaObject::checkValue<float>(L, 3);
-				auto ret = self->Scale3DEquals(Other2, Tolerance);
+				auto ret = self->Scale3DEquals(Other_, Tolerance);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -1548,9 +1548,9 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto Other = LuaObject::checkValue<FTransform*>(L, 2);
-				auto Other2 = *Other;
+				auto Other_ = *Other;
 				auto Tolerance = LuaObject::checkValue<float>(L, 3);
-				auto ret = self->Equals(Other2, Tolerance);
+				auto ret = self->Equals(Other_, Tolerance);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -1563,9 +1563,9 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto Other = LuaObject::checkValue<FTransform*>(L, 2);
-				auto Other2 = *Other;
+				auto Other_ = *Other;
 				auto Tolerance = LuaObject::checkValue<float>(L, 3);
-				auto ret = self->EqualsNoScale(Other2, Tolerance);
+				auto ret = self->EqualsNoScale(Other_, Tolerance);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -1589,8 +1589,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto Scale3DMultiplier = LuaObject::checkValue<FVector*>(L, 2);
-				auto Scale3DMultiplier2 = *Scale3DMultiplier;
-				self->MultiplyScale3D(Scale3DMultiplier2);
+				auto Scale3DMultiplier_ = *Scale3DMultiplier;
+				self->MultiplyScale3D(Scale3DMultiplier_);
 				return 0;
 			}
 			luaL_error(L, "call FTransform::MultiplyScale3D error, argc=%d", argc);
@@ -1602,8 +1602,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto NewTranslation = LuaObject::checkValue<FVector*>(L, 2);
-				auto NewTranslation2 = *NewTranslation;
-				self->SetTranslation(NewTranslation2);
+				auto NewTranslation_ = *NewTranslation;
+				self->SetTranslation(NewTranslation_);
 				return 0;
 			}
 			luaL_error(L, "call FTransform::SetTranslation error, argc=%d", argc);
@@ -1615,8 +1615,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto Other = LuaObject::checkValue<FTransform*>(L, 2);
-				auto Other2 = *Other;
-				self->CopyTranslation(Other2);
+				auto Other_ = *Other;
+				self->CopyTranslation(Other_);
 				return 0;
 			}
 			luaL_error(L, "call FTransform::CopyTranslation error, argc=%d", argc);
@@ -1628,8 +1628,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto DeltaTranslation = LuaObject::checkValue<FVector*>(L, 2);
-				auto DeltaTranslation2 = *DeltaTranslation;
-				self->AddToTranslation(DeltaTranslation2);
+				auto DeltaTranslation_ = *DeltaTranslation;
+				self->AddToTranslation(DeltaTranslation_);
 				return 0;
 			}
 			luaL_error(L, "call FTransform::AddToTranslation error, argc=%d", argc);
@@ -1641,8 +1641,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto Other = LuaObject::checkValue<FTransform*>(L, 2);
-				auto Other2 = *Other;
-				self->CopyRotation(Other2);
+				auto Other_ = *Other;
+				self->CopyRotation(Other_);
 				return 0;
 			}
 			luaL_error(L, "call FTransform::CopyRotation error, argc=%d", argc);
@@ -1654,8 +1654,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto NewScale3D = LuaObject::checkValue<FVector*>(L, 2);
-				auto NewScale3D2 = *NewScale3D;
-				self->SetScale3D(NewScale3D2);
+				auto NewScale3D_ = *NewScale3D;
+				self->SetScale3D(NewScale3D_);
 				return 0;
 			}
 			luaL_error(L, "call FTransform::SetScale3D error, argc=%d", argc);
@@ -1667,8 +1667,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto Other = LuaObject::checkValue<FTransform*>(L, 2);
-				auto Other2 = *Other;
-				self->CopyScale3D(Other2);
+				auto Other_ = *Other;
+				self->CopyScale3D(Other_);
 				return 0;
 			}
 			luaL_error(L, "call FTransform::CopyScale3D error, argc=%d", argc);
@@ -1680,10 +1680,10 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto NewTranslation = LuaObject::checkValue<FVector*>(L, 2);
-				auto NewTranslation2 = *NewTranslation;
+				auto NewTranslation_ = *NewTranslation;
 				auto NewScale3D = LuaObject::checkValue<FVector*>(L, 3);
-				auto NewScale3D2 = *NewScale3D;
-				self->SetTranslationAndScale3D(NewTranslation2, NewScale3D2);
+				auto NewScale3D_ = *NewScale3D;
+				self->SetTranslationAndScale3D(NewTranslation_, NewScale3D_);
 				return 0;
 			}
 			luaL_error(L, "call FTransform::SetTranslationAndScale3D error, argc=%d", argc);
@@ -1744,8 +1744,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto SrcBA = LuaObject::checkValue<FTransform*>(L, 2);
-				auto SrcBA2 = *SrcBA;
-				self->CopyRotationPart(SrcBA2);
+				auto SrcBA_ = *SrcBA;
+				self->CopyRotationPart(SrcBA_);
 				return 0;
 			}
 			luaL_error(L, "call FTransform::CopyRotationPart error, argc=%d", argc);
@@ -1757,8 +1757,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FTransform*>(L, 1);
 				auto SrcBA = LuaObject::checkValue<FTransform*>(L, 2);
-				auto SrcBA2 = *SrcBA;
-				self->CopyTranslationAndScale3D(SrcBA2);
+				auto SrcBA_ = *SrcBA;
+				self->CopyTranslationAndScale3D(SrcBA_);
 				return 0;
 			}
 			luaL_error(L, "call FTransform::CopyTranslationAndScale3D error, argc=%d", argc);
@@ -1769,10 +1769,10 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto InScale3D = LuaObject::checkValue<FVector*>(L, 2);
-				auto InScale3D2 = *InScale3D;
+				auto InScale3D_ = *InScale3D;
 				auto InOtherScale3D = LuaObject::checkValue<FVector*>(L, 3);
-				auto InOtherScale3D2 = *InOtherScale3D;
-				auto ret = FTransform::AnyHasNegativeScale(InScale3D2, InOtherScale3D2);
+				auto InOtherScale3D_ = *InOtherScale3D;
+				auto ret = FTransform::AnyHasNegativeScale(InScale3D_, InOtherScale3D_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -1784,10 +1784,10 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto InScale = LuaObject::checkValue<FVector*>(L, 2);
-				auto InScale2 = *InScale;
+				auto InScale_ = *InScale;
 				auto Tolerance = LuaObject::checkValue<float>(L, 3);
 				auto ret = __newFVector();
-				*ret = FTransform::GetSafeScaleReciprocal(InScale2, Tolerance);
+				*ret = FTransform::GetSafeScaleReciprocal(InScale_, Tolerance);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -1799,11 +1799,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 4) {
 				auto A = LuaObject::checkValue<FTransform*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FTransform*>(L, 3);
-				auto B2 = *B;
+				auto B_ = *B;
 				auto Tolerance = LuaObject::checkValue<float>(L, 4);
-				auto ret = FTransform::AreRotationsEqual(A2, B2, Tolerance);
+				auto ret = FTransform::AreRotationsEqual(A_, B_, Tolerance);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -1815,11 +1815,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 4) {
 				auto A = LuaObject::checkValue<FTransform*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FTransform*>(L, 3);
-				auto B2 = *B;
+				auto B_ = *B;
 				auto Tolerance = LuaObject::checkValue<float>(L, 4);
-				auto ret = FTransform::AreTranslationsEqual(A2, B2, Tolerance);
+				auto ret = FTransform::AreTranslationsEqual(A_, B_, Tolerance);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -1831,11 +1831,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 4) {
 				auto A = LuaObject::checkValue<FTransform*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FTransform*>(L, 3);
-				auto B2 = *B;
+				auto B_ = *B;
 				auto Tolerance = LuaObject::checkValue<float>(L, 4);
-				auto ret = FTransform::AreScale3DsEqual(A2, B2, Tolerance);
+				auto ret = FTransform::AreScale3DsEqual(A_, B_, Tolerance);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -1847,11 +1847,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto A = LuaObject::checkValue<FTransform*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FTransform*>(L, 3);
-				auto B2 = *B;
+				auto B_ = *B;
 				auto ret = __newFVector();
-				*ret = FTransform::AddTranslations(A2, B2);
+				*ret = FTransform::AddTranslations(A_, B_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -1863,11 +1863,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto A = LuaObject::checkValue<FTransform*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FTransform*>(L, 3);
-				auto B2 = *B;
+				auto B_ = *B;
 				auto ret = __newFVector();
-				*ret = FTransform::SubtractTranslations(A2, B2);
+				*ret = FTransform::SubtractTranslations(A_, B_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -1958,8 +1958,8 @@ namespace slua {
 			}
 			if (argc == 2) {
 				auto _a0 = LuaObject::checkValue<int>(L, 2);
-				auto _a02 = (EForceInit)_a0;
-				auto self = new FLinearColor(_a02);
+				auto _a0_ = (EForceInit)_a0;
+				auto self = new FLinearColor(_a0_);
 				LuaObject::push<FLinearColor>(L, "FLinearColor", self);
 				return 1;
 			}
@@ -2124,9 +2124,9 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FLinearColor*>(L, 1);
 				auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
-				auto ColorB2 = *ColorB;
+				auto ColorB_ = *ColorB;
 				auto Tolerance = LuaObject::checkValue<float>(L, 3);
-				auto ret = self->Equals(ColorB2, Tolerance);
+				auto ret = self->Equals(ColorB_, Tolerance);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -2205,9 +2205,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FLinearColor*>(L, 1);
 				auto bSRGB = LuaObject::checkValue<bool>(L, 2);
-				auto bSRGB2 = (const bool)bSRGB;
+				auto bSRGB_ = (const bool)bSRGB;
 				auto ret = __newFColor();
-				*ret = self->ToFColor(bSRGB2);
+				*ret = self->ToFColor(bSRGB_);
 				LuaObject::push<FColor>(L, "FColor", ret);
 				return 1;
 			}
@@ -2318,9 +2318,9 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 2) {
 				auto Color = LuaObject::checkValue<FColor*>(L, 2);
-				auto Color2 = *Color;
+				auto Color_ = *Color;
 				auto ret = __newFLinearColor();
-				*ret = FLinearColor::FromSRGBColor(Color2);
+				*ret = FLinearColor::FromSRGBColor(Color_);
 				LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
 				return 1;
 			}
@@ -2332,9 +2332,9 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 2) {
 				auto Color = LuaObject::checkValue<FColor*>(L, 2);
-				auto Color2 = *Color;
+				auto Color_ = *Color;
 				auto ret = __newFLinearColor();
-				*ret = FLinearColor::FromPow22Color(Color2);
+				*ret = FLinearColor::FromPow22Color(Color_);
 				LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
 				return 1;
 			}
@@ -2346,13 +2346,13 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 4) {
 				auto H = LuaObject::checkValue<int>(L, 2);
-				auto H2 = (unsigned char)H;
+				auto H_ = (unsigned char)H;
 				auto S = LuaObject::checkValue<int>(L, 3);
-				auto S2 = (unsigned char)S;
+				auto S_ = (unsigned char)S;
 				auto V = LuaObject::checkValue<int>(L, 4);
-				auto V2 = (unsigned char)V;
+				auto V_ = (unsigned char)V;
 				auto ret = __newFLinearColor();
-				*ret = FLinearColor::FGetHSV(H2, S2, V2);
+				*ret = FLinearColor::FGetHSV(H_, S_, V_);
 				LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
 				return 1;
 			}
@@ -2389,10 +2389,10 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto V1 = LuaObject::checkValue<FLinearColor*>(L, 2);
-				auto V12 = *V1;
+				auto V1_ = *V1;
 				auto V2 = LuaObject::checkValue<FLinearColor*>(L, 3);
-				auto V22 = *V2;
-				auto ret = FLinearColor::Dist(V12, V22);
+				auto V2_ = *V2;
+				auto ret = FLinearColor::Dist(V1_, V2_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -2404,13 +2404,13 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 4) {
 				auto From = LuaObject::checkValue<FLinearColor*>(L, 2);
-				auto From2 = *From;
+				auto From_ = *From;
 				auto To = LuaObject::checkValue<FLinearColor*>(L, 3);
-				auto To2 = *To;
+				auto To_ = *To;
 				auto Progress = LuaObject::checkValue<float>(L, 4);
-				auto Progress2 = (const float)Progress;
+				auto Progress_ = (const float)Progress;
 				auto ret = __newFLinearColor();
-				*ret = FLinearColor::LerpUsingHSV(From2, To2, Progress2);
+				*ret = FLinearColor::LerpUsingHSV(From_, To_, Progress_);
 				LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
 				return 1;
 			}
@@ -2473,21 +2473,21 @@ namespace slua {
 			}
 			if (argc == 2) {
 				auto _a0 = LuaObject::checkValue<int>(L, 2);
-				auto _a02 = (EForceInit)_a0;
-				auto self = new FColor(_a02);
+				auto _a0_ = (EForceInit)_a0;
+				auto self = new FColor(_a0_);
 				LuaObject::push<FColor>(L, "FColor", self);
 				return 1;
 			}
 			if (argc == 5) {
 				auto InR = LuaObject::checkValue<int>(L, 2);
-				auto InR2 = (unsigned char)InR;
+				auto InR_ = (unsigned char)InR;
 				auto InG = LuaObject::checkValue<int>(L, 3);
-				auto InG2 = (unsigned char)InG;
+				auto InG_ = (unsigned char)InG;
 				auto InB = LuaObject::checkValue<int>(L, 4);
-				auto InB2 = (unsigned char)InB;
+				auto InB_ = (unsigned char)InB;
 				auto InA = LuaObject::checkValue<int>(L, 5);
-				auto InA2 = (unsigned char)InA;
-				auto self = new FColor(InR2, InG2, InB2, InA2);
+				auto InA_ = (unsigned char)InA;
+				auto self = new FColor(InR_, InG_, InB_, InA_);
 				LuaObject::push<FColor>(L, "FColor", self);
 				return 1;
 			}
@@ -2601,9 +2601,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FColor*>(L, 1);
 				auto Alpha = LuaObject::checkValue<int>(L, 2);
-				auto Alpha2 = (unsigned char)Alpha;
+				auto Alpha_ = (unsigned char)Alpha;
 				auto ret = __newFColor();
-				*ret = self->WithAlpha(Alpha2);
+				*ret = self->WithAlpha(Alpha_);
 				LuaObject::push<FColor>(L, "FColor", ret);
 				return 1;
 			}
@@ -2813,9 +2813,9 @@ namespace slua {
 			}
 			if (argc == 3) {
 				auto V = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto V2 = *V;
+				auto V_ = *V;
 				auto InZ = LuaObject::checkValue<float>(L, 3);
-				auto self = new FVector(V2, InZ);
+				auto self = new FVector(V_, InZ);
 				LuaObject::push<FVector>(L, "FVector", self);
 				return 1;
 			}
@@ -2914,8 +2914,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FVector*>(L, 1);
 				auto Message = LuaObject::checkValue<const char*>(L, 2);
-				auto Message2 = UTF8_TO_TCHAR(Message);
-				self->DiagnosticCheckNaN(Message2);
+				auto Message_ = UTF8_TO_TCHAR(Message);
+				self->DiagnosticCheckNaN(Message_);
 				return 0;
 			}
 			luaL_error(L, "call FVector::DiagnosticCheckNaN error, argc=%d", argc);
@@ -2927,9 +2927,9 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FVector*>(L, 1);
 				auto V = LuaObject::checkValue<FVector*>(L, 2);
-				auto V2 = *V;
+				auto V_ = *V;
 				auto Tolerance = LuaObject::checkValue<float>(L, 3);
-				auto ret = self->Equals(V2, Tolerance);
+				auto ret = self->Equals(V_, Tolerance);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -2968,8 +2968,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FVector*>(L, 1);
 				auto Axis = LuaObject::checkValue<int>(L, 2);
-				auto Axis2 = (EAxis::Type)Axis;
-				auto ret = self->GetComponentForAxis(Axis2);
+				auto Axis_ = (EAxis::Type)Axis;
+				auto ret = self->GetComponentForAxis(Axis_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -2982,9 +2982,9 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FVector*>(L, 1);
 				auto Axis = LuaObject::checkValue<int>(L, 2);
-				auto Axis2 = (EAxis::Type)Axis;
+				auto Axis_ = (EAxis::Type)Axis;
 				auto Component = LuaObject::checkValue<float>(L, 3);
-				self->SetComponentForAxis(Axis2, Component);
+				self->SetComponentForAxis(Axis_, Component);
 				return 0;
 			}
 			luaL_error(L, "call FVector::SetComponentForAxis error, argc=%d", argc);
@@ -3058,9 +3058,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FVector*>(L, 1);
 				auto Other = LuaObject::checkValue<FVector*>(L, 2);
-				auto Other2 = *Other;
+				auto Other_ = *Other;
 				auto ret = __newFVector();
-				*ret = self->ComponentMin(Other2);
+				*ret = self->ComponentMin(Other_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -3073,9 +3073,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FVector*>(L, 1);
 				auto Other = LuaObject::checkValue<FVector*>(L, 2);
-				auto Other2 = *Other;
+				auto Other_ = *Other;
 				auto ret = __newFVector();
-				*ret = self->ComponentMax(Other2);
+				*ret = self->ComponentMax(Other_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -3199,9 +3199,9 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FVector*>(L, 1);
 				auto OutDir = LuaObject::checkValue<FVector*>(L, 2);
-				auto OutDir2 = *OutDir;
+				auto OutDir_ = *OutDir;
 				auto OutLength = LuaObject::checkValue<float>(L, 3);
-				self->ToDirectionAndLength(OutDir2, OutLength);
+				self->ToDirectionAndLength(OutDir_, OutLength);
 				LuaObject::push<FVector>(L, "FVector", OutDir);
 				LuaObject::push(L, OutLength);
 				return 2;
@@ -3254,9 +3254,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FVector*>(L, 1);
 				auto GridSz = LuaObject::checkValue<float>(L, 2);
-				auto GridSz2 = (const float)GridSz;
+				auto GridSz_ = (const float)GridSz;
 				auto ret = __newFVector();
-				*ret = self->GridSnap(GridSz2);
+				*ret = self->GridSnap(GridSz_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -3341,9 +3341,9 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FVector*>(L, 1);
 				auto V = LuaObject::checkValue<FVector*>(L, 2);
-				auto V2 = *V;
+				auto V_ = *V;
 				auto Radius = LuaObject::checkValue<float>(L, 3);
-				self->AddBounded(V2, Radius);
+				self->AddBounded(V_, Radius);
 				return 0;
 			}
 			luaL_error(L, "call FVector::AddBounded error, argc=%d", argc);
@@ -3381,9 +3381,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FVector*>(L, 1);
 				auto MirrorNormal = LuaObject::checkValue<FVector*>(L, 2);
-				auto MirrorNormal2 = *MirrorNormal;
+				auto MirrorNormal_ = *MirrorNormal;
 				auto ret = __newFVector();
-				*ret = self->MirrorByVector(MirrorNormal2);
+				*ret = self->MirrorByVector(MirrorNormal_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -3396,11 +3396,11 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FVector*>(L, 1);
 				auto AngleDeg = LuaObject::checkValue<float>(L, 2);
-				auto AngleDeg2 = (const float)AngleDeg;
+				auto AngleDeg_ = (const float)AngleDeg;
 				auto Axis = LuaObject::checkValue<FVector*>(L, 3);
-				auto Axis2 = *Axis;
+				auto Axis_ = *Axis;
 				auto ret = __newFVector();
-				*ret = self->RotateAngleAxis(AngleDeg2, Axis2);
+				*ret = self->RotateAngleAxis(AngleDeg_, Axis_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -3441,8 +3441,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FVector*>(L, 1);
 				auto B = LuaObject::checkValue<FVector*>(L, 2);
-				auto B2 = *B;
-				auto ret = self->CosineAngle2D(B2);
+				auto B_ = *B;
+				auto ret = self->CosineAngle2D(B_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3455,9 +3455,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FVector*>(L, 1);
 				auto A = LuaObject::checkValue<FVector*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto ret = __newFVector();
-				*ret = self->ProjectOnTo(A2);
+				*ret = self->ProjectOnTo(A_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -3470,9 +3470,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FVector*>(L, 1);
 				auto Normal = LuaObject::checkValue<FVector*>(L, 2);
-				auto Normal2 = *Normal;
+				auto Normal_ = *Normal;
 				auto ret = __newFVector();
-				*ret = self->ProjectOnToNormal(Normal2);
+				*ret = self->ProjectOnToNormal(Normal_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -3511,10 +3511,10 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FVector*>(L, 1);
 				auto Axis1 = LuaObject::checkValue<FVector*>(L, 2);
-				auto Axis12 = *Axis1;
+				auto Axis1_ = *Axis1;
 				auto Axis2 = LuaObject::checkValue<FVector*>(L, 3);
-				auto Axis22 = *Axis2;
-				self->FindBestAxisVectors(Axis12, Axis22);
+				auto Axis2_ = *Axis2;
+				self->FindBestAxisVectors(Axis1_, Axis2_);
 				LuaObject::push<FVector>(L, "FVector", Axis1);
 				LuaObject::push<FVector>(L, "FVector", Axis2);
 				return 2;
@@ -3625,11 +3625,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto A = LuaObject::checkValue<FVector*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FVector*>(L, 3);
-				auto B2 = *B;
+				auto B_ = *B;
 				auto ret = __newFVector();
-				*ret = FVector::CrossProduct(A2, B2);
+				*ret = FVector::CrossProduct(A_, B_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -3641,10 +3641,10 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto A = LuaObject::checkValue<FVector*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FVector*>(L, 3);
-				auto B2 = *B;
-				auto ret = FVector::DotProduct(A2, B2);
+				auto B_ = *B;
+				auto ret = FVector::DotProduct(A_, B_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3656,12 +3656,12 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 4) {
 				auto XAxis = LuaObject::checkValue<FVector*>(L, 2);
-				auto XAxis2 = *XAxis;
+				auto XAxis_ = *XAxis;
 				auto YAxis = LuaObject::checkValue<FVector*>(L, 3);
-				auto YAxis2 = *YAxis;
+				auto YAxis_ = *YAxis;
 				auto ZAxis = LuaObject::checkValue<FVector*>(L, 4);
-				auto ZAxis2 = *ZAxis;
-				FVector::CreateOrthonormalBasis(XAxis2, YAxis2, ZAxis2);
+				auto ZAxis_ = *ZAxis;
+				FVector::CreateOrthonormalBasis(XAxis_, YAxis_, ZAxis_);
 				LuaObject::push<FVector>(L, "FVector", XAxis);
 				LuaObject::push<FVector>(L, "FVector", YAxis);
 				LuaObject::push<FVector>(L, "FVector", ZAxis);
@@ -3675,10 +3675,10 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto P = LuaObject::checkValue<FVector*>(L, 2);
-				auto P2 = *P;
+				auto P_ = *P;
 				auto Q = LuaObject::checkValue<FVector*>(L, 3);
-				auto Q2 = *Q;
-				auto ret = FVector::PointsAreSame(P2, Q2);
+				auto Q_ = *Q;
+				auto ret = FVector::PointsAreSame(P_, Q_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3690,11 +3690,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 4) {
 				auto Point1 = LuaObject::checkValue<FVector*>(L, 2);
-				auto Point12 = *Point1;
+				auto Point1_ = *Point1;
 				auto Point2 = LuaObject::checkValue<FVector*>(L, 3);
-				auto Point22 = *Point2;
+				auto Point2_ = *Point2;
 				auto Dist = LuaObject::checkValue<float>(L, 4);
-				auto ret = FVector::PointsAreNear(Point12, Point22, Dist);
+				auto ret = FVector::PointsAreNear(Point1_, Point2_, Dist);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3706,12 +3706,12 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 4) {
 				auto Point = LuaObject::checkValue<FVector*>(L, 2);
-				auto Point2 = *Point;
+				auto Point_ = *Point;
 				auto PlaneBase = LuaObject::checkValue<FVector*>(L, 3);
-				auto PlaneBase2 = *PlaneBase;
+				auto PlaneBase_ = *PlaneBase;
 				auto PlaneNormal = LuaObject::checkValue<FVector*>(L, 4);
-				auto PlaneNormal2 = *PlaneNormal;
-				auto ret = FVector::PointPlaneDist(Point2, PlaneBase2, PlaneNormal2);
+				auto PlaneNormal_ = *PlaneNormal;
+				auto ret = FVector::PointPlaneDist(Point_, PlaneBase_, PlaneNormal_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3723,27 +3723,27 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 4) {
 				auto Point = LuaObject::checkValue<FVector*>(L, 2);
-				auto Point2 = *Point;
+				auto Point_ = *Point;
 				auto PlaneBase = LuaObject::checkValue<FVector*>(L, 3);
-				auto PlaneBase2 = *PlaneBase;
+				auto PlaneBase_ = *PlaneBase;
 				auto PlaneNormal = LuaObject::checkValue<FVector*>(L, 4);
-				auto PlaneNormal2 = *PlaneNormal;
+				auto PlaneNormal_ = *PlaneNormal;
 				auto ret = __newFVector();
-				*ret = FVector::PointPlaneProject(Point2, PlaneBase2, PlaneNormal2);
+				*ret = FVector::PointPlaneProject(Point_, PlaneBase_, PlaneNormal_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
 			if (argc == 5) {
 				auto Point = LuaObject::checkValue<FVector*>(L, 2);
-				auto Point2 = *Point;
+				auto Point_ = *Point;
 				auto A = LuaObject::checkValue<FVector*>(L, 3);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FVector*>(L, 4);
-				auto B2 = *B;
+				auto B_ = *B;
 				auto C = LuaObject::checkValue<FVector*>(L, 5);
-				auto C2 = *C;
+				auto C_ = *C;
 				auto ret = __newFVector();
-				*ret = FVector::PointPlaneProject(Point2, A2, B2, C2);
+				*ret = FVector::PointPlaneProject(Point_, A_, B_, C_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -3755,11 +3755,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto V = LuaObject::checkValue<FVector*>(L, 2);
-				auto V2 = *V;
+				auto V_ = *V;
 				auto PlaneNormal = LuaObject::checkValue<FVector*>(L, 3);
-				auto PlaneNormal2 = *PlaneNormal;
+				auto PlaneNormal_ = *PlaneNormal;
 				auto ret = __newFVector();
-				*ret = FVector::VectorPlaneProject(V2, PlaneNormal2);
+				*ret = FVector::VectorPlaneProject(V_, PlaneNormal_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -3771,10 +3771,10 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto V1 = LuaObject::checkValue<FVector*>(L, 2);
-				auto V12 = *V1;
+				auto V1_ = *V1;
 				auto V2 = LuaObject::checkValue<FVector*>(L, 3);
-				auto V22 = *V2;
-				auto ret = FVector::Dist(V12, V22);
+				auto V2_ = *V2;
+				auto ret = FVector::Dist(V1_, V2_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3786,10 +3786,10 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto V1 = LuaObject::checkValue<FVector*>(L, 2);
-				auto V12 = *V1;
+				auto V1_ = *V1;
 				auto V2 = LuaObject::checkValue<FVector*>(L, 3);
-				auto V22 = *V2;
-				auto ret = FVector::Distance(V12, V22);
+				auto V2_ = *V2;
+				auto ret = FVector::Distance(V1_, V2_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3801,10 +3801,10 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto V1 = LuaObject::checkValue<FVector*>(L, 2);
-				auto V12 = *V1;
+				auto V1_ = *V1;
 				auto V2 = LuaObject::checkValue<FVector*>(L, 3);
-				auto V22 = *V2;
-				auto ret = FVector::DistXY(V12, V22);
+				auto V2_ = *V2;
+				auto ret = FVector::DistXY(V1_, V2_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3816,10 +3816,10 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto V1 = LuaObject::checkValue<FVector*>(L, 2);
-				auto V12 = *V1;
+				auto V1_ = *V1;
 				auto V2 = LuaObject::checkValue<FVector*>(L, 3);
-				auto V22 = *V2;
-				auto ret = FVector::Dist2D(V12, V22);
+				auto V2_ = *V2;
+				auto ret = FVector::Dist2D(V1_, V2_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3831,10 +3831,10 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto V1 = LuaObject::checkValue<FVector*>(L, 2);
-				auto V12 = *V1;
+				auto V1_ = *V1;
 				auto V2 = LuaObject::checkValue<FVector*>(L, 3);
-				auto V22 = *V2;
-				auto ret = FVector::DistSquared(V12, V22);
+				auto V2_ = *V2;
+				auto ret = FVector::DistSquared(V1_, V2_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3846,10 +3846,10 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto V1 = LuaObject::checkValue<FVector*>(L, 2);
-				auto V12 = *V1;
+				auto V1_ = *V1;
 				auto V2 = LuaObject::checkValue<FVector*>(L, 3);
-				auto V22 = *V2;
-				auto ret = FVector::DistSquaredXY(V12, V22);
+				auto V2_ = *V2;
+				auto ret = FVector::DistSquaredXY(V1_, V2_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3861,10 +3861,10 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto V1 = LuaObject::checkValue<FVector*>(L, 2);
-				auto V12 = *V1;
+				auto V1_ = *V1;
 				auto V2 = LuaObject::checkValue<FVector*>(L, 3);
-				auto V22 = *V2;
-				auto ret = FVector::DistSquared2D(V12, V22);
+				auto V2_ = *V2;
+				auto ret = FVector::DistSquared2D(V1_, V2_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3876,10 +3876,10 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto Normal = LuaObject::checkValue<FVector*>(L, 2);
-				auto Normal2 = *Normal;
+				auto Normal_ = *Normal;
 				auto Size = LuaObject::checkValue<FVector*>(L, 3);
-				auto Size2 = *Size;
-				auto ret = FVector::BoxPushOut(Normal2, Size2);
+				auto Size_ = *Size;
+				auto ret = FVector::BoxPushOut(Normal_, Size_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3891,11 +3891,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 4) {
 				auto Normal1 = LuaObject::checkValue<FVector*>(L, 2);
-				auto Normal12 = *Normal1;
+				auto Normal1_ = *Normal1;
 				auto Normal2 = LuaObject::checkValue<FVector*>(L, 3);
-				auto Normal22 = *Normal2;
+				auto Normal2_ = *Normal2;
 				auto ParallelCosineThreshold = LuaObject::checkValue<float>(L, 4);
-				auto ret = FVector::Parallel(Normal12, Normal22, ParallelCosineThreshold);
+				auto ret = FVector::Parallel(Normal1_, Normal2_, ParallelCosineThreshold);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3907,11 +3907,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 4) {
 				auto Normal1 = LuaObject::checkValue<FVector*>(L, 2);
-				auto Normal12 = *Normal1;
+				auto Normal1_ = *Normal1;
 				auto Normal2 = LuaObject::checkValue<FVector*>(L, 3);
-				auto Normal22 = *Normal2;
+				auto Normal2_ = *Normal2;
 				auto ParallelCosineThreshold = LuaObject::checkValue<float>(L, 4);
-				auto ret = FVector::Coincident(Normal12, Normal22, ParallelCosineThreshold);
+				auto ret = FVector::Coincident(Normal1_, Normal2_, ParallelCosineThreshold);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3923,11 +3923,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 4) {
 				auto Normal1 = LuaObject::checkValue<FVector*>(L, 2);
-				auto Normal12 = *Normal1;
+				auto Normal1_ = *Normal1;
 				auto Normal2 = LuaObject::checkValue<FVector*>(L, 3);
-				auto Normal22 = *Normal2;
+				auto Normal2_ = *Normal2;
 				auto OrthogonalCosineThreshold = LuaObject::checkValue<float>(L, 4);
-				auto ret = FVector::Orthogonal(Normal12, Normal22, OrthogonalCosineThreshold);
+				auto ret = FVector::Orthogonal(Normal1_, Normal2_, OrthogonalCosineThreshold);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3939,15 +3939,15 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 6) {
 				auto Base1 = LuaObject::checkValue<FVector*>(L, 2);
-				auto Base12 = *Base1;
+				auto Base1_ = *Base1;
 				auto Normal1 = LuaObject::checkValue<FVector*>(L, 3);
-				auto Normal12 = *Normal1;
+				auto Normal1_ = *Normal1;
 				auto Base2 = LuaObject::checkValue<FVector*>(L, 4);
-				auto Base22 = *Base2;
+				auto Base2_ = *Base2;
 				auto Normal2 = LuaObject::checkValue<FVector*>(L, 5);
-				auto Normal22 = *Normal2;
+				auto Normal2_ = *Normal2;
 				auto ParallelCosineThreshold = LuaObject::checkValue<float>(L, 6);
-				auto ret = FVector::Coplanar(Base12, Normal12, Base22, Normal22, ParallelCosineThreshold);
+				auto ret = FVector::Coplanar(Base1_, Normal1_, Base2_, Normal2_, ParallelCosineThreshold);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3959,12 +3959,12 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 4) {
 				auto X = LuaObject::checkValue<FVector*>(L, 2);
-				auto X2 = *X;
+				auto X_ = *X;
 				auto Y = LuaObject::checkValue<FVector*>(L, 3);
-				auto Y2 = *Y;
+				auto Y_ = *Y;
 				auto Z = LuaObject::checkValue<FVector*>(L, 4);
-				auto Z2 = *Z;
-				auto ret = FVector::Triple(X2, Y2, Z2);
+				auto Z_ = *Z;
+				auto ret = FVector::Triple(X_, Y_, Z_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -3976,9 +3976,9 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 2) {
 				auto RadVector = LuaObject::checkValue<FVector*>(L, 2);
-				auto RadVector2 = *RadVector;
+				auto RadVector_ = *RadVector;
 				auto ret = __newFVector();
-				*ret = FVector::RadiansToDegrees(RadVector2);
+				*ret = FVector::RadiansToDegrees(RadVector_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -3990,9 +3990,9 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 2) {
 				auto DegVector = LuaObject::checkValue<FVector*>(L, 2);
-				auto DegVector2 = *DegVector;
+				auto DegVector_ = *DegVector;
 				auto ret = __newFVector();
-				*ret = FVector::DegreesToRadians(DegVector2);
+				*ret = FVector::DegreesToRadians(DegVector_);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -4102,8 +4102,8 @@ namespace slua {
 			}
 			if (argc == 2) {
 				auto _a0 = LuaObject::checkValue<int>(L, 2);
-				auto _a02 = (EForceInit)_a0;
-				auto self = new FVector2D(_a02);
+				auto _a0_ = (EForceInit)_a0;
+				auto self = new FVector2D(_a0_);
 				LuaObject::push<FVector2D>(L, "FVector2D", self);
 				return 1;
 			}
@@ -4180,9 +4180,9 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FVector2D*>(L, 1);
 				auto V = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto V2 = *V;
+				auto V_ = *V;
 				auto Tolerance = LuaObject::checkValue<float>(L, 3);
-				auto ret = self->Equals(V2, Tolerance);
+				auto ret = self->Equals(V_, Tolerance);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -4321,9 +4321,9 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FVector2D*>(L, 1);
 				auto OutDir = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto OutDir2 = *OutDir;
+				auto OutDir_ = *OutDir;
 				auto OutLength = LuaObject::checkValue<float>(L, 3);
-				self->ToDirectionAndLength(OutDir2, OutLength);
+				self->ToDirectionAndLength(OutDir_, OutLength);
 				LuaObject::push<FVector2D>(L, "FVector2D", OutDir);
 				LuaObject::push(L, OutLength);
 				return 2;
@@ -4463,10 +4463,10 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto A = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FVector2D*>(L, 3);
-				auto B2 = *B;
-				auto ret = FVector2D::DotProduct(A2, B2);
+				auto B_ = *B;
+				auto ret = FVector2D::DotProduct(A_, B_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -4478,10 +4478,10 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto V1 = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto V12 = *V1;
+				auto V1_ = *V1;
 				auto V2 = LuaObject::checkValue<FVector2D*>(L, 3);
-				auto V22 = *V2;
-				auto ret = FVector2D::DistSquared(V12, V22);
+				auto V2_ = *V2;
+				auto ret = FVector2D::DistSquared(V1_, V2_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -4493,10 +4493,10 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto V1 = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto V12 = *V1;
+				auto V1_ = *V1;
 				auto V2 = LuaObject::checkValue<FVector2D*>(L, 3);
-				auto V22 = *V2;
-				auto ret = FVector2D::Distance(V12, V22);
+				auto V2_ = *V2;
+				auto ret = FVector2D::Distance(V1_, V2_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -4508,10 +4508,10 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto A = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FVector2D*>(L, 3);
-				auto B2 = *B;
-				auto ret = FVector2D::CrossProduct(A2, B2);
+				auto B_ = *B;
+				auto ret = FVector2D::CrossProduct(A_, B_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -4748,21 +4748,21 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FRandomStream*>(L, 1);
 				auto Dir = LuaObject::checkValue<FVector*>(L, 2);
-				auto Dir2 = *Dir;
+				auto Dir_ = *Dir;
 				auto ConeHalfAngleRad = LuaObject::checkValue<float>(L, 3);
 				auto ret = __newFVector();
-				*ret = self->VRandCone(Dir2, ConeHalfAngleRad);
+				*ret = self->VRandCone(Dir_, ConeHalfAngleRad);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
 			if (argc == 4) {
 				auto self = LuaObject::checkValue<FRandomStream*>(L, 1);
 				auto Dir = LuaObject::checkValue<FVector*>(L, 2);
-				auto Dir2 = *Dir;
+				auto Dir_ = *Dir;
 				auto HorizontalConeHalfAngleRad = LuaObject::checkValue<float>(L, 3);
 				auto VerticalConeHalfAngleRad = LuaObject::checkValue<float>(L, 4);
 				auto ret = __newFVector();
-				*ret = self->VRandCone(Dir2, HorizontalConeHalfAngleRad, VerticalConeHalfAngleRad);
+				*ret = self->VRandCone(Dir_, HorizontalConeHalfAngleRad, VerticalConeHalfAngleRad);
 				LuaObject::push<FVector>(L, "FVector", ret);
 				return 1;
 			}
@@ -4802,14 +4802,14 @@ namespace slua {
 			}
 			if (argc == 5) {
 				auto InA = LuaObject::checkValue<int>(L, 2);
-				auto InA2 = (unsigned int)InA;
+				auto InA_ = (unsigned int)InA;
 				auto InB = LuaObject::checkValue<int>(L, 3);
-				auto InB2 = (unsigned int)InB;
+				auto InB_ = (unsigned int)InB;
 				auto InC = LuaObject::checkValue<int>(L, 4);
-				auto InC2 = (unsigned int)InC;
+				auto InC_ = (unsigned int)InC;
 				auto InD = LuaObject::checkValue<int>(L, 5);
-				auto InD2 = (unsigned int)InD;
-				auto self = new FGuid(InA2, InB2, InC2, InD2);
+				auto InD_ = (unsigned int)InD;
+				auto self = new FGuid(InA_, InB_, InC_, InD_);
 				LuaObject::push<FGuid>(L, "FGuid", self);
 				return 1;
 			}
@@ -4913,8 +4913,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FGuid*>(L, 1);
 				auto Format = LuaObject::checkValue<int>(L, 2);
-				auto Format2 = (EGuidFormats)Format;
-				auto ret = self->ToString(Format2);
+				auto Format_ = (EGuidFormats)Format;
+				auto ret = self->ToString(Format_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -4939,8 +4939,8 @@ namespace slua {
 			if (argc == 3) {
 				auto GuidString = LuaObject::checkValue<FString>(L, 2);
 				auto OutGuid = LuaObject::checkValue<FGuid*>(L, 3);
-				auto OutGuid2 = *OutGuid;
-				auto ret = FGuid::Parse(GuidString, OutGuid2);
+				auto OutGuid_ = *OutGuid;
+				auto ret = FGuid::Parse(GuidString, OutGuid_);
 				LuaObject::push(L, ret);
 				LuaObject::push<FGuid>(L, "FGuid", OutGuid);
 				return 2;
@@ -4954,10 +4954,10 @@ namespace slua {
 			if (argc == 4) {
 				auto GuidString = LuaObject::checkValue<FString>(L, 2);
 				auto Format = LuaObject::checkValue<int>(L, 3);
-				auto Format2 = (EGuidFormats)Format;
+				auto Format_ = (EGuidFormats)Format;
 				auto OutGuid = LuaObject::checkValue<FGuid*>(L, 4);
-				auto OutGuid2 = *OutGuid;
-				auto ret = FGuid::ParseExact(GuidString, Format2, OutGuid2);
+				auto OutGuid_ = *OutGuid;
+				auto ret = FGuid::ParseExact(GuidString, Format_, OutGuid_);
 				LuaObject::push(L, ret);
 				LuaObject::push<FGuid>(L, "FGuid", OutGuid);
 				return 2;
@@ -4994,17 +4994,17 @@ namespace slua {
 			}
 			if (argc == 2) {
 				auto _a0 = LuaObject::checkValue<int>(L, 2);
-				auto _a02 = (EForceInit)_a0;
-				auto self = new FBox2D(_a02);
+				auto _a0_ = (EForceInit)_a0;
+				auto self = new FBox2D(_a0_);
 				LuaObject::push<FBox2D>(L, "FBox2D", self);
 				return 1;
 			}
 			if (argc == 3) {
 				auto InMin = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto InMin2 = *InMin;
+				auto InMin_ = *InMin;
 				auto InMax = LuaObject::checkValue<FVector2D*>(L, 3);
-				auto InMax2 = *InMax;
-				auto self = new FBox2D(InMin2, InMax2);
+				auto InMax_ = *InMax;
+				auto self = new FBox2D(InMin_, InMax_);
 				LuaObject::push<FBox2D>(L, "FBox2D", self);
 				return 1;
 			}
@@ -5065,8 +5065,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FBox2D*>(L, 1);
 				auto Point = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto Point2 = *Point;
-				auto ret = self->ComputeSquaredDistanceToPoint(Point2);
+				auto Point_ = *Point;
+				auto ret = self->ComputeSquaredDistanceToPoint(Point_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -5079,9 +5079,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FBox2D*>(L, 1);
 				auto W = LuaObject::checkValue<float>(L, 2);
-				auto W2 = (const float)W;
+				auto W_ = (const float)W;
 				auto ret = __newFBox2D();
-				*ret = self->ExpandBy(W2);
+				*ret = self->ExpandBy(W_);
 				LuaObject::push<FBox2D>(L, "FBox2D", ret);
 				return 1;
 			}
@@ -5119,10 +5119,10 @@ namespace slua {
 			if (argc == 3) {
 				auto self = LuaObject::checkValue<FBox2D*>(L, 1);
 				auto center = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto center2 = *center;
+				auto center_ = *center;
 				auto Extents = LuaObject::checkValue<FVector2D*>(L, 3);
-				auto Extents2 = *Extents;
-				self->GetCenterAndExtents(center2, Extents2);
+				auto Extents_ = *Extents;
+				self->GetCenterAndExtents(center_, Extents_);
 				LuaObject::push<FVector2D>(L, "FVector2D", center);
 				LuaObject::push<FVector2D>(L, "FVector2D", Extents);
 				return 2;
@@ -5136,9 +5136,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FBox2D*>(L, 1);
 				auto Point = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto Point2 = *Point;
+				auto Point_ = *Point;
 				auto ret = __newFVector2D();
-				*ret = self->GetClosestPointTo(Point2);
+				*ret = self->GetClosestPointTo(Point_);
 				LuaObject::push<FVector2D>(L, "FVector2D", ret);
 				return 1;
 			}
@@ -5188,8 +5188,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FBox2D*>(L, 1);
 				auto other = LuaObject::checkValue<FBox2D*>(L, 2);
-				auto other2 = *other;
-				auto ret = self->Intersect(other2);
+				auto other_ = *other;
+				auto ret = self->Intersect(other_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -5202,8 +5202,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FBox2D*>(L, 1);
 				auto TestPoint = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto TestPoint2 = *TestPoint;
-				auto ret = self->IsInside(TestPoint2);
+				auto TestPoint_ = *TestPoint;
+				auto ret = self->IsInside(TestPoint_);
 				LuaObject::push(L, ret);
 				return 1;
 			}
@@ -5216,9 +5216,9 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FBox2D*>(L, 1);
 				auto Offset = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto Offset2 = *Offset;
+				auto Offset_ = *Offset;
 				auto ret = __newFBox2D();
-				*ret = self->ShiftBy(Offset2);
+				*ret = self->ShiftBy(Offset_);
 				LuaObject::push<FBox2D>(L, "FBox2D", ret);
 				return 1;
 			}
@@ -5272,8 +5272,8 @@ namespace slua {
 			}
 			if (argc == 2) {
 				auto InValue = LuaObject::checkValue<int>(L, 2);
-				auto InValue2 = (const long long)InValue;
-				auto self = new FFloatRangeBound(InValue2);
+				auto InValue_ = (const long long)InValue;
+				auto self = new FFloatRangeBound(InValue_);
 				LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", self);
 				return 1;
 			}
@@ -5291,9 +5291,9 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 2) {
 				auto Value = LuaObject::checkValue<float>(L, 2);
-				auto Value2 = (const float)Value;
+				auto Value_ = (const float)Value;
 				auto ret = __newFFloatRangeBound();
-				*ret = FFloatRangeBound::Exclusive(Value2);
+				*ret = FFloatRangeBound::Exclusive(Value_);
 				LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret);
 				return 1;
 			}
@@ -5305,9 +5305,9 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 2) {
 				auto Value = LuaObject::checkValue<float>(L, 2);
-				auto Value2 = (const float)Value;
+				auto Value_ = (const float)Value;
 				auto ret = __newFFloatRangeBound();
-				*ret = FFloatRangeBound::Inclusive(Value2);
+				*ret = FFloatRangeBound::Inclusive(Value_);
 				LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret);
 				return 1;
 			}
@@ -5331,9 +5331,9 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 2) {
 				auto Bound = LuaObject::checkValue<FFloatRangeBound*>(L, 2);
-				auto Bound2 = *Bound;
+				auto Bound_ = *Bound;
 				auto ret = __newFFloatRangeBound();
-				*ret = FFloatRangeBound::FlipInclusion(Bound2);
+				*ret = FFloatRangeBound::FlipInclusion(Bound_);
 				LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret);
 				return 1;
 			}
@@ -5345,11 +5345,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto A = LuaObject::checkValue<FFloatRangeBound*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FFloatRangeBound*>(L, 3);
-				auto B2 = *B;
+				auto B_ = *B;
 				auto ret = __newFFloatRangeBound();
-				*ret = FFloatRangeBound::MaxLower(A2, B2);
+				*ret = FFloatRangeBound::MaxLower(A_, B_);
 				LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret);
 				return 1;
 			}
@@ -5361,11 +5361,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto A = LuaObject::checkValue<FFloatRangeBound*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FFloatRangeBound*>(L, 3);
-				auto B2 = *B;
+				auto B_ = *B;
 				auto ret = __newFFloatRangeBound();
-				*ret = FFloatRangeBound::MaxUpper(A2, B2);
+				*ret = FFloatRangeBound::MaxUpper(A_, B_);
 				LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret);
 				return 1;
 			}
@@ -5377,11 +5377,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto A = LuaObject::checkValue<FFloatRangeBound*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FFloatRangeBound*>(L, 3);
-				auto B2 = *B;
+				auto B_ = *B;
 				auto ret = __newFFloatRangeBound();
-				*ret = FFloatRangeBound::MinLower(A2, B2);
+				*ret = FFloatRangeBound::MinLower(A_, B_);
 				LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret);
 				return 1;
 			}
@@ -5393,11 +5393,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto A = LuaObject::checkValue<FFloatRangeBound*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FFloatRangeBound*>(L, 3);
-				auto B2 = *B;
+				auto B_ = *B;
 				auto ret = __newFFloatRangeBound();
-				*ret = FFloatRangeBound::MinUpper(A2, B2);
+				*ret = FFloatRangeBound::MinUpper(A_, B_);
 				LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret);
 				return 1;
 			}
@@ -5431,17 +5431,17 @@ namespace slua {
 			}
 			if (argc == 2) {
 				auto A = LuaObject::checkValue<float>(L, 2);
-				auto A2 = (const float)A;
-				auto self = new FFloatRange(A2);
+				auto A_ = (const float)A;
+				auto self = new FFloatRange(A_);
 				LuaObject::push<FFloatRange>(L, "FFloatRange", self);
 				return 1;
 			}
 			if (argc == 3) {
 				auto A = LuaObject::checkValue<float>(L, 2);
-				auto A2 = (const float)A;
+				auto A_ = (const float)A;
 				auto B = LuaObject::checkValue<float>(L, 3);
-				auto B2 = (const float)B;
-				auto self = new FFloatRange(A2, B2);
+				auto B_ = (const float)B;
+				auto self = new FFloatRange(A_, B_);
 				LuaObject::push<FFloatRange>(L, "FFloatRange", self);
 				return 1;
 			}
@@ -5471,11 +5471,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto X = LuaObject::checkValue<FFloatRange*>(L, 2);
-				auto X2 = *X;
+				auto X_ = *X;
 				auto Y = LuaObject::checkValue<FFloatRange*>(L, 3);
-				auto Y2 = *Y;
+				auto Y_ = *Y;
 				auto ret = __newFFloatRange();
-				*ret = FFloatRange::Hull(X2, Y2);
+				*ret = FFloatRange::Hull(X_, Y_);
 				LuaObject::push<FFloatRange>(L, "FFloatRange", ret);
 				return 1;
 			}
@@ -5487,11 +5487,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto X = LuaObject::checkValue<FFloatRange*>(L, 2);
-				auto X2 = *X;
+				auto X_ = *X;
 				auto Y = LuaObject::checkValue<FFloatRange*>(L, 3);
-				auto Y2 = *Y;
+				auto Y_ = *Y;
 				auto ret = __newFFloatRange();
-				*ret = FFloatRange::Intersection(X2, Y2);
+				*ret = FFloatRange::Intersection(X_, Y_);
 				LuaObject::push<FFloatRange>(L, "FFloatRange", ret);
 				return 1;
 			}
@@ -5515,9 +5515,9 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 2) {
 				auto Value = LuaObject::checkValue<float>(L, 2);
-				auto Value2 = (const float)Value;
+				auto Value_ = (const float)Value;
 				auto ret = __newFFloatRange();
-				*ret = FFloatRange::AtLeast(Value2);
+				*ret = FFloatRange::AtLeast(Value_);
 				LuaObject::push<FFloatRange>(L, "FFloatRange", ret);
 				return 1;
 			}
@@ -5529,9 +5529,9 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 2) {
 				auto Value = LuaObject::checkValue<float>(L, 2);
-				auto Value2 = (const float)Value;
+				auto Value_ = (const float)Value;
 				auto ret = __newFFloatRange();
-				*ret = FFloatRange::AtMost(Value2);
+				*ret = FFloatRange::AtMost(Value_);
 				LuaObject::push<FFloatRange>(L, "FFloatRange", ret);
 				return 1;
 			}
@@ -5563,8 +5563,8 @@ namespace slua {
 			}
 			if (argc == 2) {
 				auto InValue = LuaObject::checkValue<int>(L, 2);
-				auto InValue2 = (const long long)InValue;
-				auto self = new FInt32RangeBound(InValue2);
+				auto InValue_ = (const long long)InValue;
+				auto self = new FInt32RangeBound(InValue_);
 				LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", self);
 				return 1;
 			}
@@ -5582,9 +5582,9 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 2) {
 				auto Value = LuaObject::checkValue<int>(L, 2);
-				auto Value2 = (const int)Value;
+				auto Value_ = (const int)Value;
 				auto ret = __newFInt32RangeBound();
-				*ret = FInt32RangeBound::Exclusive(Value2);
+				*ret = FInt32RangeBound::Exclusive(Value_);
 				LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret);
 				return 1;
 			}
@@ -5596,9 +5596,9 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 2) {
 				auto Value = LuaObject::checkValue<int>(L, 2);
-				auto Value2 = (const int)Value;
+				auto Value_ = (const int)Value;
 				auto ret = __newFInt32RangeBound();
-				*ret = FInt32RangeBound::Inclusive(Value2);
+				*ret = FInt32RangeBound::Inclusive(Value_);
 				LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret);
 				return 1;
 			}
@@ -5622,9 +5622,9 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 2) {
 				auto Bound = LuaObject::checkValue<FInt32RangeBound*>(L, 2);
-				auto Bound2 = *Bound;
+				auto Bound_ = *Bound;
 				auto ret = __newFInt32RangeBound();
-				*ret = FInt32RangeBound::FlipInclusion(Bound2);
+				*ret = FInt32RangeBound::FlipInclusion(Bound_);
 				LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret);
 				return 1;
 			}
@@ -5636,11 +5636,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto A = LuaObject::checkValue<FInt32RangeBound*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FInt32RangeBound*>(L, 3);
-				auto B2 = *B;
+				auto B_ = *B;
 				auto ret = __newFInt32RangeBound();
-				*ret = FInt32RangeBound::MaxLower(A2, B2);
+				*ret = FInt32RangeBound::MaxLower(A_, B_);
 				LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret);
 				return 1;
 			}
@@ -5652,11 +5652,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto A = LuaObject::checkValue<FInt32RangeBound*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FInt32RangeBound*>(L, 3);
-				auto B2 = *B;
+				auto B_ = *B;
 				auto ret = __newFInt32RangeBound();
-				*ret = FInt32RangeBound::MaxUpper(A2, B2);
+				*ret = FInt32RangeBound::MaxUpper(A_, B_);
 				LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret);
 				return 1;
 			}
@@ -5668,11 +5668,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto A = LuaObject::checkValue<FInt32RangeBound*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FInt32RangeBound*>(L, 3);
-				auto B2 = *B;
+				auto B_ = *B;
 				auto ret = __newFInt32RangeBound();
-				*ret = FInt32RangeBound::MinLower(A2, B2);
+				*ret = FInt32RangeBound::MinLower(A_, B_);
 				LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret);
 				return 1;
 			}
@@ -5684,11 +5684,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto A = LuaObject::checkValue<FInt32RangeBound*>(L, 2);
-				auto A2 = *A;
+				auto A_ = *A;
 				auto B = LuaObject::checkValue<FInt32RangeBound*>(L, 3);
-				auto B2 = *B;
+				auto B_ = *B;
 				auto ret = __newFInt32RangeBound();
-				*ret = FInt32RangeBound::MinUpper(A2, B2);
+				*ret = FInt32RangeBound::MinUpper(A_, B_);
 				LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret);
 				return 1;
 			}
@@ -5722,17 +5722,17 @@ namespace slua {
 			}
 			if (argc == 2) {
 				auto A = LuaObject::checkValue<int>(L, 2);
-				auto A2 = (const int)A;
-				auto self = new FInt32Range(A2);
+				auto A_ = (const int)A;
+				auto self = new FInt32Range(A_);
 				LuaObject::push<FInt32Range>(L, "FInt32Range", self);
 				return 1;
 			}
 			if (argc == 3) {
 				auto A = LuaObject::checkValue<int>(L, 2);
-				auto A2 = (const int)A;
+				auto A_ = (const int)A;
 				auto B = LuaObject::checkValue<int>(L, 3);
-				auto B2 = (const int)B;
-				auto self = new FInt32Range(A2, B2);
+				auto B_ = (const int)B;
+				auto self = new FInt32Range(A_, B_);
 				LuaObject::push<FInt32Range>(L, "FInt32Range", self);
 				return 1;
 			}
@@ -5762,11 +5762,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto X = LuaObject::checkValue<FInt32Range*>(L, 2);
-				auto X2 = *X;
+				auto X_ = *X;
 				auto Y = LuaObject::checkValue<FInt32Range*>(L, 3);
-				auto Y2 = *Y;
+				auto Y_ = *Y;
 				auto ret = __newFInt32Range();
-				*ret = FInt32Range::Hull(X2, Y2);
+				*ret = FInt32Range::Hull(X_, Y_);
 				LuaObject::push<FInt32Range>(L, "FInt32Range", ret);
 				return 1;
 			}
@@ -5778,11 +5778,11 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 3) {
 				auto X = LuaObject::checkValue<FInt32Range*>(L, 2);
-				auto X2 = *X;
+				auto X_ = *X;
 				auto Y = LuaObject::checkValue<FInt32Range*>(L, 3);
-				auto Y2 = *Y;
+				auto Y_ = *Y;
 				auto ret = __newFInt32Range();
-				*ret = FInt32Range::Intersection(X2, Y2);
+				*ret = FInt32Range::Intersection(X_, Y_);
 				LuaObject::push<FInt32Range>(L, "FInt32Range", ret);
 				return 1;
 			}
@@ -5806,9 +5806,9 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 2) {
 				auto Value = LuaObject::checkValue<int>(L, 2);
-				auto Value2 = (const int)Value;
+				auto Value_ = (const int)Value;
 				auto ret = __newFInt32Range();
-				*ret = FInt32Range::AtLeast(Value2);
+				*ret = FInt32Range::AtLeast(Value_);
 				LuaObject::push<FInt32Range>(L, "FInt32Range", ret);
 				return 1;
 			}
@@ -5820,9 +5820,9 @@ namespace slua {
 			auto argc = lua_gettop(L);
 			if (argc == 2) {
 				auto Value = LuaObject::checkValue<int>(L, 2);
-				auto Value2 = (const int)Value;
+				auto Value_ = (const int)Value;
 				auto ret = __newFInt32Range();
-				*ret = FInt32Range::AtMost(Value2);
+				*ret = FInt32Range::AtMost(Value_);
 				LuaObject::push<FInt32Range>(L, "FInt32Range", ret);
 				return 1;
 			}
@@ -5920,8 +5920,8 @@ namespace slua {
 			}
 			if (argc == 2) {
 				auto InName = LuaObject::checkValue<int>(L, 2);
-				auto InName2 = (EName)InName;
-				auto self = new FPrimaryAssetType(InName2);
+				auto InName_ = (EName)InName;
+				auto self = new FPrimaryAssetType(InName_);
 				LuaObject::push<FPrimaryAssetType>(L, "FPrimaryAssetType", self);
 				return 1;
 			}

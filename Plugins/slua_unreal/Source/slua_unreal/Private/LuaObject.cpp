@@ -476,8 +476,9 @@ namespace slua {
 		auto p = Cast<UEnumProperty>(prop);
 		ensure(p);
 		auto p2 = p->GetUnderlyingProperty();
-		ensure(p2);
-		p2->CopyCompleteValue_InContainer(parms, (int64)LuaObject::checkValue<int>(L, i));
+		ensure(p2 && p2->ElementSize == sizeof(int));
+		auto v = LuaObject::checkValue<int>(L, i);
+		p2->CopyCompleteValue_InContainer(parms, &v);
 		return 0;
 	}
 

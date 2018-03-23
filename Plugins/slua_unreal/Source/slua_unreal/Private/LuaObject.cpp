@@ -461,7 +461,7 @@ namespace slua {
 		LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L, i);
 		if (p->GetSize() != ls->size)
 			luaL_error(L, "expect struct size == %d, but got %d", p->GetSize(), ls->size);
-		p->CopyValuesInternal(parms, ls->buf, 1);
+		p->CopyCompleteValue_InContainer(parms, ls->buf);
 		return 0;
     }
 
@@ -477,7 +477,7 @@ namespace slua {
 		ensure(p);
 		auto p2 = p->GetUnderlyingProperty();
 		ensure(p2);
-		p2->SetIntPropertyValue(parms, (int64)LuaObject::checkValue<int>(L, i));
+		p2->CopyCompleteValue_InContainer(parms, (int64)LuaObject::checkValue<int>(L, i));
 		return 0;
 	}
 

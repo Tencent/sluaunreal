@@ -97,6 +97,7 @@ namespace slua {
 		static void newType(lua_State* L, const char* tn);
 		static void addMethod(lua_State* L, const char* name, lua_CFunction func, bool isInstance = true);
 		static void addField(lua_State* L, const char* name, lua_CFunction getter, lua_CFunction setter, bool isInstance = true);
+		static void addOperator(lua_State* L, const char* name, lua_CFunction func);
 		static void finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc);
 
         static void init(lua_State* L);

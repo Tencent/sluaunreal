@@ -24,7 +24,6 @@
 
 namespace slua {
 
-	static UScriptStruct* FMarginStruct = nullptr;
 	static UScriptStruct* FRotatorStruct = nullptr;
 	static UScriptStruct* FTransformStruct = nullptr;
 	static UScriptStruct* FLinearColorStruct = nullptr;
@@ -48,21 +47,6 @@ namespace slua {
 
 	TMap<UScriptStruct*, pushStructFunction> _pushStructMap;
 	TMap<UScriptStruct*, checkStructFunction> _checkStructMap;
-
-	static inline FMargin* __newFMargin() {
-		return new FMargin();
-	}
-
-	static void __pushFMargin(lua_State* L, UStructProperty* p, uint8* parms) {
-		auto ptr = __newFMargin();
-		p->CopyCompleteValue_InContainer(ptr, parms);
-		LuaObject::push<FMargin>(L, "FMargin", ptr);
-	}
-
-	static void __checkFMargin(lua_State* L, UStructProperty* p, uint8* parms, int i) {
-		auto v = LuaObject::checkValue<FMargin*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
-	}
 
 	static inline FRotator* __newFRotator() {
 		return new FRotator();
@@ -319,128 +303,6 @@ namespace slua {
 		p->CopyCompleteValue_InContainer(parms, v);
 	}
 
-	struct FMarginWrapper {
-
-		static int __ctor(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				auto self = new FMargin();
-				LuaObject::push<FMargin>(L, "FMargin", self);
-				return 1;
-			}
-			if (argc == 2) {
-				auto UniformMargin = LuaObject::checkValue<float>(L, 2);
-				auto self = new FMargin(UniformMargin);
-				LuaObject::push<FMargin>(L, "FMargin", self);
-				return 1;
-			}
-			if (argc == 3) {
-				auto Horizontal = LuaObject::checkValue<float>(L, 2);
-				auto Vertical = LuaObject::checkValue<float>(L, 3);
-				auto self = new FMargin(Horizontal, Vertical);
-				LuaObject::push<FMargin>(L, "FMargin", self);
-				return 1;
-			}
-			if (argc == 5) {
-				auto InLeft = LuaObject::checkValue<float>(L, 2);
-				auto InTop = LuaObject::checkValue<float>(L, 3);
-				auto InRight = LuaObject::checkValue<float>(L, 4);
-				auto InBottom = LuaObject::checkValue<float>(L, 5);
-				auto self = new FMargin(InLeft, InTop, InRight, InBottom);
-				LuaObject::push<FMargin>(L, "FMargin", self);
-				return 1;
-			}
-			luaL_error(L, "call FMargin() error, argc=%d", argc);
-			return 0;
-		}
-
-		static int __gc(lua_State* L) {
-			auto self = LuaObject::checkValue<FMargin*>(L, 1);
-			delete self;
-			return 0;
-		}
-
-		static int get_Left(lua_State* L) {
-			auto self = LuaObject::checkValue<FMargin*>(L, 1);
-			LuaObject::push(L, self->Left);
-			return 1;
-		}
-
-		static int set_Left(lua_State* L) {
-			auto self = LuaObject::checkValue<FMargin*>(L, 1);
-			auto a1 = LuaObject::checkValue<float>(L, 2);
-			self->Left = a1;
-			LuaObject::push(L, a1);
-			return 1;
-		}
-
-		static int get_Top(lua_State* L) {
-			auto self = LuaObject::checkValue<FMargin*>(L, 1);
-			LuaObject::push(L, self->Top);
-			return 1;
-		}
-
-		static int set_Top(lua_State* L) {
-			auto self = LuaObject::checkValue<FMargin*>(L, 1);
-			auto a1 = LuaObject::checkValue<float>(L, 2);
-			self->Top = a1;
-			LuaObject::push(L, a1);
-			return 1;
-		}
-
-		static int get_Right(lua_State* L) {
-			auto self = LuaObject::checkValue<FMargin*>(L, 1);
-			LuaObject::push(L, self->Right);
-			return 1;
-		}
-
-		static int set_Right(lua_State* L) {
-			auto self = LuaObject::checkValue<FMargin*>(L, 1);
-			auto a1 = LuaObject::checkValue<float>(L, 2);
-			self->Right = a1;
-			LuaObject::push(L, a1);
-			return 1;
-		}
-
-		static int get_Bottom(lua_State* L) {
-			auto self = LuaObject::checkValue<FMargin*>(L, 1);
-			LuaObject::push(L, self->Bottom);
-			return 1;
-		}
-
-		static int set_Bottom(lua_State* L) {
-			auto self = LuaObject::checkValue<FMargin*>(L, 1);
-			auto a1 = LuaObject::checkValue<float>(L, 2);
-			self->Bottom = a1;
-			LuaObject::push(L, a1);
-			return 1;
-		}
-
-		static int GetDesiredSize(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				auto self = LuaObject::checkValue<FMargin*>(L, 1);
-				auto ret = __newFVector2D();
-				*ret = self->GetDesiredSize();
-				LuaObject::push<FVector2D>(L, "FVector2D", ret);
-				return 1;
-			}
-			luaL_error(L, "call FMargin::GetDesiredSize error, argc=%d", argc);
-			return 0;
-		}
-
-		static void bind(lua_State* L) {
-			LuaObject::newType(L, "FMargin");
-			LuaObject::addField(L, "Left", get_Left, set_Left, true);
-			LuaObject::addField(L, "Top", get_Top, set_Top, true);
-			LuaObject::addField(L, "Right", get_Right, set_Right, true);
-			LuaObject::addField(L, "Bottom", get_Bottom, set_Bottom, true);
-			LuaObject::addMethod(L, "GetDesiredSize", GetDesiredSize, true);
-			LuaObject::finishType(L, "FMargin", __ctor, __gc);
-		}
-
-	};
-
 	struct FRotatorWrapper {
 
 		static int __ctor(lua_State* L) {
@@ -472,6 +334,44 @@ namespace slua {
 			auto self = LuaObject::checkValue<FRotator*>(L, 1);
 			delete self;
 			return 0;
+		}
+
+		static int __add(lua_State* L) {
+			auto self = LuaObject::checkValue<FRotator*>(L, 1);
+			auto R = LuaObject::checkValue<FRotator*>(L, 2);
+			auto R_ = *R;
+			auto ret = __newFRotator();
+			*ret = *self + R_;
+			LuaObject::push<FRotator>(L, "FRotator", ret);
+			return 1;
+		}
+
+		static int __sub(lua_State* L) {
+			auto self = LuaObject::checkValue<FRotator*>(L, 1);
+			auto R = LuaObject::checkValue<FRotator*>(L, 2);
+			auto R_ = *R;
+			auto ret = __newFRotator();
+			*ret = *self - R_;
+			LuaObject::push<FRotator>(L, "FRotator", ret);
+			return 1;
+		}
+
+		static int __mul(lua_State* L) {
+			auto self = LuaObject::checkValue<FRotator*>(L, 1);
+			auto Scale = LuaObject::checkValue<float>(L, 2);
+			auto ret = __newFRotator();
+			*ret = *self * Scale;
+			LuaObject::push<FRotator>(L, "FRotator", ret);
+			return 1;
+		}
+
+		static int __eq(lua_State* L) {
+			auto self = LuaObject::checkValue<FRotator*>(L, 1);
+			auto R = LuaObject::checkValue<FRotator*>(L, 2);
+			auto R_ = *R;
+			auto ret = *self == R_;
+			LuaObject::push(L, ret);
+			return 1;
 		}
 
 		static int get_Pitch(lua_State* L) {
@@ -913,6 +813,10 @@ namespace slua {
 
 		static void bind(lua_State* L) {
 			LuaObject::newType(L, "FRotator");
+			LuaObject::addOperator(L, "__add", __add);
+			LuaObject::addOperator(L, "__sub", __sub);
+			LuaObject::addOperator(L, "__mul", __mul);
+			LuaObject::addOperator(L, "__eq", __eq);
 			LuaObject::addField(L, "Pitch", get_Pitch, set_Pitch, true);
 			LuaObject::addField(L, "Yaw", get_Yaw, set_Yaw, true);
 			LuaObject::addField(L, "Roll", get_Roll, set_Roll, true);
@@ -999,6 +903,26 @@ namespace slua {
 			auto self = LuaObject::checkValue<FTransform*>(L, 1);
 			delete self;
 			return 0;
+		}
+
+		static int __add(lua_State* L) {
+			auto self = LuaObject::checkValue<FTransform*>(L, 1);
+			auto Atom = LuaObject::checkValue<FTransform*>(L, 2);
+			auto Atom_ = *Atom;
+			auto ret = __newFTransform();
+			*ret = *self + Atom_;
+			LuaObject::push<FTransform>(L, "FTransform", ret);
+			return 1;
+		}
+
+		static int __mul(lua_State* L) {
+			auto self = LuaObject::checkValue<FTransform*>(L, 1);
+			auto Other = LuaObject::checkValue<FTransform*>(L, 2);
+			auto Other_ = *Other;
+			auto ret = __newFTransform();
+			*ret = *self * Other_;
+			LuaObject::push<FTransform>(L, "FTransform", ret);
+			return 1;
 		}
 
 		static int get_Identity(lua_State* L) {
@@ -1877,6 +1801,8 @@ namespace slua {
 
 		static void bind(lua_State* L) {
 			LuaObject::newType(L, "FTransform");
+			LuaObject::addOperator(L, "__add", __add);
+			LuaObject::addOperator(L, "__mul", __mul);
 			LuaObject::addField(L, "Identity", get_Identity, nullptr, false);
 			LuaObject::addMethod(L, "DiagnosticCheckNaN_Translate", DiagnosticCheckNaN_Translate, true);
 			LuaObject::addMethod(L, "DiagnosticCheckNaN_Rotate", DiagnosticCheckNaN_Rotate, true);
@@ -1980,6 +1906,55 @@ namespace slua {
 			auto self = LuaObject::checkValue<FLinearColor*>(L, 1);
 			delete self;
 			return 0;
+		}
+
+		static int __add(lua_State* L) {
+			auto self = LuaObject::checkValue<FLinearColor*>(L, 1);
+			auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
+			auto ColorB_ = *ColorB;
+			auto ret = __newFLinearColor();
+			*ret = *self + ColorB_;
+			LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
+			return 1;
+		}
+
+		static int __sub(lua_State* L) {
+			auto self = LuaObject::checkValue<FLinearColor*>(L, 1);
+			auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
+			auto ColorB_ = *ColorB;
+			auto ret = __newFLinearColor();
+			*ret = *self - ColorB_;
+			LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
+			return 1;
+		}
+
+		static int __mul(lua_State* L) {
+			auto self = LuaObject::checkValue<FLinearColor*>(L, 1);
+			auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
+			auto ColorB_ = *ColorB;
+			auto ret = __newFLinearColor();
+			*ret = *self * ColorB_;
+			LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
+			return 1;
+		}
+
+		static int __div(lua_State* L) {
+			auto self = LuaObject::checkValue<FLinearColor*>(L, 1);
+			auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
+			auto ColorB_ = *ColorB;
+			auto ret = __newFLinearColor();
+			*ret = *self / ColorB_;
+			LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
+			return 1;
+		}
+
+		static int __eq(lua_State* L) {
+			auto self = LuaObject::checkValue<FLinearColor*>(L, 1);
+			auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
+			auto ColorB_ = *ColorB;
+			auto ret = *self == ColorB_;
+			LuaObject::push(L, ret);
+			return 1;
 		}
 
 		static int get_R(lua_State* L) {
@@ -2420,6 +2395,11 @@ namespace slua {
 
 		static void bind(lua_State* L) {
 			LuaObject::newType(L, "FLinearColor");
+			LuaObject::addOperator(L, "__add", __add);
+			LuaObject::addOperator(L, "__sub", __sub);
+			LuaObject::addOperator(L, "__mul", __mul);
+			LuaObject::addOperator(L, "__div", __div);
+			LuaObject::addOperator(L, "__eq", __eq);
 			LuaObject::addField(L, "R", get_R, set_R, true);
 			LuaObject::addField(L, "G", get_G, set_G, true);
 			LuaObject::addField(L, "B", get_B, set_B, true);
@@ -2499,6 +2479,15 @@ namespace slua {
 			auto self = LuaObject::checkValue<FColor*>(L, 1);
 			delete self;
 			return 0;
+		}
+
+		static int __eq(lua_State* L) {
+			auto self = LuaObject::checkValue<FColor*>(L, 1);
+			auto C = LuaObject::checkValue<FColor*>(L, 2);
+			auto C_ = *C;
+			auto ret = *self == C_;
+			LuaObject::push(L, ret);
+			return 1;
 		}
 
 		static int get_White(lua_State* L) {
@@ -2762,6 +2751,7 @@ namespace slua {
 
 		static void bind(lua_State* L) {
 			LuaObject::newType(L, "FColor");
+			LuaObject::addOperator(L, "__eq", __eq);
 			LuaObject::addField(L, "White", get_White, nullptr, false);
 			LuaObject::addField(L, "Black", get_Black, nullptr, false);
 			LuaObject::addField(L, "Transparent", get_Transparent, nullptr, false);
@@ -2835,6 +2825,55 @@ namespace slua {
 			auto self = LuaObject::checkValue<FVector*>(L, 1);
 			delete self;
 			return 0;
+		}
+
+		static int __add(lua_State* L) {
+			auto self = LuaObject::checkValue<FVector*>(L, 1);
+			auto V = LuaObject::checkValue<FVector*>(L, 2);
+			auto V_ = *V;
+			auto ret = __newFVector();
+			*ret = *self + V_;
+			LuaObject::push<FVector>(L, "FVector", ret);
+			return 1;
+		}
+
+		static int __sub(lua_State* L) {
+			auto self = LuaObject::checkValue<FVector*>(L, 1);
+			auto V = LuaObject::checkValue<FVector*>(L, 2);
+			auto V_ = *V;
+			auto ret = __newFVector();
+			*ret = *self - V_;
+			LuaObject::push<FVector>(L, "FVector", ret);
+			return 1;
+		}
+
+		static int __mul(lua_State* L) {
+			auto self = LuaObject::checkValue<FVector*>(L, 1);
+			auto V = LuaObject::checkValue<FVector*>(L, 2);
+			auto V_ = *V;
+			auto ret = __newFVector();
+			*ret = *self * V_;
+			LuaObject::push<FVector>(L, "FVector", ret);
+			return 1;
+		}
+
+		static int __div(lua_State* L) {
+			auto self = LuaObject::checkValue<FVector*>(L, 1);
+			auto V = LuaObject::checkValue<FVector*>(L, 2);
+			auto V_ = *V;
+			auto ret = __newFVector();
+			*ret = *self / V_;
+			LuaObject::push<FVector>(L, "FVector", ret);
+			return 1;
+		}
+
+		static int __eq(lua_State* L) {
+			auto self = LuaObject::checkValue<FVector*>(L, 1);
+			auto V = LuaObject::checkValue<FVector*>(L, 2);
+			auto V_ = *V;
+			auto ret = *self == V_;
+			LuaObject::push(L, ret);
+			return 1;
 		}
 
 		static int get_X(lua_State* L) {
@@ -4002,6 +4041,11 @@ namespace slua {
 
 		static void bind(lua_State* L) {
 			LuaObject::newType(L, "FVector");
+			LuaObject::addOperator(L, "__add", __add);
+			LuaObject::addOperator(L, "__sub", __sub);
+			LuaObject::addOperator(L, "__mul", __mul);
+			LuaObject::addOperator(L, "__div", __div);
+			LuaObject::addOperator(L, "__eq", __eq);
 			LuaObject::addField(L, "X", get_X, set_X, true);
 			LuaObject::addField(L, "Y", get_Y, set_Y, true);
 			LuaObject::addField(L, "Z", get_Z, set_Z, true);
@@ -4122,6 +4166,55 @@ namespace slua {
 			auto self = LuaObject::checkValue<FVector2D*>(L, 1);
 			delete self;
 			return 0;
+		}
+
+		static int __add(lua_State* L) {
+			auto self = LuaObject::checkValue<FVector2D*>(L, 1);
+			auto V = LuaObject::checkValue<FVector2D*>(L, 2);
+			auto V_ = *V;
+			auto ret = __newFVector2D();
+			*ret = *self + V_;
+			LuaObject::push<FVector2D>(L, "FVector2D", ret);
+			return 1;
+		}
+
+		static int __sub(lua_State* L) {
+			auto self = LuaObject::checkValue<FVector2D*>(L, 1);
+			auto V = LuaObject::checkValue<FVector2D*>(L, 2);
+			auto V_ = *V;
+			auto ret = __newFVector2D();
+			*ret = *self - V_;
+			LuaObject::push<FVector2D>(L, "FVector2D", ret);
+			return 1;
+		}
+
+		static int __mul(lua_State* L) {
+			auto self = LuaObject::checkValue<FVector2D*>(L, 1);
+			auto V = LuaObject::checkValue<FVector2D*>(L, 2);
+			auto V_ = *V;
+			auto ret = __newFVector2D();
+			*ret = *self * V_;
+			LuaObject::push<FVector2D>(L, "FVector2D", ret);
+			return 1;
+		}
+
+		static int __div(lua_State* L) {
+			auto self = LuaObject::checkValue<FVector2D*>(L, 1);
+			auto V = LuaObject::checkValue<FVector2D*>(L, 2);
+			auto V_ = *V;
+			auto ret = __newFVector2D();
+			*ret = *self / V_;
+			LuaObject::push<FVector2D>(L, "FVector2D", ret);
+			return 1;
+		}
+
+		static int __eq(lua_State* L) {
+			auto self = LuaObject::checkValue<FVector2D*>(L, 1);
+			auto V = LuaObject::checkValue<FVector2D*>(L, 2);
+			auto V_ = *V;
+			auto ret = *self == V_;
+			LuaObject::push(L, ret);
+			return 1;
 		}
 
 		static int get_X(lua_State* L) {
@@ -4521,6 +4614,11 @@ namespace slua {
 
 		static void bind(lua_State* L) {
 			LuaObject::newType(L, "FVector2D");
+			LuaObject::addOperator(L, "__add", __add);
+			LuaObject::addOperator(L, "__sub", __sub);
+			LuaObject::addOperator(L, "__mul", __mul);
+			LuaObject::addOperator(L, "__div", __div);
+			LuaObject::addOperator(L, "__eq", __eq);
 			LuaObject::addField(L, "X", get_X, set_X, true);
 			LuaObject::addField(L, "Y", get_Y, set_Y, true);
 			LuaObject::addField(L, "ZeroVector", get_ZeroVector, nullptr, false);
@@ -5018,6 +5116,25 @@ namespace slua {
 			return 0;
 		}
 
+		static int __eq(lua_State* L) {
+			auto self = LuaObject::checkValue<FBox2D*>(L, 1);
+			auto Other = LuaObject::checkValue<FBox2D*>(L, 2);
+			auto Other_ = *Other;
+			auto ret = *self == Other_;
+			LuaObject::push(L, ret);
+			return 1;
+		}
+
+		static int __add(lua_State* L) {
+			auto self = LuaObject::checkValue<FBox2D*>(L, 1);
+			auto Other = LuaObject::checkValue<FBox2D*>(L, 2);
+			auto Other_ = *Other;
+			auto ret = __newFBox2D();
+			*ret = *self + Other_;
+			LuaObject::push<FBox2D>(L, "FBox2D", ret);
+			return 1;
+		}
+
 		static int get_Min(lua_State* L) {
 			auto self = LuaObject::checkValue<FBox2D*>(L, 1);
 			LuaObject::push<FVector2D>(L, "FVector2D", &self->Min);
@@ -5240,6 +5357,8 @@ namespace slua {
 
 		static void bind(lua_State* L) {
 			LuaObject::newType(L, "FBox2D");
+			LuaObject::addOperator(L, "__eq", __eq);
+			LuaObject::addOperator(L, "__add", __add);
 			LuaObject::addField(L, "Min", get_Min, set_Min, true);
 			LuaObject::addField(L, "Max", get_Max, set_Max, true);
 			LuaObject::addField(L, "bIsValid", get_bIsValid, set_bIsValid, true);
@@ -5935,6 +6054,15 @@ namespace slua {
 			return 0;
 		}
 
+		static int __eq(lua_State* L) {
+			auto self = LuaObject::checkValue<FPrimaryAssetType*>(L, 1);
+			auto Other = LuaObject::checkValue<FPrimaryAssetType*>(L, 2);
+			auto Other_ = *Other;
+			auto ret = *self == Other_;
+			LuaObject::push(L, ret);
+			return 1;
+		}
+
 		static int IsValid(lua_State* L) {
 			auto argc = lua_gettop(L);
 			if (argc == 1) {
@@ -5961,6 +6089,7 @@ namespace slua {
 
 		static void bind(lua_State* L) {
 			LuaObject::newType(L, "FPrimaryAssetType");
+			LuaObject::addOperator(L, "__eq", __eq);
 			LuaObject::addMethod(L, "IsValid", IsValid, true);
 			LuaObject::addMethod(L, "ToString", ToString, true);
 			LuaObject::finishType(L, "FPrimaryAssetType", __ctor, __gc);
@@ -5991,6 +6120,15 @@ namespace slua {
 			auto self = LuaObject::checkValue<FPrimaryAssetId*>(L, 1);
 			delete self;
 			return 0;
+		}
+
+		static int __eq(lua_State* L) {
+			auto self = LuaObject::checkValue<FPrimaryAssetId*>(L, 1);
+			auto Other = LuaObject::checkValue<FPrimaryAssetId*>(L, 2);
+			auto Other_ = *Other;
+			auto ret = *self == Other_;
+			LuaObject::push(L, ret);
+			return 1;
 		}
 
 		static int get_PrimaryAssetType(lua_State* L) {
@@ -6046,6 +6184,7 @@ namespace slua {
 
 		static void bind(lua_State* L) {
 			LuaObject::newType(L, "FPrimaryAssetId");
+			LuaObject::addOperator(L, "__eq", __eq);
 			LuaObject::addField(L, "PrimaryAssetType", get_PrimaryAssetType, set_PrimaryAssetType, true);
 			LuaObject::addMethod(L, "IsValid", IsValid, true);
 			LuaObject::addMethod(L, "ToString", ToString, true);
@@ -6076,9 +6215,6 @@ namespace slua {
 	}
 
 	void LuaWrapper::init(lua_State* L) {
-		FMarginStruct = FMargin::StaticStruct();
-		_pushStructMap.Add(FMarginStruct, __pushFMargin);
-		_checkStructMap.Add(FMarginStruct, __checkFMargin);
 		FRotatorStruct = TBaseStructure<FRotator>::Get();
 		_pushStructMap.Add(FRotatorStruct, __pushFRotator);
 		_checkStructMap.Add(FRotatorStruct, __checkFRotator);
@@ -6131,7 +6267,6 @@ namespace slua {
 		_pushStructMap.Add(FPrimaryAssetIdStruct, __pushFPrimaryAssetId);
 		_checkStructMap.Add(FPrimaryAssetIdStruct, __checkFPrimaryAssetId);
 
-		FMarginWrapper::bind(L);
 		FRotatorWrapper::bind(L);
 		FTransformWrapper::bind(L);
 		FLinearColorWrapper::bind(L);

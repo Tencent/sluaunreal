@@ -1,6 +1,6 @@
 # slua-unreal
 
-Now slua for unreal is available.
+Now slua for unreal available.
 
 # Feature
 
@@ -8,7 +8,7 @@ Now slua for unreal is available.
 * Lua function passed as callback of blueprint.
 * Common c++ class (Non blueprint class) can be exported by static code generation by libclang tool( another tool available ASAP )
 
-# Usage as glance
+# Usage at a glance
 
 ```lua
 local Button = import('Button');

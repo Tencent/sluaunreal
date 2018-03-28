@@ -109,7 +109,7 @@ namespace slua {
 		setMetaMethods(L);
 		
 		char _inst[64];
-		sprintf_s(_inst, 64, "%s_inst", tn);
+		sprintf(_inst, "%s_inst", tn);
 		luaL_newmetatable(L, _inst);
 		setMetaMethods(L);
 	}
@@ -137,13 +137,13 @@ namespace slua {
 
 	void LuaObject::getStaticTypeTable(lua_State* L, const char* tn) {
 		char _static[64];
-		sprintf_s(_static, 64, "%s_static", tn);
+		sprintf(_static, "%s_static", tn);
 		luaL_getmetatable(L, _static);
 	}
 
 	void LuaObject::getInstanceTypeTable(lua_State* L, const char* tn) {
 		char _inst[64];
-		sprintf_s(_inst, 64, "%s_inst", tn);
+		sprintf(_inst, "%s_inst", tn);
 		luaL_getmetatable(L, _inst);
 	}
 
@@ -163,7 +163,7 @@ namespace slua {
 		lua_pop(L, 1);
 
 		char _static[64];
-		sprintf_s(_static, 64, "%s_static", tn);
+		sprintf(_static, "%s_static", tn);
 		lua_setfield(L, LUA_REGISTRYINDEX, _static);
 
 		lua_pushcclosure(L, gc, 0);

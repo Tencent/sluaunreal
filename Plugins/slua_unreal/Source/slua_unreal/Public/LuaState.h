@@ -73,10 +73,10 @@ namespace slua {
 			return L;
 		}
         static int pushErrorHandler(lua_State* L);
-		static int loader(lua_State* L);
     protected:
         LoadFileDelegate loadFileDelegate;
         uint8* loadFile(const char* fn,uint32& len);
+		static int loader(lua_State* L);
     private:
         friend class LuaObject;
         friend class SluaUtil;

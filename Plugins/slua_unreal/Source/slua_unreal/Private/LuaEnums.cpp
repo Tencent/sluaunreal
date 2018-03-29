@@ -26,10 +26,8 @@
 namespace slua {
 
 	void LuaEnums::init(lua_State* L) {
-		lua_pushstring(L, "enums");
-		if (LuaState::loader(L)) {
-			lua_pcall(L, 0, LUA_MULTRET, 0);
-		}
+		auto state = LuaState::get(L);
+		state->doFile("enums");
 	}
 
 }

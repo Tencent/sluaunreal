@@ -183,7 +183,6 @@ namespace slua {
 		lua_settop(L, 0);
 
         LuaObject::init(L);
-		LuaWrapper::init(L);
         SluaUtil::openLib(L);
         lua_settop(L,0);
 
@@ -192,8 +191,6 @@ namespace slua {
 
 	void LuaState::setLoadFileDelegate(LoadFileDelegate func) {
 		loadFileDelegate = func;
-		ensure(lua_gettop(L) == 0);
-		LuaEnums::init(L);
 	}
 
     LuaVar LuaState::doBuffer(const uint8* buf,uint32 len, const char* chunk) {

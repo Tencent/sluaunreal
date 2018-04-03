@@ -640,6 +640,9 @@ namespace slua {
         regChecker(UObjectProperty::StaticClass(),checkUObjectProperty);
         regChecker(UStrProperty::StaticClass(),checkUStrProperty);
 		regChecker(UEnumProperty::StaticClass(), checkEnumProperty);
+
+		LuaWrapper::init(L);
+		LuaEnums::init(L);
     }
 
     int LuaObject::push(lua_State* L,UFunction* func)  {

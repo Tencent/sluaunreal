@@ -62,9 +62,8 @@ namespace slua {
 
         }
 
-        void setLoadFileDelegate(LoadFileDelegate func) {
-            loadFileDelegate = func;
-        }
+		void setLoadFileDelegate(LoadFileDelegate func);
+
 		lua_State* getLuaState()
 		{
 			return L;
@@ -77,7 +76,7 @@ namespace slua {
     protected:
         LoadFileDelegate loadFileDelegate;
         uint8* loadFile(const char* fn,uint32& len);
-        static int loader(lua_State* L);
+		static int loader(lua_State* L);
     private:
         friend class LuaObject;
         friend class SluaUtil;

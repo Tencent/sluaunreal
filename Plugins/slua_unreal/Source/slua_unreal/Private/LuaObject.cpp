@@ -33,6 +33,7 @@
 #include "LuaCppBinding.h"
 #include "LuaState.h"
 #include "LuaWrapper.h"
+#include "LuaEnums.h"
 
 namespace slua { 
 
@@ -488,9 +489,23 @@ namespace slua {
 		auto p = Cast<UEnumProperty>(prop);
 		ensure(p);
 		auto p2 = p->GetUnderlyingProperty();
-		ensure(p2 && p2->ElementSize == sizeof(int));
+		ensure(p2);
 		auto v = LuaObject::checkValue<int>(L, i);
-		p2->CopyCompleteValue_InContainer(parms, &v);
+		if (p2->ElementSize == sizeof(int8)) {
+			auto v2 = (int8)v;
+			p2->CopyCompleteValue_InContainer(parms, &v2);
+		} else if (p2->ElementSize == sizeof(int16)) {
+			auto v2 = (int16)v;
+			p2->CopyCompleteValue_InContainer(parms, &v2);
+		} else if (p2->ElementSize == sizeof(int32)) {
+			auto v2 = (int32)v;
+			p2->CopyCompleteValue_InContainer(parms, &v2);
+		} else if (p2->ElementSize == sizeof(int64)) {
+			auto v2 = (int64)v;
+			p2->CopyCompleteValue_InContainer(parms, &v2);
+		} else {
+			luaL_error(L, "unexcept enum size %d", p2->ElementSize);
+		}
 		return 0;
 	}
 
@@ -639,6 +654,7 @@ namespace slua {
 		regChecker(UEnumProperty::StaticClass(), checkEnumProperty);
 
 		LuaWrapper::init(L);
+		LuaEnums::init(L);
     }
 
     int LuaObject::push(lua_State* L,UFunction* func)  {

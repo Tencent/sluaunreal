@@ -32,6 +32,8 @@
 #include "Util.h"
 #include "lua/lua.hpp"
 #include <map>
+#include "LuaWrapper.h"
+#include "LuaEnums.h"
 
 namespace slua {
 
@@ -101,8 +103,6 @@ namespace slua {
         if(loadFileDelegate) return loadFileDelegate(fn,len);
         return nullptr;
     }
-
-    
 
     LuaState::LuaState()
         :loadFileDelegate(nullptr)
@@ -180,14 +180,18 @@ namespace slua {
         }
         lua_pushvalue(L,loaderFunc);
         lua_rawseti(L,loaderTable,2);
+		lua_settop(L, 0);
 
         LuaObject::init(L);
         SluaUtil::openLib(L);
-
         lua_settop(L,0);
 
         return true;
     }
+
+	void LuaState::setLoadFileDelegate(LoadFileDelegate func) {
+		loadFileDelegate = func;
+	}
 
     LuaVar LuaState::doBuffer(const uint8* buf,uint32 len, const char* chunk) {
         AutoStack g(L);

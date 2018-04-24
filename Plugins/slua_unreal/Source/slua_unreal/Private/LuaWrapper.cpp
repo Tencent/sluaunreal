@@ -24,6 +24,8 @@
 
 namespace slua {
 
+	static UScriptStruct* FMarginStruct = nullptr;
+	static UScriptStruct* FSlateColorStruct = nullptr;
 	static UScriptStruct* FRotatorStruct = nullptr;
 	static UScriptStruct* FTransformStruct = nullptr;
 	static UScriptStruct* FLinearColorStruct = nullptr;
@@ -47,6 +49,36 @@ namespace slua {
 
 	TMap<UScriptStruct*, pushStructFunction> _pushStructMap;
 	TMap<UScriptStruct*, checkStructFunction> _checkStructMap;
+
+	static inline FMargin* __newFMargin() {
+		return new FMargin();
+	}
+
+	static void __pushFMargin(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFMargin();
+		p->CopyCompleteValue_InContainer(ptr, parms);
+		LuaObject::push<FMargin>(L, "FMargin", ptr);
+	}
+
+	static void __checkFMargin(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FMargin*>(L, i);
+		p->CopyCompleteValue_InContainer(parms, v);
+	}
+
+	static inline FSlateColor* __newFSlateColor() {
+		return new FSlateColor();
+	}
+
+	static void __pushFSlateColor(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFSlateColor();
+		p->CopyCompleteValue_InContainer(ptr, parms);
+		LuaObject::push<FSlateColor>(L, "FSlateColor", ptr);
+	}
+
+	static void __checkFSlateColor(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FSlateColor*>(L, i);
+		p->CopyCompleteValue_InContainer(parms, v);
+	}
 
 	static inline FRotator* __newFRotator() {
 		return new FRotator();
@@ -302,6 +334,291 @@ namespace slua {
 		auto v = LuaObject::checkValue<FPrimaryAssetId*>(L, i);
 		p->CopyCompleteValue_InContainer(parms, v);
 	}
+
+	struct FMarginWrapper {
+
+		static int __ctor(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = new FMargin();
+				LuaObject::push<FMargin>(L, "FMargin", self);
+				return 1;
+			}
+			if (argc == 2) {
+				auto UniformMargin = LuaObject::checkValue<float>(L, 2);
+				auto self = new FMargin(UniformMargin);
+				LuaObject::push<FMargin>(L, "FMargin", self);
+				return 1;
+			}
+			if (argc == 3) {
+				auto Horizontal = LuaObject::checkValue<float>(L, 2);
+				auto Vertical = LuaObject::checkValue<float>(L, 3);
+				auto self = new FMargin(Horizontal, Vertical);
+				LuaObject::push<FMargin>(L, "FMargin", self);
+				return 1;
+			}
+			if (argc == 5) {
+				auto InLeft = LuaObject::checkValue<float>(L, 2);
+				auto InTop = LuaObject::checkValue<float>(L, 3);
+				auto InRight = LuaObject::checkValue<float>(L, 4);
+				auto InBottom = LuaObject::checkValue<float>(L, 5);
+				auto self = new FMargin(InLeft, InTop, InRight, InBottom);
+				LuaObject::push<FMargin>(L, "FMargin", self);
+				return 1;
+			}
+			luaL_error(L, "call FMargin() error, argc=%d", argc);
+			return 0;
+		}
+
+		static int __gc(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			delete self;
+			return 0;
+		}
+
+		static int __mul(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			auto InScale = LuaObject::checkValue<FMargin*>(L, 2);
+			auto InScale_ = *InScale;
+			auto ret = __newFMargin();
+			*ret = *self * InScale_;
+			LuaObject::push<FMargin>(L, "FMargin", ret);
+			return 1;
+		}
+
+		static int __add(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			auto InDelta = LuaObject::checkValue<FMargin*>(L, 2);
+			auto InDelta_ = *InDelta;
+			auto ret = __newFMargin();
+			*ret = *self + InDelta_;
+			LuaObject::push<FMargin>(L, "FMargin", ret);
+			return 1;
+		}
+
+		static int __sub(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			auto Other = LuaObject::checkValue<FMargin*>(L, 2);
+			auto Other_ = *Other;
+			auto ret = __newFMargin();
+			*ret = *self - Other_;
+			LuaObject::push<FMargin>(L, "FMargin", ret);
+			return 1;
+		}
+
+		static int __eq(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			auto Other = LuaObject::checkValue<FMargin*>(L, 2);
+			auto Other_ = *Other;
+			auto ret = *self == Other_;
+			LuaObject::push(L, ret);
+			return 1;
+		}
+
+		static int get_Left(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			LuaObject::push(L, self->Left);
+			return 1;
+		}
+
+		static int set_Left(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			auto a1 = LuaObject::checkValue<float>(L, 2);
+			self->Left = a1;
+			LuaObject::push(L, a1);
+			return 1;
+		}
+
+		static int get_Top(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			LuaObject::push(L, self->Top);
+			return 1;
+		}
+
+		static int set_Top(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			auto a1 = LuaObject::checkValue<float>(L, 2);
+			self->Top = a1;
+			LuaObject::push(L, a1);
+			return 1;
+		}
+
+		static int get_Right(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			LuaObject::push(L, self->Right);
+			return 1;
+		}
+
+		static int set_Right(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			auto a1 = LuaObject::checkValue<float>(L, 2);
+			self->Right = a1;
+			LuaObject::push(L, a1);
+			return 1;
+		}
+
+		static int get_Bottom(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			LuaObject::push(L, self->Bottom);
+			return 1;
+		}
+
+		static int set_Bottom(lua_State* L) {
+			auto self = LuaObject::checkValue<FMargin*>(L, 1);
+			auto a1 = LuaObject::checkValue<float>(L, 2);
+			self->Bottom = a1;
+			LuaObject::push(L, a1);
+			return 1;
+		}
+
+		static int GetDesiredSize(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = LuaObject::checkValue<FMargin*>(L, 1);
+				auto ret = __newFVector2D();
+				*ret = self->GetDesiredSize();
+				LuaObject::push<FVector2D>(L, "FVector2D", ret);
+				return 1;
+			}
+			luaL_error(L, "call FMargin::GetDesiredSize error, argc=%d", argc);
+			return 0;
+		}
+
+		static void bind(lua_State* L) {
+			LuaObject::newType(L, "FMargin");
+			LuaObject::addOperator(L, "__mul", __mul);
+			LuaObject::addOperator(L, "__add", __add);
+			LuaObject::addOperator(L, "__sub", __sub);
+			LuaObject::addOperator(L, "__eq", __eq);
+			LuaObject::addField(L, "Left", get_Left, set_Left, true);
+			LuaObject::addField(L, "Top", get_Top, set_Top, true);
+			LuaObject::addField(L, "Right", get_Right, set_Right, true);
+			LuaObject::addField(L, "Bottom", get_Bottom, set_Bottom, true);
+			LuaObject::addMethod(L, "GetDesiredSize", GetDesiredSize, true);
+			LuaObject::finishType(L, "FMargin", __ctor, __gc);
+		}
+
+	};
+
+	struct FSlateColorWrapper {
+
+		static int __ctor(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = new FSlateColor();
+				LuaObject::push<FSlateColor>(L, "FSlateColor", self);
+				return 1;
+			}
+			if (argc == 2) {
+				auto InColor = LuaObject::checkValue<FLinearColor*>(L, 2);
+				auto InColor_ = *InColor;
+				auto self = new FSlateColor(InColor_);
+				LuaObject::push<FSlateColor>(L, "FSlateColor", self);
+				return 1;
+			}
+			luaL_error(L, "call FSlateColor() error, argc=%d", argc);
+			return 0;
+		}
+
+		static int __gc(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateColor*>(L, 1);
+			delete self;
+			return 0;
+		}
+
+		static int __eq(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateColor*>(L, 1);
+			auto Other = LuaObject::checkValue<FSlateColor*>(L, 2);
+			auto Other_ = *Other;
+			auto ret = *self == Other_;
+			LuaObject::push(L, ret);
+			return 1;
+		}
+
+		static int GetSpecifiedColor(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = LuaObject::checkValue<FSlateColor*>(L, 1);
+				auto ret = __newFLinearColor();
+				*ret = self->GetSpecifiedColor();
+				LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
+				return 1;
+			}
+			luaL_error(L, "call FSlateColor::GetSpecifiedColor error, argc=%d", argc);
+			return 0;
+		}
+
+		static int IsColorSpecified(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = LuaObject::checkValue<FSlateColor*>(L, 1);
+				auto ret = self->IsColorSpecified();
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "call FSlateColor::IsColorSpecified error, argc=%d", argc);
+			return 0;
+		}
+
+		static int __PPO__SpecifiedColor(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto ret = FSlateColor::__PPO__SpecifiedColor();
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "call FSlateColor::__PPO__SpecifiedColor error, argc=%d", argc);
+			return 0;
+		}
+
+		static int __PPO__ColorUseRule(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto ret = FSlateColor::__PPO__ColorUseRule();
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "call FSlateColor::__PPO__ColorUseRule error, argc=%d", argc);
+			return 0;
+		}
+
+		static int UseForeground(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto ret = __newFSlateColor();
+				*ret = FSlateColor::UseForeground();
+				LuaObject::push<FSlateColor>(L, "FSlateColor", ret);
+				return 1;
+			}
+			luaL_error(L, "call FSlateColor::UseForeground error, argc=%d", argc);
+			return 0;
+		}
+
+		static int UseSubduedForeground(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto ret = __newFSlateColor();
+				*ret = FSlateColor::UseSubduedForeground();
+				LuaObject::push<FSlateColor>(L, "FSlateColor", ret);
+				return 1;
+			}
+			luaL_error(L, "call FSlateColor::UseSubduedForeground error, argc=%d", argc);
+			return 0;
+		}
+
+		static void bind(lua_State* L) {
+			LuaObject::newType(L, "FSlateColor");
+			LuaObject::addOperator(L, "__eq", __eq);
+			LuaObject::addMethod(L, "GetSpecifiedColor", GetSpecifiedColor, true);
+			LuaObject::addMethod(L, "IsColorSpecified", IsColorSpecified, true);
+			LuaObject::addMethod(L, "__PPO__SpecifiedColor", __PPO__SpecifiedColor, false);
+			LuaObject::addMethod(L, "__PPO__ColorUseRule", __PPO__ColorUseRule, false);
+			LuaObject::addMethod(L, "UseForeground", UseForeground, false);
+			LuaObject::addMethod(L, "UseSubduedForeground", UseSubduedForeground, false);
+			LuaObject::finishType(L, "FSlateColor", __ctor, __gc);
+		}
+
+	};
 
 	struct FRotatorWrapper {
 
@@ -6215,6 +6532,12 @@ namespace slua {
 	}
 
 	void LuaWrapper::init(lua_State* L) {
+		FMarginStruct = FMargin::StaticStruct();
+		_pushStructMap.Add(FMarginStruct, __pushFMargin);
+		_checkStructMap.Add(FMarginStruct, __checkFMargin);
+		FSlateColorStruct = FSlateColor::StaticStruct();
+		_pushStructMap.Add(FSlateColorStruct, __pushFSlateColor);
+		_checkStructMap.Add(FSlateColorStruct, __checkFSlateColor);
 		FRotatorStruct = TBaseStructure<FRotator>::Get();
 		_pushStructMap.Add(FRotatorStruct, __pushFRotator);
 		_checkStructMap.Add(FRotatorStruct, __checkFRotator);
@@ -6267,6 +6590,8 @@ namespace slua {
 		_pushStructMap.Add(FPrimaryAssetIdStruct, __pushFPrimaryAssetId);
 		_checkStructMap.Add(FPrimaryAssetIdStruct, __checkFPrimaryAssetId);
 
+		FMarginWrapper::bind(L);
+		FSlateColorWrapper::bind(L);
 		FRotatorWrapper::bind(L);
 		FTransformWrapper::bind(L);
 		FLinearColorWrapper::bind(L);

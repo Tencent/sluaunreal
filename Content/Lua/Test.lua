@@ -1,5 +1,6 @@
-
 local B=require 'b'
+
+print("UEnums.EForceInit.ForceInitToZero=" .. tostring(UEnums.EForceInit.ForceInitToZero))
 
 print("test require",B.foo())
 

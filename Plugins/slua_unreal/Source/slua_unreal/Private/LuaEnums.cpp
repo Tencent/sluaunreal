@@ -20,23 +20,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once
-#include "LuaObject.h"
-#include "Margin.h"
-#include "SlateColor.h"
-#include "Log.h"
-
-#define LUA_WRAPPER_DEBUG
+#include "LuaEnums.h"
+#include "LuaState.h"
 
 namespace slua {
 
-	struct LuaWrapper {
-
-		static void init(lua_State* L);
-		static int pushValue(lua_State* L, UStructProperty* p, UScriptStruct* uss, uint8* parms);
-		static int checkValue(lua_State* L, UStructProperty* p, UScriptStruct* uss, uint8* parms, int i);
-
-	};
+	void LuaEnums::init(lua_State* L) {
+		auto state = LuaState::get(L);
+		#include "LuaEnums.lua"
+	}
 
 }
-

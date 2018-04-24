@@ -690,7 +690,10 @@
                     "/Users/siney/slua-unreal/Source/democpp",
                     "/usr/local/include"
                 ]
-            }
+            },
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
         }
     ],
     "version": 3

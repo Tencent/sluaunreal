@@ -26,6 +26,7 @@
 #include "lua/lua.hpp"
 #include "UObject/UnrealType.h"
 #include "UObject/WeakObjectPtr.h"
+#include "Blueprint/UserWidget.h"
 
 #define CheckUD(Type,L,P) UserData<Type*>* ud = reinterpret_cast<UserData<Type*>*>(luaL_checkudata(L, P,#Type)); \
     if(!ud) { luaL_error(L, "checkValue error at %d",P); } \
@@ -138,8 +139,8 @@ namespace slua {
             return 1;
         }
 
-        template<class T>
-        static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt=NULL,lua_CFunction gc=NULL) {
+        template<typename T>
+        static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt=nullptr,lua_CFunction gc=nullptr) {
             if(getFromCache(L,obj)) return 1;
             obj->AddToRoot();
             lua_pushcclosure(L,gc,0);
@@ -151,11 +152,20 @@ namespace slua {
             return r;
         }
 
+        template<typename T>
+        static int pushObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt=nullptr) {
+            if(getFromCache(L,obj)) return 1;
+            int r = pushType<T>(L,obj,tn,setupmt,nullptr);
+            if(r) cacheObj(L,obj);
+            return r;
+        }
+
 		static int setupMTSelfSearch(lua_State* L);
         
         static int pushClass(lua_State* L,UClass* cls);
         static int pushStruct(lua_State* L,UScriptStruct* cls);
         static int push(lua_State* L, UObject* obj);
+        static int push(lua_State* L, UUserWidget* obj);
 		static int push(lua_State* L, FScriptDelegate* obj);
 		static int push(lua_State* L, LuaStruct* ls);
 		static int push(lua_State* L, double v);

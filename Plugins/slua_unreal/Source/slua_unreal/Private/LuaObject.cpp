@@ -41,6 +41,9 @@ namespace slua {
 
 	TMap<UClass*,PushPropertyFunction> pusherMap;
 	TMap<UClass*,CheckPropertyFunction> checkerMap;
+    #if !PLATFORM_WINDOWS
+    #define sprintf_s snprintf
+    #endif
 
     // construct lua struct
     LuaStruct::LuaStruct(uint8* buf,uint32 size,UScriptStruct* uss)
@@ -562,7 +565,7 @@ namespace slua {
             lua_pushnil(L);
             return 1;
         }
-        return pushGCObject<UClass*>(L,cls,"UClass",setupClassMT,gcClass);
+        return pushGCObject(L,cls,"UClass",setupClassMT,gcClass);
     }
 
     int LuaObject::pushStruct(lua_State* L,UScriptStruct* cls) {
@@ -570,7 +573,7 @@ namespace slua {
             lua_pushnil(L);
             return 1;
         }          
-        return pushGCObject<UScriptStruct*>(L,cls,"UScriptStruct",setupStructMT,gcStructClass);
+        return pushGCObject(L,cls,"UScriptStruct",setupStructMT,gcStructClass);
     }
 
     int LuaObject::gcObject(lua_State* L) {
@@ -603,6 +606,15 @@ namespace slua {
             return 1;
         }
         return pushGCObject<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject);
+    }
+
+    // userwidget owned by uworld, not need to gc
+    int LuaObject::push(lua_State* L, UUserWidget* obj) {
+        if(!obj) {
+            lua_pushnil(L);
+            return 1;
+        }
+        return pushObject<UObject*>(L,obj,"UObject",setupInstanceMT);
     }
 
     void LuaObject::init(lua_State* L) {

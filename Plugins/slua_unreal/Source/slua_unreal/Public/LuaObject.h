@@ -114,18 +114,20 @@ namespace slua {
 		}
 
 		template<class T>
-		static void push(lua_State* L, const char* fn, T* v) {
+		static int push(lua_State* L, const char* fn, T* v) {
 			NewUD(T, v);
 			getInstanceTypeTable(L, fn);
 			lua_setmetatable(L, -2);
+            return 1;
 		}
 
 		template<class T>
-		static void push(lua_State* L, const char* fn, const T* v) {
+		static int push(lua_State* L, const char* fn, const T* v) {
 			auto v2 = const_cast<T*>(v);
 			NewUD(T, v2);
 			getStaticTypeTable(L, fn);
 			lua_setmetatable(L, -2);
+            return 1;
 		}
 
         typedef void SetupMetaTableFunc(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc);
@@ -139,18 +141,18 @@ namespace slua {
             return 1;
         }
 
-        // template<typename T>
-        // static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt=nullptr,lua_CFunction gc=nullptr) {
-        //     if(getFromCache(L,obj)) return 1;
-        //     obj->AddToRoot();
-        //     lua_pushcclosure(L,gc,0);
-        //     lua_pushcclosure(L,removeFromCacheGC,1);
-        //     int f = lua_gettop(L);
-        //     int r = pushType<T>(L,obj,tn,setupmt,f);
-        //     lua_remove(L,f); // remove wraped gc function
-        //     if(r) cacheObj(L,obj);
-        //     return r;
-        // }
+        template<typename T>
+        static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt=nullptr,lua_CFunction gc=nullptr) {
+            if(getFromCache(L,obj)) return 1;
+            obj->AddToRoot();
+            lua_pushcclosure(L,gc,0);
+            lua_pushcclosure(L,removeFromCacheGC,1);
+            int f = lua_gettop(L);
+            int r = pushType<T>(L,obj,tn,setupmt,f);
+            lua_remove(L,f); // remove wraped gc function
+            if(r) cacheObj(L,obj);
+            return r;
+        }
 
         template<typename T>
         static int pushObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt=nullptr) {
@@ -177,6 +179,10 @@ namespace slua {
         static int push(lua_State* L, UProperty* up, uint8* parms);
 		// static int push(lua_State* L, FScriptArray* array);
         
+        static int pushNil(lua_State* L) {
+            lua_pushnil(L);
+            return 1;
+        }
     private:
         static int setupClassMT(lua_State* L);
         static int setupInstanceMT(lua_State* L);

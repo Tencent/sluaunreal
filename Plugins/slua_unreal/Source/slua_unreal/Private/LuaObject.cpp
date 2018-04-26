@@ -580,7 +580,7 @@ namespace slua {
             lua_pushnil(L);
             return 1;
         }
-        return pushGCObject(L,cls,"UClass",setupClassMT,gcClass);
+        return pushObject(L,cls,"UClass",setupClassMT);
     }
 
     int LuaObject::pushStruct(lua_State* L,UScriptStruct* cls) {
@@ -588,7 +588,7 @@ namespace slua {
             lua_pushnil(L);
             return 1;
         }          
-        return pushGCObject(L,cls,"UScriptStruct",setupStructMT,gcStructClass);
+        return pushObject(L,cls,"UScriptStruct",setupStructMT);
     }
 
     int LuaObject::gcObject(lua_State* L) {

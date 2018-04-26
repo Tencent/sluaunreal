@@ -421,7 +421,7 @@ namespace slua {
 		uint8* buf = (uint8*)FMemory::Malloc(size);
 		FMemory::Memcpy(buf, parms, size);
 		//p->CopyValuesInternal(buf,parms,1);
-		return LuaObject::push(L, new LuaStruct{ buf,size,uss });
+		return LuaObject::push(L, new LuaStruct{buf,size,uss});
     }  
 
     int pushUMulticastDelegateProperty(lua_State* L,UProperty* prop,uint8* parms) {
@@ -615,16 +615,8 @@ namespace slua {
 		return 0;
 	}
 
-    int LuaObject::push(lua_State* L, UObject* obj) {
-        if(!obj) {
-            lua_pushnil(L);
-            return 1;
-        }
-        return pushGCObject<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject);
-    }
-
     // userwidget owned by uworld, not need to gc
-    int LuaObject::push(lua_State* L, UUserWidget* obj) {
+    int LuaObject::push(lua_State* L, UObject* obj) {
         if(!obj) {
             lua_pushnil(L);
             return 1;

@@ -50,6 +50,7 @@ namespace slua {
         LuaObject::setupMTSelfSearch(L);
 
         RegMetaMethod(L,FindWidget);
+        RegMetaMethod(L,RemoveWidget);
         return 0;
     }
 

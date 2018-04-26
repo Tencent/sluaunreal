@@ -139,18 +139,18 @@ namespace slua {
             return 1;
         }
 
-        template<typename T>
-        static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt=nullptr,lua_CFunction gc=nullptr) {
-            if(getFromCache(L,obj)) return 1;
-            obj->AddToRoot();
-            lua_pushcclosure(L,gc,0);
-            lua_pushcclosure(L,removeFromCacheGC,1);
-            int f = lua_gettop(L);
-            int r = pushType<T>(L,obj,tn,setupmt,f);
-            lua_remove(L,f); // remove wraped gc function
-            if(r) cacheObj(L,obj);
-            return r;
-        }
+        // template<typename T>
+        // static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt=nullptr,lua_CFunction gc=nullptr) {
+        //     if(getFromCache(L,obj)) return 1;
+        //     obj->AddToRoot();
+        //     lua_pushcclosure(L,gc,0);
+        //     lua_pushcclosure(L,removeFromCacheGC,1);
+        //     int f = lua_gettop(L);
+        //     int r = pushType<T>(L,obj,tn,setupmt,f);
+        //     lua_remove(L,f); // remove wraped gc function
+        //     if(r) cacheObj(L,obj);
+        //     return r;
+        // }
 
         template<typename T>
         static int pushObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt=nullptr) {
@@ -165,7 +165,6 @@ namespace slua {
         static int pushClass(lua_State* L,UClass* cls);
         static int pushStruct(lua_State* L,UScriptStruct* cls);
         static int push(lua_State* L, UObject* obj);
-        static int push(lua_State* L, UUserWidget* obj);
 		static int push(lua_State* L, FScriptDelegate* obj);
 		static int push(lua_State* L, LuaStruct* ls);
 		static int push(lua_State* L, double v);

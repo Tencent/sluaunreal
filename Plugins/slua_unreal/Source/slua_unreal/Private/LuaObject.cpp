@@ -49,13 +49,11 @@ namespace slua {
     // construct lua struct
     LuaStruct::LuaStruct(uint8* buf,uint32 size,UScriptStruct* uss)
         :buf(buf),size(size),uss(uss) {
-        this->uss->AddToRoot();
     }
 
     LuaStruct::~LuaStruct() {
         FMemory::Free(buf);
         buf = nullptr;
-        uss->RemoveFromRoot();
     }
 
 	int LuaObject::classIndex(lua_State* L) {

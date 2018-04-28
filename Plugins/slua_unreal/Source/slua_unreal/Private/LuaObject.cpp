@@ -613,13 +613,12 @@ namespace slua {
 		return 0;
 	}
 
-    // userwidget owned by uworld, not need to gc
     int LuaObject::push(lua_State* L, UObject* obj) {
         if(!obj) {
             lua_pushnil(L);
             return 1;
         }
-        return pushObject<UObject*>(L,obj,"UObject",setupInstanceMT);
+        return pushGCObject<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject);
     }
 
     void LuaObject::init(lua_State* L) {

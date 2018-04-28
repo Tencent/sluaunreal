@@ -38,7 +38,7 @@ namespace slua {
         lua_setglobal(L,"slua");
     }
     
-     int SluaUtil::loadUI(lua_State* L) {
+    int SluaUtil::loadUI(lua_State* L) {
         const char* ui = luaL_checkstring(L,1);
 
         TArray<FStringFormatArg> Args;
@@ -54,7 +54,8 @@ namespace slua {
         UWorld* wld = ls->sluaComponent?ls->sluaComponent->GetWorld():nullptr;
         if(!wld)
             luaL_error(L,"World missed");
-        UUserWidget* widget = CreateWidget<UUserWidget>(wld,uclass);
+        UGameInstance* instance = wld->GetGameInstance();
+        UUserWidget* widget = CreateWidget<UUserWidget>(instance,uclass);
         return LuaObject::push(L,widget);
     }
 }

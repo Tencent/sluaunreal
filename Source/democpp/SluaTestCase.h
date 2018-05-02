@@ -40,7 +40,7 @@ public:
 
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
-    void TwoArgs(FString a,int b,float c,FString d,UUserWidget* widget);   
+    void TwoArgs(FString a,int b,float c,FString d,UObject* widget);   
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     void SetButton(UUserWidget* widget);

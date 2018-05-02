@@ -5,6 +5,15 @@
 	"files.associations": {
 		"locale": "cpp",
 		"string": "cpp",
-		"memory": "cpp"
+		"memory": "cpp",
+		"__split_buffer": "cpp",
+		"__tree": "cpp",
+		"bitset": "cpp",
+		"initializer_list": "cpp",
+		"iterator": "cpp",
+		"list": "cpp",
+		"map": "cpp",
+		"utility": "cpp",
+		"vector": "cpp"
 	}
 }

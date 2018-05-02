@@ -59,7 +59,7 @@ void USluaTestCase::TestStruct(FVector v) {
 	slua::Log::Log("v.X=%f, v.Y=%f, v.Z=%f", v.X, v.Y, v.Z);
 }
 
-void USluaTestCase::TwoArgs(FString a,int b,float c,FString d,UUserWidget* widget) {
+void USluaTestCase::TwoArgs(FString a,int b,float c,FString d,UObject* widget) {
 	slua::Log::Log("We get 5 args %s,%d,%f,%s,%p", TCHAR_TO_UTF8(*a),b,c,TCHAR_TO_UTF8(*d),widget);    
 }
 

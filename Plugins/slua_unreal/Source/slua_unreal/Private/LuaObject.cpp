@@ -42,17 +42,18 @@ namespace slua {
 
 	TMap<UClass*,PushPropertyFunction> pusherMap;
 	TMap<UClass*,CheckPropertyFunction> checkerMap;
+    #if !PLATFORM_WINDOWS
+    #define sprintf_s snprintf
+    #endif
 
     // construct lua struct
     LuaStruct::LuaStruct(uint8* buf,uint32 size,UScriptStruct* uss)
         :buf(buf),size(size),uss(uss) {
-        this->uss->AddToRoot();
     }
 
     LuaStruct::~LuaStruct() {
         FMemory::Free(buf);
         buf = nullptr;
-        uss->RemoveFromRoot();
     }
 
 	int LuaObject::classIndex(lua_State* L) {
@@ -110,7 +111,7 @@ namespace slua {
 		setMetaMethods(L);
 		
 		char _inst[64];
-		sprintf(_inst, "%s_inst", tn);
+		sprintf_s(_inst, 64, "%s_inst", tn);
 		luaL_newmetatable(L, _inst);
 		setMetaMethods(L);
 	}
@@ -138,13 +139,13 @@ namespace slua {
 
 	void LuaObject::getStaticTypeTable(lua_State* L, const char* tn) {
 		char _static[64];
-		sprintf(_static, "%s_static", tn);
+		sprintf_s(_static, 64, "%s_static", tn);
 		luaL_getmetatable(L, _static);
 	}
 
 	void LuaObject::getInstanceTypeTable(lua_State* L, const char* tn) {
 		char _inst[64];
-		sprintf(_inst, "%s_inst", tn);
+		sprintf_s(_inst, 64, "%s_inst", tn);
 		luaL_getmetatable(L, _inst);
 	}
 
@@ -164,7 +165,7 @@ namespace slua {
 		lua_pop(L, 1);
 
 		char _static[64];
-		sprintf(_static, "%s_static", tn);
+		sprintf_s(_static, 64, "%s_static", tn);
 		lua_setfield(L, LUA_REGISTRYINDEX, _static);
 
 		lua_pushcclosure(L, gc, 0);
@@ -418,7 +419,7 @@ namespace slua {
 		uint8* buf = (uint8*)FMemory::Malloc(size);
 		FMemory::Memcpy(buf, parms, size);
 		//p->CopyValuesInternal(buf,parms,1);
-		return LuaObject::push(L, new LuaStruct{ buf,size,uss });
+		return LuaObject::push(L, new LuaStruct{buf,size,uss});
     }  
 
     int pushUMulticastDelegateProperty(lua_State* L,UProperty* prop,uint8* parms) {
@@ -577,7 +578,7 @@ namespace slua {
             lua_pushnil(L);
             return 1;
         }
-        return pushGCObject<UClass*>(L,cls,"UClass",setupClassMT,gcClass);
+        return pushObject(L,cls,"UClass",setupClassMT);
     }
 
     int LuaObject::pushStruct(lua_State* L,UScriptStruct* cls) {
@@ -585,7 +586,7 @@ namespace slua {
             lua_pushnil(L);
             return 1;
         }          
-        return pushGCObject<UScriptStruct*>(L,cls,"UScriptStruct",setupStructMT,gcStructClass);
+        return pushObject(L,cls,"UScriptStruct",setupStructMT);
     }
 
     int LuaObject::gcObject(lua_State* L) {

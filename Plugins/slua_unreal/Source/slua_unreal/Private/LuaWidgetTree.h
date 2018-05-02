@@ -34,6 +34,7 @@ namespace slua {
     private:
         static int setupMT(lua_State* L);
         static int FindWidget(lua_State* L);
+        static int RemoveWidget(lua_State* L);
     };
 
 

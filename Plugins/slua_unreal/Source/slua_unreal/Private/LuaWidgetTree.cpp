@@ -39,10 +39,18 @@ namespace slua {
         return LuaObject::push(L,w);
     }
 
+    int LuaWidgetTree::RemoveWidget(lua_State* L) {
+        CheckUD(UWidgetTree,L,1);
+        CheckUDEX(UWidget,widget,L,2);
+        bool ret = UD->RemoveWidget(widget->ud);
+        return LuaObject::push(L,ret);
+    }
+
     int LuaWidgetTree::setupMT(lua_State* L) {
         LuaObject::setupMTSelfSearch(L);
 
         RegMetaMethod(L,FindWidget);
+        RegMetaMethod(L,RemoveWidget);
         return 0;
     }
 

@@ -24,6 +24,8 @@
 
 namespace slua {
 
+	static UScriptStruct* FSlateFontInfoStruct = nullptr;
+	static UScriptStruct* FSlateBrushStruct = nullptr;
 	static UScriptStruct* FMarginStruct = nullptr;
 	static UScriptStruct* FSlateColorStruct = nullptr;
 	static UScriptStruct* FRotatorStruct = nullptr;
@@ -49,6 +51,36 @@ namespace slua {
 
 	TMap<UScriptStruct*, pushStructFunction> _pushStructMap;
 	TMap<UScriptStruct*, checkStructFunction> _checkStructMap;
+
+	static inline FSlateFontInfo* __newFSlateFontInfo() {
+		return new FSlateFontInfo();
+	}
+
+	static void __pushFSlateFontInfo(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFSlateFontInfo();
+		p->CopyCompleteValue_InContainer(ptr, parms);
+		LuaObject::push<FSlateFontInfo>(L, "FSlateFontInfo", ptr);
+	}
+
+	static void __checkFSlateFontInfo(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FSlateFontInfo*>(L, i);
+		p->CopyCompleteValue_InContainer(parms, v);
+	}
+
+	static inline FSlateBrush* __newFSlateBrush() {
+		return new FSlateBrush();
+	}
+
+	static void __pushFSlateBrush(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFSlateBrush();
+		p->CopyCompleteValue_InContainer(ptr, parms);
+		LuaObject::push<FSlateBrush>(L, "FSlateBrush", ptr);
+	}
+
+	static void __checkFSlateBrush(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FSlateBrush*>(L, i);
+		p->CopyCompleteValue_InContainer(parms, v);
+	}
 
 	static inline FMargin* __newFMargin() {
 		return new FMargin();
@@ -334,6 +366,293 @@ namespace slua {
 		auto v = LuaObject::checkValue<FPrimaryAssetId*>(L, i);
 		p->CopyCompleteValue_InContainer(parms, v);
 	}
+
+	struct FSlateFontInfoWrapper {
+
+		static int __ctor(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = new FSlateFontInfo();
+				LuaObject::push<FSlateFontInfo>(L, "FSlateFontInfo", self);
+				return 1;
+			}
+			if (argc == 4) {
+				auto InFontName = LuaObject::checkValue<const char*>(L, 2);
+				auto InSize = LuaObject::checkValue<int>(L, 3);
+				auto InSize_ = (unsigned short)InSize;
+				auto InHinting = LuaObject::checkValue<int>(L, 4);
+				auto InHinting_ = (EFontHinting)InHinting;
+				auto self = new FSlateFontInfo(InFontName, InSize_, InHinting_);
+				LuaObject::push<FSlateFontInfo>(L, "FSlateFontInfo", self);
+				return 1;
+			}
+			luaL_error(L, "call FSlateFontInfo() error, argc=%d", argc);
+			return 0;
+		}
+
+		static int __gc(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateFontInfo*>(L, 1);
+			delete self;
+			return 0;
+		}
+
+		static int __eq(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateFontInfo*>(L, 1);
+			auto Other = LuaObject::checkValue<FSlateFontInfo*>(L, 2);
+			auto Other_ = *Other;
+			auto ret = *self == Other_;
+			LuaObject::push(L, ret);
+			return 1;
+		}
+
+		static int get_Size(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateFontInfo*>(L, 1);
+			LuaObject::push(L, self->Size);
+			return 1;
+		}
+
+		static int set_Size(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateFontInfo*>(L, 1);
+			auto a1 = LuaObject::checkValue<int32>(L, 2);
+			self->Size = a1;
+			LuaObject::push(L, a1);
+			return 1;
+		}
+
+		static int get_FontFallback(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateFontInfo*>(L, 1);
+			LuaObject::push(L, (int)(self->FontFallback));
+			return 1;
+		}
+
+		static int set_FontFallback(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateFontInfo*>(L, 1);
+			auto a1 = LuaObject::checkValue<int>(L, 2);
+			self->FontFallback = (EFontFallback)a1;
+			LuaObject::push(L, a1);
+			return 1;
+		}
+
+		static int HasValidFont(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = LuaObject::checkValue<FSlateFontInfo*>(L, 1);
+				auto ret = self->HasValidFont();
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "call FSlateFontInfo::HasValidFont error, argc=%d", argc);
+			return 0;
+		}
+
+		static void bind(lua_State* L) {
+			LuaObject::newType(L, "FSlateFontInfo");
+			LuaObject::addOperator(L, "__eq", __eq);
+			LuaObject::addField(L, "Size", get_Size, set_Size, true);
+			LuaObject::addField(L, "FontFallback", get_FontFallback, set_FontFallback, true);
+			LuaObject::addMethod(L, "HasValidFont", HasValidFont, true);
+			LuaObject::finishType(L, "FSlateFontInfo", __ctor, __gc);
+		}
+
+	};
+
+	struct FSlateBrushWrapper {
+
+		static int __ctor(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = new FSlateBrush();
+				LuaObject::push<FSlateBrush>(L, "FSlateBrush", self);
+				return 1;
+			}
+			luaL_error(L, "call FSlateBrush() error, argc=%d", argc);
+			return 0;
+		}
+
+		static int __gc(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
+			delete self;
+			return 0;
+		}
+
+		static int __eq(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
+			auto Other = LuaObject::checkValue<FSlateBrush*>(L, 2);
+			auto Other_ = *Other;
+			auto ret = *self == Other_;
+			LuaObject::push(L, ret);
+			return 1;
+		}
+
+		static int get_ImageSize(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
+			LuaObject::push<FVector2D>(L, "FVector2D", &self->ImageSize);
+			return 1;
+		}
+
+		static int set_ImageSize(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
+			auto a1 = LuaObject::checkValue<FVector2D*>(L, 2);
+			self->ImageSize = *a1;
+			LuaObject::push<FVector2D>(L, "FVector2D", a1);
+			return 1;
+		}
+
+		static int get_Margin(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
+			LuaObject::push<FMargin>(L, "FMargin", &self->Margin);
+			return 1;
+		}
+
+		static int set_Margin(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
+			auto a1 = LuaObject::checkValue<FMargin*>(L, 2);
+			self->Margin = *a1;
+			LuaObject::push<FMargin>(L, "FMargin", a1);
+			return 1;
+		}
+
+		static int get_Tint_DEPRECATED(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
+			LuaObject::push<FLinearColor>(L, "FLinearColor", &self->Tint_DEPRECATED);
+			return 1;
+		}
+
+		static int set_Tint_DEPRECATED(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
+			auto a1 = LuaObject::checkValue<FLinearColor*>(L, 2);
+			self->Tint_DEPRECATED = *a1;
+			LuaObject::push<FLinearColor>(L, "FLinearColor", a1);
+			return 1;
+		}
+
+		static int get_TintColor(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
+			LuaObject::push<FSlateColor>(L, "FSlateColor", &self->TintColor);
+			return 1;
+		}
+
+		static int set_TintColor(lua_State* L) {
+			auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
+			auto a1 = LuaObject::checkValue<FSlateColor*>(L, 2);
+			self->TintColor = *a1;
+			LuaObject::push<FSlateColor>(L, "FSlateColor", a1);
+			return 1;
+		}
+
+		static int HasUObject(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
+				auto ret = self->HasUObject();
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "call FSlateBrush::HasUObject error, argc=%d", argc);
+			return 0;
+		}
+
+		static int IsDynamicallyLoaded(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
+				auto ret = self->IsDynamicallyLoaded();
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "call FSlateBrush::IsDynamicallyLoaded error, argc=%d", argc);
+			return 0;
+		}
+
+		static int GetUVRegion(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
+				auto ret = __newFBox2D();
+				*ret = self->GetUVRegion();
+				LuaObject::push<FBox2D>(L, "FBox2D", ret);
+				return 1;
+			}
+			luaL_error(L, "call FSlateBrush::GetUVRegion error, argc=%d", argc);
+			return 0;
+		}
+
+		static int SetUVRegion(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 2) {
+				auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
+				auto InUVRegion = LuaObject::checkValue<FBox2D*>(L, 2);
+				auto InUVRegion_ = *InUVRegion;
+				self->SetUVRegion(InUVRegion_);
+				return 0;
+			}
+			luaL_error(L, "call FSlateBrush::SetUVRegion error, argc=%d", argc);
+			return 0;
+		}
+
+		static int __PPO__ResourceObject(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto ret = FSlateBrush::__PPO__ResourceObject();
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "call FSlateBrush::__PPO__ResourceObject error, argc=%d", argc);
+			return 0;
+		}
+
+		static int __PPO__ResourceName(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto ret = FSlateBrush::__PPO__ResourceName();
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "call FSlateBrush::__PPO__ResourceName error, argc=%d", argc);
+			return 0;
+		}
+
+		static int __PPO__UVRegion(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto ret = FSlateBrush::__PPO__UVRegion();
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "call FSlateBrush::__PPO__UVRegion error, argc=%d", argc);
+			return 0;
+		}
+
+		static int UTextureIdentifier(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto ret = FSlateBrush::UTextureIdentifier();
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "call FSlateBrush::UTextureIdentifier error, argc=%d", argc);
+			return 0;
+		}
+
+		static void bind(lua_State* L) {
+			LuaObject::newType(L, "FSlateBrush");
+			LuaObject::addOperator(L, "__eq", __eq);
+			LuaObject::addField(L, "ImageSize", get_ImageSize, set_ImageSize, true);
+			LuaObject::addField(L, "Margin", get_Margin, set_Margin, true);
+			LuaObject::addField(L, "Tint_DEPRECATED", get_Tint_DEPRECATED, set_Tint_DEPRECATED, true);
+			LuaObject::addField(L, "TintColor", get_TintColor, set_TintColor, true);
+			LuaObject::addMethod(L, "HasUObject", HasUObject, true);
+			LuaObject::addMethod(L, "IsDynamicallyLoaded", IsDynamicallyLoaded, true);
+			LuaObject::addMethod(L, "GetUVRegion", GetUVRegion, true);
+			LuaObject::addMethod(L, "SetUVRegion", SetUVRegion, true);
+			LuaObject::addMethod(L, "__PPO__ResourceObject", __PPO__ResourceObject, false);
+			LuaObject::addMethod(L, "__PPO__ResourceName", __PPO__ResourceName, false);
+			LuaObject::addMethod(L, "__PPO__UVRegion", __PPO__UVRegion, false);
+			LuaObject::addMethod(L, "UTextureIdentifier", UTextureIdentifier, false);
+			LuaObject::finishType(L, "FSlateBrush", __ctor, __gc);
+		}
+
+	};
 
 	struct FMarginWrapper {
 
@@ -6532,6 +6851,12 @@ namespace slua {
 	}
 
 	void LuaWrapper::init(lua_State* L) {
+		FSlateFontInfoStruct = FSlateFontInfo::StaticStruct();
+		_pushStructMap.Add(FSlateFontInfoStruct, __pushFSlateFontInfo);
+		_checkStructMap.Add(FSlateFontInfoStruct, __checkFSlateFontInfo);
+		FSlateBrushStruct = FSlateBrush::StaticStruct();
+		_pushStructMap.Add(FSlateBrushStruct, __pushFSlateBrush);
+		_checkStructMap.Add(FSlateBrushStruct, __checkFSlateBrush);
 		FMarginStruct = FMargin::StaticStruct();
 		_pushStructMap.Add(FMarginStruct, __pushFMargin);
 		_checkStructMap.Add(FMarginStruct, __checkFMargin);
@@ -6590,6 +6915,8 @@ namespace slua {
 		_pushStructMap.Add(FPrimaryAssetIdStruct, __pushFPrimaryAssetId);
 		_checkStructMap.Add(FPrimaryAssetIdStruct, __checkFPrimaryAssetId);
 
+		FSlateFontInfoWrapper::bind(L);
+		FSlateBrushWrapper::bind(L);
 		FMarginWrapper::bind(L);
 		FSlateColorWrapper::bind(L);
 		FRotatorWrapper::bind(L);

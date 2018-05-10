@@ -46,7 +46,7 @@ public:
 
 namespace slua {
 
-    class LuaDelegate : public UObject {
+    class LuaDelegate {
     public:
         static int push(lua_State* L,FMulticastScriptDelegate* delegate,UFunction* ufunc);
     private:

@@ -108,6 +108,7 @@ namespace slua {
         :loadFileDelegate(nullptr)
         ,L(nullptr)
         ,cacheObjRef(LUA_NOREF)
+        ,root(nullptr)
     {
     }
 
@@ -133,6 +134,7 @@ namespace slua {
             L=nullptr;
         }
         sluaComponent=nullptr;
+        root->RemoveFromRoot();
     }
 
 
@@ -140,6 +142,9 @@ namespace slua {
 
         if(!comp)
             return false;
+
+        root = NewObject<ULuaObject>();
+		root->AddToRoot();
 
         sluaComponent = comp;
 

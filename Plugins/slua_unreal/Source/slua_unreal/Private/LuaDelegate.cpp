@@ -66,7 +66,7 @@ namespace slua {
 
         auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(),ULuaDelegate::StaticClass());
         obj->bindFunction(L,2,UD->ufunc);
-        obj->AddToRoot();
+        LuaObject::addRef(L,obj);
 
         FScriptDelegate* Delegate = new FScriptDelegate();
         Delegate->BindUFunction(obj, TEXT("OnClicked"));
@@ -85,7 +85,7 @@ namespace slua {
             UD->delegate->Remove(*sd);
             UObject* obj = sd->GetUObject();
             // free uobject
-            obj->RemoveFromRoot();
+            LuaObject::removeRef(L,obj);
             obj->ConditionalBeginDestroy();
             delete sd;
             // set ud is null

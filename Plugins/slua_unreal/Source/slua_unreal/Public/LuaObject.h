@@ -27,6 +27,19 @@
 #include "UObject/UnrealType.h"
 #include "UObject/WeakObjectPtr.h"
 #include "Blueprint/UserWidget.h"
+#include "LuaObject.generated.h"
+
+
+UCLASS()
+class SLUA_UNREAL_API ULuaObject : public UObject {
+    GENERATED_UCLASS_BODY()
+public:
+    void AddRef(UObject* obj);
+    void Remove(UObject* obj);
+private:
+    UPROPERTY()
+    TArray<UObject*> Cache;
+};
 
 #define CheckUD(Type,L,P) UserData<Type*>* ud = reinterpret_cast<UserData<Type*>*>(luaL_checkudata(L, P,#Type)); \
     if(!ud) { luaL_error(L, "checkValue error at %d",P); } \
@@ -141,10 +154,13 @@ namespace slua {
             return 1;
         }
 
+        static void addRef(lua_State* L,UObject* obj);
+        static void removeRef(lua_State* L,UObject* obj);
+
         template<typename T>
         static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt=nullptr,lua_CFunction gc=nullptr) {
             if(getFromCache(L,obj)) return 1;
-            obj->AddToRoot();
+            addRef(L,obj);
             lua_pushcclosure(L,gc,0);
             lua_pushcclosure(L,removeFromCacheGC,1);
             int f = lua_gettop(L);

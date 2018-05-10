@@ -35,6 +35,23 @@
 #include "LuaWrapper.h"
 #include "LuaEnums.h"
 
+
+ULuaObject::ULuaObject(const FObjectInitializer& ObjectInitializer)
+: Super(ObjectInitializer)
+{
+}
+
+void ULuaObject::AddRef(UObject* obj)
+{
+    Cache.Add(obj);
+}
+
+void ULuaObject::Remove(UObject* obj)
+{
+    Cache.Remove(obj);
+}
+
+
 namespace slua { 
 
     typedef int (*PushPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms);
@@ -44,7 +61,8 @@ namespace slua {
 	TMap<UClass*,CheckPropertyFunction> checkerMap;
     #if !PLATFORM_WINDOWS
     #define sprintf_s snprintf
-    #endif
+    #endif 
+    
 
     // construct lua struct
     LuaStruct::LuaStruct(uint8* buf,uint32 size,UScriptStruct* uss)
@@ -543,6 +561,17 @@ namespace slua {
         return ret;
     }
 
+    void LuaObject::addRef(lua_State* L,UObject* obj) {
+        auto sl = LuaState::get(L);
+        sl->addRef(obj);
+    }
+
+
+    void LuaObject::removeRef(lua_State* L,UObject* obj) {
+        auto sl = LuaState::get(L);
+        sl->removeRef(obj);
+    }
+
     void LuaObject::cacheObj(lua_State* L,void* obj) {
         LuaState* ls = LuaState::get(L);
         lua_geti(L,LUA_REGISTRYINDEX,ls->cacheObjRef);
@@ -591,19 +620,19 @@ namespace slua {
 
     int LuaObject::gcObject(lua_State* L) {
         CheckUD(UObject,L,1);
-        UD->RemoveFromRoot();
+        removeRef(L,UD);
         return 0;
     }
 
     int LuaObject::gcClass(lua_State* L) {
         CheckUD(UClass,L,1);
-        UD->RemoveFromRoot();
+        removeRef(L,UD);
         return 0;
     }
 
     int LuaObject::gcStructClass(lua_State* L) {
         CheckUD(UScriptStruct,L,1);
-        UD->RemoveFromRoot();
+        removeRef(L,UD);
         return 0;
     }
 

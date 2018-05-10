@@ -48,6 +48,8 @@ namespace slua {
         LuaVar doBuffer(const uint8* buf,uint32 len, const char* chunk);
         LuaVar doFile(const char* fn);
 
+       
+
         template<typename ...ARGS>
         LuaVar call(const char* key,ARGS ...args) {
             LuaVar f = get(key);
@@ -72,6 +74,18 @@ namespace slua {
 		{
 			return L;
 		}
+
+
+        void addRef(UObject* obj) {
+            ensure(root);
+            root->AddRef(obj);
+        }
+
+        void removeRef(UObject* obj) {
+            ensure(root);
+            root->Remove(obj);
+        }
+        
         static int pushErrorHandler(lua_State* L);
     protected:
         LoadFileDelegate loadFileDelegate;
@@ -84,5 +98,6 @@ namespace slua {
         USceneComponent* sluaComponent;
         int cacheObjRef;
         int _pushErrorHandler(lua_State* L);
+        ULuaObject* root;
     };
 }

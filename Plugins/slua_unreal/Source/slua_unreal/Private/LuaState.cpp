@@ -134,13 +134,16 @@ namespace slua {
             L=nullptr;
         }
         sluaComponent=nullptr;
-        root->RemoveFromRoot();
+        if(root) {
+            root->RemoveFromRoot();
+            root = nullptr;
+        }
     }
 
 
     bool LuaState::init(USceneComponent* comp) {
 
-        if(!comp)
+        if(!comp || root)
             return false;
 
         root = NewObject<ULuaObject>();

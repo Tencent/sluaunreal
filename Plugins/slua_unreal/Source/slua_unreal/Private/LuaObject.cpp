@@ -351,6 +351,19 @@ namespace slua {
             return LuaObject::push(L,func);
     }
 
+    int newinstanceIndex(lua_State* L) {
+        UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
+        const char* name = LuaObject::checkValue<const char*>(L, 2);
+        
+        UClass* cls = obj->GetClass();
+        UProperty* up = cls->FindPropertyByName(wname);
+        auto checker = getChecker(up);
+        if(!up)
+            luaL_error(L,"Can't find property named %s",name);
+        
+        return LuaObject::push(L,up,(uint8*)obj);
+    }
+
     int instanceStructIndex(lua_State* L) {
         LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L, 1);
         const char* name = LuaObject::checkValue<const char*>(L, 2);
@@ -753,6 +766,8 @@ namespace slua {
     int LuaObject::setupInstanceMT(lua_State* L) {
         lua_pushcfunction(L,instanceIndex);
         lua_setfield(L, -2, "__index");
+        lua_pushcfunction(L,newinstanceIndex);
+        lua_setfield(L, -2, "__newindex");
         return 0;
     }
 

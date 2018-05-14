@@ -8,6 +8,7 @@ local r = FRotator()
 
 local Test=import('SluaTestCase');
 local t=Test();
+local brush = t:GetBrush()
 local bb = t:GetWidget("Button");
 
 local v = FVector(100,200,300)
@@ -56,6 +57,14 @@ local edit=tree:FindWidget('TextBox_0');
 --     index=index+1
 --     print('fuck',index) 
 -- end);
+
+xx={}
+
+function xx.text()
+    print(t.Value)
+    t.Value=1024
+    print("set value",t.Value)
+end
 
 
 local HitResult = import('HitResult');

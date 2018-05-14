@@ -56,6 +56,8 @@ void ASluaActor::BeginPlay()
 		ensure(v.getAt(0).asInt()==1024);
 		slua::Log::Log("first return value is %d",v.getAt(0).asInt());
 	}
+
+	state->call("xx.text");
 }
 
 // Called every frame

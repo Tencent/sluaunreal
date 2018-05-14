@@ -246,4 +246,44 @@ namespace slua {
         return lua_gettop(state);
     }
 
+    // modified FString::Split function to return left if no InS to search
+    static bool strSplit(const FString& S,const FString& InS, FString* LeftS, FString* RightS, ESearchCase::Type SearchCase = ESearchCase::IgnoreCase,
+		ESearchDir::Type SearchDir = ESearchDir::FromStart)
+	{
+        if(S.IsEmpty()) return false;
+
+        
+		int32 InPos = S.Find(InS, SearchCase, SearchDir);
+
+		if (InPos < 0)	{ 
+            *LeftS = S;
+            *RightS = "";
+            return true; 
+        }
+
+		if (LeftS)		{ *LeftS = S.Left(InPos); }
+		if (RightS)	{ *RightS = S.Mid(InPos + InS.Len()); }
+
+		return true;
+	}
+
+    LuaVar LuaState::get(const char* key) {
+        // push global table
+        lua_pushglobaltable(L);
+
+        FString path(key);
+        FString left,right;
+        LuaVar rt;
+        while(strSplit(path,".",&left,&right)) {
+            lua_pushstring(L,TCHAR_TO_UTF8(*left));
+            lua_gettable(L,-2);
+            rt.set(L,-1);
+            lua_remove(L,-2);
+            if(rt.isNil()) break;
+            path = right;
+        }
+        lua_pop(L,1);
+        return rt;
+    }
+
 }

@@ -56,13 +56,7 @@ namespace slua {
             return f.call(args...);
         }
 
-        LuaVar get(const char* key) {
-            AutoStack g(L);
-            // TODO, search full path of key
-            lua_getglobal(L,key);
-            return LuaVar(L,-1);
-
-        }
+        LuaVar get(const char* key);
 
 		void setLoadFileDelegate(LoadFileDelegate func);
 

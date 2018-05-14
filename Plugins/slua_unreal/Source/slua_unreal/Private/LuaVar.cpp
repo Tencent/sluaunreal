@@ -58,12 +58,17 @@ namespace slua {
     }
 
     LuaVar::LuaVar(lua_State* L,int p):LuaVar() {
-        int t = lua_type(L,p);
+        set(L,p);
+    }
+
+    void LuaVar::set(lua_State* l,int p) {
+        free();
+        int t = lua_type(l,p);
         LuaVar::Type type = LV_NIL;
         switch(t) {
             case LUA_TNUMBER:
                 {
-                if(lua_isinteger(L,p))
+                if(lua_isinteger(l,p))
                     type = LV_INT;
                 else
                     type = LV_NUMBER;
@@ -83,7 +88,7 @@ namespace slua {
                 type = LV_NIL;
                 break;
         }
-        init(L,p,type);
+        init(l,p,type);
     }
 
     LuaVar::LuaVar(lua_State* L,int p,LuaVar::Type type):LuaVar() {

@@ -87,6 +87,7 @@ namespace slua {
 
         virtual ~LuaVar();
 
+        void set(lua_State* L,int p);
         void set(lua_Integer v);
         void set(lua_Number v);
         void set(const char* v);

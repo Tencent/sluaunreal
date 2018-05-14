@@ -287,7 +287,7 @@ namespace slua {
 
     template<>
     inline int LuaObject::checkValue(lua_State* L, int p) {
-        return (float)luaL_checkinteger(L, p);
+        return luaL_checkinteger(L, p);
     }
 
     template<>

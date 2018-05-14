@@ -48,6 +48,7 @@ EndDef()
 USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+    this->Value=2048;
 }
 
 TArray<int> USluaTestCase::GetArray() {

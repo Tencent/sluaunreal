@@ -354,14 +354,16 @@ namespace slua {
     int newinstanceIndex(lua_State* L) {
         UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
         const char* name = LuaObject::checkValue<const char*>(L, 2);
-        
+        TCHAR* wname = UTF8_TO_TCHAR(name);
         UClass* cls = obj->GetClass();
         UProperty* up = cls->FindPropertyByName(wname);
         auto checker = getChecker(up);
         if(!up)
             luaL_error(L,"Can't find property named %s",name);
         
-        return LuaObject::push(L,up,(uint8*)obj);
+        // set property value
+        checker(L,up,(uint8*)obj,3);
+        return 0;
     }
 
     int instanceStructIndex(lua_State* L) {
@@ -397,14 +399,14 @@ namespace slua {
     int pushUIntProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto ip=Cast<UIntProperty>(prop);
         ensure(ip);
-        int i = ip->GetSignedIntPropertyValue(parms);
+        int i = ip->GetPropertyValue_InContainer(parms);
         return LuaObject::push(L,i);
     }
 
     int pushFloatProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto ip=Cast<UFloatProperty>(prop);
         ensure(ip);
-        float i = ip->GetFloatingPointPropertyValue(parms);
+        float i = ip->GetPropertyValue_InContainer(parms);
         return LuaObject::push(L,i);
     }
 

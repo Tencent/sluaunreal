@@ -51,6 +51,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance, meta=( DisplayName="Brush" ))
     FSlateBrush Brush;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Appearance, meta=( DisplayName="Value" ))
+    int Value;
+
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     FSlateBrush GetBrush();
 };

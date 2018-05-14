@@ -275,6 +275,7 @@ namespace slua {
         FString left,right;
         LuaVar rt;
         while(strSplit(path,".",&left,&right)) {
+            if(lua_type(L,-1)!=LUA_TTABLE) break;
             lua_pushstring(L,TCHAR_TO_UTF8(*left));
             lua_gettable(L,-2);
             rt.set(L,-1);

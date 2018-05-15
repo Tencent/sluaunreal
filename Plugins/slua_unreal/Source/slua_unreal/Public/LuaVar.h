@@ -162,9 +162,9 @@ namespace slua {
         };
 
         struct RefRef: public Ref {
-            RefRef(lua_State* L):Ref() {
-                this->L = L;
-                ref=luaL_ref(L,LUA_REGISTRYINDEX);
+            RefRef(lua_State* l):Ref() {
+                this->L = l;
+                ref=luaL_ref(l,LUA_REGISTRYINDEX);
             }
             virtual ~RefRef() {
                 luaL_unref(L,LUA_REGISTRYINDEX,ref);

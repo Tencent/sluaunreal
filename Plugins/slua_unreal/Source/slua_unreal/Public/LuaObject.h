@@ -61,8 +61,8 @@ private:
 namespace slua {
 
     struct AutoStack {
-        AutoStack(lua_State* L) {
-            this->L = L;
+        AutoStack(lua_State* l) {
+            this->L = l;
             this->top = lua_gettop(L);
         }
         ~AutoStack() {

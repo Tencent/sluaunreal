@@ -43,22 +43,22 @@ namespace slua {
         alloc(n);
     }
 
-    LuaVar::LuaVar(lua_State* L,lua_Integer v)
+    LuaVar::LuaVar(lua_State* l,lua_Integer v)
         :LuaVar(1) 
     {
         vars[0].luatype = LV_INT;
         vars[0].i = v;
     }
 
-    LuaVar::LuaVar(lua_State* L,lua_Number v)
+    LuaVar::LuaVar(lua_State* l,lua_Number v)
         :LuaVar(1) 
     {
         vars[0].luatype = LV_NUMBER;
         vars[0].d = v;
     }
 
-    LuaVar::LuaVar(lua_State* L,int p):LuaVar() {
-        set(L,p);
+    LuaVar::LuaVar(lua_State* l,int p):LuaVar() {
+        set(l,p);
     }
 
     void LuaVar::set(lua_State* l,int p) {
@@ -91,15 +91,15 @@ namespace slua {
         init(l,p,type);
     }
 
-    LuaVar::LuaVar(lua_State* L,int p,LuaVar::Type type):LuaVar() {
-        init(L,p,type);
+    LuaVar::LuaVar(lua_State* l,int p,LuaVar::Type type):LuaVar() {
+        init(l,p,type);
     }
 
     // used to create number n of tuple
     // it used for return value from lua
     // don't call it to create n element of tuple
-    LuaVar::LuaVar(lua_State* L,size_t n):LuaVar() {
-        init(L,n,LV_TUPLE);
+    LuaVar::LuaVar(lua_State* l,size_t n):LuaVar() {
+        init(l,n,LV_TUPLE);
     }
 
     void LuaVar::init(lua_State* l,int p,LuaVar::Type type) {

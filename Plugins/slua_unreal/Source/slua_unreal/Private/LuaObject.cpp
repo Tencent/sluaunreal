@@ -65,8 +65,8 @@ namespace slua {
     
 
     // construct lua struct
-    LuaStruct::LuaStruct(uint8* buf,uint32 size,UScriptStruct* uss)
-        :buf(buf),size(size),uss(uss) {
+    LuaStruct::LuaStruct(uint8* b,uint32 s,UScriptStruct* u)
+        :buf(b),size(s),uss(u) {
     }
 
     LuaStruct::~LuaStruct() {

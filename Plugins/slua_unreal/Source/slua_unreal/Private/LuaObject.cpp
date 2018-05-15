@@ -349,8 +349,7 @@ namespace slua {
         UFunction* func = cls->FindFunctionByName(wname);
         if(!func) {
             UProperty* up = cls->FindPropertyByName(wname);
-            if(!up)
-                return 0;
+            if(!up) return 0;
             return LuaObject::push(L,up,(uint8*)obj);
         }
         else   
@@ -363,9 +362,11 @@ namespace slua {
         TCHAR* wname = UTF8_TO_TCHAR(name);
         UClass* cls = obj->GetClass();
         UProperty* up = cls->FindPropertyByName(wname);
+        if(up->GetPropertyFlags() & CPF_BlueprintReadOnly)
+            luaL_error(L,"Property %s is readonly",name);
+
         auto checker = getChecker(up);
-        if(!up)
-            luaL_error(L,"Can't find property named %s",name);
+        if(!up) luaL_error(L,"Can't find property named %s",name);
         
         // set property value
         checker(L,up,(uint8*)obj,3);
@@ -379,8 +380,7 @@ namespace slua {
         auto* cls = ls->uss;
         TCHAR* wname = UTF8_TO_TCHAR(name);
         UProperty* up = cls->FindPropertyByName(wname);
-        if(!up)
-            return 0;
+        if(!up) return 0;
         return LuaObject::push(L,up,ls->buf);
     }
 

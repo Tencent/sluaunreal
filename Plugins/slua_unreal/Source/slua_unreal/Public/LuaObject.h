@@ -259,8 +259,25 @@ namespace slua {
 
     template<>
     inline UObject* LuaObject::checkValue(lua_State* L, int p) {
-        CheckUD(UObject, L, p);
-        return UD;
+        int lt = lua_type(L,p);
+        if(lt == LUA_TUSERDATA) {
+            UserData<UObject*>* ud = reinterpret_cast<UserData<UObject*>*>(luaL_checkudata(L, p, "UObject")); 
+            if(!ud)
+                goto errorpath;
+            return ud->ud;
+        }
+        else if(lt == LUA_TTABLE) {
+            lua_getfield(L,p,"__cppinst");
+            if(lua_type(L,-1)==LUA_TUSERDATA) {
+                UserData<UObject*>* ud = reinterpret_cast<UserData<UObject*>*>(luaL_checkudata(L, -1, "UObject"));
+                if(!ud)
+                    goto errorpath;
+                return ud->ud;
+            }
+        }
+    errorpath:
+        luaL_error(L, "checkValue error at %d",p);
+        return nullptr;
     }
 
     template<>

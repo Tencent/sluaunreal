@@ -393,6 +393,13 @@ namespace slua {
         return 1;
     }
 
+    int pushUNameProperty(lua_State* L,UProperty* prop,uint8* parms) {
+        auto ip=Cast<UNameProperty>(prop);
+        ensure(ip);
+        FName i = ip->GetPropertyValue_InContainer(parms);
+        return LuaObject::push(L,i);
+    }
+
 	int pushEnumProperty(lua_State* L, UProperty* prop, uint8* parms) {
 		auto p = Cast<UEnumProperty>(prop);
 		ensure(p);
@@ -519,6 +526,13 @@ namespace slua {
         auto p = Cast<UTextProperty>(prop);
         ensure(p);
         p->SetPropertyValue_InContainer(parms,LuaObject::checkValue<FText>(L,i));
+        return 0;
+    }
+
+    int checkUNameProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
+        auto p = Cast<UNameProperty>(prop);
+        ensure(p);
+        p->SetPropertyValue_InContainer(parms,LuaObject::checkValue<FName>(L,i));
         return 0;
     }
 
@@ -682,7 +696,7 @@ namespace slua {
         regPusher(UStrProperty::StaticClass(),pushUStrProperty);
         regPusher(UStructProperty::StaticClass(),pushUStructProperty);
 		regPusher(UEnumProperty::StaticClass(), pushEnumProperty);
-		//regPusher(UNameProperty::StaticClass(), pushUNameProperty);
+		regPusher(UNameProperty::StaticClass(), pushUNameProperty);
 
         regChecker(UIntProperty::StaticClass(),checkUIntProperty);
         regChecker(UBoolProperty::StaticClass(),checkUBoolProperty);
@@ -692,7 +706,7 @@ namespace slua {
         regChecker(UObjectProperty::StaticClass(),checkUObjectProperty);
         regChecker(UStrProperty::StaticClass(),checkUStrProperty);
 		regChecker(UEnumProperty::StaticClass(), checkEnumProperty);
-		//regChecker(UNameProperty::StaticClass(), checkUNameProperty);
+		regChecker(UNameProperty::StaticClass(), checkUNameProperty);
 
 		LuaWrapper::init(L);
 		LuaEnums::init(L);
@@ -761,6 +775,11 @@ namespace slua {
 
 	int LuaObject::push(lua_State* L, const FString& str) {
 		lua_pushstring(L, TCHAR_TO_UTF8(*str));
+		return 1;
+	}
+
+    int LuaObject::push(lua_State* L, const FName& name) {
+		lua_pushstring(L, TCHAR_TO_UTF8(*name.ToString()));
 		return 1;
 	}
 

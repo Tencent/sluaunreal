@@ -193,11 +193,17 @@ namespace slua {
 	}
 
     PushPropertyFunction getPusher(UClass* cls) {
-        return *(pusherMap.Find(cls));
+        auto it = pusherMap.Find(cls);
+        if(it!=nullptr)
+            return *it;
+        return nullptr;
     }
 
     CheckPropertyFunction getChecker(UClass* cls) {
-        return *(checkerMap.Find(cls));
+        auto it = checkerMap.Find(cls);
+        if(it!=nullptr)
+            return *it;
+        return nullptr;
     }
 
     PushPropertyFunction getPusher(UProperty* prop) {
@@ -676,6 +682,7 @@ namespace slua {
         regPusher(UStrProperty::StaticClass(),pushUStrProperty);
         regPusher(UStructProperty::StaticClass(),pushUStructProperty);
 		regPusher(UEnumProperty::StaticClass(), pushEnumProperty);
+		//regPusher(UNameProperty::StaticClass(), pushUNameProperty);
 
         regChecker(UIntProperty::StaticClass(),checkUIntProperty);
         regChecker(UBoolProperty::StaticClass(),checkUBoolProperty);
@@ -685,6 +692,7 @@ namespace slua {
         regChecker(UObjectProperty::StaticClass(),checkUObjectProperty);
         regChecker(UStrProperty::StaticClass(),checkUStrProperty);
 		regChecker(UEnumProperty::StaticClass(), checkEnumProperty);
+		//regChecker(UNameProperty::StaticClass(), checkUNameProperty);
 
 		LuaWrapper::init(L);
 		LuaEnums::init(L);

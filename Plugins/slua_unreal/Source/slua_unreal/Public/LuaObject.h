@@ -186,6 +186,8 @@ namespace slua {
 		static int push(lua_State* L, FScriptDelegate* obj);
 		static int push(lua_State* L, LuaStruct* ls);
 		static int push(lua_State* L, double v);
+        static int push(lua_State* L, int64 v);
+        static int push(lua_State* L, uint64 v);
 		static int push(lua_State* L, float v);
 		static int push(lua_State* L, int v);
 		static int push(lua_State* L, uint32 v);
@@ -262,16 +264,15 @@ namespace slua {
         int lt = lua_type(L,p);
         if(lt == LUA_TUSERDATA) {
             UserData<UObject*>* ud = reinterpret_cast<UserData<UObject*>*>(luaL_checkudata(L, p, "UObject")); 
-            if(!ud)
-                goto errorpath;
+            if(!ud) goto errorpath;
             return ud->ud;
         }
         else if(lt == LUA_TTABLE) {
+            AutoStack g(L);
             lua_getfield(L,p,"__cppinst");
             if(lua_type(L,-1)==LUA_TUSERDATA) {
                 UserData<UObject*>* ud = reinterpret_cast<UserData<UObject*>*>(luaL_checkudata(L, -1, "UObject"));
-                if(!ud)
-                    goto errorpath;
+                if(!ud) goto errorpath;
                 return ud->ud;
             }
         }

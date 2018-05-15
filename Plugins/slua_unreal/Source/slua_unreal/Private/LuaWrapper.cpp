@@ -512,20 +512,6 @@ namespace slua {
 			return 1;
 		}
 
-		static int get_Tint_DEPRECATED(lua_State* L) {
-			auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
-			LuaObject::push<FLinearColor>(L, "FLinearColor", &self->Tint_DEPRECATED);
-			return 1;
-		}
-
-		static int set_Tint_DEPRECATED(lua_State* L) {
-			auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
-			auto a1 = LuaObject::checkValue<FLinearColor*>(L, 2);
-			self->Tint_DEPRECATED = *a1;
-			LuaObject::push<FLinearColor>(L, "FLinearColor", a1);
-			return 1;
-		}
-
 		static int get_TintColor(lua_State* L) {
 			auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
 			LuaObject::push<FSlateColor>(L, "FSlateColor", &self->TintColor);
@@ -639,7 +625,6 @@ namespace slua {
 			LuaObject::addOperator(L, "__eq", __eq);
 			LuaObject::addField(L, "ImageSize", get_ImageSize, set_ImageSize, true);
 			LuaObject::addField(L, "Margin", get_Margin, set_Margin, true);
-			LuaObject::addField(L, "Tint_DEPRECATED", get_Tint_DEPRECATED, set_Tint_DEPRECATED, true);
 			LuaObject::addField(L, "TintColor", get_TintColor, set_TintColor, true);
 			LuaObject::addMethod(L, "HasUObject", HasUObject, true);
 			LuaObject::addMethod(L, "IsDynamicallyLoaded", IsDynamicallyLoaded, true);

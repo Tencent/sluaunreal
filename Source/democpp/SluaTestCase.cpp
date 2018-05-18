@@ -56,8 +56,39 @@ TArray<int> USluaTestCase::GetArray() {
     return array;
 }
 
-void USluaTestCase::TestStruct(FVector v) {
+FVector USluaTestCase::TestStruct(FVector v, ESlateVisibility e, FVector& v2, int i, int& i2, FString str) {
 	slua::Log::Log("v.X=%f, v.Y=%f, v.Z=%f", v.X, v.Y, v.Z);
+	slua::Log::Log("i = %d", i);
+	slua::Log::Log("s = %s", TCHAR_TO_UTF8(*str));
+	slua::Log::Log("e = %d", (int)e);
+	v2 = v * 2;
+	return v2 * 2;
+}
+
+int USluaTestCase::TestInt_int(int i) {
+	slua::Log::Log("TestInt_int i=%d", i);
+	return i * 2;
+}
+
+FString USluaTestCase::TestIntStr_Str(int i, FString s) {
+	slua::Log::Log("TestIntStr_Str i=%d, s=%s", i, TCHAR_TO_UTF8(*s));
+	return FString(UTF8_TO_TCHAR("TestIntStr_Str"));
+}
+
+ESlateVisibility USluaTestCase::TestIntStrEnum_Enum(int i, FString s, ESlateVisibility e) {
+	slua::Log::Log("TestIntStrEnum_Enum i=%d, s=%s, e=%d", i, TCHAR_TO_UTF8(*s), (int)e);
+	return ESlateVisibility((int)e + 1);
+}
+
+TArray<int> USluaTestCase::TestIntStrEnum_Arr(int i, FString s, ESlateVisibility e) {
+	slua::Log::Log("TestIntStrEnum_Arr i=%d, s=%s, e=%d", i, TCHAR_TO_UTF8(*s), (int)e);
+	TArray<int> arr = { 123, 321 };
+	return arr;
+}
+
+void USluaTestCase::TestOIntOStrOEnum(int i, int& oi, FString s, FString& os, ESlateVisibility e, ESlateVisibility& oe) {
+	slua::Log::Log("TestOIntOStrOEnum i=%d, s=%s, e=%d", i, TCHAR_TO_UTF8(*s), (int)e);
+	slua::Log::Log("TestOIntOStrOEnum oi=%d, os=%s, oe=%d", oi, TCHAR_TO_UTF8(*os), (int)oe);
 }
 
 void USluaTestCase::TwoArgs(FString a,int b,float c,FString d,UObject* widget) {

@@ -58,13 +58,13 @@ namespace slua {
 
 	static void __pushFSlateFontInfo(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFSlateFontInfo();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FSlateFontInfo>(L, "FSlateFontInfo", ptr);
 	}
 
 	static void __checkFSlateFontInfo(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FSlateFontInfo*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FSlateBrush* __newFSlateBrush() {
@@ -73,13 +73,13 @@ namespace slua {
 
 	static void __pushFSlateBrush(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFSlateBrush();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FSlateBrush>(L, "FSlateBrush", ptr);
 	}
 
 	static void __checkFSlateBrush(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FSlateBrush*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FMargin* __newFMargin() {
@@ -88,13 +88,13 @@ namespace slua {
 
 	static void __pushFMargin(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFMargin();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FMargin>(L, "FMargin", ptr);
 	}
 
 	static void __checkFMargin(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FMargin*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FSlateColor* __newFSlateColor() {
@@ -103,13 +103,13 @@ namespace slua {
 
 	static void __pushFSlateColor(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFSlateColor();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FSlateColor>(L, "FSlateColor", ptr);
 	}
 
 	static void __checkFSlateColor(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FSlateColor*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FRotator* __newFRotator() {
@@ -118,13 +118,13 @@ namespace slua {
 
 	static void __pushFRotator(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFRotator();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FRotator>(L, "FRotator", ptr);
 	}
 
 	static void __checkFRotator(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FRotator*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FTransform* __newFTransform() {
@@ -133,13 +133,13 @@ namespace slua {
 
 	static void __pushFTransform(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFTransform();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FTransform>(L, "FTransform", ptr);
 	}
 
 	static void __checkFTransform(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FTransform*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FLinearColor* __newFLinearColor() {
@@ -148,13 +148,13 @@ namespace slua {
 
 	static void __pushFLinearColor(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFLinearColor();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FLinearColor>(L, "FLinearColor", ptr);
 	}
 
 	static void __checkFLinearColor(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FLinearColor*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FColor* __newFColor() {
@@ -163,13 +163,13 @@ namespace slua {
 
 	static void __pushFColor(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFColor();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FColor>(L, "FColor", ptr);
 	}
 
 	static void __checkFColor(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FColor*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FVector* __newFVector() {
@@ -178,13 +178,13 @@ namespace slua {
 
 	static void __pushFVector(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFVector();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FVector>(L, "FVector", ptr);
 	}
 
 	static void __checkFVector(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FVector*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FVector2D* __newFVector2D() {
@@ -193,13 +193,13 @@ namespace slua {
 
 	static void __pushFVector2D(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFVector2D();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FVector2D>(L, "FVector2D", ptr);
 	}
 
 	static void __checkFVector2D(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FVector2D*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FRandomStream* __newFRandomStream() {
@@ -208,13 +208,13 @@ namespace slua {
 
 	static void __pushFRandomStream(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFRandomStream();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FRandomStream>(L, "FRandomStream", ptr);
 	}
 
 	static void __checkFRandomStream(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FRandomStream*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FGuid* __newFGuid() {
@@ -223,13 +223,13 @@ namespace slua {
 
 	static void __pushFGuid(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFGuid();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FGuid>(L, "FGuid", ptr);
 	}
 
 	static void __checkFGuid(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FGuid*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FBox2D* __newFBox2D() {
@@ -238,13 +238,13 @@ namespace slua {
 
 	static void __pushFBox2D(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFBox2D();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FBox2D>(L, "FBox2D", ptr);
 	}
 
 	static void __checkFBox2D(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FBox2D*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FFloatRangeBound* __newFFloatRangeBound() {
@@ -253,13 +253,13 @@ namespace slua {
 
 	static void __pushFFloatRangeBound(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFFloatRangeBound();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ptr);
 	}
 
 	static void __checkFFloatRangeBound(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FFloatRangeBound*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FFloatRange* __newFFloatRange() {
@@ -268,13 +268,13 @@ namespace slua {
 
 	static void __pushFFloatRange(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFFloatRange();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FFloatRange>(L, "FFloatRange", ptr);
 	}
 
 	static void __checkFFloatRange(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FFloatRange*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FInt32RangeBound* __newFInt32RangeBound() {
@@ -283,13 +283,13 @@ namespace slua {
 
 	static void __pushFInt32RangeBound(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFInt32RangeBound();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ptr);
 	}
 
 	static void __checkFInt32RangeBound(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FInt32RangeBound*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FInt32Range* __newFInt32Range() {
@@ -298,13 +298,13 @@ namespace slua {
 
 	static void __pushFInt32Range(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFInt32Range();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FInt32Range>(L, "FInt32Range", ptr);
 	}
 
 	static void __checkFInt32Range(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FInt32Range*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FFloatInterval* __newFFloatInterval() {
@@ -313,13 +313,13 @@ namespace slua {
 
 	static void __pushFFloatInterval(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFFloatInterval();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FFloatInterval>(L, "FFloatInterval", ptr);
 	}
 
 	static void __checkFFloatInterval(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FFloatInterval*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FInt32Interval* __newFInt32Interval() {
@@ -328,13 +328,13 @@ namespace slua {
 
 	static void __pushFInt32Interval(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFInt32Interval();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FInt32Interval>(L, "FInt32Interval", ptr);
 	}
 
 	static void __checkFInt32Interval(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FInt32Interval*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FPrimaryAssetType* __newFPrimaryAssetType() {
@@ -343,13 +343,13 @@ namespace slua {
 
 	static void __pushFPrimaryAssetType(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFPrimaryAssetType();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FPrimaryAssetType>(L, "FPrimaryAssetType", ptr);
 	}
 
 	static void __checkFPrimaryAssetType(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FPrimaryAssetType*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	static inline FPrimaryAssetId* __newFPrimaryAssetId() {
@@ -358,13 +358,13 @@ namespace slua {
 
 	static void __pushFPrimaryAssetId(lua_State* L, UStructProperty* p, uint8* parms) {
 		auto ptr = __newFPrimaryAssetId();
-		p->CopyCompleteValue_InContainer(ptr, parms);
+		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", ptr);
 	}
 
 	static void __checkFPrimaryAssetId(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FPrimaryAssetId*>(L, i);
-		p->CopyCompleteValue_InContainer(parms, v);
+		p->CopyCompleteValue(parms, v);
 	}
 
 	struct FSlateFontInfoWrapper {

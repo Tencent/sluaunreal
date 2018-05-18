@@ -41,7 +41,6 @@ namespace slua {
     }
 
     int LuaArray::push(lua_State* L,UArrayProperty* prop,FScriptArray* data) {
-
         LuaArray* array = new LuaArray(prop,data);
         return LuaObject::pushType(L,array,"LuaArray",setupMT,gc);
     }

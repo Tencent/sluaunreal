@@ -281,7 +281,7 @@ namespace slua {
             if((propflag&CPF_ReturnParm))
                 continue;
 
-            fillParamFromState(L,prop,params,i);
+            fillParamFromState(L,prop,params+prop->GetOffset_ForInternal(),i);
             i++;
         }
     }
@@ -293,10 +293,9 @@ namespace slua {
 		const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
 
         int ret = 0;
-        int offset= 0;
         if(bHasReturnParam) {
             UProperty* p = func->GetReturnProperty();
-            ret += LuaObject::push(L,p,params);
+            ret += LuaObject::push(L,p,params+p->GetOffset_ForInternal());
         }
 
         // push out parms
@@ -308,9 +307,8 @@ namespace slua {
                 continue;
 
             if((propflag&CPF_OutParm)) {
-                ret += LuaObject::push(L,p,params+offset);
+                ret += LuaObject::push(L,p,params+p->GetOffset_ForInternal());
             }
-            offset += p->GetSize();
         }
         
         return ret;
@@ -350,7 +348,7 @@ namespace slua {
         if(!func) {
             UProperty* up = cls->FindPropertyByName(wname);
             if(!up) return 0;
-            return LuaObject::push(L,up,(uint8*)obj);
+            return LuaObject::push(L,up,(uint8*)up->ContainerPtrToValuePtr<void>(obj));
         }
         else   
             return LuaObject::push(L,func);
@@ -369,7 +367,7 @@ namespace slua {
         if(!up) luaL_error(L,"Can't find property named %s",name);
         
         // set property value
-        checker(L,up,(uint8*)obj,3);
+        checker(L,up,(uint8*)up->ContainerPtrToValuePtr<void>(obj),3);
         return 0;
     }
 
@@ -381,7 +379,7 @@ namespace slua {
         TCHAR* wname = UTF8_TO_TCHAR(name);
         UProperty* up = cls->FindPropertyByName(wname);
         if(!up) return 0;
-        return LuaObject::push(L,up,ls->buf);
+        return LuaObject::push(L,up,ls->buf+up->GetOffset_ForInternal());
     }
 
     int instanceIndexSelf(lua_State* L) {
@@ -396,7 +394,7 @@ namespace slua {
     int pushUNameProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto ip=Cast<UNameProperty>(prop);
         ensure(ip);
-        FName i = ip->GetPropertyValue_InContainer(parms);
+        FName i = ip->GetPropertyValue(parms);
         return LuaObject::push(L,i);
     }
 
@@ -412,73 +410,70 @@ namespace slua {
     int pushUIntProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto ip=Cast<UIntProperty>(prop);
         ensure(ip);
-        int i = ip->GetPropertyValue_InContainer(parms);
+        int i = ip->GetPropertyValue(parms);
         return LuaObject::push(L,i);
     }
 
     int pushFloatProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto ip=Cast<UFloatProperty>(prop);
         ensure(ip);
-        float i = ip->GetPropertyValue_InContainer(parms);
+        float i = ip->GetPropertyValue(parms);
         return LuaObject::push(L,i);
     }
 
     int pushUBoolProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto bp=Cast<UBoolProperty>(prop);
         ensure(bp);
-        bool b = bp->GetPropertyValue_InContainer(parms);
+        bool b = bp->GetPropertyValue(parms);
         return LuaObject::push(L,b);
     }
 
     int pushUArrayProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p = Cast<UArrayProperty>(prop);
         ensure(p);
-        FScriptArray* v = p->GetPropertyValuePtr_InContainer(parms);
+        FScriptArray* v = p->GetPropertyValuePtr(parms);
         return LuaArray::push(L,p,v);
     }
 
     int pushUTextProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p = Cast<UTextProperty>(prop);
         ensure(p);
-        FText* text = p->GetPropertyValuePtr_InContainer(parms);
+        FText* text = p->GetPropertyValuePtr(parms);
         return LuaObject::push(L,*text);
     }    
 
     int pushUStrProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p = Cast<UStrProperty>(prop);
         ensure(p);
-        FString* str = p->GetPropertyValuePtr_InContainer(parms);
+        FString* str = p->GetPropertyValuePtr(parms);
         return LuaObject::push(L,*str);
     }
 
-    int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms_) {
+    int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p = Cast<UStructProperty>(prop);
         ensure(p);
         auto uss = p->Struct;
-        uint8* parms = parms_+p->GetOffset_ForInternal();
 
-        uint32 size = uss->GetStructureSize() ? uss->GetStructureSize() : 1;
-
-		if (LuaWrapper::pushValue(L, p, uss, parms))  
+		if (LuaWrapper::pushValue(L, p, uss, parms))
 			return 1;
 
+		uint32 size = uss->GetStructureSize() ? uss->GetStructureSize() : 1;
 		uint8* buf = (uint8*)FMemory::Malloc(size);
 		FMemory::Memcpy(buf, parms, size);
-		//p->CopyValuesInternal(buf,parms,1);
 		return LuaObject::push(L, new LuaStruct{buf,size,uss});
     }  
 
     int pushUMulticastDelegateProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p = Cast<UMulticastDelegateProperty>(prop);
         ensure(p);   
-        FMulticastScriptDelegate* delegate = p->GetPropertyValuePtr_InContainer(parms);
+        FMulticastScriptDelegate* delegate = p->GetPropertyValuePtr(parms);
         return LuaDelegate::push(L,delegate,p->SignatureFunction);
     }
 	 
     int pushUObjectProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p = Cast<UObjectProperty>(prop);
         ensure(p);   
-        UObject* o = p->GetPropertyValue_InContainer(parms);
+        UObject* o = p->GetPropertyValue(parms);
         if(auto tr=Cast<UWidgetTree>(o))
             return LuaWidgetTree::push(L,tr);
         else
@@ -488,24 +483,23 @@ namespace slua {
     int checkUIntProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UIntProperty>(prop);
         ensure(p);
-        p->SetPropertyValue_InContainer(parms,LuaObject::checkValue<int>(L,i));
+        p->SetPropertyValue(parms,LuaObject::checkValue<int>(L,i));
         return 0;
     }
 
     int checkUBoolProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UBoolProperty>(prop);
         ensure(p);
-        p->SetPropertyValue_InContainer(parms,LuaObject::checkValue<bool>(L,i));
+        p->SetPropertyValue(parms,LuaObject::checkValue<bool>(L,i));
         return 0;
     }
 
     int checkUFloatProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UFloatProperty>(prop);
         ensure(p);
-        p->SetPropertyValue_InContainer(parms,LuaObject::checkValue<float>(L,i));
+        p->SetPropertyValue(parms,LuaObject::checkValue<float>(L,i));
         return 0;
     }
-    
 
     int checkUStructProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UStructProperty>(prop);
@@ -518,46 +512,43 @@ namespace slua {
 		LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L, i);
 		if (p->GetSize() != ls->size)
 			luaL_error(L, "expect struct size == %d, but got %d", p->GetSize(), ls->size);
-		p->CopyCompleteValue_InContainer(parms, ls->buf);
+		p->CopyCompleteValue(parms, ls->buf);
 		return 0;
     }
 
     int checkUTextProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UTextProperty>(prop);
         ensure(p);
-        p->SetPropertyValue_InContainer(parms,LuaObject::checkValue<FText>(L,i));
+        p->SetPropertyValue(parms,LuaObject::checkValue<FText>(L,i));
         return 0;
     }
 
     int checkUNameProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UNameProperty>(prop);
         ensure(p);
-        p->SetPropertyValue_InContainer(parms,LuaObject::checkValue<FName>(L,i));
+        p->SetPropertyValue(parms,LuaObject::checkValue<FName>(L,i));
         return 0;
     }
 
 	int checkEnumProperty(lua_State* L, UProperty* prop, uint8* parms, int i) {
 		auto p = Cast<UEnumProperty>(prop);
 		ensure(p);
-		auto p2 = p->GetUnderlyingProperty();
-		ensure(p2);
-		auto v = LuaObject::checkValue<int>(L, i);
-		auto v2 = (int64)v;
-		p2->CopyCompleteValue_InContainer(parms, &v2);
+		auto v = (int64)LuaObject::checkValue<int>(L, i);
+		p->CopyCompleteValue(parms, &v);
 		return 0;
 	}
 
     int checkUStrProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UStrProperty>(prop);
         ensure(p);
-        p->SetPropertyValue_InContainer(parms,LuaObject::checkValue<FString>(L,i));
+        p->SetPropertyValue(parms,LuaObject::checkValue<FString>(L,i));
         return 0;
     }
 
     int checkUObjectProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UObjectProperty>(prop);
         ensure(p);
-        p->SetPropertyValue_InContainer(parms,LuaObject::checkValue<UObject*>(L,i));
+        p->SetPropertyValue(parms,LuaObject::checkValue<UObject*>(L,i));
         return 0;
     }
 

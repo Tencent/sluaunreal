@@ -348,7 +348,7 @@ namespace slua {
         if(!func) {
             UProperty* up = cls->FindPropertyByName(wname);
             if(!up) return 0;
-            return LuaObject::push(L,up,(uint8*)up->ContainerPtrToValuePtr<void>(obj));
+            return LuaObject::push(L,up,up->ContainerPtrToValuePtr<uint8>(obj));
         }
         else   
             return LuaObject::push(L,func);
@@ -367,7 +367,7 @@ namespace slua {
         if(!up) luaL_error(L,"Can't find property named %s",name);
         
         // set property value
-        checker(L,up,(uint8*)up->ContainerPtrToValuePtr<void>(obj),3);
+        checker(L,up,up->ContainerPtrToValuePtr<uint8>(obj),3);
         return 0;
     }
 

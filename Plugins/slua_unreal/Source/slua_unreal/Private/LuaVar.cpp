@@ -368,14 +368,13 @@ namespace slua {
 
     void LuaVar::callByUFunction(UFunction* func,uint8* parms) {
         int n=0;
-        int offset = 0;
         for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
             UProperty* prop = *it;
             uint64 propflag = prop->GetPropertyFlags();
             if((propflag&CPF_ReturnParm))
                 continue;
 
-            offset += pushArgByParms(prop,parms+offset);
+            pushArgByParms(prop,parms+prop->GetOffset_ForInternal());
             n++;
         }
         docall(n);

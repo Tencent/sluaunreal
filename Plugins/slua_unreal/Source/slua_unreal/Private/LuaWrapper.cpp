@@ -6839,87 +6839,106 @@ namespace slua {
 		FSlateFontInfoStruct = FSlateFontInfo::StaticStruct();
 		_pushStructMap.Add(FSlateFontInfoStruct, __pushFSlateFontInfo);
 		_checkStructMap.Add(FSlateFontInfoStruct, __checkFSlateFontInfo);
+		FSlateFontInfoWrapper::bind(L);
+
 		FSlateBrushStruct = FSlateBrush::StaticStruct();
 		_pushStructMap.Add(FSlateBrushStruct, __pushFSlateBrush);
 		_checkStructMap.Add(FSlateBrushStruct, __checkFSlateBrush);
+		FSlateBrushWrapper::bind(L);
+
 		FMarginStruct = FMargin::StaticStruct();
 		_pushStructMap.Add(FMarginStruct, __pushFMargin);
 		_checkStructMap.Add(FMarginStruct, __checkFMargin);
+		FMarginWrapper::bind(L);
+
 		FSlateColorStruct = FSlateColor::StaticStruct();
 		_pushStructMap.Add(FSlateColorStruct, __pushFSlateColor);
 		_checkStructMap.Add(FSlateColorStruct, __checkFSlateColor);
+		FSlateColorWrapper::bind(L);
+
 		FRotatorStruct = TBaseStructure<FRotator>::Get();
 		_pushStructMap.Add(FRotatorStruct, __pushFRotator);
 		_checkStructMap.Add(FRotatorStruct, __checkFRotator);
+		FRotatorWrapper::bind(L);
+
 		FTransformStruct = TBaseStructure<FTransform>::Get();
 		_pushStructMap.Add(FTransformStruct, __pushFTransform);
 		_checkStructMap.Add(FTransformStruct, __checkFTransform);
+		FTransformWrapper::bind(L);
+
 		FLinearColorStruct = TBaseStructure<FLinearColor>::Get();
 		_pushStructMap.Add(FLinearColorStruct, __pushFLinearColor);
 		_checkStructMap.Add(FLinearColorStruct, __checkFLinearColor);
+		FLinearColorWrapper::bind(L);
+
 		FColorStruct = TBaseStructure<FColor>::Get();
 		_pushStructMap.Add(FColorStruct, __pushFColor);
 		_checkStructMap.Add(FColorStruct, __checkFColor);
+		FColorWrapper::bind(L);
+
 		FVectorStruct = TBaseStructure<FVector>::Get();
 		_pushStructMap.Add(FVectorStruct, __pushFVector);
 		_checkStructMap.Add(FVectorStruct, __checkFVector);
+		FVectorWrapper::bind(L);
+
 		FVector2DStruct = TBaseStructure<FVector2D>::Get();
 		_pushStructMap.Add(FVector2DStruct, __pushFVector2D);
 		_checkStructMap.Add(FVector2DStruct, __checkFVector2D);
+		FVector2DWrapper::bind(L);
+
 		FRandomStreamStruct = TBaseStructure<FRandomStream>::Get();
 		_pushStructMap.Add(FRandomStreamStruct, __pushFRandomStream);
 		_checkStructMap.Add(FRandomStreamStruct, __checkFRandomStream);
+		FRandomStreamWrapper::bind(L);
+
 		FGuidStruct = TBaseStructure<FGuid>::Get();
 		_pushStructMap.Add(FGuidStruct, __pushFGuid);
 		_checkStructMap.Add(FGuidStruct, __checkFGuid);
+		FGuidWrapper::bind(L);
+
 		FBox2DStruct = TBaseStructure<FBox2D>::Get();
 		_pushStructMap.Add(FBox2DStruct, __pushFBox2D);
 		_checkStructMap.Add(FBox2DStruct, __checkFBox2D);
+		FBox2DWrapper::bind(L);
+
 		FFloatRangeBoundStruct = TBaseStructure<FFloatRangeBound>::Get();
 		_pushStructMap.Add(FFloatRangeBoundStruct, __pushFFloatRangeBound);
 		_checkStructMap.Add(FFloatRangeBoundStruct, __checkFFloatRangeBound);
+		FFloatRangeBoundWrapper::bind(L);
+
 		FFloatRangeStruct = TBaseStructure<FFloatRange>::Get();
 		_pushStructMap.Add(FFloatRangeStruct, __pushFFloatRange);
 		_checkStructMap.Add(FFloatRangeStruct, __checkFFloatRange);
+		FFloatRangeWrapper::bind(L);
+
 		FInt32RangeBoundStruct = TBaseStructure<FInt32RangeBound>::Get();
 		_pushStructMap.Add(FInt32RangeBoundStruct, __pushFInt32RangeBound);
 		_checkStructMap.Add(FInt32RangeBoundStruct, __checkFInt32RangeBound);
+		FInt32RangeBoundWrapper::bind(L);
+
 		FInt32RangeStruct = TBaseStructure<FInt32Range>::Get();
 		_pushStructMap.Add(FInt32RangeStruct, __pushFInt32Range);
 		_checkStructMap.Add(FInt32RangeStruct, __checkFInt32Range);
+		FInt32RangeWrapper::bind(L);
+
 		FFloatIntervalStruct = TBaseStructure<FFloatInterval>::Get();
 		_pushStructMap.Add(FFloatIntervalStruct, __pushFFloatInterval);
 		_checkStructMap.Add(FFloatIntervalStruct, __checkFFloatInterval);
+		FFloatIntervalWrapper::bind(L);
+
 		FInt32IntervalStruct = TBaseStructure<FInt32Interval>::Get();
 		_pushStructMap.Add(FInt32IntervalStruct, __pushFInt32Interval);
 		_checkStructMap.Add(FInt32IntervalStruct, __checkFInt32Interval);
+		FInt32IntervalWrapper::bind(L);
+
 		FPrimaryAssetTypeStruct = TBaseStructure<FPrimaryAssetType>::Get();
 		_pushStructMap.Add(FPrimaryAssetTypeStruct, __pushFPrimaryAssetType);
 		_checkStructMap.Add(FPrimaryAssetTypeStruct, __checkFPrimaryAssetType);
+		FPrimaryAssetTypeWrapper::bind(L);
+
 		FPrimaryAssetIdStruct = TBaseStructure<FPrimaryAssetId>::Get();
 		_pushStructMap.Add(FPrimaryAssetIdStruct, __pushFPrimaryAssetId);
 		_checkStructMap.Add(FPrimaryAssetIdStruct, __checkFPrimaryAssetId);
-
-		FSlateFontInfoWrapper::bind(L);
-		FSlateBrushWrapper::bind(L);
-		FMarginWrapper::bind(L);
-		FSlateColorWrapper::bind(L);
-		FRotatorWrapper::bind(L);
-		FTransformWrapper::bind(L);
-		FLinearColorWrapper::bind(L);
-		FColorWrapper::bind(L);
-		FVectorWrapper::bind(L);
-		FVector2DWrapper::bind(L);
-		FRandomStreamWrapper::bind(L);
-		FGuidWrapper::bind(L);
-		FBox2DWrapper::bind(L);
-		FFloatRangeBoundWrapper::bind(L);
-		FFloatRangeWrapper::bind(L);
-		FInt32RangeBoundWrapper::bind(L);
-		FInt32RangeWrapper::bind(L);
-		FFloatIntervalWrapper::bind(L);
-		FInt32IntervalWrapper::bind(L);
-		FPrimaryAssetTypeWrapper::bind(L);
 		FPrimaryAssetIdWrapper::bind(L);
 	}
 

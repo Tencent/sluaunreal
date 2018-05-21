@@ -2,6 +2,7 @@
 local Test=import('SluaTestCase');
 local t=Test();
 
+
 print(string.format("Brush=%s", tostring(t.Brush)))
 print(string.format("Value=%s", tostring(t.Value)))
 t.Value = 100
@@ -138,6 +139,9 @@ local HitResult = import('HitResult');
 
 function update(dt,actor)
     print("call update")
+    actor:SetFName("fuck")
+    actor.FolderPath = "asdfasdfasdf"
+    print("folder path",actor.FolderPath)
     local p = actor:K2_GetActorLocation()
     --print("actor pos",p[1])
     local h = HitResult()

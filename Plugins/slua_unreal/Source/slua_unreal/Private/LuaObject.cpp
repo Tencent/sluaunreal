@@ -288,7 +288,6 @@ namespace slua {
 
     // handle return value and out params
     int returnValue(lua_State* L,UFunction* func,uint8* params) {
-
         // check is function has return value
 		const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
 

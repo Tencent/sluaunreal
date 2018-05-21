@@ -761,6 +761,11 @@ namespace slua {
 		return 1;
 	}
 
+    int LuaObject::push(lua_State* L, const char* str) {
+		lua_pushstring(L, str);
+		return 1;
+	}
+
     int LuaObject::setupMTSelfSearch(lua_State* L) {
         lua_pushcfunction(L,instanceIndexSelf);
         lua_setfield(L, -2, "__index");

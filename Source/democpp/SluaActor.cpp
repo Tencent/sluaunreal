@@ -80,3 +80,7 @@ void ASluaActor::Tick(float DeltaTime)
 	// slua::Log::Log("lua stack top %d",lua_gettop(*state));
 }
 
+void ASluaActor::SetFName(FName name) {
+	slua::Log::Log("set fname %s", TCHAR_TO_UTF8(*(name.ToString())));	
+}
+

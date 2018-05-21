@@ -1,4 +1,3 @@
-
 local Test=import('SluaTestCase');
 local t=Test();
 

@@ -1052,8 +1052,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FRotator*>(L, 1);
 				auto Message = LuaObject::checkValue<const char*>(L, 2);
-				auto Message_ = UTF8_TO_TCHAR(Message);
-				self->DiagnosticCheckNaN(Message_);
+				auto Message_ = FString(UTF8_TO_TCHAR(Message));
+				self->DiagnosticCheckNaN(*Message_);
 				return 0;
 			}
 			luaL_error(L, "call FRotator::DiagnosticCheckNaN error, argc=%d", argc);
@@ -3574,8 +3574,8 @@ namespace slua {
 			if (argc == 2) {
 				auto self = LuaObject::checkValue<FVector*>(L, 1);
 				auto Message = LuaObject::checkValue<const char*>(L, 2);
-				auto Message_ = UTF8_TO_TCHAR(Message);
-				self->DiagnosticCheckNaN(Message_);
+				auto Message_ = FString(UTF8_TO_TCHAR(Message));
+				self->DiagnosticCheckNaN(*Message_);
 				return 0;
 			}
 			luaL_error(L, "call FVector::DiagnosticCheckNaN error, argc=%d", argc);

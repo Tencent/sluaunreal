@@ -35,7 +35,6 @@
 #include "LuaWrapper.h"
 #include "LuaEnums.h"
 
-
 ULuaObject::ULuaObject(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
 {
@@ -375,7 +374,7 @@ namespace slua {
 
         // get blueprint member
         UClass* cls = obj->GetClass();
-        TCHAR* wname = UTF8_TO_TCHAR(name);
+		FName wname(UTF8_TO_TCHAR(name));
         UFunction* func = cls->FindFunctionByName(wname);
         if(!func) {
             UProperty* up = cls->FindPropertyByName(wname);
@@ -392,9 +391,8 @@ namespace slua {
     int newinstanceIndex(lua_State* L) {
         UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
         const char* name = LuaObject::checkValue<const char*>(L, 2);
-        TCHAR* wname = UTF8_TO_TCHAR(name);
         UClass* cls = obj->GetClass();
-        UProperty* up = cls->FindPropertyByName(wname);
+        UProperty* up = cls->FindPropertyByName(UTF8_TO_TCHAR(name));
         if(up->GetPropertyFlags() & CPF_BlueprintReadOnly)
             luaL_error(L,"Property %s is readonly",name);
 
@@ -411,8 +409,7 @@ namespace slua {
         const char* name = LuaObject::checkValue<const char*>(L, 2);
         
         auto* cls = ls->uss;
-        TCHAR* wname = UTF8_TO_TCHAR(name);
-        UProperty* up = cls->FindPropertyByName(wname);
+        UProperty* up = cls->FindPropertyByName(UTF8_TO_TCHAR(name));
         if(!up) return 0;
         return LuaObject::push(L,up,ls->buf+up->GetOffset_ForInternal());
     }

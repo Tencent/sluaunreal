@@ -122,6 +122,8 @@ namespace slua {
         }
 
         void callByUFunction(UFunction* ufunc,uint8* parms);
+
+        bool toProperty(UProperty* p,uint8* ptr);
     private:
         friend class LuaState;
         // init number n of element

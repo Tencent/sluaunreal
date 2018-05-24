@@ -79,7 +79,7 @@ namespace slua {
             // index is int-list based 0, so should plus Offset to get first arg 
             // (not include obj ptr if it's a member function)
             static T invoke(lua_State * L,void* ptr) noexcept {
-                return target(L, ptr, readArg<Args>(L, index + Offset)...);
+                return target(L, ptr, readArg<typename remove_cr<Args>::type>(L, index + Offset)...);
             }
         };
 
@@ -109,7 +109,7 @@ namespace slua {
             // index is int-list based 0, so should plus Offset to get first arg 
             // (not include obj ptr if it's a member function)
             static void invoke(lua_State * L,void* ptr) noexcept {
-                target(L, ptr, readArg<Args>(L, index + Offset)...);
+                target(L, ptr, readArg<typename remove_cr<Args>::type>(L, index + Offset)...);
             }
         };
 

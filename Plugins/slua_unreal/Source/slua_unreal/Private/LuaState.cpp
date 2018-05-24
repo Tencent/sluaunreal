@@ -155,6 +155,8 @@ namespace slua {
         void* extraspace = lua_getextraspace(L);
         *((LuaState**)extraspace) = this;
 
+        lua_atpanic(L,_atPanic);
+
         // init obj cache table
         lua_newtable(L);
         lua_newtable(L);
@@ -195,6 +197,12 @@ namespace slua {
         lua_settop(L,0);
 
         return true;
+    }
+
+    int LuaState::_atPanic(lua_State* L) {
+        const char* err = lua_tostring(L,-1);
+        Log::Error("Fatal error: %s",err);
+        return 0;
     }
 
 	void LuaState::setLoadFileDelegate(LoadFileDelegate func) {

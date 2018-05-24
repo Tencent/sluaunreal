@@ -23,7 +23,6 @@
 #include "LuaWidgetTree.h"
 #include "Blueprint/WidgetTree.h"
 #include "LuaObject.h"
-#include "Blueprint/WidgetTree.h"
 
 namespace slua {
 

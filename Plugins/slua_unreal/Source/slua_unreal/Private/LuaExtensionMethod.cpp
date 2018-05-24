@@ -22,23 +22,36 @@
 
 #include "LuaObject.h"
 #include "LuaCppBinding.h"
+#include "Blueprint/WidgetTree.h"
 
 namespace slua {
 
-    template<>
-    struct TypeName<UUserWidget> {
-        static const char* value() {
-            return "UObject";
-        }
-    };
+    #define MetaMap(U,N) \
+        template<>\
+        struct TypeName<U> {\
+            static const char* value() {\
+                return #N;\
+            }\
+        };\
+
+    MetaMap(UUserWidget,UObject)
 
     namespace ExtensionMethod {
 
         #define REG_EXTENSION_METHOD(U,N,M) { \
             LuaObject::addExtensionMethod(U::StaticClass(),N,LuaCppBinding<decltype(M),M>::LuaCFunction); }
 
+        #define REG_EXTENSION_METHOD_IMP(U,N,BODY) { \
+            LuaObject::addExtensionMethod(U::StaticClass(),N,[](lua_State* L)->int BODY); }
+
         void init() {
             REG_EXTENSION_METHOD(UUserWidget,"GetWidgetFromName",&UUserWidget::GetWidgetFromName);
+            REG_EXTENSION_METHOD_IMP(UUserWidget,"RemoveWidgetFromName",{
+                CheckUD(UUserWidget,L,1);
+                CheckUDEX(UWidget,widget,L,2);
+                bool ret = UD->WidgetTree->RemoveWidget(widget->ud);
+                return LuaObject::push(L,ret);
+            });
         }
     }
 }

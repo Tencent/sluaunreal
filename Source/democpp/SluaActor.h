@@ -23,6 +23,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+
+	UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
+    void SetFName(FName name);
 	
 	static ASluaActor* instance;
 };

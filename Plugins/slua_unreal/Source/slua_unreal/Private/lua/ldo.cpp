@@ -32,8 +32,6 @@
 #include "lzio.h"
 
 #define errorstatus(s)	((s) > LUA_YIELD)
-#define LUA_USE_LONGJMP
-
 /*
 ** {======================================================
 ** Error-recovery functions

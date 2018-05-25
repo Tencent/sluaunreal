@@ -30,6 +30,7 @@ namespace slua {
         return LuaObject::pushType(L,tree,"UWidgetTree",setupMT);
     }
 
+    // deprecated function, use GetWidgetFromName
     int LuaWidgetTree::FindWidget(lua_State* L) {
         CheckUD(UWidgetTree,L,1);
         const char* name = luaL_checkstring(L,2);
@@ -38,6 +39,7 @@ namespace slua {
         return LuaObject::push(L,w);
     }
 
+    // deprecated function, use RemoveWidgetFromName
     int LuaWidgetTree::RemoveWidget(lua_State* L) {
         CheckUD(UWidgetTree,L,1);
         CheckUDEX(UWidget,widget,L,2);

@@ -34,5 +34,15 @@ end);
 -- handle text changed event
 local edit=tree:FindWidget('TextBox_0');
 local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
+
+-- use FVector
+local p = actor:K2_GetActorLocation()
+local h = HitResult()
+local v = FVector(math.sin(tt)*100,2,3)
+local offset = FVector(0,math.cos(tt)*50,0)
+-- support Operator
+local ok,h=actor:K2_SetActorLocation(v+offset,true,h,true)
+-- get referenced value
+print("hit info",h)
 ```
 

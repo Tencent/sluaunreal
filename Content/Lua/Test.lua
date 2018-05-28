@@ -1,3 +1,7 @@
+
+
+require 'TestCase'
+
 local Test=import('SluaTestCase');
 local t=Test();
 
@@ -93,15 +97,15 @@ for i=1,10 do
 end
 
 local Button = import('Button');
--- local ButtonStyle = import('ButtonStyle');
--- local TextBlock = import('TextBlock');
+local ButtonStyle = import('ButtonStyle');
+local TextBlock = import('TextBlock');
 local btn=Button();
--- local txt=TextBlock();
+local txt=TextBlock();
 local ui=slua.loadUI('/Game/Panel.Panel');
 t:TwoArgs("fuck",100,1717,"1024",ui)
 ui:AddToViewport(0);
--- local seq=ui.ActiveSequencePlayers;
--- print('seq',seq:Num());
+local seq=ui.ActiveSequencePlayers;
+print('seq',seq:Num());
 local tree=ui.WidgetTree;
 local btn2=tree:FindWidget('Button1');
 local index = 1
@@ -111,43 +115,37 @@ btn2.OnClicked:Add(function()
     print('fuck',index) 
 end);
 local edit=tree:FindWidget('TextBox_0');
--- local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
--- edit.OnTextChanged:Remove(evt);
--- txt:SetText('fuck button');
--- local style=ButtonStyle();
--- btn:SetStyle(style);
--- btn:AddChild(txt);
--- print(btn:IsPressed(),btn.OnClicked);
--- local event=btn.OnClicked;
--- local index=1
--- event:Add(function() 
---     index=index+1
---     print('fuck',index) 
--- end);
+local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
+edit.OnTextChanged:Remove(evt);
+txt:SetText('fuck button');
+local style=ButtonStyle();
+btn:SetStyle(style);
+btn:AddChild(txt);
+print(btn:IsPressed(),btn.OnClicked);
+local event=btn.OnClicked;
+local index=1
+event:Add(function() 
+    index=index+1
+    print('fuck',index) 
+end);
 
 xx={}
 
 function xx.text()
-    print(t.Value)
-    t.Value=1024
-    print("set value",t.Value)
 end
 
 
 local HitResult = import('HitResult');
-
+local count=0
+local tt=0
 function update(dt,actor)
-    print("call update")
-    actor:SetFName("fuck")
-    actor.FolderPath = "asdfasdfasdf"
-    print("folder path",actor.FolderPath)
+    tt=tt+dt
     local p = actor:K2_GetActorLocation()
-    --print("actor pos",p[1])
     local h = HitResult()
-    --local ok,h=actor:K2_SetActorLocation({20,0,0},true,h,true)
-    local v = FVector(1,2,3)
-    local ok,h=actor:K2_SetActorLocation(v,true,h,true)
-    --print("hit info",h)
+    local v = FVector(math.sin(tt)*100,2,3)
+    local offset = FVector(0,math.cos(tt)*50,0)
+    local ok,h=actor:K2_SetActorLocation(v+offset,true,h,true)
+    print("hit info",h)
     -- test memory leak?
     local arr=t:GetArray();
     -- print("arr len",arr:Num())
@@ -160,7 +158,7 @@ function update(dt,actor)
     -- test free event twice
     edit.OnTextChanged:Remove(evt);
 
-    return 1024,2,"s",{},function() end
+    return 1024,2,"s",{1,2,3,4},function() end
 end
 
 function print_table(t)
@@ -188,10 +186,10 @@ print(OneVector)
 print(OneVector.X,OneVector.Y,OneVector.Z)
 print(OneVector:ToString())
 
--- print(FVector)
--- for k,v in pairs(FVector) do
---     print(type(k),k,type(v),v)
---     print_table(getmetatable(v))
--- end
+print(FVector)
+for k,v in pairs(FVector) do
+    print(type(k),k,type(v),v)
+    print_table(getmetatable(v))
+end
 
-return 1024,2,"s",{},function() end
+return 1024,2,"s",{1,2,3,4},function() end

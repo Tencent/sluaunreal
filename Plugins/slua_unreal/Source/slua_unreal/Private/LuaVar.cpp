@@ -37,24 +37,40 @@ namespace slua {
         numOfVar = 0;
     }
 
-    LuaVar::LuaVar(int n)
+    LuaVar::LuaVar(lua_Integer v)
         :LuaVar()
     {
-        alloc(n);
+        set(v);
     }
 
-    LuaVar::LuaVar(lua_State* l,lua_Integer v)
-        :LuaVar(1) 
+    LuaVar::LuaVar(int v)
+        :LuaVar()
     {
-        vars[0].luatype = LV_INT;
-        vars[0].i = v;
+        set((lua_Integer)v);
     }
 
-    LuaVar::LuaVar(lua_State* l,lua_Number v)
-        :LuaVar(1) 
+    LuaVar::LuaVar(size_t v)
+        :LuaVar()
     {
-        vars[0].luatype = LV_NUMBER;
-        vars[0].d = v;
+        set((lua_Integer)v);
+    }
+
+    LuaVar::LuaVar(lua_Number v)
+        :LuaVar()
+    {
+        set(v);
+    }
+
+    LuaVar::LuaVar(bool v)
+        :LuaVar()
+    {
+        set(v);
+    }
+
+    LuaVar::LuaVar(const char* v)
+        :LuaVar()
+    {
+        set(v);
     }
 
     LuaVar::LuaVar(lua_State* l,int p):LuaVar() {
@@ -274,10 +290,12 @@ namespace slua {
             return r;
         }
         else {
+            ensure(index>0);
             ensure(numOfVar>index);
-            LuaVar r(1);
+            LuaVar r;
+            r.alloc(1);
             r.L = this->L;
-            varClone(r.vars[0],vars[index]);
+            varClone(r.vars[0],vars[index-1]);
             return r;
         }
     }
@@ -291,16 +309,6 @@ namespace slua {
         lua_pop(L,2);
         return r;
     }
-
-    void LuaVar::setToTable(const LuaVar& key,const LuaVar& value) {
-        ensure(isTable());
-        push(L);
-        key.push(L);
-        value.push(L);
-        lua_settable(L,-2);
-        lua_pop(L,1);
-    }
-
 
     void LuaVar::set(lua_Integer v) {
         free();

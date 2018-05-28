@@ -62,12 +62,16 @@ namespace slua {
     public:
         enum Type {LV_NIL,LV_INT,LV_NUMBER,LV_BOOL,LV_STRING,LV_FUNCTION,LV_TABLE,LV_TUPLE};
         LuaVar();
-        
+        // copy construct for simple type
+        LuaVar(lua_Integer v);
+        LuaVar(int v);
+        LuaVar(size_t v);
+        LuaVar(lua_Number v);
+        LuaVar(const char* v);
+        LuaVar(bool v);
+
         LuaVar(lua_State* L,int p);
         LuaVar(lua_State* L,int p,Type t);
-        LuaVar(lua_State* L,lua_Integer v);
-        LuaVar(lua_State* L,lua_Number v);
-        LuaVar(lua_State* L,const char* v);
 
         LuaVar(const LuaVar& other):LuaVar() {
             clone(other);
@@ -107,10 +111,32 @@ namespace slua {
         const char* asString() const;
         bool asBool() const;
 
+
+        template<class T>
+        inline T castTo();
+
         size_t count() const;
         LuaVar getAt(size_t index) const;
+        template<class R>
+        R getAt(size_t index) const {
+            return getAt(index).castTo<R>();
+        }
+
         LuaVar getFromTable(const LuaVar& key) const;
-        void setToTable(const LuaVar& key,const LuaVar& value);
+        
+        template<class R>
+        R getFromTable(const LuaVar& key) const {
+            return getFromTable(key).castTo<R>();
+        }
+
+        void setToTable(const LuaVar& key,const LuaVar& value) {
+            ensure(isTable());
+            push(L);
+            key.push(L);
+            value.push(L);
+            lua_settable(L,-3);
+            lua_pop(L,1);
+        }
 
         template<class ...ARGS>
         LuaVar call(ARGS ...args) {
@@ -126,21 +152,17 @@ namespace slua {
             return ret;
         }
 
-        template<class T>
-        static T autocast(const LuaVar& lv);
-
         template<class RET,class ...ARGS>
         RET call(ARGS ...args) {
             LuaVar ret = call(args...);
-            return autocast<RET>(ret);
+            return castTo<RET>(ret);
         }
 
         bool toProperty(UProperty* p,uint8* ptr);
         void callByUFunction(UFunction* ufunc,uint8* parms);
     private:
         friend class LuaState;
-        // init number n of element
-        LuaVar(int n);
+
         // used to create number n of tuple
         LuaVar(lua_State* L,size_t n);
 
@@ -240,27 +262,27 @@ namespace slua {
 
 
     template<>
-    inline int LuaVar::autocast(const LuaVar& lv) {
-        return lv.asInt();
+    inline int LuaVar::castTo() {
+        return asInt();
     }
 
     template<>
-    inline float LuaVar::autocast(const LuaVar& lv) {
-        return lv.asFloat();
+    inline float LuaVar::castTo() {
+        return asFloat();
     }
 
     template<>
-    inline double LuaVar::autocast(const LuaVar& lv) {
-        return lv.asDouble();
+    inline double LuaVar::castTo() {
+        return asDouble();
     }
 
     template<>
-    inline bool LuaVar::autocast(const LuaVar& lv) {
-        return lv.asBool();
+    inline bool LuaVar::castTo() {
+        return asBool();
     }
 
     template<>
-    inline const char* LuaVar::autocast(const LuaVar& lv) {
-        return lv.asString();
+    inline const char* LuaVar::castTo() {
+        return asString();
     }
 }

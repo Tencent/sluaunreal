@@ -94,5 +94,6 @@ namespace slua {
         int _pushErrorHandler(lua_State* L);
         static int _atPanic(lua_State* L);
         ULuaObject* root;
+        int stackCount;
     };
 }

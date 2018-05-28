@@ -109,6 +109,7 @@ namespace slua {
         ,L(nullptr)
         ,cacheObjRef(LUA_NOREF)
         ,root(nullptr)
+        ,stackCount(0)
     {
     }
 
@@ -125,7 +126,11 @@ namespace slua {
     }
 
     void LuaState::tick(float dtime) {
-        
+        int top = lua_gettop(L);
+        if(top!=stackCount) {
+            stackCount = top;
+            Log::Error("Error: lua stack count should be zero , now is %d",top);
+        }
     }
 
     void LuaState::close() {

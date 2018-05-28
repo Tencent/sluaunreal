@@ -11,7 +11,7 @@ public class slua_unreal : ModuleRules
         bEnableExceptions = true;
         bEnforceIWYU = false;
 
-		Definitions.Add("LUA_USE_LONGJMP");
+		// Definitions.Add("LUA_USE_LONGJMP");
 
         if(Target.Platform == UnrealTargetPlatform.Win64)
             Definitions.Add("LUA_BUILD_AS_DLL");

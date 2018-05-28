@@ -210,6 +210,12 @@ namespace slua {
     }
 
     size_t LuaVar::count() const {
+        if(isTable()) {
+            push(L);
+            size_t n = lua_rawlen(L,-1);
+            lua_pop(L,1);
+            return n;
+        }
         return numOfVar;
     }
 
@@ -254,12 +260,45 @@ namespace slua {
         return vars[0].s->str;
     }
 
+    bool LuaVar::asBool() const {
+        ensure(numOfVar==1 && vars[0].luatype==LV_BOOL);
+        return vars[0].b;
+    }
+
     LuaVar LuaVar::getAt(size_t index) const {
-        ensure(numOfVar>index);
-        LuaVar r(1);
-        r.L = this->L;
-        varClone(r.vars[0],vars[index]);
+        if(isTable()) {
+            push(L); // push this table
+            lua_geti(L,-1,index); // get by index
+            LuaVar r(L,-1); // construct LuaVar
+            lua_pop(L,2); // pop table and value
+            return r;
+        }
+        else {
+            ensure(numOfVar>index);
+            LuaVar r(1);
+            r.L = this->L;
+            varClone(r.vars[0],vars[index]);
+            return r;
+        }
+    }
+
+    LuaVar LuaVar::getFromTable(const LuaVar& key) const {
+        ensure(isTable());
+        push(L);
+        key.push(L);
+        lua_gettable(L,-2);
+        LuaVar r(L,-1);
+        lua_pop(L,2);
         return r;
+    }
+
+    void LuaVar::setToTable(const LuaVar& key,const LuaVar& value) {
+        ensure(isTable());
+        push(L);
+        key.push(L);
+        value.push(L);
+        lua_settable(L,-2);
+        lua_pop(L,1);
     }
 
 
@@ -284,6 +323,13 @@ namespace slua {
         vars[0].luatype = LV_STRING;
     }
 
+    void LuaVar::set(bool b) {
+        free();
+        alloc(1);
+        vars[0].b = b;
+        vars[0].luatype = LV_BOOL;
+    }
+
     void LuaVar::pushVar(lua_State* l,const lua_var& ov) const {
         switch(ov.luatype) {
         case LV_INT:
@@ -291,6 +337,9 @@ namespace slua {
             break;
         case LV_NUMBER:
             lua_pushnumber(l,ov.d);
+            break;
+        case LV_BOOL:
+            lua_pushboolean(l,ov.b);
             break;
         case LV_STRING:
             lua_pushstring(l,ov.s->str);
@@ -335,6 +384,10 @@ namespace slua {
 
     bool LuaVar::isTuple() const {
         return numOfVar>1;
+    }
+
+    bool LuaVar::isTable() const {
+        return numOfVar==1 && vars[0].luatype==LV_TABLE;
     }
 
     LuaVar::Type LuaVar::type() const {

@@ -756,7 +756,6 @@ LUALIB_API int luaL_loadstring (lua_State *L, const char *s) {
 /* }====================================================== */
 
 
-
 LUALIB_API int luaL_getmetafield (lua_State *L, int obj, const char *event) {
   if (!lua_getmetatable(L, obj))  /* no metatable? */
     return LUA_TNIL;

@@ -236,6 +236,10 @@ static void preinit_thread (lua_State *L, global_State *g) {
   L->onlyluac = 0;
 }
 
+LUA_API void lua_setonlyluac(lua_State *L, int v) {
+	L->onlyluac = v;
+}
+
 
 static void close_state (lua_State *L) {
   global_State *g = G(L);

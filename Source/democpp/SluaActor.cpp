@@ -5,6 +5,7 @@
 #include "SluaComponent.h"
 #include "HAL/PlatformFileManager.h"
 #include "Misc/Paths.h"
+#include "GenericPlatformFile.h"
 
 
 ASluaActor* ASluaActor::instance=nullptr;
@@ -17,6 +18,24 @@ ASluaActor::ASluaActor()
 	instance = this;
 }
 
+// read file content
+static uint8* ReadFile(IPlatformFile& PlatformFile, FString path, uint32& len) {
+	IFileHandle* FileHandle = PlatformFile.OpenRead(*path);
+	if (FileHandle) {
+		len = (uint32)FileHandle->Size();
+		uint8* buf = new uint8[len];
+
+		FileHandle->Read(buf, len);
+
+		// Close the file again
+		delete FileHandle;
+
+		return buf;
+	}
+
+	return nullptr;
+}
+
 // Called when the game starts or when spawned
 void ASluaActor::BeginPlay()
 {
@@ -26,25 +45,17 @@ void ASluaActor::BeginPlay()
 	auto state = slua->State();
 	state->setLoadFileDelegate([](const char* fn,uint32& len)->uint8* {
 
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 		FString path = FPaths::ProjectContentDir();
 		path+="/Lua/";
 		path+=UTF8_TO_TCHAR(fn);
-		path+=".lua";
-
-		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
- 
-		IFileHandle* FileHandle = PlatformFile.OpenRead(*path);
-		if(FileHandle)
-		{
-			len = (uint32) FileHandle->Size();
-			uint8* buf = new uint8[len];
-
-			FileHandle->Read(buf, len);
-		
-			// Close the file again
-			delete FileHandle;
-
-			return buf;
+		TArray<FString> luaExts = { UTF8_TO_TCHAR(".pdcode"), UTF8_TO_TCHAR(".lua") };
+		for (auto ptr = luaExts.CreateConstIterator(); ptr; ++ptr) {
+			auto fullPath = path + *ptr;
+			auto buf = ReadFile(PlatformFile, fullPath, len);
+			if (buf) {
+				return buf;
+			}
 		}
 
 		return nullptr;

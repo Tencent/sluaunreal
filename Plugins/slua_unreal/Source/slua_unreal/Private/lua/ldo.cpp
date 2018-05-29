@@ -32,8 +32,6 @@
 #include "lzio.h"
 
 #define errorstatus(s)	((s) > LUA_YIELD)
-
-
 /*
 ** {======================================================
 ** Error-recovery functions

@@ -20,39 +20,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "LuaWidgetTree.h"
-#include "Blueprint/WidgetTree.h"
 #include "LuaObject.h"
+#include "LuaCppBinding.h"
+#include "Blueprint/WidgetTree.h"
 
 namespace slua {
 
-    int LuaWidgetTree::push(lua_State* L,UWidgetTree* tree) {
-        return LuaObject::pushType(L,tree,"UWidgetTree",setupMT);
+    #define MetaMap(U,N) \
+        template<>\
+        struct TypeName<U> {\
+            static const char* value() {\
+                return #N;\
+            }\
+        };\
+
+    MetaMap(UUserWidget,UObject)
+
+    namespace ExtensionMethod {
+
+        #define REG_EXTENSION_METHOD(U,N,M) { \
+            LuaObject::addExtensionMethod(U::StaticClass(),N,LuaCppBinding<decltype(M),M>::LuaCFunction); }
+
+        #define REG_EXTENSION_METHOD_IMP(U,N,BODY) { \
+            LuaObject::addExtensionMethod(U::StaticClass(),N,[](lua_State* L)->int BODY); }
+
+        void init() {
+            REG_EXTENSION_METHOD(UUserWidget,"GetWidgetFromName",&UUserWidget::GetWidgetFromName);
+            REG_EXTENSION_METHOD_IMP(UUserWidget,"RemoveWidgetFromName",{
+                CheckUD(UUserWidget,L,1);
+                CheckUDEX(UWidget,widget,L,2);
+                bool ret = UD->WidgetTree->RemoveWidget(widget->ud);
+                return LuaObject::push(L,ret);
+            });
+        }
     }
-
-    // deprecated function, use GetWidgetFromName
-    int LuaWidgetTree::FindWidget(lua_State* L) {
-        CheckUD(UWidgetTree,L,1);
-        const char* name = luaL_checkstring(L,2);
-        FName fname(UTF8_TO_TCHAR(name));
-        auto w = UD->FindWidget(fname);
-        return LuaObject::push(L,w);
-    }
-
-    // deprecated function, use RemoveWidgetFromName
-    int LuaWidgetTree::RemoveWidget(lua_State* L) {
-        CheckUD(UWidgetTree,L,1);
-        CheckUDEX(UWidget,widget,L,2);
-        bool ret = UD->RemoveWidget(widget->ud);
-        return LuaObject::push(L,ret);
-    }
-
-    int LuaWidgetTree::setupMT(lua_State* L) {
-        LuaObject::setupMTSelfSearch(L);
-
-        RegMetaMethod(L,FindWidget);
-        RegMetaMethod(L,RemoveWidget);
-        return 0;
-    }
-
 }

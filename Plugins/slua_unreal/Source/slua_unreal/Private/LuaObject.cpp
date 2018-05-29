@@ -62,6 +62,12 @@ namespace slua {
     #define sprintf_s snprintf
     #endif 
     
+    TMap< UClass*, TMap<FString,lua_CFunction> > extensionMMap;
+
+    namespace ExtensionMethod{
+        void init();
+    }
+    
 
     // construct lua struct
     LuaStruct::LuaStruct(uint8* b,uint32 s,UScriptStruct* u)
@@ -71,6 +77,11 @@ namespace slua {
     LuaStruct::~LuaStruct() {
         FMemory::Free(buf);
         buf = nullptr;
+    }
+
+    void LuaObject::addExtensionMethod(UClass* cls,const char* n,lua_CFunction func) {
+        auto& extmap = extensionMMap.FindOrAdd(cls);
+        extmap.Add(n,func);
     }
 
 	int LuaObject::classIndex(lua_State* L) {
@@ -336,17 +347,41 @@ namespace slua {
         // return value to push lua stack
         return returnValue(L,func,params);
     }
+
+    int searchExtensionMethod(lua_State* L,UObject* o,const char* name) {
+
+        // search class and its super
+        TMap<FString,lua_CFunction>* mapptr=nullptr;
+        auto cls = o->GetClass();
+        while(cls!=nullptr) {
+            mapptr = extensionMMap.Find(cls);
+            if(mapptr!=nullptr) {
+                // find function
+                auto funcptr = mapptr->Find(name);
+                if(funcptr!=nullptr) {
+                    lua_pushcfunction(L,*funcptr);
+                    return 1;
+                }
+            }
+            cls=cls->GetSuperClass();
+        }   
+        return 0;
+    }
     
     int instanceIndex(lua_State* L) {
         UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
         const char* name = LuaObject::checkValue<const char*>(L, 2);
-        
+
+        // get blueprint member
         UClass* cls = obj->GetClass();
 		FName wname(UTF8_TO_TCHAR(name));
         UFunction* func = cls->FindFunctionByName(wname);
         if(!func) {
             UProperty* up = cls->FindPropertyByName(wname);
-            if(!up) return 0;
+            if(!up) {
+                // search extension method
+                return searchExtensionMethod(L,obj,name);
+            }
             return LuaObject::push(L,up,up->ContainerPtrToValuePtr<uint8>(obj));
         }
         else   
@@ -685,6 +720,7 @@ namespace slua {
 
 		LuaWrapper::init(L);
 		LuaEnums::init(L);
+        ExtensionMethod::init();
     }
 
     int LuaObject::push(lua_State* L,UFunction* func)  {

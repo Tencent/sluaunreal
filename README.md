@@ -7,6 +7,8 @@ Now slua for unreal available.
 * Export all blueprint interface to lua via refection by Unreal4.
 * Lua function passed as callback of blueprint.
 * Common c++ class (Non blueprint class) can be exported by static code generation by libclang tool( another tool available ASAP )
+* support operator overloading for FVector etc.
+* support extension-method mechanism for some non blueprint function in blueprint class, like GetWidgetFromName of UUserWidget
 
 # Usage at a glance
 
@@ -34,5 +36,15 @@ end);
 -- handle text changed event
 local edit=tree:FindWidget('TextBox_0');
 local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
+
+-- use FVector
+local p = actor:K2_GetActorLocation()
+local h = HitResult()
+local v = FVector(math.sin(tt)*100,2,3)
+local offset = FVector(0,math.cos(tt)*50,0)
+-- support Operator
+local ok,h=actor:K2_SetActorLocation(v+offset,true,h,true)
+-- get referenced value
+print("hit info",h)
 ```
 

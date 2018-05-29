@@ -37,24 +37,40 @@ namespace slua {
         numOfVar = 0;
     }
 
-    LuaVar::LuaVar(int n)
+    LuaVar::LuaVar(lua_Integer v)
         :LuaVar()
     {
-        alloc(n);
+        set(v);
     }
 
-    LuaVar::LuaVar(lua_State* l,lua_Integer v)
-        :LuaVar(1) 
+    LuaVar::LuaVar(int v)
+        :LuaVar()
     {
-        vars[0].luatype = LV_INT;
-        vars[0].i = v;
+        set((lua_Integer)v);
     }
 
-    LuaVar::LuaVar(lua_State* l,lua_Number v)
-        :LuaVar(1) 
+    LuaVar::LuaVar(size_t v)
+        :LuaVar()
     {
-        vars[0].luatype = LV_NUMBER;
-        vars[0].d = v;
+        set((lua_Integer)v);
+    }
+
+    LuaVar::LuaVar(lua_Number v)
+        :LuaVar()
+    {
+        set(v);
+    }
+
+    LuaVar::LuaVar(bool v)
+        :LuaVar()
+    {
+        set(v);
+    }
+
+    LuaVar::LuaVar(const char* v)
+        :LuaVar()
+    {
+        set(v);
     }
 
     LuaVar::LuaVar(lua_State* l,int p):LuaVar() {
@@ -210,6 +226,12 @@ namespace slua {
     }
 
     size_t LuaVar::count() const {
+        if(isTable()) {
+            push(L);
+            size_t n = lua_rawlen(L,-1);
+            lua_pop(L,1);
+            return n;
+        }
         return numOfVar;
     }
 
@@ -254,14 +276,39 @@ namespace slua {
         return vars[0].s->str;
     }
 
-    LuaVar LuaVar::getAt(size_t index) const {
-        ensure(numOfVar>index);
-        LuaVar r(1);
-        r.L = this->L;
-        varClone(r.vars[0],vars[index]);
-        return r;
+    bool LuaVar::asBool() const {
+        ensure(numOfVar==1 && vars[0].luatype==LV_BOOL);
+        return vars[0].b;
     }
 
+    LuaVar LuaVar::getAt(size_t index) const {
+        if(isTable()) {
+            push(L); // push this table
+            lua_geti(L,-1,index); // get by index
+            LuaVar r(L,-1); // construct LuaVar
+            lua_pop(L,2); // pop table and value
+            return r;
+        }
+        else {
+            ensure(index>0);
+            ensure(numOfVar>index);
+            LuaVar r;
+            r.alloc(1);
+            r.L = this->L;
+            varClone(r.vars[0],vars[index-1]);
+            return r;
+        }
+    }
+
+    LuaVar LuaVar::getFromTable(const LuaVar& key) const {
+        ensure(isTable());
+        push(L);
+        key.push(L);
+        lua_gettable(L,-2);
+        LuaVar r(L,-1);
+        lua_pop(L,2);
+        return r;
+    }
 
     void LuaVar::set(lua_Integer v) {
         free();
@@ -284,6 +331,13 @@ namespace slua {
         vars[0].luatype = LV_STRING;
     }
 
+    void LuaVar::set(bool b) {
+        free();
+        alloc(1);
+        vars[0].b = b;
+        vars[0].luatype = LV_BOOL;
+    }
+
     void LuaVar::pushVar(lua_State* l,const lua_var& ov) const {
         switch(ov.luatype) {
         case LV_INT:
@@ -291,6 +345,9 @@ namespace slua {
             break;
         case LV_NUMBER:
             lua_pushnumber(l,ov.d);
+            break;
+        case LV_BOOL:
+            lua_pushboolean(l,ov.b);
             break;
         case LV_STRING:
             lua_pushstring(l,ov.s->str);
@@ -335,6 +392,10 @@ namespace slua {
 
     bool LuaVar::isTuple() const {
         return numOfVar>1;
+    }
+
+    bool LuaVar::isTable() const {
+        return numOfVar==1 && vars[0].luatype==LV_TABLE;
     }
 
     LuaVar::Type LuaVar::type() const {
@@ -419,5 +480,22 @@ namespace slua {
 
         other.numOfVar = 0;
         other.vars = nullptr;
+    }
+
+    typedef int (*CheckPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms,int i);
+    CheckPropertyFunction getChecker(UClass* cls);
+
+    bool LuaVar::toProperty(UProperty* p,uint8* ptr) {
+
+        auto func = slua::getChecker(p->GetClass());
+        if(func) {
+            // push var's value to top of stack
+            push(L);
+            bool ok = (*func)(L,p,ptr,lua_absindex(L,-1));
+            lua_pop(L,1);
+            return ok;
+        }
+        
+        return false;
     }
 }

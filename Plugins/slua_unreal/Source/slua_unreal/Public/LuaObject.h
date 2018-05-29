@@ -83,15 +83,21 @@ namespace slua {
     };
 
 	template<typename T>
-	struct remove_pointer
+	struct remove_cr
 	{
 		typedef T type;
 	};
 
-	template<typename T>
-	struct remove_pointer<T*>
+    template<typename T>
+	struct remove_cr<const T&>
 	{
-		typedef typename remove_pointer<T>::type type;
+		typedef typename remove_cr<T>::type type;
+	};
+
+    template<typename T>
+	struct remove_cr<T&>
+	{
+		typedef typename remove_cr<T>::type type;
 	};
 
     template<class T>
@@ -203,6 +209,8 @@ namespace slua {
             lua_pushnil(L);
             return 1;
         }
+
+        static void addExtensionMethod(UClass* cls,const char* n,lua_CFunction func);
     private:
         static int setupClassMT(lua_State* L);
         static int setupInstanceMT(lua_State* L);

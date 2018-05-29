@@ -64,8 +64,14 @@ void ASluaActor::BeginPlay()
 	if(!v.isNil()) {
 		ensure(v.isTuple());
 		ensure(v.count()==5);
-		ensure(v.getAt(0).asInt()==1024);
-		slua::Log::Log("first return value is %d",v.getAt(0).asInt());
+		ensure(v.getAt(1).asInt()==1024);
+		slua::Log::Log("first return value is %d",v.getAt(1).asInt());
+
+		slua::LuaVar t = v.getAt(4);
+		ensure(t.isTable());
+		ensure(t.getAt<int>(1)==1);
+		t.setToTable(5,1024);
+		ensure(t.getFromTable<int>(5)==1024);
 	}
 
 	state->call("xx.text");
@@ -85,9 +91,10 @@ void ASluaActor::Tick(float DeltaTime)
 		slua::LuaVar v3 = v2;
 		ensure(v.isTuple());
 		ensure(v.count()==5);
-		ensure(v.getAt(0).asInt()==1024);
+		ensure(v.getAt(1).asInt()==1024);
 	}
 
+	GEngine->ForceGarbageCollection(true);
 	// slua::Log::Log("lua stack top %d",lua_gettop(*state));
 }
 

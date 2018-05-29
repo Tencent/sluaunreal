@@ -109,6 +109,7 @@ namespace slua {
         ,L(nullptr)
         ,cacheObjRef(LUA_NOREF)
         ,root(nullptr)
+        ,stackCount(0)
     {
     }
 
@@ -125,7 +126,11 @@ namespace slua {
     }
 
     void LuaState::tick(float dtime) {
-        
+        int top = lua_gettop(L);
+        if(top!=stackCount) {
+            stackCount = top;
+            Log::Error("Error: lua stack count should be zero , now is %d",top);
+        }
     }
 
     void LuaState::close() {
@@ -154,6 +159,8 @@ namespace slua {
         L = luaL_newstate();
         void* extraspace = lua_getextraspace(L);
         *((LuaState**)extraspace) = this;
+
+        lua_atpanic(L,_atPanic);
 
         // init obj cache table
         lua_newtable(L);
@@ -195,6 +202,12 @@ namespace slua {
         lua_settop(L,0);
 
         return true;
+    }
+
+    int LuaState::_atPanic(lua_State* L) {
+        const char* err = lua_tostring(L,-1);
+        Log::Error("Fatal error: %s",err);
+        return 0;
     }
 
 	void LuaState::setLoadFileDelegate(LoadFileDelegate func) {

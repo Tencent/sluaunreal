@@ -60,7 +60,7 @@ namespace slua {
 
     class SLUA_UNREAL_API LuaVar {
     public:
-        enum Type {LV_NIL,LV_INT,LV_NUMBER,LV_BOOL,LV_STRING,LV_FUNCTION,LV_TABLE,LV_TUPLE};
+        enum Type {LV_NIL,LV_INT,LV_NUMBER,LV_BOOL,LV_STRING,LV_FUNCTION,LV_USERDATA,LV_TABLE,LV_TUPLE};
         LuaVar();
         // copy construct for simple type
         LuaVar(lua_Integer v);

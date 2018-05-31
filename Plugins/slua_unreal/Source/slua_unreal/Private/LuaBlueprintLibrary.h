@@ -48,20 +48,20 @@ public:
 
 	/** Call a lua function with args */
 	UFUNCTION(BlueprintCallable, meta=( DisplayName="Call To Lua" ), Category="slua")
-	static FLuaBPVar CallToLua(FString FuncName,const TArray<FLuaBPVar>& Args);
+	static FLuaBPVar CallToLua(FString FunctionName,const TArray<FLuaBPVar>& Args);
 
 	UFUNCTION(BlueprintCallable, Category="slua")
-	static FLuaBPVar CreateVarFromInt(int i);
+	static FLuaBPVar CreateVarFromInt(int Value);
 
 	UFUNCTION(BlueprintCallable, Category="slua")
-	static FLuaBPVar CreateVarFromString(FString s);
+	static FLuaBPVar CreateVarFromString(FString Value);
 
 	UFUNCTION(BlueprintCallable, Category="slua")
-	static FLuaBPVar CreateVarFromNumber(float d);
+	static FLuaBPVar CreateVarFromNumber(float Value);
 
 	UFUNCTION(BlueprintCallable, Category="slua")
-	static FLuaBPVar CreateVarFromBool(bool b);
+	static FLuaBPVar CreateVarFromBool(bool Value);
 
 	UFUNCTION(BlueprintCallable, Category="slua")
-	static FLuaBPVar CreateVarFromObject(UObject* o);
+	static FLuaBPVar CreateVarFromObject(UObject* Value);
 };

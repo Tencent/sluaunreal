@@ -134,8 +134,8 @@ xx={}
 function xx.text()
 end
 
-function bpcall(a,b,c)
-    print("call from bp",a,b,c)
+function bpcall(a,b,c,d)
+    print("call from bp",a,b,c,d)
 end
 
 local HitResult = import('HitResult');

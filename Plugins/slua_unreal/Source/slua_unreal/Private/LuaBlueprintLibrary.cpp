@@ -31,7 +31,7 @@ ULuaBlueprintLibrary::ULuaBlueprintLibrary(const FObjectInitializer& ObjectIniti
 FLuaBPVar ULuaBlueprintLibrary::CallToLua(FString funcname,const TArray<FLuaBPVar>& args) {
     using namespace slua;
     // get main state
-    auto ls = LuaState::get((lua_State*)nullptr);
+    auto ls = LuaState::get();
     if(!ls) return FLuaBPVar();
     LuaVar f = ls->get(TCHAR_TO_UTF8(*funcname));
     if(f.isFunction()) {

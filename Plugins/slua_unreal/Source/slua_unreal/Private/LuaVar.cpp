@@ -99,6 +99,9 @@ namespace slua {
             case LUA_TTABLE:
                 type = LV_TABLE;
                 break;
+            case LUA_TUSERDATA:
+                type = LV_USERDATA;
+                break;
             case LUA_TNIL:
             default:
                 type = LV_NIL;
@@ -132,20 +135,13 @@ namespace slua {
             set(lua_tostring(l,p));
             break;
         case LV_FUNCTION: 
-            this->L = l;
-            ensure(lua_type(L,p)==LUA_TFUNCTION);
-            alloc(1);
-            lua_pushvalue(l,p);
-            vars[0].ref = new RefRef(l);
-            vars[0].luatype=LV_FUNCTION;
-            break;
         case LV_TABLE:
+        case LV_USERDATA:
             this->L = l;
-            ensure(lua_type(L,p)==LUA_TTABLE);
             alloc(1);
             lua_pushvalue(l,p);
             vars[0].ref = new RefRef(l);
-            vars[0].luatype=LV_TABLE;
+            vars[0].luatype=type;
             break;
         case LV_TUPLE:
             this->L = l;
@@ -361,6 +357,7 @@ namespace slua {
             break;
         case LV_FUNCTION:
         case LV_TABLE:
+        case LV_USERDATA:
             ov.ref->push(l);
             break;
         default:
@@ -372,7 +369,7 @@ namespace slua {
     int LuaVar::push(lua_State* l) const {
         if(l==nullptr) l=L;
         if(l==nullptr) return 0;
-        
+
         if(vars==nullptr || numOfVar==0) {
             lua_pushnil(l);
             return 1;

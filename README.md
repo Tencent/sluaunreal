@@ -9,6 +9,7 @@ Now slua for unreal available.
 * Common c++ class (Non blueprint class) can be exported by static code generation by libclang tool( another tool available ASAP )
 * support operator overloading for FVector etc.
 * support extension-method mechanism for some non blueprint function in blueprint class, like GetWidgetFromName of UUserWidget
+* support call to lua from blueprint with variable parameter type and variable parameter count
 
 # Usage at a glance
 

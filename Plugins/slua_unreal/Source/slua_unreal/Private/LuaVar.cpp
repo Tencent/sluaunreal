@@ -461,6 +461,7 @@ namespace slua {
             break;
         case LV_FUNCTION:
         case LV_TABLE:
+        case LV_USERDATA:
             tv.ref = ov.ref;
             tv.ref->addRef();
             break;

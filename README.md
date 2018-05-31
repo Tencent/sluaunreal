@@ -49,3 +49,17 @@ local ok,h=actor:K2_SetActorLocation(v+offset,true,h,true)
 print("hit info",h)
 ```
 
+## Call lua from blueprint with variable pamaters
+
+![](bpcall.png)
+
+```
+-- this function called by blueprint
+function bpcall(a,b,c,d)
+    print("call from bp",a,b,c,d)
+end
+```
+
+Output is:
+
+Slua:     call from bp    1024    Hello World 3.1400001049042 UObject: 0x136486168

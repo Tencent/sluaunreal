@@ -49,7 +49,7 @@ void ASluaActor::BeginPlay()
 		FString path = FPaths::ProjectContentDir();
 		path+="/Lua/";
 		path+=UTF8_TO_TCHAR(fn);
-		TArray<FString> luaExts = { UTF8_TO_TCHAR(".pdcode"), UTF8_TO_TCHAR(".lua") };
+		TArray<FString> luaExts = { UTF8_TO_TCHAR(".lua"), UTF8_TO_TCHAR(".luac") };
 		for (auto ptr = luaExts.CreateConstIterator(); ptr; ++ptr) {
 			auto fullPath = path + *ptr;
 			auto buf = ReadFile(PlatformFile, fullPath, len);

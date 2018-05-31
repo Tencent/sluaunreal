@@ -134,6 +134,9 @@ xx={}
 function xx.text()
 end
 
+function bpcall(a,b,c)
+    print("call from bp",a,b,c)
+end
 
 local HitResult = import('HitResult');
 local count=0
@@ -192,4 +195,4 @@ for k,v in pairs(FVector) do
     print_table(getmetatable(v))
 end
 
-return 1024,2,"s",{1,2,3,4},function() end
+return 1024,2,"s",{1,2,3,4,5},function() end

@@ -38,7 +38,7 @@ namespace slua {
 
         typedef uint8* (*LoadFileDelegate) (const char* fn, uint32& len);
 
-        static LuaState* get(lua_State* L);
+        static LuaState* get(lua_State* L=nullptr);
         
         virtual bool init(USceneComponent* wld);
         virtual void tick(float dtime);
@@ -95,5 +95,6 @@ namespace slua {
         static int _atPanic(lua_State* L);
         ULuaObject* root;
         int stackCount;
+        static LuaState* mainState;
     };
 }

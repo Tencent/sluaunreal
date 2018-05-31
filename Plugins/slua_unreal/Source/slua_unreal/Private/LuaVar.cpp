@@ -317,6 +317,13 @@ namespace slua {
         vars[0].luatype = LV_INT;
     }
 
+    void LuaVar::set(int v) {
+        free();
+        alloc(1);
+        vars[0].i = v;
+        vars[0].luatype = LV_INT;
+    }
+
     void LuaVar::set(lua_Number v) {
         free();
         alloc(1);
@@ -364,6 +371,8 @@ namespace slua {
 
     int LuaVar::push(lua_State* l) const {
         if(l==nullptr) l=L;
+        if(l==nullptr) return 0;
+        
         if(vars==nullptr || numOfVar==0) {
             lua_pushnil(l);
             return 1;

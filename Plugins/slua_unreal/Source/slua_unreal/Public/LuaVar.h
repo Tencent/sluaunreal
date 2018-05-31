@@ -93,6 +93,7 @@ namespace slua {
 
         void set(lua_State* L,int p);
         void set(lua_Integer v);
+        void set(int v);
         void set(lua_Number v);
         void set(const char* v);
         void set(bool b);
@@ -156,6 +157,13 @@ namespace slua {
         RET call(ARGS ...args) {
             LuaVar ret = call(args...);
             return castTo<RET>(ret);
+        }
+
+        inline LuaVar callWithNArg(int n) {
+            int nret = docall(n);
+            auto ret = LuaVar::wrapReturn(L,nret);
+            lua_pop(L,nret);
+            return ret;
         }
 
         bool toProperty(UProperty* p,uint8* ptr);

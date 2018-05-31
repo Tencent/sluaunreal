@@ -104,6 +104,8 @@ namespace slua {
         return nullptr;
     }
 
+    LuaState* LuaState::mainState = nullptr;
+
     LuaState::LuaState()
         :loadFileDelegate(nullptr)
         ,L(nullptr)
@@ -111,6 +113,7 @@ namespace slua {
         ,root(nullptr)
         ,stackCount(0)
     {
+        
     }
 
     LuaState::~LuaState()
@@ -119,6 +122,8 @@ namespace slua {
     }
 
     LuaState* LuaState::get(lua_State* L) {
+        // if L is nullptr, return main state
+        if(!L) return mainState;
         void* extraspace = lua_getextraspace(L);
         LuaState* ls = *(LuaState**)extraspace;
         
@@ -134,6 +139,8 @@ namespace slua {
     }
 
     void LuaState::close() {
+        if(mainState==this) mainState = nullptr;
+        
         if(L) {
             lua_close(L);
             L=nullptr;
@@ -150,6 +157,9 @@ namespace slua {
 
         if(!comp || root)
             return false;
+
+        if(!mainState) 
+            mainState = this;
 
         root = NewObject<ULuaObject>();
 		root->AddToRoot();

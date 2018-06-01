@@ -53,7 +53,7 @@ namespace slua {
         template<typename ...ARGS>
         LuaVar call(const char* key,ARGS ...args) {
             LuaVar f = get(key);
-            return f.call(args...);
+            return f.call(std::forward<ARGS>(args)...);
         }
 
         LuaVar get(const char* key);

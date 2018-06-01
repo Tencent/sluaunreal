@@ -27,6 +27,8 @@
 #include "Log.h"
 #include <string>
 #include <exception>
+#include <utility>
+#include <cstddef>
 
 #if defined(_NOEXCEPT)
 #define __NOEXCEPT _NOEXCEPT
@@ -158,7 +160,7 @@ namespace slua {
                 return LuaVar();
             }
 
-            int n = pushArg(args...);
+            int n = pushArg(std::forward<ARGS>(args)...);
             int nret = docall(n);
             auto ret = LuaVar::wrapReturn(L,nret);
             lua_pop(L,nret);
@@ -167,7 +169,7 @@ namespace slua {
 
         template<class RET,class ...ARGS>
         RET call(ARGS ...args) {
-            LuaVar ret = call(args...);
+            LuaVar ret = call(std::forward<ARGS>(args)...);
             return castTo<RET>(ret);
         }
 

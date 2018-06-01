@@ -30,7 +30,7 @@
 #include "LuaBlueprintLibrary.generated.h"
 
 USTRUCT(BlueprintType)
-struct FLuaBPVar {
+struct UMG_API FLuaBPVar {
 	GENERATED_USTRUCT_BODY()
 public:
 	FLuaBPVar(const slua::LuaVar& v):value(v) {}

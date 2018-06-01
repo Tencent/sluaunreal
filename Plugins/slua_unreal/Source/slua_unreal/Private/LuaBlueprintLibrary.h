@@ -64,4 +64,19 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="slua")
 	static FLuaBPVar CreateVarFromObject(UObject* Value);
+
+	UFUNCTION(BlueprintCallable, Category="slua")
+	static int GetIntFromVar(FLuaBPVar Value,int Index=1);
+	
+	UFUNCTION(BlueprintCallable, Category="slua")
+	static float GetNumberFromVar(FLuaBPVar Value,int Index=1);
+
+	UFUNCTION(BlueprintCallable, Category="slua")
+	static FString GetStringFromVar(FLuaBPVar Value,int Index=1);
+
+	UFUNCTION(BlueprintCallable, Category="slua")
+	static bool GetBoolFromVar(FLuaBPVar Value,int Index=1);
+
+	UFUNCTION(BlueprintCallable, Category="slua")
+	static UObject* GetObjectFromVar(FLuaBPVar Value,int Index=1);
 };

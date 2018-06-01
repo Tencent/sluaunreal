@@ -136,6 +136,7 @@ end
 
 function bpcall(a,b,c,d)
     print("call from bp",a,b,c,d)
+    return 1024,"return from lua"
 end
 
 local HitResult = import('HitResult');

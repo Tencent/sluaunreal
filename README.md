@@ -6,7 +6,7 @@ Now slua for unreal available.
 
 * Export all blueprint interface to lua via refection by Unreal4.
 * Lua function passed as callback of blueprint.
-* Common c++ class (Non blueprint class) can be exported by static code generation by libclang tool( another tool available ASAP )
+* Common c++ class (Non blueprint class) can be exported by static code generation by libclang tool( https://github.com/easily/dot-clang )
 * support operator overloading for FVector etc.
 * support extension-method mechanism for some non blueprint function in blueprint class, like GetWidgetFromName of UUserWidget
 * support call to lua from blueprint with variable parameter type and variable parameter count

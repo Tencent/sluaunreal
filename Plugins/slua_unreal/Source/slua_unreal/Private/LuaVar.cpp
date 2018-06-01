@@ -277,6 +277,8 @@ namespace slua {
         return vars[0].b;
     }
 
+
+
     LuaVar LuaVar::getAt(size_t index) const {
         if(isTable()) {
             push(L); // push this table
@@ -287,7 +289,7 @@ namespace slua {
         }
         else {
             ensure(index>0);
-            ensure(numOfVar>index);
+            ensure(numOfVar>=index);
             LuaVar r;
             r.alloc(1);
             r.L = this->L;
@@ -402,6 +404,32 @@ namespace slua {
 
     bool LuaVar::isTable() const {
         return numOfVar==1 && vars[0].luatype==LV_TABLE;
+    }
+
+    bool LuaVar::isInt() const {
+        return numOfVar==1 && vars[0].luatype==LV_INT;
+    }
+
+    bool LuaVar::isNumber() const {
+        return numOfVar==1 && vars[0].luatype==LV_NUMBER;
+    }
+
+    bool LuaVar::isBool() const {
+        return numOfVar==1 && vars[0].luatype==LV_BOOL;
+    }
+
+    bool LuaVar::isUserdata(const char* t) const {
+        if(numOfVar==1 && vars[0].luatype==LV_USERDATA) {
+            push(L);
+            void* p = luaL_testudata(L, -1, t);
+            lua_pop(L,1);
+            return p!=nullptr;
+        }
+        return false;
+    }
+
+    bool LuaVar::isString() const {
+        return numOfVar==1 && vars[0].luatype==LV_STRING;
     }
 
     LuaVar::Type LuaVar::type() const {

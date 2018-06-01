@@ -104,6 +104,11 @@ namespace slua {
         bool isFunction() const;
         bool isTuple() const;
         bool isTable() const;
+        bool isInt() const;
+        bool isNumber() const;
+        bool isString() const;
+        bool isBool() const;
+        bool isUserdata(const char* t) const;
         Type type() const;
 
         int asInt() const;
@@ -111,6 +116,13 @@ namespace slua {
         double asDouble() const;
         const char* asString() const;
         bool asBool() const;
+        template<typename T>
+        T* asUserdata(const char* t) const {
+            push(L);
+            UserData<T*>* ud = reinterpret_cast<UserData<T*>*>(luaL_testudata(L, -1, t));
+            lua_pop(L,1);
+            return ud?ud->ud:nullptr;
+        }
 
 
         template<class T>

@@ -24,6 +24,9 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 local Button = import('Button');
 local ButtonStyle = import('ButtonStyle');
 local TextBlock = import('TextBlock');
+local SluaTestCase=import('SluaTestCase');
+-- call static function of uclass
+SluaTestCase.StaticFunc()
 -- create Button
 local btn=Button();
 local txt=TextBlock();

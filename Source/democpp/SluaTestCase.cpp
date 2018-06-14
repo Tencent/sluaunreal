@@ -120,3 +120,7 @@ void USluaTestCase::SetButton(UUserWidget* widget) {
 FSlateBrush USluaTestCase::GetBrush() {
     return FSlateBrush();
 }
+
+void USluaTestCase::StaticFunc() {
+    slua::Log::Log("static function call");
+}

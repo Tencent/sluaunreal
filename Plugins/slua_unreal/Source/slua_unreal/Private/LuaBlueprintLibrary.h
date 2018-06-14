@@ -30,7 +30,7 @@
 #include "LuaBlueprintLibrary.generated.h"
 
 USTRUCT(BlueprintType)
-struct UMG_API FLuaBPVar {
+struct SLUA_UNREAL_API FLuaBPVar {
 	GENERATED_USTRUCT_BODY()
 public:
 	FLuaBPVar(const slua::LuaVar& v):value(v) {}
@@ -40,7 +40,7 @@ public:
 };
 
 UCLASS()
-class UMG_API ULuaBlueprintLibrary : public UBlueprintFunctionLibrary
+class SLUA_UNREAL_API ULuaBlueprintLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_UCLASS_BODY()
 

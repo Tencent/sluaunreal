@@ -72,7 +72,10 @@ namespace slua {
 
     int error(lua_State* L) {
         const char* err = lua_tostring(L,1);
+        luaL_traceback(L,L,err,1);
+        err = lua_tostring(L,2);
         Log::Error("%s",err);
+        lua_pop(L,1);
         return 0;
     }
 

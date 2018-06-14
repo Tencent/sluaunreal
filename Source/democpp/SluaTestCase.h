@@ -34,6 +34,10 @@ class USluaTestCase : public UObject {
     GENERATED_UCLASS_BODY()
 public:
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
+    static void StaticFunc();
+
+
+    UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     TArray<int> GetArray();
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")

@@ -244,6 +244,15 @@ namespace slua {
         return 0;
     }
 
+    int classIndex(lua_State* L) {
+        UClass* cls = LuaObject::checkValue<UClass*>(L, 1);
+        const char* name = LuaObject::checkValue<const char*>(L, 2);
+        // get blueprint member
+        UFunction* func = cls->FindFunctionByName(UTF8_TO_TCHAR(name));
+        if(func) return LuaObject::push(L,func,cls);
+        return 0;
+    }
+
     int structConstruct(lua_State* L) {
         UScriptStruct* uss = LuaObject::checkValue<UScriptStruct*>(L, 1);
         if(uss) {
@@ -329,17 +338,20 @@ namespace slua {
         void* ud = lua_touserdata(L, -1);
         lua_pop(L, 1); // pop ud of func
         
-        if(!ud)
-            luaL_error(L, "Call ufunction error");
+        if(!ud) luaL_error(L, "Call ufunction error");
+
+        lua_pushvalue(L,lua_upvalueindex(2));
+        UClass* cls = reinterpret_cast<UClass*>(lua_touserdata(L, -1));
+        lua_pop(L,1); // pop staticfunc flag
         
-        //UE_LOG(LogClass, Log, TEXT("lua top %d"),lua_gettop(L));
-        UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
+        UObject* obj;
+        if(cls) obj = cls->ClassDefaultObject;
+        else obj = LuaObject::checkValue<UObject*>(L, 1);
         
         UFunction* func = reinterpret_cast<UFunction*>(ud);
         
         uint8* params = (uint8*)FMemory_Alloca(func->ParmsSize);
         FMemory::Memzero( params, func->ParmsSize );
-        //UE_LOG(LogClass, Log, TEXT("fill params %d"),func->ParmsSize);
         fillParam(L,func,params);
 
         // call function with params
@@ -723,9 +735,14 @@ namespace slua {
         ExtensionMethod::init();
     }
 
-    int LuaObject::push(lua_State* L,UFunction* func)  {
+    int LuaObject::push(lua_State* L,UFunction* func,UClass* cls)  {
         lua_pushlightuserdata(L, func);
-        lua_pushcclosure(L, ufuncClosure, 1);
+        if(cls) {
+            lua_pushlightuserdata(L, cls);
+            lua_pushcclosure(L, ufuncClosure, 2);
+        }
+        else
+            lua_pushcclosure(L, ufuncClosure, 1);
         return 1;
     }
 
@@ -809,6 +826,8 @@ namespace slua {
     int LuaObject::setupClassMT(lua_State* L) {
         lua_pushcfunction(L,classConstruct);
         lua_setfield(L, -2, "__call");
+        lua_pushcfunction(L,slua::classIndex);
+        lua_setfield(L, -2, "__index");
         return 0;
     }
 

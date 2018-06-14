@@ -3,6 +3,7 @@
 require 'TestCase'
 
 local Test=import('SluaTestCase');
+print("Test static func",Test.StaticFunc())
 local t=Test();
 
 

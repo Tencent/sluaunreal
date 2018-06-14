@@ -201,7 +201,7 @@ namespace slua {
 		static int push(lua_State* L, const FString& str);
 		static int push(lua_State* L, const FName& str);
 		static int push(lua_State* L, const char* str);
-        static int push(lua_State* L, UFunction* func);
+        static int push(lua_State* L, UFunction* func, UClass* cls=nullptr);
         static int push(lua_State* L, UProperty* up, uint8* parms);
 		// static int push(lua_State* L, FScriptArray* array);
         

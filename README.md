@@ -15,6 +15,7 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 * 支持FVector等非蓝图类，同时支持操作符重载
 * 支持扩展方法，将某些未标记为蓝图方法的函数，手动添加到蓝图类中，例如UUserWidget的GetWidgetFromName方法。
 * 支持从蓝图中调入lua，并接收lua返回值，支持任意参数类型和任意参数个数。
+* 支持蓝图out标记参数，支持c++非const引用作为out类型参数返回。
 
 # 使用方法简单范例
 
@@ -31,8 +32,7 @@ local ui=slua.loadUI('/Game/Panel.Panel');
 -- add to show
 ui:AddToViewport(0);
 -- find sub widget from the panel
-local tree=ui.WidgetTree;
-local btn2=tree:FindWidget('Button1');
+local btn2=ui:FindWidget('Button1');
 local index = 1
 -- handle click event
 btn2.OnClicked:Add(function() 
@@ -40,7 +40,7 @@ btn2.OnClicked:Add(function()
     print('fuck',index) 
 end);
 -- handle text changed event
-local edit=tree:FindWidget('TextBox_0');
+local edit=ui:FindWidget('TextBox_0');
 local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
 
 -- use FVector
@@ -68,3 +68,9 @@ end
 Output is:
 
 Slua:     call from bp    1024    Hello World 3.1400001049042 UObject: 0x136486168
+
+# 相关参考
+
+slua-unreal依赖dot-clang做c++静态代码生成，请参考：
+
+http://git.code.oa.com/leeyi/dot-clang.git

@@ -1,17 +1,21 @@
-# slua-unreal
 
-Now slua for unreal available.
 
-# Feature
+# slua-unreal 是什么
 
-* Export all blueprint interface to lua via refection by Unreal4.
-* Lua function passed as callback of blueprint.
-* Common c++ class (Non blueprint class) can be exported by static code generation by libclang tool( https://github.com/easily/dot-clang )
-* support operator overloading for FVector etc.
-* support extension-method mechanism for some non blueprint function in blueprint class, like GetWidgetFromName of UUserWidget
-* support call to lua from blueprint with variable parameter type and variable parameter count
+slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射能力，结合libclang静态c++代码分析，自动化导出蓝图接口和静态c++接口，提供给lua语言，使得可以通过lua语言开发unreal游戏业务逻辑，方便游戏高效迭代开发，上线热更新，同时支持lua到c++双向，lua到蓝图双向调用，使用lua语言完美替代unreal的c++开发方式，修改业务逻辑不需要等待c++编译，大大提升开发速度。
 
-# Usage at a glance
+目前该项目已经用于剑侠，刺激战场，全军出击，用于构建这些业务的周边系统、运营系统，上线质量稳定。
+
+# slua-unreal 有什么功能
+
+* 通过蓝图反射机制，自动导出unreal 4的蓝图api到lua接口
+* 支持以lua function作为蓝图事件的回调函数
+* 支持普通c++函数和类 通过静态代码生成或者泛型代码展开导出到lua接口，同时支持与蓝图接口交互。
+* 支持FVector等非蓝图类，同时支持操作符重载
+* 支持扩展方法，将某些未标记为蓝图方法的函数，手动添加到蓝图类中，例如UUserWidget的GetWidgetFromName方法。
+* 支持从蓝图中调入lua，并接收lua返回值，支持任意参数类型和任意参数个数。
+
+# 使用方法简单范例
 
 ```lua
 -- import blueprint class to use
@@ -49,7 +53,7 @@ local ok,h=actor:K2_SetActorLocation(v+offset,true,h,true)
 print("hit info",h)
 ```
 
-## Call lua from blueprint with variable pamaters
+## 在蓝图中调用lua
 
 ![](bpcall.png)
 

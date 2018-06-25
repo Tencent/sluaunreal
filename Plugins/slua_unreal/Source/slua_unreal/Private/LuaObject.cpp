@@ -458,6 +458,20 @@ namespace slua {
         return LuaObject::push(L,i);
     }
 
+    int pushUInt64Property(lua_State* L,UProperty* prop,uint8* parms) {
+        auto ip=Cast<UInt64Property>(prop);
+        ensure(ip);
+        int64 i = ip->GetPropertyValue(parms);
+        return LuaObject::push(L,i);
+    }
+
+	int pushUUInt64Property(lua_State* L, UProperty* prop, uint8* parms) {
+		auto ip = Cast<UUInt64Property>(prop);
+		ensure(ip);
+		uint64 i = ip->GetPropertyValue(parms);
+		return LuaObject::push(L, i);
+	}
+
     int pushFloatProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto ip=Cast<UFloatProperty>(prop);
         ensure(ip);
@@ -528,6 +542,20 @@ namespace slua {
         auto p = Cast<UIntProperty>(prop);
         ensure(p);
         p->SetPropertyValue(parms,LuaObject::checkValue<int>(L,i));
+        return 0;
+    }
+
+    int checkUInt64Property(lua_State* L,UProperty* prop,uint8* parms,int i) {
+        auto p = Cast<UInt64Property>(prop);
+        ensure(p);
+        p->SetPropertyValue(parms,LuaObject::checkValue<int64>(L,i));
+        return 0;
+    }
+
+    int checkUUInt64Property(lua_State* L,UProperty* prop,uint8* parms,int i) {
+        auto p = Cast<UUInt64Property>(prop);
+        ensure(p);
+        p->SetPropertyValue(parms,LuaObject::checkValue<uint64>(L,i));
         return 0;
     }
 
@@ -709,6 +737,8 @@ namespace slua {
 
     void LuaObject::init(lua_State* L) {
         regPusher(UIntProperty::StaticClass(),pushUIntProperty);
+        regPusher(UInt64Property::StaticClass(),pushUInt64Property);
+        regPusher(UUInt64Property::StaticClass(),pushUUInt64Property);
         regPusher(UFloatProperty::StaticClass(),pushFloatProperty);
         regPusher(UTextProperty::StaticClass(),pushUTextProperty);
         regPusher(UMulticastDelegateProperty::StaticClass(),pushUMulticastDelegateProperty);
@@ -721,6 +751,8 @@ namespace slua {
 		regPusher(UNameProperty::StaticClass(), pushUNameProperty);
 
         regChecker(UIntProperty::StaticClass(),checkUIntProperty);
+        regChecker(UInt64Property::StaticClass(),checkUInt64Property);
+        regChecker(UUInt64Property::StaticClass(),checkUUInt64Property);
         regChecker(UBoolProperty::StaticClass(),checkUBoolProperty);
         regChecker(UFloatProperty::StaticClass(),checkUFloatProperty);
         regChecker(UStructProperty::StaticClass(),checkUStructProperty);

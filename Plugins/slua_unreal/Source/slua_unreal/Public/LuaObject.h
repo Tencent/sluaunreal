@@ -319,6 +319,16 @@ namespace slua {
     }
 
     template<>
+    inline int64 LuaObject::checkValue(lua_State* L, int p) {
+        return luaL_checkinteger(L, p);
+    }
+
+    template<>
+    inline uint64 LuaObject::checkValue(lua_State* L, int p) {
+        return luaL_checkinteger(L, p);
+    }
+
+    template<>
     inline bool LuaObject::checkValue(lua_State* L, int p) {
         luaL_checktype(L, p, LUA_TBOOLEAN);
         return !!lua_toboolean(L, p);

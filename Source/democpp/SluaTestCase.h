@@ -40,6 +40,8 @@ public:
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     TArray<int> GetArray();
 
+    
+
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     UUserWidget* GetWidget(FString name);
 
@@ -75,4 +77,5 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Appearance, meta=( DisplayName="Value" ))
     int Value;
+
 };

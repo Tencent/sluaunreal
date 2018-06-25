@@ -40,26 +40,6 @@
 
 namespace slua {
 
-    class SLUA_UNREAL_API LuaVarExcetpion : public std::exception {
-    public:
-        LuaVarExcetpion(const char* err):errormsg(err) {}
-        virtual const char* what() const __NOEXCEPT {
-            return TCHAR_TO_UTF8(*errormsg);
-        }
-    private:
-        FString errormsg;
-    };
-
-    class SLUA_UNREAL_API LuaVarBadCastException : public LuaVarExcetpion {
-    public:
-        LuaVarBadCastException():LuaVarExcetpion("bad cast") {}
-    };
-
-    class SLUA_UNREAL_API LuaVarBadCall : public LuaVarExcetpion {
-    public:
-        LuaVarBadCall(const char* err):LuaVarExcetpion(err) {}
-    };
-
     class SLUA_UNREAL_API LuaVar {
     public:
         enum Type {LV_NIL,LV_INT,LV_NUMBER,LV_BOOL,LV_STRING,LV_FUNCTION,LV_USERDATA,LV_TABLE,LV_TUPLE};
@@ -136,6 +116,10 @@ namespace slua {
         R getAt(size_t index) const {
             return getAt(index).castTo<R>();
         }
+
+        // if pos==-1 setAt push var to back of table,
+        // otherwise push var to given position at pos
+        void setAt(const LuaVar& var,int pos=-1);
 
         LuaVar getFromTable(const LuaVar& key) const;
         
@@ -307,4 +291,6 @@ namespace slua {
     inline const char* LuaVar::castTo() {
         return asString();
     }
+
+    
 }

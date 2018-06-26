@@ -34,12 +34,12 @@ namespace slua {
         // why FScriptArray can't be copy constructed or MoveToEmpty?
         // just hack it, TODO
         // array.MoveToEmpty(*buf);
-        prop->AddToRoot();
         FMemory::Memcpy(&array,buf,sizeof(FScriptArray));
+        if(prop) prop->AddToRoot();
     }
 
     LuaArray::~LuaArray() {
-        prop->RemoveFromRoot();
+        if(prop) prop->RemoveFromRoot();
     }
 
     int LuaArray::push(lua_State* L,UArrayProperty* prop,FScriptArray* data) {

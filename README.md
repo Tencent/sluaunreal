@@ -1,5 +1,4 @@
 
-
 # slua-unreal 是什么
 
 slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射能力，结合libclang静态c++代码分析，自动化导出蓝图接口和静态c++接口，提供给lua语言，使得可以通过lua语言开发unreal游戏业务逻辑，方便游戏高效迭代开发，上线热更新，同时支持lua到c++双向，lua到蓝图双向调用，使用lua语言完美替代unreal的c++开发方式，修改业务逻辑不需要等待c++编译，大大提升开发速度。
@@ -40,7 +39,7 @@ local index = 1
 -- handle click event
 btn2.OnClicked:Add(function() 
     index=index+1
-    print('fuck',index) 
+    print('say helloworld',index) 
 end);
 -- handle text changed event
 local edit=ui:FindWidget('TextBox_0');

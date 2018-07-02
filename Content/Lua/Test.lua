@@ -103,7 +103,7 @@ local TextBlock = import('TextBlock');
 local btn=Button();
 local txt=TextBlock();
 local ui=slua.loadUI('/Game/Panel.Panel');
-t:TwoArgs("fuck",100,1717,"1024",ui)
+t:TwoArgs("helloworld",100,1717,"1024",ui)
 ui:AddToViewport(0);
 local seq=ui.ActiveSequencePlayers;
 print('seq',seq:Num());
@@ -113,12 +113,12 @@ local index = 1
 
 btn2.OnClicked:Add(function() 
     index=index+1
-    print('fuck',index) 
+    print('say helloworld',index) 
 end);
 local edit=tree:FindWidget('TextBox_0');
 local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
 edit.OnTextChanged:Remove(evt);
-txt:SetText('fuck button');
+txt:SetText('helloworld button');
 local style=ButtonStyle();
 btn:SetStyle(style);
 btn:AddChild(txt);
@@ -127,7 +127,7 @@ local event=btn.OnClicked;
 local index=1
 event:Add(function() 
     index=index+1
-    print('fuck',index) 
+    print('helloworld',index) 
 end);
 
 xx={}

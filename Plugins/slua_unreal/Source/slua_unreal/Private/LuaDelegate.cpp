@@ -37,7 +37,6 @@ void ULuaDelegate::OnClicked()
 }
 
 void ULuaDelegate::ProcessEvent( UFunction* f, void* Parms ) {
-    //UObject::ProcessEvent(Function,Parms);
     ensure(luafunction!=nullptr && ufunction!=nullptr);
 
 	const bool bHasReturnParam = ufunction->ReturnValueOffset != MAX_uint16;

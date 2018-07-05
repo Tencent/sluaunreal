@@ -535,9 +535,9 @@ namespace slua {
         if(func) {
             // push var's value to top of stack
             push(L);
-            bool ok = (*func)(L,p,ptr,lua_absindex(L,-1));
+            (*func)(L,p,ptr,lua_absindex(L,-1));
             lua_pop(L,1);
-            return ok;
+            return true;
         }
         
         return false;

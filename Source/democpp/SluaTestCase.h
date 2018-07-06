@@ -78,4 +78,11 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Appearance, meta=( DisplayName="Value" ))
     int Value;
 
+
+    DECLARE_DYNAMIC_DELEGATE_OneParam(FOnAssetClassLoaded, int, P);
+
+	UFUNCTION(BlueprintCallable, Category = "Lua|TestCase")
+	static void LoadAssetClass(FOnAssetClassLoaded OnLoaded);
+
+    static void callback();
 };

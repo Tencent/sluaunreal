@@ -109,6 +109,8 @@ namespace slua {
 
     LuaState* LuaState::mainState = nullptr;
 
+    TMap<lua_State*,LuaState*> stateMap;
+
     LuaState::LuaState()
         :loadFileDelegate(nullptr)
         ,L(nullptr)
@@ -127,10 +129,13 @@ namespace slua {
     LuaState* LuaState::get(lua_State* L) {
         // if L is nullptr, return main state
         if(!L) return mainState;
-        void* extraspace = lua_getextraspace(L);
-        LuaState* ls = *(LuaState**)extraspace;
-        
-        return ls;
+        auto it = stateMap.Find(L);
+        if(it) return *it;
+        return nullptr;
+    }
+
+    bool LuaState::isValid(lua_State* L) {
+        return get(L)!=nullptr;
     }
 
     void LuaState::tick(float dtime) {
@@ -146,8 +151,10 @@ namespace slua {
         
         if(L) {
             lua_close(L);
+            stateMap.Remove(L);
             L=nullptr;
         }
+
         sluaComponent=nullptr;
         if(root) {
             root->RemoveFromRoot();
@@ -170,8 +177,7 @@ namespace slua {
         sluaComponent = comp;
 
         L = luaL_newstate();
-        void* extraspace = lua_getextraspace(L);
-        *((LuaState**)extraspace) = this;
+        stateMap.Add(L,this);
 
         lua_atpanic(L,_atPanic);
 

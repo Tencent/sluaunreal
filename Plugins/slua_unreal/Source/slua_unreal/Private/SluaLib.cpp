@@ -28,12 +28,14 @@
 #include "UObject/Package.h"
 #include "Blueprint/UserWidget.h"
 #include "Misc/AssertionMacros.h"
+#include "LuaDelegate.h"
 
 namespace slua {
 
     void SluaUtil::openLib(lua_State* L) {
         lua_newtable(L);
         RegMetaMethod(L,loadUI);
+        RegMetaMethod(L,createDelegate);
 
         lua_setglobal(L,"slua");
     }
@@ -47,15 +49,20 @@ namespace slua {
         // load blueprint widget from cpp, need add '_C' tail
         auto cui = FString::Format(TEXT("Blueprint'{0}_C'"),Args);
         TSubclassOf<UUserWidget> uclass = LoadClass<UUserWidget>(NULL, *cui);
-        if(uclass==nullptr)
-            luaL_error(L,"Can't find ui named %s",ui);
+        if(uclass==nullptr) luaL_error(L,"Can't find ui named %s",ui);
         
         auto ls = LuaState::get(L);
         UWorld* wld = ls->sluaComponent?ls->sluaComponent->GetWorld():nullptr;
-        if(!wld)
-            luaL_error(L,"World missed");
+        if(!wld) luaL_error(L,"World missed");
         UGameInstance* instance = wld->GetGameInstance();
         UUserWidget* widget = CreateWidget<UUserWidget>(instance,uclass);
         return LuaObject::push(L,widget);
+    }
+
+    int SluaUtil::createDelegate(lua_State* L) {
+        luaL_checktype(L,1,LUA_TFUNCTION);
+        auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(),ULuaDelegate::StaticClass());
+        obj->bindFunction(L,1);
+        return LuaObject::push(L,obj);
     }
 }

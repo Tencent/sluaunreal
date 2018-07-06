@@ -201,6 +201,11 @@ namespace slua {
         free();
     }
 
+    LuaVar::RefRef::~RefRef() {
+        if(LuaState::isValid(L))
+            luaL_unref(L,LUA_REGISTRYINDEX,ref);
+    }
+
     void LuaVar::free() {
         for(int n=0;n<numOfVar;n++) {
             if( (vars[n].luatype==LV_FUNCTION || vars[n].luatype==LV_TABLE) 
@@ -471,6 +476,15 @@ namespace slua {
     }
 
     void LuaVar::callByUFunction(UFunction* func,uint8* parms) {
+        
+        if(!func) return;
+
+        const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
+        if(func->ParmsSize==0 && !bHasReturnParam) {
+            call();
+            return;
+        }
+
         int n=0;
         for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
             UProperty* prop = *it;

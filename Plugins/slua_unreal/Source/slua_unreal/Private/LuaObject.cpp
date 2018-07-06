@@ -292,8 +292,7 @@ namespace slua {
         
     }
 
-    void fillParam(lua_State* L,UFunction* func,uint8* params) {
-        int i=2;
+    void fillParam(lua_State* L,int i,UFunction* func,uint8* params) {
         for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
             UProperty* prop = *it;
             uint64 propflag = prop->GetPropertyFlags();
@@ -345,14 +344,21 @@ namespace slua {
         lua_pop(L,1); // pop staticfunc flag
         
         UObject* obj;
+        int offset=1;
+        // use ClassDefaultObject if is static function call 
         if(cls) obj = cls->ClassDefaultObject;
-        else obj = LuaObject::checkValue<UObject*>(L, 1);
+        // use obj instance if is member function call
+        // and offset set 2 to skip self
+        else {
+            obj = LuaObject::checkValue<UObject*>(L, 1);
+            offset++;
+        }
         
         UFunction* func = reinterpret_cast<UFunction*>(ud);
         
         uint8* params = (uint8*)FMemory_Alloca(func->ParmsSize);
         FMemory::Memzero( params, func->ParmsSize );
-        fillParam(L,func,params);
+        fillParam(L,offset,func,params);
 
         // call function with params
         obj->ProcessEvent(func,params);
@@ -526,6 +532,21 @@ namespace slua {
         ensure(p);   
         FMulticastScriptDelegate* delegate = p->GetPropertyValuePtr(parms);
         return LuaDelegate::push(L,delegate,p->SignatureFunction);
+    }
+
+    int checkUDelegateProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
+        auto p = Cast<UDelegateProperty>(prop);
+        ensure(p);
+        CheckUD(UObject,L,i);
+        // bind SignatureFunction
+        if(auto dobj=Cast<ULuaDelegate>(UD)) dobj->bindFunction(p->SignatureFunction);
+        else luaL_error(L,"arg 1 expect an UDelegateObject");
+
+        FScriptDelegate d;
+        d.BindUFunction(UD, TEXT("EventTrigger"));
+
+        p->SetPropertyValue(parms,d);
+        return 0;
     }
 	 
     int pushUObjectProperty(lua_State* L,UProperty* prop,uint8* parms) {
@@ -757,6 +778,7 @@ namespace slua {
         regChecker(UFloatProperty::StaticClass(),checkUFloatProperty);
         regChecker(UStructProperty::StaticClass(),checkUStructProperty);
         regChecker(UTextProperty::StaticClass(),checkUTextProperty);
+        regChecker(UDelegateProperty::StaticClass(),checkUDelegateProperty);
         regChecker(UObjectProperty::StaticClass(),checkUObjectProperty);
         regChecker(UStrProperty::StaticClass(),checkUStrProperty);
 		regChecker(UEnumProperty::StaticClass(), checkEnumProperty);

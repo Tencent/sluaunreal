@@ -41,6 +41,8 @@ private:
     TArray<UObject*> Cache;
 };
 
+#define SafeDelete(ptr) if(ptr) { delete ptr;ptr=nullptr; }
+
 #define CheckUD(Type,L,P) UserData<Type*>* ud = reinterpret_cast<UserData<Type*>*>(luaL_checkudata(L, P,#Type)); \
     if(!ud) { luaL_error(L, "checkValue error at %d",P); } \
     Type* UD = ud->ud; \
@@ -131,6 +133,13 @@ namespace slua {
 			UserData<T> *udptr = reinterpret_cast<UserData<T>*>(ud);
 			return udptr->ud;
 		}
+
+        template<class T>
+        static UObject* checkUObject(lua_State* L,int p) {
+            UserData<UObject*>* ud = reinterpret_cast<UserData<UObject*>*>(luaL_checkudata(L, p,"UObject"));
+            if(!ud) luaL_error(L, "checkValue error at %d",p);
+            return Cast<T>(ud->ud);
+        }
 
 		template<class T>
 		static int push(lua_State* L, const char* fn, T* v) {

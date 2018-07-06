@@ -6,6 +6,7 @@
 #include "HAL/PlatformFileManager.h"
 #include "Misc/Paths.h"
 #include "GenericPlatformFile.h"
+#include "SluaTestCase.h"
 
 
 ASluaActor* ASluaActor::instance=nullptr;
@@ -95,7 +96,7 @@ void ASluaActor::Tick(float DeltaTime)
 	}
 
 	GEngine->ForceGarbageCollection(true);
-	// slua::Log::Log("lua stack top %d",lua_gettop(*state));
+	USluaTestCase::callback();
 }
 
 void ASluaActor::SetFName(FName name) {

@@ -124,3 +124,12 @@ FSlateBrush USluaTestCase::GetBrush() {
 void USluaTestCase::StaticFunc() {
     slua::Log::Log("static function call");
 }
+
+static USluaTestCase::FOnAssetClassLoaded s_onloaded;
+void USluaTestCase::LoadAssetClass(FOnAssetClassLoaded OnLoaded) {
+    s_onloaded = OnLoaded;
+}
+
+void USluaTestCase::callback() {
+    s_onloaded.ExecuteIfBound(1024);
+}

@@ -209,9 +209,7 @@ namespace slua {
                 this->L = l;
                 ref=luaL_ref(l,LUA_REGISTRYINDEX);
             }
-            virtual ~RefRef() {
-                luaL_unref(L,LUA_REGISTRYINDEX,ref);
-            }
+            virtual ~RefRef();
             bool isValid() {
                 return ref != LUA_NOREF;
             }

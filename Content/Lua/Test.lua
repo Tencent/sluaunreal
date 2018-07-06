@@ -3,8 +3,16 @@
 require 'TestCase'
 
 local Test=import('SluaTestCase');
-print("Test static func",Test.StaticFunc())
+--print("Test static func",Test.StaticFunc())
+
+
 local t=Test();
+
+callback = slua.createDelegate(function(p)
+    print("LoadAssetClass callback",p) 
+end)
+
+Test.LoadAssetClass(callback)
 
 
 print(string.format("Brush=%s", tostring(t.Brush)))

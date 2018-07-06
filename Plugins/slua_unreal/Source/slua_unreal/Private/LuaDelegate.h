@@ -35,10 +35,15 @@ class SLUA_UNREAL_API ULuaDelegate : public UObject {
     GENERATED_UCLASS_BODY()
 public:
     UFUNCTION(BlueprintCallable, Category="Lua|Delegate")
-	void OnClicked();
+	void EventTrigger();
+
+    ~ULuaDelegate();
+
 
     virtual void ProcessEvent( UFunction* Function, void* Parms );
     void bindFunction(slua::lua_State *L, int p, UFunction *func);
+    void bindFunction(slua::lua_State *L, int p);
+    void bindFunction(UFunction *func);
   private:
     slua::LuaVar* luafunction;
     UFunction* ufunction;

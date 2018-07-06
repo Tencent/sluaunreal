@@ -26,30 +26,39 @@
 
 ULuaDelegate::ULuaDelegate(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
+    ,luafunction(nullptr)
+    ,ufunction(nullptr)
 {
-	luafunction = nullptr;
-    ufunction = nullptr;
 }
 
-void ULuaDelegate::OnClicked()
+ULuaDelegate::~ULuaDelegate() {
+    SafeDelete(luafunction);
+}
+
+void ULuaDelegate::EventTrigger()
 {
     ensure(false); // never run here
 }
 
 void ULuaDelegate::ProcessEvent( UFunction* f, void* Parms ) {
     ensure(luafunction!=nullptr && ufunction!=nullptr);
-
-	const bool bHasReturnParam = ufunction->ReturnValueOffset != MAX_uint16;
-    if(ufunction->ParmsSize==0 && !bHasReturnParam)
-        luafunction->call();
-    else {
-        luafunction->callByUFunction(ufunction,reinterpret_cast<uint8*>(Parms));
-    }
+    luafunction->callByUFunction(ufunction,reinterpret_cast<uint8*>(Parms));
 }
 
 void ULuaDelegate::bindFunction(slua::lua_State* L,int p,UFunction* ufunc) {
     luaL_checktype(L,p,LUA_TFUNCTION);
+    ensure(ufunc);
     luafunction = new slua::LuaVar(L,p,slua::LuaVar::LV_FUNCTION);
+    ufunction = ufunc;
+}
+
+void ULuaDelegate::bindFunction(slua::lua_State* L,int p) {
+    luaL_checktype(L,p,LUA_TFUNCTION);
+    luafunction = new slua::LuaVar(L,p,slua::LuaVar::LV_FUNCTION);
+}
+
+void ULuaDelegate::bindFunction(UFunction *ufunc) {
+    ensure(ufunc);
     ufunction = ufunc;
 }
 
@@ -63,33 +72,28 @@ namespace slua {
     int LuaDelegate::Add(lua_State* L) {
         CheckUD(LuaDelegateWrap,L,1);
 
+        // bind luafucntion and signature function
         auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(),ULuaDelegate::StaticClass());
         obj->bindFunction(L,2,UD->ufunc);
-        LuaObject::addRef(L,obj);
 
-        FScriptDelegate* Delegate = new FScriptDelegate();
-        Delegate->BindUFunction(obj, TEXT("OnClicked"));
-        UD->delegate->AddUnique(*Delegate);
+        // add event listener
+        FScriptDelegate Delegate;
+        Delegate.BindUFunction(obj, TEXT("EventTrigger"));
+        UD->delegate->AddUnique(Delegate);
 
-        return LuaObject::push(L,Delegate);
+        return LuaObject::push(L,obj);
     }
 
     int LuaDelegate::Remove(lua_State* L) {
         CheckUD(LuaDelegateWrap,L,1);
-        CheckUDEX(FScriptDelegate,d,L,2);
-        
-        FScriptDelegate* sd = d->ud;
-        if(sd) {
-            // remove delegate
-            UD->delegate->Remove(*sd);
-            UObject* obj = sd->GetUObject();
-            // free uobject
-            LuaObject::removeRef(L,obj);
-            obj->ConditionalBeginDestroy();
-            delete sd;
-            // set ud is null
-            d->ud = nullptr;
-        }
+        auto dobj = LuaObject::checkUObject<ULuaDelegate>(L,2);
+        if(!dobj) luaL_error(L,"arg 2 expect ULuaDelegate");
+
+        FScriptDelegate Delegate;
+        Delegate.BindUFunction(dobj, TEXT("EventTrigger"));
+
+        // remove delegate
+        UD->delegate->Remove(Delegate);
         return 0;
     }
 

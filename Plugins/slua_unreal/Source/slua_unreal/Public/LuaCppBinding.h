@@ -21,6 +21,7 @@
 // THE SOFTWARE.
 
 #pragma once
+#define LUA_LIB
 #include "lua/lua.hpp"
 #include <utility>
 #include <cstddef>

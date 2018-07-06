@@ -21,14 +21,13 @@
 // THE SOFTWARE.
 
 #pragma once
-
+#define LUA_LIB
 #include "CoreMinimal.h"
 #include "lua/lua.hpp"
 #include "UObject/UnrealType.h"
 #include "UObject/WeakObjectPtr.h"
 #include "Blueprint/UserWidget.h"
 #include "LuaObject.generated.h"
-
 
 UCLASS()
 class SLUA_UNREAL_API ULuaObject : public UObject {

@@ -81,6 +81,7 @@ namespace slua {
         Delegate.BindUFunction(obj, TEXT("EventTrigger"));
         UD->delegate->AddUnique(Delegate);
 
+        // obj will be freed by lua collect
         return LuaObject::push(L,obj);
     }
 
@@ -94,6 +95,13 @@ namespace slua {
 
         // remove delegate
         UD->delegate->Remove(Delegate);
+
+        return 0;
+    }
+
+    int LuaDelegate::Clear(lua_State* L) {
+        CheckUD(LuaDelegateWrap,L,1);
+        UD->delegate->Clear();
         return 0;
     }
 
@@ -109,6 +117,7 @@ namespace slua {
 
         RegMetaMethod(L,Add);
         RegMetaMethod(L,Remove);
+        RegMetaMethod(L,Clear);
         return 0;
     }
 

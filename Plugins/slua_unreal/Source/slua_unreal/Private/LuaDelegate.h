@@ -59,6 +59,7 @@ namespace slua {
         static int instanceIndex(lua_State* L);
         static int Add(lua_State* L);
         static int Remove(lua_State* L);
+        static int Clear(lua_State* L);
         static int gc(lua_State* L);
     };
 }

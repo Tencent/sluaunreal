@@ -31,15 +31,7 @@
 #include <utility>
 #include <cstddef>
 
-#if defined(_NOEXCEPT)
-#define __NOEXCEPT _NOEXCEPT
-#elif defined(_GLIBCXX_NOEXCEPT)
-#define __NOEXCEPT _GLIBCXX_NOEXCEPT
-#else
-#define __NOEXCEPT noexcept
-#endif
-
-#if _WIN32
+#ifdef _WIN32
 #define strdup _strdup
 #endif
 

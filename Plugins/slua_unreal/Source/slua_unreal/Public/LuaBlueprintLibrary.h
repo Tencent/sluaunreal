@@ -21,6 +21,7 @@
 // THE SOFTWARE.
 
 #pragma once
+#define LUA_LIB
 #include "CoreMinimal.h"
 #include "lua/lua.hpp"
 #include "UObject/UnrealType.h"

@@ -21,6 +21,7 @@
 // THE SOFTWARE.
 
 #pragma once
+#define LUA_LIB
 #include "CoreMinimal.h"
 #include "LuaObject.h"
 #include "lua/lua.hpp"
@@ -36,6 +37,10 @@
 #define __NOEXCEPT _GLIBCXX_NOEXCEPT
 #else
 #define __NOEXCEPT noexcept
+#endif
+
+#if _WIN32
+#define strdup _strdup
 #endif
 
 namespace slua {

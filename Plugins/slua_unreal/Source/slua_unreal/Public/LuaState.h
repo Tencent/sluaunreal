@@ -21,7 +21,7 @@
 // THE SOFTWARE.
 
 #pragma once
-
+#define LUA_LIB
 #include "CoreMinimal.h"
 #include "Components/SceneComponent.h"
 #include "LuaVar.h"

@@ -36,7 +36,13 @@ namespace slua {
         LuaState();
         virtual ~LuaState();
 
-        typedef uint8* (*LoadFileDelegate) (const char* fn, uint32& len);
+        /*
+         * fn, lua file to load, fn may be a short filename
+         * if find fn to load, return file size to len and file full path fo filepath arguments
+         * if find fn and load successful, return buf of file content, otherwise return nullptr
+         * you must delete[] buf returned by function for free memory.
+         */
+        typedef uint8* (*LoadFileDelegate) (const char* fn, uint32& len, FString& filepath);
 
         static LuaState* get(lua_State* L=nullptr);
         static bool isValid(lua_State* L);
@@ -84,7 +90,7 @@ namespace slua {
         static int pushErrorHandler(lua_State* L);
     protected:
         LoadFileDelegate loadFileDelegate;
-        uint8* loadFile(const char* fn,uint32& len);
+        uint8* loadFile(const char* fn,uint32& len,FString& filepath);
 		static int loader(lua_State* L);
     private:
         friend class LuaObject;

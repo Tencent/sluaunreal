@@ -44,7 +44,7 @@ void ASluaActor::BeginPlay()
 	
 	auto slua = FindComponentByClass<USluaComponent>();
 	auto state = slua->State();
-	state->setLoadFileDelegate([](const char* fn,uint32& len)->uint8* {
+	state->setLoadFileDelegate([](const char* fn,uint32& len,FString& filepath)->uint8* {
 
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 		FString path = FPaths::ProjectContentDir();
@@ -55,6 +55,7 @@ void ASluaActor::BeginPlay()
 			auto fullPath = path + *ptr;
 			auto buf = ReadFile(PlatformFile, fullPath, len);
 			if (buf) {
+				filepath = fullPath;
 				return buf;
 			}
 		}

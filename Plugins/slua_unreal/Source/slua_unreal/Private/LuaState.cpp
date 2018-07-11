@@ -83,11 +83,12 @@ namespace slua {
         LuaState* state = LuaState::get(L);
         const char* fn = lua_tostring(L,1);
         uint32 len;
-        if(uint8* buf = state->loadFile(fn,len)) {
+        FString filepath;
+        if(uint8* buf = state->loadFile(fn,len,filepath)) {
             AutoDeleteArray<uint8> defer(buf);
 
             char chunk[256];
-            snprintf(chunk,256,"@%s",fn);
+            snprintf(chunk,256,"@%s",TCHAR_TO_UTF8(*filepath));
             if(luaL_loadbuffer(L,(const char*)buf,len,chunk)==0) {
                 return 1;
             }
@@ -102,8 +103,8 @@ namespace slua {
         return 0;
     }
     
-    uint8* LuaState::loadFile(const char* fn,uint32& len) {
-        if(loadFileDelegate) return loadFileDelegate(fn,len);
+    uint8* LuaState::loadFile(const char* fn,uint32& len,FString& filepath) {
+        if(loadFileDelegate) return loadFileDelegate(fn,len,filepath);
         return nullptr;
     }
 
@@ -256,11 +257,12 @@ namespace slua {
 
     LuaVar LuaState::doFile(const char* fn) {
         uint32 len;
-        if(uint8* buf=loadFile(fn,len)) {
+        FString filepath;
+        if(uint8* buf=loadFile(fn,len,filepath)) {
             char chunk[256];
             snprintf(chunk,256,"@%s",fn);
 
-            LuaVar r = doBuffer( buf,len,chunk );
+            LuaVar r = doBuffer( buf,len,TCHAR_TO_UTF8(*filepath) );
             delete[] buf;
             return r;
         }

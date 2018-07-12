@@ -15,6 +15,10 @@ public class slua_unreal : ModuleRules
         {
             Definitions.Add("LUA_BUILD_AS_DLL");
         }
+		else if (Target.Platform == UnrealTargetPlatform.IOS)
+		{
+			Definitions.Add("_DARWIN_C_SOURCE=1");
+		}
 
         PublicIncludePaths.AddRange(
 			new string[] {

@@ -128,16 +128,28 @@ namespace slua {
         close();
     }
 
+    lua_State* LuaState::mainThread(lua_State* l) {
+        // get main thread
+        lua_geti(l,LUA_REGISTRYINDEX,LUA_RIDX_MAINTHREAD);
+        lua_State* ml = lua_tothread(l,-1);
+        lua_pop(l,1);
+        return ml;
+    }
+
     LuaState* LuaState::get(lua_State* L) {
         // if L is nullptr, return main state
         if(!L) return mainState;
-        auto it = stateMap.Find(L);
+        // get main thread
+        lua_State* ml = mainThread(L);
+        auto it = stateMap.Find(ml);
         if(it) return *it;
         return nullptr;
     }
 
     bool LuaState::isValid(lua_State* L) {
-        return get(L)!=nullptr;
+        if(!L) return false;
+        auto it = stateMap.Find(L);
+        return it!=nullptr;
     }
 
     void LuaState::tick(float dtime) {

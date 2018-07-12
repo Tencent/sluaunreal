@@ -170,7 +170,7 @@ namespace slua {
         LuaVar(lua_State* L,size_t n);
 
         void init(lua_State* L,int p,Type t);
-        void initTuple(size_t n);
+        void initTuple(lua_State* L,size_t n);
 
         void free();
         void alloc(int n);
@@ -202,10 +202,7 @@ namespace slua {
         };
 
         struct RefRef: public Ref {
-            RefRef(lua_State* l):Ref() {
-                this->L = l;
-                ref=luaL_ref(l,LUA_REGISTRYINDEX);
-            }
+            RefRef(lua_State* l);
             virtual ~RefRef();
             bool isValid() {
                 return ref != LUA_NOREF;

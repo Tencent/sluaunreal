@@ -6,16 +6,6 @@ local Test=import('SluaTestCase');
 print("Test static func",Test.StaticFunc())
 
 
-
-
-callback = slua.createDelegate(function(p)
-    print("LoadAssetClass callback",p) 
-end)
-
-Test.LoadAssetClass(callback)
-
-
-
 local B=require 'TestModule'
 
 print("UEnums.EForceInit.ForceInitToZero=" .. tostring(UEnums.EForceInit.ForceInitToZero))
@@ -90,6 +80,17 @@ end
 local HitResult = import('HitResult');
 local count=0
 local tt=0
+
+-- test coroutine
+local co = coroutine.create( function()
+    ccb = slua.createDelegate(function(p)
+        print("LoadAssetClass callback in coroutine",p) 
+    end)
+    Test.LoadAssetClass(ccb)
+end )
+coroutine.resume( co )
+co = nil
+
 function update(dt,actor)
     tt=tt+dt
     local p = actor:K2_GetActorLocation()
@@ -109,6 +110,8 @@ function update(dt,actor)
     edit.OnTextChanged:Remove(evt);
     -- test free event twice
     edit.OnTextChanged:Remove(evt);
+
+    collectgarbage("collect")
 
     return 1024,2,"s",{1,2,3,4},function() end
 end

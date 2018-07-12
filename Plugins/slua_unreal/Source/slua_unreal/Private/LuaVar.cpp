@@ -137,57 +137,57 @@ namespace slua {
         case LV_FUNCTION: 
         case LV_TABLE:
         case LV_USERDATA:
-            this->L = l;
+            this->L = LuaState::mainThread(l);
             alloc(1);
             lua_pushvalue(l,p);
             vars[0].ref = new RefRef(l);
             vars[0].luatype=type;
             break;
         case LV_TUPLE:
-            this->L = l;
-            ensure(p>0 && lua_gettop(L)>=p);
-            initTuple(p);
+            this->L = LuaState::mainThread(l);
+            ensure(p>0 && lua_gettop(l)>=p);
+            initTuple(l,p);
             break;
         default:
             break;
         }
     }
 
-    void LuaVar::initTuple(size_t n) {
-        ensure(lua_gettop(L)>=n);
+    void LuaVar::initTuple(lua_State* l,size_t n) {
+        ensure(lua_gettop(l)>=n);
         alloc(n);
-        int f = lua_gettop(L)-n+1;
+        int f = lua_gettop(l)-n+1;
         for(int i=0;i<n;i++) {
             
             int p = i+f;
-            int t = lua_type(L,p);
+            int t = lua_type(l,p);
 
             switch(t) {
             case LUA_TNUMBER:
                 {
-                    if(lua_isinteger(L,p)) {
+                    if(lua_isinteger(l,p)) {
                         vars[i].luatype = LV_INT;
-                        vars[i].i = lua_tointeger(L,p);
+                        vars[i].i = lua_tointeger(l,p);
                     }
                     else {
                         vars[i].luatype = LV_NUMBER;
-                        vars[i].d = lua_tonumber(L,p);
+                        vars[i].d = lua_tonumber(l,p);
                     }
                 }
                 break;
             case LUA_TSTRING:
                 vars[i].luatype = LV_STRING;
-                vars[i].s = new RefStr(lua_tostring(L,p));
+                vars[i].s = new RefStr(lua_tostring(l,p));
                 break;
             case LUA_TFUNCTION:
                 vars[i].luatype = LV_FUNCTION;
-                lua_pushvalue(L,p);
-                vars[i].ref = new RefRef(L);
+                lua_pushvalue(l,p);
+                vars[i].ref = new RefRef(l);
                 break;
             case LUA_TTABLE:
                 vars[i].luatype = LV_TABLE;
-                lua_pushvalue(L,p);
-                vars[i].ref = new RefRef(L);
+                lua_pushvalue(l,p);
+                vars[i].ref = new RefRef(l);
                 break;
             case LUA_TNIL:
             default:
@@ -199,6 +199,13 @@ namespace slua {
 
     LuaVar::~LuaVar() {
         free();
+    }
+
+    LuaVar::RefRef::RefRef(lua_State* l) 
+        :LuaVar::Ref() 
+    {
+        ref=luaL_ref(l,LUA_REGISTRYINDEX);
+        this->L = LuaState::mainThread(l);
     }
 
     LuaVar::RefRef::~RefRef() {

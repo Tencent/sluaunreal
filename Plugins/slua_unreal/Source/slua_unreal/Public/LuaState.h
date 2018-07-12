@@ -46,6 +46,7 @@ namespace slua {
 
         static LuaState* get(lua_State* L=nullptr);
         static bool isValid(lua_State* L);
+        static lua_State* mainThread(lua_State* L);
         
         virtual bool init(USceneComponent* wld);
         virtual void tick(float dtime);

@@ -28,6 +28,7 @@
 #include "UObject/Package.h"
 #include "Blueprint/UserWidget.h"
 #include "Misc/AssertionMacros.h"
+#include "Misc/SecureHash.h"
 #include "Log.h"
 #include "Util.h"
 #include "lua/lua.hpp"
@@ -252,7 +253,22 @@ namespace slua {
     }
 
     LuaVar LuaState::doString(const char* str) {
-        return doBuffer((const uint8*)str,strlen(str),str);
+        #if WITH_EDITOR
+        FMD5 md5;
+        uint8 digest[17];
+        md5.Update((const uint8*)str,strlen(str));
+        md5.Final(digest);
+        digest[16]=0;
+
+        TArray<FStringFormatArg> Args;
+		Args.Add(UTF8_TO_TCHAR(digest));
+        FString chunk = FString::Format(TEXT("codechunk_{0}"),Args);
+
+        // addSourceToDebug(chunk,str);
+        #else
+        FString chunk="codechunk";
+        #endif
+        return doBuffer((const uint8*)str,strlen(str),TCHAR_TO_UTF8(*chunk));
     }
 
     LuaVar LuaState::doFile(const char* fn) {

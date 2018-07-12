@@ -160,7 +160,7 @@ namespace slua {
         typedef void SetupMetaTableFunc(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc);
 
         template<class T>
-        static int pushType(lua_State* L,T cls,const char* tn,lua_CFunction setupmt=NULL,lua_CFunction gc=NULL) {
+        static int pushType(lua_State* L,T cls,const char* tn,lua_CFunction setupmt=nullptr,lua_CFunction gc=nullptr) {
             if(!cls) lua_pushnil(L);
             UserData<T>* ud = reinterpret_cast< UserData<T>* >(lua_newuserdata(L, sizeof(UserData<T>)));
             ud->ud = cls;
@@ -172,7 +172,7 @@ namespace slua {
         static void removeRef(lua_State* L,UObject* obj);
 
         template<typename T>
-        static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt=nullptr,lua_CFunction gc=nullptr) {
+        static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt,lua_CFunction gc) {
             if(getFromCache(L,obj)) return 1;
             addRef(L,obj);
             lua_pushcclosure(L,gc,0);

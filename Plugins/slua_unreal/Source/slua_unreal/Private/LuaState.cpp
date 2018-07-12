@@ -262,13 +262,13 @@ namespace slua {
 
         TArray<FStringFormatArg> Args;
 		Args.Add(UTF8_TO_TCHAR(digest));
-        FString chunk = FString::Format(TEXT("codechunk_{0}"),Args);
+        FString chunk = FString::Format(TEXT("@codechunk_{0}"),Args);
 
         // addSourceToDebug(chunk,str);
-        #else
-        FString chunk="codechunk";
-        #endif
         return doBuffer((const uint8*)str,strlen(str),TCHAR_TO_UTF8(*chunk));
+        #else
+        return doBuffer((const uint8*)str,strlen(str),str);
+        #endif
     }
 
     LuaVar LuaState::doFile(const char* fn) {
@@ -276,9 +276,9 @@ namespace slua {
         FString filepath;
         if(uint8* buf=loadFile(fn,len,filepath)) {
             char chunk[256];
-            snprintf(chunk,256,"@%s",fn);
+            snprintf(chunk,256,"@%s",TCHAR_TO_UTF8(*filepath));
 
-            LuaVar r = doBuffer( buf,len,TCHAR_TO_UTF8(*filepath) );
+            LuaVar r = doBuffer( buf,len,chunk );
             delete[] buf;
             return r;
         }

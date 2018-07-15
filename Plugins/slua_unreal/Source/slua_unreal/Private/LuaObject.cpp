@@ -252,6 +252,8 @@ namespace slua {
         return getChecker(prop->GetClass());        
     }
 
+    
+
     void regPusher(UClass* cls,PushPropertyFunction func) {
 		pusherMap.Add(cls, func);
     }
@@ -469,11 +471,11 @@ namespace slua {
         return 1;
     }
 
-    int pushUNameProperty(lua_State* L,UProperty* prop,uint8* parms) {
-        auto ip=Cast<UNameProperty>(prop);
-        ensure(ip);
-        FName i = ip->GetPropertyValue(parms);
-        return LuaObject::push(L,i);
+    template<typename T>
+    int pushUProperty(lua_State* L,UProperty* prop,uint8* parms) {
+        auto p=Cast<T>(prop);
+        ensure(p);
+        return LuaObject::push(L,p->GetPropertyValue(parms));
     }
 
 	int pushEnumProperty(lua_State* L, UProperty* prop, uint8* parms) {
@@ -485,60 +487,11 @@ namespace slua {
 		return LuaObject::push(L, i);
 	}
 
-    int pushUIntProperty(lua_State* L,UProperty* prop,uint8* parms) {
-        auto ip=Cast<UIntProperty>(prop);
-        ensure(ip);
-        int i = ip->GetPropertyValue(parms);
-        return LuaObject::push(L,i);
-    }
-
-    int pushUInt64Property(lua_State* L,UProperty* prop,uint8* parms) {
-        auto ip=Cast<UInt64Property>(prop);
-        ensure(ip);
-        int64 i = ip->GetPropertyValue(parms);
-        return LuaObject::push(L,i);
-    }
-
-	int pushUUInt64Property(lua_State* L, UProperty* prop, uint8* parms) {
-		auto ip = Cast<UUInt64Property>(prop);
-		ensure(ip);
-		uint64 i = ip->GetPropertyValue(parms);
-		return LuaObject::push(L, i);
-	}
-
-    int pushFloatProperty(lua_State* L,UProperty* prop,uint8* parms) {
-        auto ip=Cast<UFloatProperty>(prop);
-        ensure(ip);
-        float i = ip->GetPropertyValue(parms);
-        return LuaObject::push(L,i);
-    }
-
-    int pushUBoolProperty(lua_State* L,UProperty* prop,uint8* parms) {
-        auto bp=Cast<UBoolProperty>(prop);
-        ensure(bp);
-        bool b = bp->GetPropertyValue(parms);
-        return LuaObject::push(L,b);
-    }
-
     int pushUArrayProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p = Cast<UArrayProperty>(prop);
         ensure(p);
         FScriptArray* v = p->GetPropertyValuePtr(parms);
         return LuaArray::push(L,p,v);
-    }
-
-    int pushUTextProperty(lua_State* L,UProperty* prop,uint8* parms) {
-        auto p = Cast<UTextProperty>(prop);
-        ensure(p);
-        FText* text = p->GetPropertyValuePtr(parms);
-        return LuaObject::push(L,*text);
-    }    
-
-    int pushUStrProperty(lua_State* L,UProperty* prop,uint8* parms) {
-        auto p = Cast<UStrProperty>(prop);
-        ensure(p);
-        FString* str = p->GetPropertyValuePtr(parms);
-        return LuaObject::push(L,*str);
     }
 
     int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms) {
@@ -587,40 +540,22 @@ namespace slua {
             return LuaObject::push(L,o);
     }
 
-    int checkUIntProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
-        auto p = Cast<UIntProperty>(prop);
+    template<typename T>
+    int checkUProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
+        auto p = Cast<T>(prop);
         ensure(p);
-        p->SetPropertyValue(parms,LuaObject::checkValue<int>(L,i));
+        p->SetPropertyValue(parms,LuaObject::checkValue<typename T::TCppType>(L,i));
         return 0;
     }
 
-    int checkUInt64Property(lua_State* L,UProperty* prop,uint8* parms,int i) {
-        auto p = Cast<UInt64Property>(prop);
-        ensure(p);
-        p->SetPropertyValue(parms,LuaObject::checkValue<int64>(L,i));
-        return 0;
-    }
-
-    int checkUUInt64Property(lua_State* L,UProperty* prop,uint8* parms,int i) {
-        auto p = Cast<UUInt64Property>(prop);
-        ensure(p);
-        p->SetPropertyValue(parms,LuaObject::checkValue<uint64>(L,i));
-        return 0;
-    }
-
-    int checkUBoolProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
-        auto p = Cast<UBoolProperty>(prop);
-        ensure(p);
-        p->SetPropertyValue(parms,LuaObject::checkValue<bool>(L,i));
-        return 0;
-    }
-
-    int checkUFloatProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
-        auto p = Cast<UFloatProperty>(prop);
-        ensure(p);
-        p->SetPropertyValue(parms,LuaObject::checkValue<float>(L,i));
-        return 0;
-    }
+    template<>
+	int checkUProperty<UEnumProperty>(lua_State* L, UProperty* prop, uint8* parms, int i) {
+		auto p = Cast<UEnumProperty>(prop);
+		ensure(p);
+		auto v = (int64)LuaObject::checkValue<int>(L, i);
+		p->CopyCompleteValue(parms, &v);
+		return 0;
+	}
 
     int checkUStructProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UStructProperty>(prop);
@@ -636,43 +571,6 @@ namespace slua {
 		p->CopyCompleteValue(parms, ls->buf);
 		return 0;
     }
-
-    int checkUTextProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
-        auto p = Cast<UTextProperty>(prop);
-        ensure(p);
-        p->SetPropertyValue(parms,LuaObject::checkValue<FText>(L,i));
-        return 0;
-    }
-
-    int checkUNameProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
-        auto p = Cast<UNameProperty>(prop);
-        ensure(p);
-        p->SetPropertyValue(parms,LuaObject::checkValue<FName>(L,i));
-        return 0;
-    }
-
-	int checkEnumProperty(lua_State* L, UProperty* prop, uint8* parms, int i) {
-		auto p = Cast<UEnumProperty>(prop);
-		ensure(p);
-		auto v = (int64)LuaObject::checkValue<int>(L, i);
-		p->CopyCompleteValue(parms, &v);
-		return 0;
-	}
-
-    int checkUStrProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
-        auto p = Cast<UStrProperty>(prop);
-        ensure(p);
-        p->SetPropertyValue(parms,LuaObject::checkValue<FString>(L,i));
-        return 0;
-    }
-
-    int checkUObjectProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
-        auto p = Cast<UObjectProperty>(prop);
-        ensure(p);
-        p->SetPropertyValue(parms,LuaObject::checkValue<UObject*>(L,i));
-        return 0;
-    }
-
 
     // search obj from registry, push cached obj and return true if find it
     bool LuaObject::getFromCache(lua_State* L,void* obj) {
@@ -783,34 +681,50 @@ namespace slua {
         }
         return pushGCObject<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject);
     }
+    
+    template<typename T>
+    inline void regPusher() {
+		pusherMap.Add(T::StaticClass(), pushUProperty<T>);
+    }
+
+    template<typename T>
+    inline void regChecker() {
+		checkerMap.Add(T::StaticClass(), checkUProperty<T>);
+    }
 
     void LuaObject::init(lua_State* L) {
-        regPusher(UIntProperty::StaticClass(),pushUIntProperty);
-        regPusher(UInt64Property::StaticClass(),pushUInt64Property);
-        regPusher(UUInt64Property::StaticClass(),pushUUInt64Property);
-        regPusher(UFloatProperty::StaticClass(),pushFloatProperty);
-        regPusher(UTextProperty::StaticClass(),pushUTextProperty);
+        regPusher<UIntProperty>();
+        regPusher<UInt64Property>();
+        regPusher<UUInt64Property>();
+        regPusher<UFloatProperty>();
+        regPusher<UBoolProperty>();
+        regPusher<UByteProperty>();
+        regPusher<UTextProperty>();
+        regPusher<UStrProperty>();
+        regPusher<UNameProperty>();
+
         regPusher(UMulticastDelegateProperty::StaticClass(),pushUMulticastDelegateProperty);
         regPusher(UObjectProperty::StaticClass(),pushUObjectProperty);
-        regPusher(UBoolProperty::StaticClass(),pushUBoolProperty);
         regPusher(UArrayProperty::StaticClass(),pushUArrayProperty);
-        regPusher(UStrProperty::StaticClass(),pushUStrProperty);
         regPusher(UStructProperty::StaticClass(),pushUStructProperty);
 		regPusher(UEnumProperty::StaticClass(), pushEnumProperty);
-		regPusher(UNameProperty::StaticClass(), pushUNameProperty);
+		
+        regChecker<UIntProperty>();
+        regChecker<UInt64Property>();
+        regChecker<UUInt64Property>();
+        regChecker<UBoolProperty>();
+        regChecker<UFloatProperty>();
+        regChecker<UByteProperty>();
+        regChecker<UNameProperty>();
+        regChecker<UTextProperty>();
+        regChecker<UObjectProperty>();
+        regChecker<UStrProperty>();
+        regChecker<UEnumProperty>();
 
-        regChecker(UIntProperty::StaticClass(),checkUIntProperty);
-        regChecker(UInt64Property::StaticClass(),checkUInt64Property);
-        regChecker(UUInt64Property::StaticClass(),checkUUInt64Property);
-        regChecker(UBoolProperty::StaticClass(),checkUBoolProperty);
-        regChecker(UFloatProperty::StaticClass(),checkUFloatProperty);
-        regChecker(UStructProperty::StaticClass(),checkUStructProperty);
-        regChecker(UTextProperty::StaticClass(),checkUTextProperty);
         regChecker(UDelegateProperty::StaticClass(),checkUDelegateProperty);
-        regChecker(UObjectProperty::StaticClass(),checkUObjectProperty);
-        regChecker(UStrProperty::StaticClass(),checkUStrProperty);
-		regChecker(UEnumProperty::StaticClass(), checkEnumProperty);
-		regChecker(UNameProperty::StaticClass(), checkUNameProperty);
+        regChecker(UStructProperty::StaticClass(),checkUStructProperty);
+		
+		
 
 		LuaWrapper::init(L);
 		LuaEnums::init(L);
@@ -834,7 +748,7 @@ namespace slua {
             return pusher(L,prop,parms);
         else {
             FString name = prop->GetClass()->GetName();
-            luaL_error(L,"unsupport type %s to push",TCHAR_TO_UTF8(*name));
+            Log::Error("unsupport type %s to push",TCHAR_TO_UTF8(*name));
             return 0;
         }
     }

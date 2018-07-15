@@ -81,26 +81,38 @@ namespace slua {
         Delegate.BindUFunction(obj, TEXT("EventTrigger"));
         UD->delegate->AddUnique(Delegate);
 
-        // obj will be freed by lua collect
-        return LuaObject::push(L,obj);
+        // add reference
+        obj->AddToRoot();
+
+        lua_pushlightuserdata(L,obj);
+        return 1;
     }
 
     int LuaDelegate::Remove(lua_State* L) {
         CheckUD(LuaDelegateWrap,L,1);
-        auto dobj = LuaObject::checkUObject<ULuaDelegate>(L,2);
-        if(!dobj) luaL_error(L,"arg 2 expect ULuaDelegate");
+        if(!lua_islightuserdata(L,2))
+            luaL_error(L,"arg 2 expect ULuaDelegate");
+        auto obj =  reinterpret_cast<ULuaDelegate*>(lua_touserdata(L,2));
+        if(!obj->IsValidLowLevel()) return 0;
 
         FScriptDelegate Delegate;
-        Delegate.BindUFunction(dobj, TEXT("EventTrigger"));
+        Delegate.BindUFunction(obj, TEXT("EventTrigger"));
 
         // remove delegate
         UD->delegate->Remove(Delegate);
+
+        // remove reference
+        obj->RemoveFromRoot();
 
         return 0;
     }
 
     int LuaDelegate::Clear(lua_State* L) {
         CheckUD(LuaDelegateWrap,L,1);
+        auto array = UD->delegate->GetAllObjects();
+        for(auto it:array) {
+            it->RemoveFromRoot();
+        }
         UD->delegate->Clear();
         return 0;
     }
@@ -110,7 +122,7 @@ namespace slua {
         delete UD;
         return 0;    
     }
-    
+   
 
     int LuaDelegate::setupMT(lua_State* L) {
         LuaObject::setupMTSelfSearch(L);

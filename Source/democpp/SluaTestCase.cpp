@@ -62,6 +62,7 @@ FVector USluaTestCase::TestStruct(FVector v, ESlateVisibility e, FVector& v2, in
 	slua::Log::Log("s = %s", TCHAR_TO_UTF8(*str));
 	slua::Log::Log("e = %d", (int)e);
 	v2 = v * 2;
+    i2 = i;
 	return v2 * 2;
 }
 

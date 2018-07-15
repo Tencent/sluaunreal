@@ -28,6 +28,7 @@
 #include "UObject/Package.h"
 #include "Blueprint/UserWidget.h"
 #include "Misc/AssertionMacros.h"
+#include "Misc/SecureHash.h"
 #include "Log.h"
 #include "Util.h"
 #include "lua/lua.hpp"
@@ -127,16 +128,28 @@ namespace slua {
         close();
     }
 
+    lua_State* LuaState::mainThread(lua_State* l) {
+        // get main thread
+        lua_geti(l,LUA_REGISTRYINDEX,LUA_RIDX_MAINTHREAD);
+        lua_State* ml = lua_tothread(l,-1);
+        lua_pop(l,1);
+        return ml;
+    }
+
     LuaState* LuaState::get(lua_State* L) {
         // if L is nullptr, return main state
         if(!L) return mainState;
-        auto it = stateMap.Find(L);
+        // get main thread
+        lua_State* ml = mainThread(L);
+        auto it = stateMap.Find(ml);
         if(it) return *it;
         return nullptr;
     }
 
     bool LuaState::isValid(lua_State* L) {
-        return get(L)!=nullptr;
+        if(!L) return false;
+        auto it = stateMap.Find(L);
+        return it!=nullptr;
     }
 
     void LuaState::tick(float dtime) {
@@ -252,7 +265,22 @@ namespace slua {
     }
 
     LuaVar LuaState::doString(const char* str) {
+        #if WITH_EDITOR
+        FMD5 md5;
+        uint8 digest[17];
+        md5.Update((const uint8*)str,strlen(str));
+        md5.Final(digest);
+        digest[16]=0;
+
+        TArray<FStringFormatArg> Args;
+		Args.Add(UTF8_TO_TCHAR(digest));
+        FString chunk = FString::Format(TEXT("@codechunk_{0}"),Args);
+
+        // addSourceToDebug(chunk,str);
+        return doBuffer((const uint8*)str,strlen(str),TCHAR_TO_UTF8(*chunk));
+        #else
         return doBuffer((const uint8*)str,strlen(str),str);
+        #endif
     }
 
     LuaVar LuaState::doFile(const char* fn) {
@@ -260,9 +288,9 @@ namespace slua {
         FString filepath;
         if(uint8* buf=loadFile(fn,len,filepath)) {
             char chunk[256];
-            snprintf(chunk,256,"@%s",fn);
+            snprintf(chunk,256,"@%s",TCHAR_TO_UTF8(*filepath));
 
-            LuaVar r = doBuffer( buf,len,TCHAR_TO_UTF8(*filepath) );
+            LuaVar r = doBuffer( buf,len,chunk );
             delete[] buf;
             return r;
         }

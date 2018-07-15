@@ -58,9 +58,6 @@ namespace slua {
 
 	TMap<UClass*,PushPropertyFunction> pusherMap;
 	TMap<UClass*,CheckPropertyFunction> checkerMap;
-    #if !PLATFORM_WINDOWS
-    #define sprintf_s snprintf
-    #endif 
     
     TMap< UClass*, TMap<FString,lua_CFunction> > extensionMMap;
 
@@ -113,6 +110,15 @@ namespace slua {
 		}
 	}
 
+	static inline bool strStartsWith(const char* str, const char* pattern) {
+		while (*pattern) {
+			if (*pattern++ != *str++) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	static void setMetaMethods(lua_State* L) {
 		lua_newtable(L);
 		lua_pushvalue(L, -1);
@@ -127,7 +133,7 @@ namespace slua {
 	}
 
 	void LuaObject::newType(lua_State* L, const char* tn) {
-		lua_pushglobaltable(L);					// _G
+		lua_pushglobaltable(L);				    // _G
 		lua_newtable(L);							// local t = {}
 		lua_pushvalue(L, -1);
 		lua_setfield(L, -3, tn);					// _G[tn] = t
@@ -137,9 +143,9 @@ namespace slua {
 		lua_pushvalue(L, -1);
 		lua_setmetatable(L, -3);					// setmetatable(t, mt)
 		setMetaMethods(L);
-		
+
 		char _inst[64];
-		sprintf_s(_inst, 64, "%s_inst", tn);
+		sprintf(_inst, "%s_inst", tn);
 		luaL_newmetatable(L, _inst);
 		setMetaMethods(L);
 	}
@@ -165,41 +171,63 @@ namespace slua {
 		lua_setfield(L, -2, name);
 	}
 
+	void LuaObject::finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc) {
+		lua_pushcclosure(L, ctor, 0);
+		lua_setfield(L, -3, "__call");
+
+		lua_newtable(L);             // t, mt, _instance, _static
+		lua_pushvalue(L, -2);       // t, mt, _instance, _static, _instance
+		lua_pushnil(L);              // t, mt, _instance, _static, _instance, nil
+		while (lua_next(L, -2)) {   // t, mt, _instance, _static, _instance, key, value
+			lua_pushvalue(L, -2);   // t, mt, _instance, _static, _instance, key, value, key
+			lua_insert(L, -2);      // t, mt, _instance, _static, _instance, key, key, value
+			lua_settable(L, -5);    // t, mt, _instance, _static, _instance, key				
+		}
+		lua_pop(L, 1); // t, mt, _instance, _static
+
+		lua_pushvalue(L, -1);             // t, mt, _instance, _static, _static
+		lua_setfield(L, -4, "__static"); // t, mt, _instance, _static
+		char _static[64];
+		sprintf(_static, "%s_static", tn);
+		lua_pushstring(L, _static); // t, mt, _instance, _static, t_static
+		lua_setfield(L, -2, "__name");
+        lua_setfield(L, LUA_REGISTRYINDEX, _static); // t, mt, _instance
+
+		lua_pushvalue(L, -1);             // t, mt, _instance, _instance
+		lua_setfield(L, -3, "__instance"); // t, mt, _instance
+
+		lua_pushcclosure(L, gc, 0); // t, mt, _instance, __gc
+		lua_setfield(L, -2, "__gc"); // t, mt, _instance
+	}
+
 	void LuaObject::getStaticTypeTable(lua_State* L, const char* tn) {
 		char _static[64];
-		sprintf_s(_static, 64, "%s_static", tn);
+		sprintf(_static, "%s_static", tn);
 		luaL_getmetatable(L, _static);
 	}
 
 	void LuaObject::getInstanceTypeTable(lua_State* L, const char* tn) {
 		char _inst[64];
-		sprintf_s(_inst, 64, "%s_inst", tn);
+		sprintf(_inst, "%s_inst", tn);
 		luaL_getmetatable(L, _inst);
 	}
 
-	void LuaObject::finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc) {
-		lua_pushcclosure(L, ctor, 0);
-		lua_setfield(L, -3, "__call");
-
-		// copy _inst table as _static table before add __gc method
-		lua_newtable(L);
-		lua_pushvalue(L, -2);
-		lua_pushnil(L);
-		while (lua_next(L, -2)) {
-			lua_pushvalue(L, -2);
-			lua_insert(L, -2);
-			lua_settable(L, -5);
+	bool LuaObject::matchType(lua_State* L, int p, const char* tn) {
+		AutoStack autoStack(L);
+		if (!lua_isuserdata(L, p)) {
+			return false;
 		}
-		lua_pop(L, 1);
-
-		char _static[64];
-		sprintf_s(_static, 64, "%s_static", tn);
-		lua_setfield(L, LUA_REGISTRYINDEX, _static);
-
-		lua_pushcclosure(L, gc, 0);
-		lua_setfield(L, -2, "__gc");
-
-		lua_pop(L, 3); // type table and mt table
+		lua_getmetatable(L, p);
+		if (lua_isnil(L, -1)) {
+			return false;
+		}
+		lua_getfield(L, -1, "__name");
+		if (lua_isnil(L, -1)) {
+			return false;
+		}
+		auto name = luaL_checkstring(L, -1);
+		auto ret = strStartsWith(name, tn);
+		return ret;
 	}
 
     PushPropertyFunction getPusher(UClass* cls) {

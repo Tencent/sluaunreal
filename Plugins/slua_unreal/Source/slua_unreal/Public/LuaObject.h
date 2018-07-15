@@ -69,7 +69,6 @@ namespace slua {
         ~AutoStack() {
             lua_settop(this->L,this->top);
         }
-
         lua_State* L;
         int top;
     };
@@ -111,6 +110,7 @@ namespace slua {
     public:
 		static void getInstanceTypeTable(lua_State* L, const char* tn);
 		static void getStaticTypeTable(lua_State* L, const char* tn);
+		static bool matchType(lua_State* L, int p, const char* tn);
 
 		static int classIndex(lua_State* L);
 		static int classNewindex(lua_State* L);

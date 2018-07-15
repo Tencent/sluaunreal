@@ -398,11 +398,15 @@ namespace slua {
 
 		static int __eq(lua_State* L) {
 			auto self = LuaObject::checkValue<FSlateFontInfo*>(L, 1);
-			auto Other = LuaObject::checkValue<FSlateFontInfo*>(L, 2);
-			auto Other_ = *Other;
-			auto ret = *self == Other_;
-			LuaObject::push(L, ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FSlateFontInfo")) {
+				auto Other = LuaObject::checkValue<FSlateFontInfo*>(L, 2);
+				auto Other_ = *Other;
+				auto ret = *self == Other_;
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "FSlateFontInfo operator__eq error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int get_Size(lua_State* L) {
@@ -446,6 +450,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FSlateFontInfo");
 			LuaObject::addOperator(L, "__eq", __eq);
 			LuaObject::addField(L, "Size", get_Size, set_Size, true);
@@ -477,11 +482,15 @@ namespace slua {
 
 		static int __eq(lua_State* L) {
 			auto self = LuaObject::checkValue<FSlateBrush*>(L, 1);
-			auto Other = LuaObject::checkValue<FSlateBrush*>(L, 2);
-			auto Other_ = *Other;
-			auto ret = *self == Other_;
-			LuaObject::push(L, ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FSlateBrush")) {
+				auto Other = LuaObject::checkValue<FSlateBrush*>(L, 2);
+				auto Other_ = *Other;
+				auto ret = *self == Other_;
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "FSlateBrush operator__eq error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int get_ImageSize(lua_State* L) {
@@ -621,6 +630,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FSlateBrush");
 			LuaObject::addOperator(L, "__eq", __eq);
 			LuaObject::addField(L, "ImageSize", get_ImageSize, set_ImageSize, true);
@@ -682,41 +692,64 @@ namespace slua {
 
 		static int __mul(lua_State* L) {
 			auto self = LuaObject::checkValue<FMargin*>(L, 1);
-			auto InScale = LuaObject::checkValue<FMargin*>(L, 2);
-			auto InScale_ = *InScale;
-			auto ret = __newFMargin();
-			*ret = *self * InScale_;
-			LuaObject::push<FMargin>(L, "FMargin", ret);
-			return 1;
+			if (lua_isnumber(L, 2)) {
+				auto Scale = LuaObject::checkValue<float>(L, 2);
+				auto ret = __newFMargin();
+				*ret = *self * Scale;
+				LuaObject::push<FMargin>(L, "FMargin", ret);
+				return 1;
+			}
+			if (LuaObject::matchType(L, 2, "FMargin")) {
+				auto InScale = LuaObject::checkValue<FMargin*>(L, 2);
+				auto InScale_ = *InScale;
+				auto ret = __newFMargin();
+				*ret = *self * InScale_;
+				LuaObject::push<FMargin>(L, "FMargin", ret);
+				return 1;
+			}
+			luaL_error(L, "FMargin operator__mul error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __add(lua_State* L) {
 			auto self = LuaObject::checkValue<FMargin*>(L, 1);
-			auto InDelta = LuaObject::checkValue<FMargin*>(L, 2);
-			auto InDelta_ = *InDelta;
-			auto ret = __newFMargin();
-			*ret = *self + InDelta_;
-			LuaObject::push<FMargin>(L, "FMargin", ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FMargin")) {
+				auto InDelta = LuaObject::checkValue<FMargin*>(L, 2);
+				auto InDelta_ = *InDelta;
+				auto ret = __newFMargin();
+				*ret = *self + InDelta_;
+				LuaObject::push<FMargin>(L, "FMargin", ret);
+				return 1;
+			}
+			luaL_error(L, "FMargin operator__add error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __sub(lua_State* L) {
 			auto self = LuaObject::checkValue<FMargin*>(L, 1);
-			auto Other = LuaObject::checkValue<FMargin*>(L, 2);
-			auto Other_ = *Other;
-			auto ret = __newFMargin();
-			*ret = *self - Other_;
-			LuaObject::push<FMargin>(L, "FMargin", ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FMargin")) {
+				auto Other = LuaObject::checkValue<FMargin*>(L, 2);
+				auto Other_ = *Other;
+				auto ret = __newFMargin();
+				*ret = *self - Other_;
+				LuaObject::push<FMargin>(L, "FMargin", ret);
+				return 1;
+			}
+			luaL_error(L, "FMargin operator__sub error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __eq(lua_State* L) {
 			auto self = LuaObject::checkValue<FMargin*>(L, 1);
-			auto Other = LuaObject::checkValue<FMargin*>(L, 2);
-			auto Other_ = *Other;
-			auto ret = *self == Other_;
-			LuaObject::push(L, ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FMargin")) {
+				auto Other = LuaObject::checkValue<FMargin*>(L, 2);
+				auto Other_ = *Other;
+				auto ret = *self == Other_;
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "FMargin operator__eq error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int get_Left(lua_State* L) {
@@ -789,6 +822,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FMargin");
 			LuaObject::addOperator(L, "__mul", __mul);
 			LuaObject::addOperator(L, "__add", __add);
@@ -832,11 +866,15 @@ namespace slua {
 
 		static int __eq(lua_State* L) {
 			auto self = LuaObject::checkValue<FSlateColor*>(L, 1);
-			auto Other = LuaObject::checkValue<FSlateColor*>(L, 2);
-			auto Other_ = *Other;
-			auto ret = *self == Other_;
-			LuaObject::push(L, ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FSlateColor")) {
+				auto Other = LuaObject::checkValue<FSlateColor*>(L, 2);
+				auto Other_ = *Other;
+				auto ret = *self == Other_;
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "FSlateColor operator__eq error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int GetSpecifiedColor(lua_State* L) {
@@ -911,6 +949,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FSlateColor");
 			LuaObject::addOperator(L, "__eq", __eq);
 			LuaObject::addMethod(L, "GetSpecifiedColor", GetSpecifiedColor, true);
@@ -959,40 +998,56 @@ namespace slua {
 
 		static int __add(lua_State* L) {
 			auto self = LuaObject::checkValue<FRotator*>(L, 1);
-			auto R = LuaObject::checkValue<FRotator*>(L, 2);
-			auto R_ = *R;
-			auto ret = __newFRotator();
-			*ret = *self + R_;
-			LuaObject::push<FRotator>(L, "FRotator", ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FRotator")) {
+				auto R = LuaObject::checkValue<FRotator*>(L, 2);
+				auto R_ = *R;
+				auto ret = __newFRotator();
+				*ret = *self + R_;
+				LuaObject::push<FRotator>(L, "FRotator", ret);
+				return 1;
+			}
+			luaL_error(L, "FRotator operator__add error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __sub(lua_State* L) {
 			auto self = LuaObject::checkValue<FRotator*>(L, 1);
-			auto R = LuaObject::checkValue<FRotator*>(L, 2);
-			auto R_ = *R;
-			auto ret = __newFRotator();
-			*ret = *self - R_;
-			LuaObject::push<FRotator>(L, "FRotator", ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FRotator")) {
+				auto R = LuaObject::checkValue<FRotator*>(L, 2);
+				auto R_ = *R;
+				auto ret = __newFRotator();
+				*ret = *self - R_;
+				LuaObject::push<FRotator>(L, "FRotator", ret);
+				return 1;
+			}
+			luaL_error(L, "FRotator operator__sub error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __mul(lua_State* L) {
 			auto self = LuaObject::checkValue<FRotator*>(L, 1);
-			auto Scale = LuaObject::checkValue<float>(L, 2);
-			auto ret = __newFRotator();
-			*ret = *self * Scale;
-			LuaObject::push<FRotator>(L, "FRotator", ret);
-			return 1;
+			if (lua_isnumber(L, 2)) {
+				auto Scale = LuaObject::checkValue<float>(L, 2);
+				auto ret = __newFRotator();
+				*ret = *self * Scale;
+				LuaObject::push<FRotator>(L, "FRotator", ret);
+				return 1;
+			}
+			luaL_error(L, "FRotator operator__mul error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __eq(lua_State* L) {
 			auto self = LuaObject::checkValue<FRotator*>(L, 1);
-			auto R = LuaObject::checkValue<FRotator*>(L, 2);
-			auto R_ = *R;
-			auto ret = *self == R_;
-			LuaObject::push(L, ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FRotator")) {
+				auto R = LuaObject::checkValue<FRotator*>(L, 2);
+				auto R_ = *R;
+				auto ret = *self == R_;
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "FRotator operator__eq error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int get_Pitch(lua_State* L) {
@@ -1433,6 +1488,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FRotator");
 			LuaObject::addOperator(L, "__add", __add);
 			LuaObject::addOperator(L, "__sub", __sub);
@@ -1528,22 +1584,30 @@ namespace slua {
 
 		static int __add(lua_State* L) {
 			auto self = LuaObject::checkValue<FTransform*>(L, 1);
-			auto Atom = LuaObject::checkValue<FTransform*>(L, 2);
-			auto Atom_ = *Atom;
-			auto ret = __newFTransform();
-			*ret = *self + Atom_;
-			LuaObject::push<FTransform>(L, "FTransform", ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FTransform")) {
+				auto Atom = LuaObject::checkValue<FTransform*>(L, 2);
+				auto Atom_ = *Atom;
+				auto ret = __newFTransform();
+				*ret = *self + Atom_;
+				LuaObject::push<FTransform>(L, "FTransform", ret);
+				return 1;
+			}
+			luaL_error(L, "FTransform operator__add error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __mul(lua_State* L) {
 			auto self = LuaObject::checkValue<FTransform*>(L, 1);
-			auto Other = LuaObject::checkValue<FTransform*>(L, 2);
-			auto Other_ = *Other;
-			auto ret = __newFTransform();
-			*ret = *self * Other_;
-			LuaObject::push<FTransform>(L, "FTransform", ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FTransform")) {
+				auto Other = LuaObject::checkValue<FTransform*>(L, 2);
+				auto Other_ = *Other;
+				auto ret = __newFTransform();
+				*ret = *self * Other_;
+				LuaObject::push<FTransform>(L, "FTransform", ret);
+				return 1;
+			}
+			luaL_error(L, "FTransform operator__mul error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int get_Identity(lua_State* L) {
@@ -2421,6 +2485,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FTransform");
 			LuaObject::addOperator(L, "__add", __add);
 			LuaObject::addOperator(L, "__mul", __mul);
@@ -2531,51 +2596,85 @@ namespace slua {
 
 		static int __add(lua_State* L) {
 			auto self = LuaObject::checkValue<FLinearColor*>(L, 1);
-			auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
-			auto ColorB_ = *ColorB;
-			auto ret = __newFLinearColor();
-			*ret = *self + ColorB_;
-			LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FLinearColor")) {
+				auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
+				auto ColorB_ = *ColorB;
+				auto ret = __newFLinearColor();
+				*ret = *self + ColorB_;
+				LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
+				return 1;
+			}
+			luaL_error(L, "FLinearColor operator__add error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __sub(lua_State* L) {
 			auto self = LuaObject::checkValue<FLinearColor*>(L, 1);
-			auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
-			auto ColorB_ = *ColorB;
-			auto ret = __newFLinearColor();
-			*ret = *self - ColorB_;
-			LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FLinearColor")) {
+				auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
+				auto ColorB_ = *ColorB;
+				auto ret = __newFLinearColor();
+				*ret = *self - ColorB_;
+				LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
+				return 1;
+			}
+			luaL_error(L, "FLinearColor operator__sub error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __mul(lua_State* L) {
 			auto self = LuaObject::checkValue<FLinearColor*>(L, 1);
-			auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
-			auto ColorB_ = *ColorB;
-			auto ret = __newFLinearColor();
-			*ret = *self * ColorB_;
-			LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FLinearColor")) {
+				auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
+				auto ColorB_ = *ColorB;
+				auto ret = __newFLinearColor();
+				*ret = *self * ColorB_;
+				LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
+				return 1;
+			}
+			if (lua_isnumber(L, 2)) {
+				auto Scalar = LuaObject::checkValue<float>(L, 2);
+				auto ret = __newFLinearColor();
+				*ret = *self * Scalar;
+				LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
+				return 1;
+			}
+			luaL_error(L, "FLinearColor operator__mul error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __div(lua_State* L) {
 			auto self = LuaObject::checkValue<FLinearColor*>(L, 1);
-			auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
-			auto ColorB_ = *ColorB;
-			auto ret = __newFLinearColor();
-			*ret = *self / ColorB_;
-			LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FLinearColor")) {
+				auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
+				auto ColorB_ = *ColorB;
+				auto ret = __newFLinearColor();
+				*ret = *self / ColorB_;
+				LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
+				return 1;
+			}
+			if (lua_isnumber(L, 2)) {
+				auto Scalar = LuaObject::checkValue<float>(L, 2);
+				auto ret = __newFLinearColor();
+				*ret = *self / Scalar;
+				LuaObject::push<FLinearColor>(L, "FLinearColor", ret);
+				return 1;
+			}
+			luaL_error(L, "FLinearColor operator__div error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __eq(lua_State* L) {
 			auto self = LuaObject::checkValue<FLinearColor*>(L, 1);
-			auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
-			auto ColorB_ = *ColorB;
-			auto ret = *self == ColorB_;
-			LuaObject::push(L, ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FLinearColor")) {
+				auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
+				auto ColorB_ = *ColorB;
+				auto ret = *self == ColorB_;
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "FLinearColor operator__eq error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int get_R(lua_State* L) {
@@ -3015,6 +3114,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FLinearColor");
 			LuaObject::addOperator(L, "__add", __add);
 			LuaObject::addOperator(L, "__sub", __sub);
@@ -3104,11 +3204,15 @@ namespace slua {
 
 		static int __eq(lua_State* L) {
 			auto self = LuaObject::checkValue<FColor*>(L, 1);
-			auto C = LuaObject::checkValue<FColor*>(L, 2);
-			auto C_ = *C;
-			auto ret = *self == C_;
-			LuaObject::push(L, ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FColor")) {
+				auto C = LuaObject::checkValue<FColor*>(L, 2);
+				auto C_ = *C;
+				auto ret = *self == C_;
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "FColor operator__eq error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int get_White(lua_State* L) {
@@ -3371,6 +3475,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FColor");
 			LuaObject::addOperator(L, "__eq", __eq);
 			LuaObject::addField(L, "White", get_White, nullptr, false);
@@ -3450,51 +3555,99 @@ namespace slua {
 
 		static int __add(lua_State* L) {
 			auto self = LuaObject::checkValue<FVector*>(L, 1);
-			auto V = LuaObject::checkValue<FVector*>(L, 2);
-			auto V_ = *V;
-			auto ret = __newFVector();
-			*ret = *self + V_;
-			LuaObject::push<FVector>(L, "FVector", ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FVector")) {
+				auto V = LuaObject::checkValue<FVector*>(L, 2);
+				auto V_ = *V;
+				auto ret = __newFVector();
+				*ret = *self + V_;
+				LuaObject::push<FVector>(L, "FVector", ret);
+				return 1;
+			}
+			if (lua_isnumber(L, 2)) {
+				auto Bias = LuaObject::checkValue<float>(L, 2);
+				auto ret = __newFVector();
+				*ret = *self + Bias;
+				LuaObject::push<FVector>(L, "FVector", ret);
+				return 1;
+			}
+			luaL_error(L, "FVector operator__add error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __sub(lua_State* L) {
 			auto self = LuaObject::checkValue<FVector*>(L, 1);
-			auto V = LuaObject::checkValue<FVector*>(L, 2);
-			auto V_ = *V;
-			auto ret = __newFVector();
-			*ret = *self - V_;
-			LuaObject::push<FVector>(L, "FVector", ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FVector")) {
+				auto V = LuaObject::checkValue<FVector*>(L, 2);
+				auto V_ = *V;
+				auto ret = __newFVector();
+				*ret = *self - V_;
+				LuaObject::push<FVector>(L, "FVector", ret);
+				return 1;
+			}
+			if (lua_isnumber(L, 2)) {
+				auto Bias = LuaObject::checkValue<float>(L, 2);
+				auto ret = __newFVector();
+				*ret = *self - Bias;
+				LuaObject::push<FVector>(L, "FVector", ret);
+				return 1;
+			}
+			luaL_error(L, "FVector operator__sub error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __mul(lua_State* L) {
 			auto self = LuaObject::checkValue<FVector*>(L, 1);
-			auto V = LuaObject::checkValue<FVector*>(L, 2);
-			auto V_ = *V;
-			auto ret = __newFVector();
-			*ret = *self * V_;
-			LuaObject::push<FVector>(L, "FVector", ret);
-			return 1;
+			if (lua_isnumber(L, 2)) {
+				auto Scale = LuaObject::checkValue<float>(L, 2);
+				auto ret = __newFVector();
+				*ret = *self * Scale;
+				LuaObject::push<FVector>(L, "FVector", ret);
+				return 1;
+			}
+			if (LuaObject::matchType(L, 2, "FVector")) {
+				auto V = LuaObject::checkValue<FVector*>(L, 2);
+				auto V_ = *V;
+				auto ret = __newFVector();
+				*ret = *self * V_;
+				LuaObject::push<FVector>(L, "FVector", ret);
+				return 1;
+			}
+			luaL_error(L, "FVector operator__mul error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __div(lua_State* L) {
 			auto self = LuaObject::checkValue<FVector*>(L, 1);
-			auto V = LuaObject::checkValue<FVector*>(L, 2);
-			auto V_ = *V;
-			auto ret = __newFVector();
-			*ret = *self / V_;
-			LuaObject::push<FVector>(L, "FVector", ret);
-			return 1;
+			if (lua_isnumber(L, 2)) {
+				auto Scale = LuaObject::checkValue<float>(L, 2);
+				auto ret = __newFVector();
+				*ret = *self / Scale;
+				LuaObject::push<FVector>(L, "FVector", ret);
+				return 1;
+			}
+			if (LuaObject::matchType(L, 2, "FVector")) {
+				auto V = LuaObject::checkValue<FVector*>(L, 2);
+				auto V_ = *V;
+				auto ret = __newFVector();
+				*ret = *self / V_;
+				LuaObject::push<FVector>(L, "FVector", ret);
+				return 1;
+			}
+			luaL_error(L, "FVector operator__div error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __eq(lua_State* L) {
 			auto self = LuaObject::checkValue<FVector*>(L, 1);
-			auto V = LuaObject::checkValue<FVector*>(L, 2);
-			auto V_ = *V;
-			auto ret = *self == V_;
-			LuaObject::push(L, ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FVector")) {
+				auto V = LuaObject::checkValue<FVector*>(L, 2);
+				auto V_ = *V;
+				auto ret = *self == V_;
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "FVector operator__eq error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int get_X(lua_State* L) {
@@ -4661,6 +4814,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FVector");
 			LuaObject::addOperator(L, "__add", __add);
 			LuaObject::addOperator(L, "__sub", __sub);
@@ -4791,51 +4945,99 @@ namespace slua {
 
 		static int __add(lua_State* L) {
 			auto self = LuaObject::checkValue<FVector2D*>(L, 1);
-			auto V = LuaObject::checkValue<FVector2D*>(L, 2);
-			auto V_ = *V;
-			auto ret = __newFVector2D();
-			*ret = *self + V_;
-			LuaObject::push<FVector2D>(L, "FVector2D", ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FVector2D")) {
+				auto V = LuaObject::checkValue<FVector2D*>(L, 2);
+				auto V_ = *V;
+				auto ret = __newFVector2D();
+				*ret = *self + V_;
+				LuaObject::push<FVector2D>(L, "FVector2D", ret);
+				return 1;
+			}
+			if (lua_isnumber(L, 2)) {
+				auto A = LuaObject::checkValue<float>(L, 2);
+				auto ret = __newFVector2D();
+				*ret = *self + A;
+				LuaObject::push<FVector2D>(L, "FVector2D", ret);
+				return 1;
+			}
+			luaL_error(L, "FVector2D operator__add error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __sub(lua_State* L) {
 			auto self = LuaObject::checkValue<FVector2D*>(L, 1);
-			auto V = LuaObject::checkValue<FVector2D*>(L, 2);
-			auto V_ = *V;
-			auto ret = __newFVector2D();
-			*ret = *self - V_;
-			LuaObject::push<FVector2D>(L, "FVector2D", ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FVector2D")) {
+				auto V = LuaObject::checkValue<FVector2D*>(L, 2);
+				auto V_ = *V;
+				auto ret = __newFVector2D();
+				*ret = *self - V_;
+				LuaObject::push<FVector2D>(L, "FVector2D", ret);
+				return 1;
+			}
+			if (lua_isnumber(L, 2)) {
+				auto A = LuaObject::checkValue<float>(L, 2);
+				auto ret = __newFVector2D();
+				*ret = *self - A;
+				LuaObject::push<FVector2D>(L, "FVector2D", ret);
+				return 1;
+			}
+			luaL_error(L, "FVector2D operator__sub error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __mul(lua_State* L) {
 			auto self = LuaObject::checkValue<FVector2D*>(L, 1);
-			auto V = LuaObject::checkValue<FVector2D*>(L, 2);
-			auto V_ = *V;
-			auto ret = __newFVector2D();
-			*ret = *self * V_;
-			LuaObject::push<FVector2D>(L, "FVector2D", ret);
-			return 1;
+			if (lua_isnumber(L, 2)) {
+				auto Scale = LuaObject::checkValue<float>(L, 2);
+				auto ret = __newFVector2D();
+				*ret = *self * Scale;
+				LuaObject::push<FVector2D>(L, "FVector2D", ret);
+				return 1;
+			}
+			if (LuaObject::matchType(L, 2, "FVector2D")) {
+				auto V = LuaObject::checkValue<FVector2D*>(L, 2);
+				auto V_ = *V;
+				auto ret = __newFVector2D();
+				*ret = *self * V_;
+				LuaObject::push<FVector2D>(L, "FVector2D", ret);
+				return 1;
+			}
+			luaL_error(L, "FVector2D operator__mul error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __div(lua_State* L) {
 			auto self = LuaObject::checkValue<FVector2D*>(L, 1);
-			auto V = LuaObject::checkValue<FVector2D*>(L, 2);
-			auto V_ = *V;
-			auto ret = __newFVector2D();
-			*ret = *self / V_;
-			LuaObject::push<FVector2D>(L, "FVector2D", ret);
-			return 1;
+			if (lua_isnumber(L, 2)) {
+				auto Scale = LuaObject::checkValue<float>(L, 2);
+				auto ret = __newFVector2D();
+				*ret = *self / Scale;
+				LuaObject::push<FVector2D>(L, "FVector2D", ret);
+				return 1;
+			}
+			if (LuaObject::matchType(L, 2, "FVector2D")) {
+				auto V = LuaObject::checkValue<FVector2D*>(L, 2);
+				auto V_ = *V;
+				auto ret = __newFVector2D();
+				*ret = *self / V_;
+				LuaObject::push<FVector2D>(L, "FVector2D", ret);
+				return 1;
+			}
+			luaL_error(L, "FVector2D operator__div error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __eq(lua_State* L) {
 			auto self = LuaObject::checkValue<FVector2D*>(L, 1);
-			auto V = LuaObject::checkValue<FVector2D*>(L, 2);
-			auto V_ = *V;
-			auto ret = *self == V_;
-			LuaObject::push(L, ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FVector2D")) {
+				auto V = LuaObject::checkValue<FVector2D*>(L, 2);
+				auto V_ = *V;
+				auto ret = *self == V_;
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "FVector2D operator__eq error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int get_X(lua_State* L) {
@@ -5234,6 +5436,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FVector2D");
 			LuaObject::addOperator(L, "__add", __add);
 			LuaObject::addOperator(L, "__sub", __sub);
@@ -5490,6 +5693,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FRandomStream");
 			LuaObject::addMethod(L, "Initialize", Initialize, true);
 			LuaObject::addMethod(L, "Reset", Reset, true);
@@ -5686,6 +5890,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FGuid");
 			LuaObject::addField(L, "A", get_A, set_A, true);
 			LuaObject::addField(L, "B", get_B, set_B, true);
@@ -5739,21 +5944,37 @@ namespace slua {
 
 		static int __eq(lua_State* L) {
 			auto self = LuaObject::checkValue<FBox2D*>(L, 1);
-			auto Other = LuaObject::checkValue<FBox2D*>(L, 2);
-			auto Other_ = *Other;
-			auto ret = *self == Other_;
-			LuaObject::push(L, ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FBox2D")) {
+				auto Other = LuaObject::checkValue<FBox2D*>(L, 2);
+				auto Other_ = *Other;
+				auto ret = *self == Other_;
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "FBox2D operator__eq error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int __add(lua_State* L) {
 			auto self = LuaObject::checkValue<FBox2D*>(L, 1);
-			auto Other = LuaObject::checkValue<FBox2D*>(L, 2);
-			auto Other_ = *Other;
-			auto ret = __newFBox2D();
-			*ret = *self + Other_;
-			LuaObject::push<FBox2D>(L, "FBox2D", ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FBox2D")) {
+				auto Other = LuaObject::checkValue<FVector2D*>(L, 2);
+				auto Other_ = *Other;
+				auto ret = __newFBox2D();
+				*ret = *self + Other_;
+				LuaObject::push<FBox2D>(L, "FBox2D", ret);
+				return 1;
+			}
+			if (LuaObject::matchType(L, 2, "FBox2D")) {
+				auto Other = LuaObject::checkValue<FBox2D*>(L, 2);
+				auto Other_ = *Other;
+				auto ret = __newFBox2D();
+				*ret = *self + Other_;
+				LuaObject::push<FBox2D>(L, "FBox2D", ret);
+				return 1;
+			}
+			luaL_error(L, "FBox2D operator__add error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int get_Min(lua_State* L) {
@@ -5977,6 +6198,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FBox2D");
 			LuaObject::addOperator(L, "__eq", __eq);
 			LuaObject::addOperator(L, "__add", __add);
@@ -6146,6 +6368,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FFloatRangeBound");
 			LuaObject::addMethod(L, "Exclusive", Exclusive, false);
 			LuaObject::addMethod(L, "Inclusive", Inclusive, false);
@@ -6280,6 +6503,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FFloatRange");
 			LuaObject::addMethod(L, "Empty", Empty, false);
 			LuaObject::addMethod(L, "Hull", Hull, false);
@@ -6437,6 +6661,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FInt32RangeBound");
 			LuaObject::addMethod(L, "Exclusive", Exclusive, false);
 			LuaObject::addMethod(L, "Inclusive", Inclusive, false);
@@ -6571,6 +6796,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FInt32Range");
 			LuaObject::addMethod(L, "Empty", Empty, false);
 			LuaObject::addMethod(L, "Hull", Hull, false);
@@ -6610,6 +6836,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FFloatInterval");
 			LuaObject::finishType(L, "FFloatInterval", __ctor, __gc);
 		}
@@ -6643,6 +6870,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FInt32Interval");
 			LuaObject::finishType(L, "FInt32Interval", __ctor, __gc);
 		}
@@ -6677,11 +6905,15 @@ namespace slua {
 
 		static int __eq(lua_State* L) {
 			auto self = LuaObject::checkValue<FPrimaryAssetType*>(L, 1);
-			auto Other = LuaObject::checkValue<FPrimaryAssetType*>(L, 2);
-			auto Other_ = *Other;
-			auto ret = *self == Other_;
-			LuaObject::push(L, ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FPrimaryAssetType")) {
+				auto Other = LuaObject::checkValue<FPrimaryAssetType*>(L, 2);
+				auto Other_ = *Other;
+				auto ret = *self == Other_;
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "FPrimaryAssetType operator__eq error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int IsValid(lua_State* L) {
@@ -6709,6 +6941,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FPrimaryAssetType");
 			LuaObject::addOperator(L, "__eq", __eq);
 			LuaObject::addMethod(L, "IsValid", IsValid, true);
@@ -6745,11 +6978,15 @@ namespace slua {
 
 		static int __eq(lua_State* L) {
 			auto self = LuaObject::checkValue<FPrimaryAssetId*>(L, 1);
-			auto Other = LuaObject::checkValue<FPrimaryAssetId*>(L, 2);
-			auto Other_ = *Other;
-			auto ret = *self == Other_;
-			LuaObject::push(L, ret);
-			return 1;
+			if (LuaObject::matchType(L, 2, "FPrimaryAssetId")) {
+				auto Other = LuaObject::checkValue<FPrimaryAssetId*>(L, 2);
+				auto Other_ = *Other;
+				auto ret = *self == Other_;
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "FPrimaryAssetId operator__eq error, arg=%d", lua_typename(L, 2));
+			return 0;
 		}
 
 		static int get_PrimaryAssetType(lua_State* L) {
@@ -6804,6 +7041,7 @@ namespace slua {
 		}
 
 		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
 			LuaObject::newType(L, "FPrimaryAssetId");
 			LuaObject::addOperator(L, "__eq", __eq);
 			LuaObject::addField(L, "PrimaryAssetType", get_PrimaryAssetType, set_PrimaryAssetType, true);
@@ -6836,6 +7074,7 @@ namespace slua {
 	}
 
 	void LuaWrapper::init(lua_State* L) {
+		AutoStack autoStack(L);
 		FSlateFontInfoStruct = FSlateFontInfo::StaticStruct();
 		_pushStructMap.Add(FSlateFontInfoStruct, __pushFSlateFontInfo);
 		_checkStructMap.Add(FSlateFontInfoStruct, __checkFSlateFontInfo);

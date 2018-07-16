@@ -208,8 +208,8 @@ namespace slua {
         
     #define EndDef()  return 0; }
 
-    //#define DefLuaMethod(M) 
-    #define DefLuaMethod(NAME,M) { lua_CFunction x=LuaCppBinding<decltype(M),M>::LuaCFunction; \
+    #define DefLuaMethod(NAME,M) { \
+        lua_CFunction x=LuaCppBinding<decltype(M),M>::LuaCFunction; \
         lua_pushcfunction(L,x); \
         lua_setfield(L,-2,#NAME); \
     }

@@ -1,6 +1,7 @@
 
 
 require 'TestCase'
+require 'TestStruct'
 
 local Test=import('SluaTestCase');
 print("Test static func",Test.StaticFunc())

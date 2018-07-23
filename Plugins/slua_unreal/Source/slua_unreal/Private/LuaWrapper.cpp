@@ -20,6 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+// Generated automatically by dot-clang on Mon, 16 Jul 2018 16:43:41 GMT.
+
 #include "LuaWrapper.h"
 
 namespace slua {

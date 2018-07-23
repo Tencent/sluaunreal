@@ -82,7 +82,7 @@ namespace slua {
         UD->delegate->AddUnique(Delegate);
 
         // add reference
-        obj->AddToRoot();
+        LuaObject::addRef(L,obj);
 
         lua_pushlightuserdata(L,obj);
         return 1;
@@ -102,7 +102,7 @@ namespace slua {
         UD->delegate->Remove(Delegate);
 
         // remove reference
-        obj->RemoveFromRoot();
+        LuaObject::removeRef(L,obj);
 
         return 0;
     }

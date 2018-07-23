@@ -140,6 +140,10 @@ namespace slua {
                 Log::Error("LuaVar is not a function, can't be called");
                 return LuaVar();
             }
+            if(!isValid()) {
+                Log::Error("State of lua function is invalid");
+                return LuaVar();
+            }
 
             int n = pushArg(std::forward<ARGS>(args)...);
             int nret = docall(n);
@@ -256,6 +260,7 @@ namespace slua {
         void move(LuaVar&& other);
         void varClone(lua_var& tv,const lua_var& ov) const;
         void pushVar(lua_State* l,const lua_var& ov) const;
+        bool isValid() const;
     };
 
 

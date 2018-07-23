@@ -411,6 +411,10 @@ namespace slua {
         return 0;
     }
 
+    bool LuaVar::isValid() const {
+        return L!=nullptr && LuaState::isValid(L);
+    }
+
     bool LuaVar::isNil() const {
         return vars==nullptr || numOfVar==0;
     }
@@ -463,6 +467,10 @@ namespace slua {
     }
 
     int LuaVar::docall(int argn) {
+        if(!isValid()) {
+            Log::Error("State of lua function is invalid");
+            return 0;
+        }
         int top = lua_gettop(L);
         top=top-argn+1;
         LuaState::pushErrorHandler(L);
@@ -485,6 +493,11 @@ namespace slua {
     void LuaVar::callByUFunction(UFunction* func,uint8* parms) {
         
         if(!func) return;
+
+        if(!isValid()) {
+            Log::Error("State of lua function is invalid");
+            return;
+        }
 
         const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
         if(func->ParmsSize==0 && !bHasReturnParam) {

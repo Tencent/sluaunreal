@@ -111,7 +111,7 @@ namespace slua {
         CheckUD(LuaDelegateWrap,L,1);
         auto array = UD->delegate->GetAllObjects();
         for(auto it:array) {
-            it->RemoveFromRoot();
+            LuaObject::removeRef(L,it);
         }
         UD->delegate->Clear();
         return 0;

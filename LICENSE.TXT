@@ -1,0 +1,6 @@
+Tencent is pleased to support the open source community by making sluaunreal available. 
+
+Copyright (C) 2018 THL A29 Limited, a Tencent company.  All rights reserved.
+
+If you have downloaded a copy of the sluaunreal binary from Tencent, 
+please note that the sluaunreal binary is licensed under the BSD 3-Clause License.

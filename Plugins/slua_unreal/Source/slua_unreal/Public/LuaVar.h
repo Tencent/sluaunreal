@@ -68,6 +68,8 @@ namespace slua {
         void set(const char* v);
         void set(bool b);
 
+        // push luavar to lua state, 
+        // if l is null, push luavar to L
         int push(lua_State *l=nullptr) const;
 
         bool isNil() const;
@@ -98,8 +100,14 @@ namespace slua {
         template<class T>
         inline T castTo();
 
+        // return count of luavar if it's table or tuple, 
+        // otherwise it's return 1
         size_t count() const;
+
+        // get at element by index if luavar is table or tuple
         LuaVar getAt(size_t index) const;
+
+        // template function for return value
         template<class R>
         R getAt(size_t index) const {
             return getAt(index).castTo<R>();
@@ -109,6 +117,7 @@ namespace slua {
         // otherwise push var to given position at pos
         void setAt(const LuaVar& var,int pos=-1);
 
+        // get table by key, if luavar is table
         LuaVar getFromTable(const LuaVar& key) const;
         
         template<class R>
@@ -116,6 +125,7 @@ namespace slua {
             return getFromTable(key).castTo<R>();
         }
 
+        // set table by key and value
         void setToTable(const LuaVar& key,const LuaVar& value) {
             ensure(isTable());
             push(L);
@@ -125,6 +135,8 @@ namespace slua {
             lua_pop(L,1);
         }
 
+        // call luavar if it's funciton
+        // args is arguments passed to lua
         template<class ...ARGS>
         LuaVar call(ARGS ...args) {
             if(!isFunction()) {
@@ -149,6 +161,7 @@ namespace slua {
             return castTo<RET>(ret);
         }
 
+        // call function with pre-pushed n args
         inline LuaVar callWithNArg(int n) {
             int nret = docall(n);
             auto ret = LuaVar::wrapReturn(L,nret);

@@ -93,6 +93,9 @@ namespace slua {
             case LUA_TUSERDATA:
                 type = LV_USERDATA;
                 break;
+            case LUA_TLIGHTUSERDATA:
+                type = LV_LIGHTUD;
+                break;
             case LUA_TNIL:
             default:
                 type = LV_NIL;
@@ -124,6 +127,11 @@ namespace slua {
             break;
         case LV_STRING:
             set(lua_tostring(l,p));
+            break;
+        case LV_LIGHTUD:
+            alloc(1);
+            vars[0].ptr = lua_touserdata(l,p);
+            vars[0].luatype = type;
             break;
         case LV_FUNCTION: 
         case LV_TABLE:
@@ -280,7 +288,10 @@ namespace slua {
         return vars[0].b;
     }
 
-
+    void* LuaVar::asLightUD() const {
+        ensure(numOfVar==1 && vars[0].luatype==LV_LIGHTUD);
+        return vars[0].ptr;
+    }
 
     LuaVar LuaVar::getAt(size_t index) const {
         if(isTable()) {
@@ -374,6 +385,9 @@ namespace slua {
         case LV_USERDATA:
             ov.ref->push(l);
             break;
+        case LV_LIGHTUD:
+            lua_pushlightuserdata(l,ov.ptr);
+            break;
         default:
             lua_pushnil(l);
             break;
@@ -442,6 +456,10 @@ namespace slua {
             return p!=nullptr;
         }
         return false;
+    }
+
+    bool LuaVar::isLightUserdata() const {
+        return numOfVar==1 && vars[0].luatype==LV_LIGHTUD;
     }
 
     bool LuaVar::isString() const {
@@ -526,6 +544,9 @@ namespace slua {
         case LV_USERDATA:
             tv.ref = ov.ref;
             tv.ref->addRef();
+            break;
+        case LV_LIGHTUD:
+            tv.ptr = ov.ptr;
             break;
         }
         tv.luatype = ov.luatype;

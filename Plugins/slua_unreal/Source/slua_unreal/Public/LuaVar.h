@@ -30,7 +30,8 @@ namespace slua {
 
     class SLUA_UNREAL_API LuaVar {
     public:
-        enum Type {LV_NIL,LV_INT,LV_NUMBER,LV_BOOL,LV_STRING,LV_FUNCTION,LV_USERDATA,LV_TABLE,LV_TUPLE};
+        enum Type {LV_NIL,LV_INT,LV_NUMBER,LV_BOOL,
+            LV_STRING,LV_FUNCTION,LV_USERDATA,LV_LIGHTUD,LV_TABLE,LV_TUPLE};
         LuaVar();
         // copy construct for simple type
         LuaVar(lua_Integer v);
@@ -81,6 +82,7 @@ namespace slua {
         bool isString() const;
         bool isBool() const;
         bool isUserdata(const char* t) const;
+        bool isLightUserdata() const;
         Type type() const;
 
         int asInt() const;
@@ -88,6 +90,7 @@ namespace slua {
         double asDouble() const;
         const char* asString() const;
         bool asBool() const;
+        void* asLightUD() const;
         template<typename T>
         T* asUserdata(const char* t) const {
             push(L);
@@ -229,6 +232,7 @@ namespace slua {
                 lua_Integer i;
                 lua_Number d;
                 RefStr* s;
+                void* ptr;
                 bool b;
             };
             Type luatype;

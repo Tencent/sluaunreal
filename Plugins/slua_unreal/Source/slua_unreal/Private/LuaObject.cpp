@@ -776,6 +776,11 @@ namespace slua {
 		return 1;
 	}
 
+    int LuaObject::push(lua_State* L, bool v) {
+		lua_pushboolean(L, v);
+		return 1;
+	}
+
 	int LuaObject::push(lua_State* L, uint32 v) {
 		lua_pushnumber(L, v);
 		return 1;

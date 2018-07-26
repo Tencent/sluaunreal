@@ -18,7 +18,6 @@
 #include "UObject/UnrealType.h"
 #include "UObject/WeakObjectPtr.h"
 #include "Blueprint/UserWidget.h"
-#include "SluaUtil.h"
 #include "LuaObject.generated.h"
 
 
@@ -77,6 +76,11 @@ namespace slua {
     template<class T>
     struct UserData {
         T ud;
+    };
+
+    template<typename T>
+    struct TypeName {
+        static const char* value();
     };
 
     class SLUA_UNREAL_API LuaObject
@@ -178,6 +182,7 @@ namespace slua {
         static int push(lua_State* L, uint64 v);
 		static int push(lua_State* L, float v);
 		static int push(lua_State* L, int v);
+		static int push(lua_State* L, bool v);
 		static int push(lua_State* L, uint32 v);
 		static int push(lua_State* L, const FText& v);
 		static int push(lua_State* L, const FString& str);
@@ -185,6 +190,13 @@ namespace slua {
 		static int push(lua_State* L, const char* str);
         static int push(lua_State* L, UFunction* func, UClass* cls=nullptr);
         static int push(lua_State* L, UProperty* up, uint8* parms);
+
+
+        template<typename T>
+        static int push(lua_State* L,T* ptr,typename std::enable_if<!std::is_base_of<UObject,T>::value>::type* = 0) {
+            return push(L,TypeName<T>::value(),ptr);
+        }
+
 		// static int push(lua_State* L, FScriptArray* array);
         
         static int pushNil(lua_State* L) {

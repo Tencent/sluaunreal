@@ -64,32 +64,6 @@ namespace slua {
 		typedef typename remove_cr<T>::type type;
 	};
 
-
-    template<typename T>
-    struct TypeName {
-        static const char* value() {
-            return nullptr;
-        }
-    };
-
-    template<typename T>
-    struct LuaValuePush {
-        static int push(lua_State* L,T value) {
-            return LuaObject::push(L,value);
-        }
-    };
-
-    template<typename T>
-    struct LuaValuePush<T*> {
-        static int push(lua_State* L,T* value) {
-            if(TypeName<T>::value())
-                return LuaObject::push(L,TypeName<T>::value(),value);
-            else
-                return LuaObject::push(L,value);
-        }
-    };
-
-
     template <typename T, T,int Offset>
     struct FunctionBind;
 
@@ -126,7 +100,7 @@ namespace slua {
             // make int list for arg index
             using I = MakeIntList<sizeof...(Args)>;
             T ret = Functor<I>::invoke(L,ptr);
-            return LuaValuePush<T>::push(L,ret);
+            return LuaObject::push(L,ret);
         }
     };
 

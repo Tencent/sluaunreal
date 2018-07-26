@@ -28,7 +28,9 @@ local bb = t:GetWidget("Button");
 
 local v = FVector(100,200,300)
 local r1,r2,r3=t:TestStruct(v,0,v,1024,0,"hello world")
-assert(r1==v and r2==FVector(200,400,600) and r3==1024)
+assert(r1==v*4)
+assert(r2==FVector(200,400,600))
+assert(r3==1024)
 
 print(bb)
 

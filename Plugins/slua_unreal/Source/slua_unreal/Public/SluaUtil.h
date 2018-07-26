@@ -33,11 +33,27 @@ namespace slua {
         const std::function<void()>& func;
     };
 
-    struct InstName {
+    template<typename T>
+    struct InstName;
+    
+    template<>
+    struct InstName<void>
+    {
         static const char* value(const char* t) {
             static char s_inst[64];
 		    snprintf(s_inst, 64, "%s_inst", t?t:"Unknown");
             return s_inst;
+        }
+    };
+
+    template<typename T>
+    struct InstName {
+        static const char* value(const char* t) {
+            if(std::is_base_of<UObject,T>::value)
+                return "UObject";
+            else {
+                return InstName<void>::value(t);
+            }
         }
     };
 

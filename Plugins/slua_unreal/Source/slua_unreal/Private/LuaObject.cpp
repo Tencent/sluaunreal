@@ -136,7 +136,7 @@ namespace slua {
 		lua_setmetatable(L, -3);					// setmetatable(t, mt)
 		setMetaMethods(L);
 
-		luaL_newmetatable(L, InstName::value(tn));
+		luaL_newmetatable(L, InstName<void>::value(tn));
 		setMetaMethods(L);
 	}
 

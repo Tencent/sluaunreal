@@ -80,7 +80,13 @@ namespace slua {
 
     template<typename T>
     struct TypeName {
-        static const char* value();
+        static const char* value() {
+            if(std::is_base_of<UObject,T>::value) 
+                return "UObject";
+            return value_();
+        }
+
+        static const char* value_();
     };
 
     class SLUA_UNREAL_API LuaObject
@@ -193,7 +199,7 @@ namespace slua {
 
 
         template<typename T>
-        static int push(lua_State* L,T* ptr,typename std::enable_if<!std::is_base_of<UObject,T>::value>::type* = 0) {
+        static int push(lua_State* L,T* ptr,typename std::enable_if<!std::is_base_of<UObject,T>::value>::type* = nullptr) {
             return push(L,TypeName<T>::value(),ptr);
         }
 

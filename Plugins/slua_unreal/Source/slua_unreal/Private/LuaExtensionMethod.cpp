@@ -17,16 +17,6 @@
 
 namespace slua {
 
-    #define MetaMap(U,N) \
-        template<>\
-        struct TypeName<U> {\
-            static const char* value() {\
-                return #N;\
-            }\
-        };\
-
-    MetaMap(UUserWidget,UObject)
-
     namespace ExtensionMethod {
 
         #define REG_EXTENSION_METHOD(U,N,M) { \

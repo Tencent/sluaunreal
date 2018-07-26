@@ -53,15 +53,14 @@ t:TwoArgs("helloworld",100,1717,"1024",ui)
 ui:AddToViewport(0);
 local seq=ui.ActiveSequencePlayers;
 print('seq',seq:Num());
-local tree=ui.WidgetTree;
-local btn2=tree:FindWidget('Button1');
+local btn2=ui:FindWidget('Button1');
 local index = 1
 
 btn2.OnClicked:Add(function() 
     index=index+1
     print('say helloworld',index) 
 end);
-local edit=tree:FindWidget('TextBox_0');
+local edit=ui:FindWidget('TextBox_0');
 local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
 edit.OnTextChanged:Remove(evt);
 txt:SetText('helloworld button');

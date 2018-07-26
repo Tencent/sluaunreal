@@ -163,7 +163,7 @@ namespace slua {
 
         static int LuaCFunction(lua_State* L) {
             // check and get obj ptr;
-            void* p = luaL_checkudata(L,1,slua::InstName::value(TypeName<T>::value()));
+            void* p = luaL_checkudata(L,1,slua::InstName<T>::value(TypeName<T>::value()));
             using f = FunctionBind<RET (*)(lua_State *, void*, ARG...), invoke, 2>;
             return f::invoke(L,p);
         }
@@ -180,7 +180,7 @@ namespace slua {
 
         static int LuaCFunction(lua_State* L) {
             // check and get obj ptr;
-            void* p = luaL_checkudata(L,1,slua::InstName::value(TypeName<T>::value()));
+            void* p = luaL_checkudata(L,1,slua::InstName<T>::value(TypeName<T>::value()));
             using f = FunctionBind<RET (*)(lua_State *, void*, ARG...), invoke, 2>;
             return f::invoke(L,p);
         }
@@ -197,7 +197,7 @@ namespace slua {
 
         static int LuaCFunction(lua_State* L) {
             // check and get obj ptr;
-            void* p = luaL_checkudata(L,1,slua::InstName::value(TypeName<T>::value()));
+            void* p = luaL_checkudata(L,1,slua::InstName<T>::value(TypeName<T>::value()));
             using f = FunctionBind<void (*)(lua_State *, void*, ARG...), invoke, 2>;
             return f::invoke(L,p);
         }
@@ -211,11 +211,9 @@ namespace slua {
 
     #define DefLuaClass(CLS) \
         template<> \
-        struct TypeName<CLS> { \
-            static const char* value() { \
-                return #CLS; \
-            } \
-        }; \
+        const char* TypeName<CLS>::value_() { \
+            return #CLS; \
+        } \
         static int Lua##CLS##_gc(lua_State* L) { \
             auto self = LuaObject::checkValue<CLS*>(L, 1); \
 			delete self; \

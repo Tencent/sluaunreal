@@ -70,7 +70,9 @@
 			"fstream": "cpp",
 			"cstddef": "cpp",
 			"variant": "cpp",
-			"stack": "cpp"
+			"stack": "cpp",
+			"cfenv": "cpp",
+			"condition_variable": "cpp"
 		}
 	}
 }

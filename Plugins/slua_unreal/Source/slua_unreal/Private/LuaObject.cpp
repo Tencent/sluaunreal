@@ -25,6 +25,7 @@
 #include "LuaState.h"
 #include "LuaWrapper.h"
 #include "LuaEnums.h"
+#include "SluaUtil.h"
 
 ULuaObject::ULuaObject(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
@@ -135,9 +136,7 @@ namespace slua {
 		lua_setmetatable(L, -3);					// setmetatable(t, mt)
 		setMetaMethods(L);
 
-		char _inst[64];
-		sprintf(_inst, "%s_inst", tn);
-		luaL_newmetatable(L, _inst);
+		luaL_newmetatable(L, InstName::value(tn));
 		setMetaMethods(L);
 	}
 

@@ -21,11 +21,11 @@
 #include "Misc/AssertionMacros.h"
 #include "Misc/SecureHash.h"
 #include "Log.h"
-#include "Util.h"
 #include "lua/lua.hpp"
 #include <map>
 #include "LuaWrapper.h"
 #include "LuaEnums.h"
+#include "LuaCppBinding.h"
 
 namespace slua {
 
@@ -223,6 +223,8 @@ namespace slua {
 
         LuaObject::init(L);
         SluaUtil::openLib(L);
+        LuaClass::reg(L);
+
         lua_settop(L,0);
 
         return true;

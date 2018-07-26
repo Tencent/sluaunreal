@@ -16,6 +16,8 @@
 #include "lua/lua.hpp"
 #include <utility>
 #include <cstddef>
+#include <type_traits>
+#include "SluaUtil.h"
 
 namespace slua {
 
@@ -42,6 +44,51 @@ namespace slua {
 
     template <int n>
     using MakeIntList = typename MakeIntList_t<n>::type;
+
+
+    template<typename T>
+	struct remove_cr
+	{
+		typedef T type;
+	};
+
+    template<typename T>
+	struct remove_cr<const T&>
+	{
+		typedef typename remove_cr<T>::type type;
+	};
+
+    template<typename T>
+	struct remove_cr<T&>
+	{
+		typedef typename remove_cr<T>::type type;
+	};
+
+
+    template<typename T>
+    struct TypeName {
+        static const char* value() {
+            return nullptr;
+        }
+    };
+
+    template<typename T>
+    struct LuaValuePush {
+        static int push(lua_State* L,T value) {
+            return LuaObject::push(L,value);
+        }
+    };
+
+    template<typename T>
+    struct LuaValuePush<T*> {
+        static int push(lua_State* L,T* value) {
+            if(TypeName<T>::value())
+                return LuaObject::push(L,TypeName<T>::value(),value);
+            else
+                return LuaObject::push(L,value);
+        }
+    };
+
 
     template <typename T, T,int Offset>
     struct FunctionBind;
@@ -79,7 +126,7 @@ namespace slua {
             // make int list for arg index
             using I = MakeIntList<sizeof...(Args)>;
             T ret = Functor<I>::invoke(L,ptr);
-            return LuaObject::push(L,ret);
+            return LuaValuePush<T>::push(L,ret);
         }
     };
 
@@ -113,25 +160,23 @@ namespace slua {
         }
     };
 
-    template<typename T>
-    struct TypeName {
-        static const char* value();
-    };
-
-    template<typename T>
-    struct LuaValuePush {
-        static int push(lua_State* L,T);
-    };
-
-    template<typename T,T>
+    template<typename T,T,int Offset=1>
     struct LuaCppBinding;
 
-    template<typename RET,typename ...ARG,RET (*func)(ARG...)>
-    struct LuaCppBinding< RET (*)(ARG...), func> {
+    template<typename RET,typename ...ARG,RET (*func)(ARG...),int Offset>
+    struct LuaCppBinding< RET (*)(ARG...), func, Offset> {
+
+        static RET invoke(lua_State* L,void* ptr,ARG... args) {
+            return func( std::forward<ARG>(args)... );
+        }
+
         static int LuaCFunction(lua_State* L) {
-            return 0;
+            using f = FunctionBind<RET (*)(lua_State *, void*, ARG...), invoke, Offset>;
+            return f::invoke(L,nullptr);
         }
     };
+
+
 
     template<typename T,typename RET,typename ...ARG,RET (T::*func)(ARG...) const>
     struct LuaCppBinding< RET (T::*)(ARG...) const, func> {
@@ -144,8 +189,7 @@ namespace slua {
 
         static int LuaCFunction(lua_State* L) {
             // check and get obj ptr;
-            void* p = luaL_checkudata(L,1,TypeName<T>::value());
-            if(!p) luaL_error(L,"expect userdata %s",TypeName<T>::value());
+            void* p = luaL_checkudata(L,1,slua::InstName::value(TypeName<T>::value()));
             using f = FunctionBind<RET (*)(lua_State *, void*, ARG...), invoke, 2>;
             return f::invoke(L,p);
         }
@@ -162,8 +206,7 @@ namespace slua {
 
         static int LuaCFunction(lua_State* L) {
             // check and get obj ptr;
-            void* p = luaL_checkudata(L,1,TypeName<T>::value());
-            if(!p) luaL_error(L,"expect userdata %s",TypeName<T>::value());
+            void* p = luaL_checkudata(L,1,slua::InstName::value(TypeName<T>::value()));
             using f = FunctionBind<RET (*)(lua_State *, void*, ARG...), invoke, 2>;
             return f::invoke(L,p);
         }
@@ -180,11 +223,16 @@ namespace slua {
 
         static int LuaCFunction(lua_State* L) {
             // check and get obj ptr;
-            void* p = luaL_checkudata(L,1,TypeName<T>::value());
-            if(!p) luaL_error(L,"expect userdata %s",TypeName<T>::value());
+            void* p = luaL_checkudata(L,1,slua::InstName::value(TypeName<T>::value()));
             using f = FunctionBind<void (*)(lua_State *, void*, ARG...), invoke, 2>;
             return f::invoke(L,p);
         }
+    };
+
+    struct LuaClass {
+        LuaClass(lua_CFunction reg);
+
+        static void reg(lua_State* L);
     };
 
     #define DefLuaClass(CLS) \
@@ -194,17 +242,27 @@ namespace slua {
                 return #CLS; \
             } \
         }; \
-        int Lua##CLS##_setupMT(lua_State* L) { \
-        LuaObject::setupMTSelfSearch(L); \
+        static int Lua##CLS##_gc(lua_State* L) { \
+            auto self = LuaObject::checkValue<CLS*>(L, 1); \
+			delete self; \
+            return 0;\
+        } \
+        static int Lua##CLS##_setup(lua_State* L); \
+        LuaClass Lua##CLS##__(Lua##CLS##_setup); \
+        int Lua##CLS##_setup(lua_State* L) { \
+            AutoStack autoStack(L); \
+            LuaObject::newType(L,#CLS); \
         
-    #define EndDef()  return 0; }
+    #define EndDef(CLS,M)  \
+        lua_CFunction x=LuaCppBinding<decltype(M),M,2>::LuaCFunction; \
+        LuaObject::finishType(L, #CLS, x, Lua##CLS##_gc); \
+        return 0; } \
 
     #define DefLuaMethod(NAME,M) { \
         lua_CFunction x=LuaCppBinding<decltype(M),M>::LuaCFunction; \
-        lua_pushcfunction(L,x); \
-        lua_setfield(L,-2,#NAME); \
+        bool inst=std::is_member_function_pointer<decltype(M)>::value; \
+        LuaObject::addMethod(L, #NAME, x, inst); \
     }
-
-    #define LuaClass(CLS) Lua##CLS##_setupMT
+    
 }
 

@@ -24,16 +24,29 @@
 
 namespace slua {
 
-class Foo {
-public:
-    void bar(const char*,int) {}
-    FString getStr() { return FString(UTF8_TO_TCHAR("some text")); }
-};
+    class Foo {
+    public:
+        Foo(int v):value(v) {}
 
-DefLuaClass(Foo)
-    DefLuaMethod(bar,&Foo::bar)
-    DefLuaMethod(getStr,&Foo::getStr)
-EndDef()
+        static Foo* create(int v) {
+            return new Foo(v);
+        }
+
+        void bar(const char* v) {
+            Log::Log("get text %s and value is %d",v,value);
+        }
+
+        static FString getStr() { 
+            return FString(UTF8_TO_TCHAR("some text"));
+        }
+
+        int value;
+    };
+
+    DefLuaClass(Foo)
+        DefLuaMethod(bar,&Foo::bar)
+        DefLuaMethod(getStr,&Foo::getStr)
+    EndDef(Foo,&Foo::create)
 }
 
 USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)

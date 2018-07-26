@@ -18,7 +18,9 @@
 #include "UObject/UnrealType.h"
 #include "UObject/WeakObjectPtr.h"
 #include "Blueprint/UserWidget.h"
+#include "SluaUtil.h"
 #include "LuaObject.generated.h"
+
 
 UCLASS()
 class SLUA_UNREAL_API ULuaObject : public UObject {
@@ -31,7 +33,6 @@ private:
     TArray<UObject*> Cache;
 };
 
-#define SafeDelete(ptr) if(ptr) { delete ptr;ptr=nullptr; }
 
 #define CheckUD(Type,L,P) UserData<Type*>* ud = reinterpret_cast<UserData<Type*>*>(luaL_checkudata(L, P,#Type)); \
     if(!ud) { luaL_error(L, "checkValue error at %d",P); } \
@@ -72,24 +73,6 @@ namespace slua {
         LuaStruct(uint8* buf,uint32 size,UScriptStruct* uss);
         ~LuaStruct();
     };
-
-	template<typename T>
-	struct remove_cr
-	{
-		typedef T type;
-	};
-
-    template<typename T>
-	struct remove_cr<const T&>
-	{
-		typedef typename remove_cr<T>::type type;
-	};
-
-    template<typename T>
-	struct remove_cr<T&>
-	{
-		typedef typename remove_cr<T>::type type;
-	};
 
     template<class T>
     struct UserData {
@@ -202,6 +185,10 @@ namespace slua {
 		static int push(lua_State* L, const char* str);
         static int push(lua_State* L, UFunction* func, UClass* cls=nullptr);
         static int push(lua_State* L, UProperty* up, uint8* parms);
+        template<typename T>
+        static int push(lua_State* L,T* ptr) {
+            return 0;//push(L,TypeName<T>::value(),ptr);
+        }
 		// static int push(lua_State* L, FScriptArray* array);
         
         static int pushNil(lua_State* L) {

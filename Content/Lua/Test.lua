@@ -3,6 +3,12 @@
 require 'TestCase'
 require 'TestStruct'
 
+-- test cpp binding
+local f1=Foo(1024)
+local str=Foo.getStr()
+f1:bar(str)
+
+
 local Test=import('SluaTestCase');
 print("Test static func",Test.StaticFunc())
 

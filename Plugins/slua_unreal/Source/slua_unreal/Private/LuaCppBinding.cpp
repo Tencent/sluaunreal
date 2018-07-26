@@ -11,22 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 
-#pragma once
-#include <functional>
+#include "LuaObject.h"
+#include "LuaCppBinding.h"
 
 namespace slua {
+    TArray<lua_CFunction> luaclasss;
 
-    template<typename T>
-    struct AutoDeleteArray {
-        AutoDeleteArray(T* ptr):ptr(ptr) {}
-        ~AutoDeleteArray() { delete[] ptr; }
-        T* ptr;
-    };
+    LuaClass::LuaClass(lua_CFunction setup) {
+        luaclasss.Add(setup);
+    }
 
-    struct Defer {
-        Defer(const std::function<void()>& f):func(f) {}
-        ~Defer() { func(); }
-        const std::function<void()>& func;
-    };
-
+    void LuaClass::reg(lua_State* L) {
+        for(auto it:luaclasss)
+            it(L);
+    }
 }

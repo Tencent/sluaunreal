@@ -1,12 +1,13 @@
-
-
 require 'TestCase'
 require 'TestStruct'
 
 -- test cpp binding
 local f1=Foo(1024)
 local str=Foo.getStr()
+-- f2 not collect
+local f2=Foo.getInstance()
 f1:bar(str)
+f2:bar(str)
 
 
 local Test=import('SluaTestCase');
@@ -81,7 +82,7 @@ function xx.text()
 end
 
 function bpcall(a,b,c,d)
-    print("call from bp",a,b,c,d)
+    --print("call from bp",a,b,c,d)
     return 1024,"return from lua"
 end
 
@@ -119,6 +120,7 @@ function update(dt,actor)
     -- test free event twice
     edit.OnTextChanged:Remove(evt);
 
+    local f1=Foo(1024)
     collectgarbage("collect")
 
     return 1024,2,"s",{1,2,3,4},function() end

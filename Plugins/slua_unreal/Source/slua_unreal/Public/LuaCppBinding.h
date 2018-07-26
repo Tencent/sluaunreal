@@ -215,8 +215,8 @@ namespace slua {
             return #CLS; \
         } \
         static int Lua##CLS##_gc(lua_State* L) { \
-            auto self = LuaObject::checkValue<CLS*>(L, 1); \
-			delete self; \
+            UserData<CLS*>* UD = reinterpret_cast<UserData<CLS*>*>(lua_touserdata(L,1)); \
+            if(UD->owned) delete UD->ud; \
             return 0;\
         } \
         static int Lua##CLS##_setup(lua_State* L); \

@@ -27,9 +27,20 @@ namespace slua {
     class Foo {
     public:
         Foo(int v):value(v) {}
+        ~Foo() {
+            Log::Log("Foo object %p had been freed",this);
+        }
 
-        static Foo* create(int v) {
+        // constructor function for lua
+        // LuaOwnedPtr will hold ptr by lua and auto collect it;
+        static LuaOwnedPtr<Foo> create(int v) {
             return new Foo(v);
+        }
+
+        // raw ptr not hold by lua, lua not collect it
+        static Foo* getInstance() {
+            static Foo s_inst(2048);
+            return &s_inst;
         }
 
         void bar(const char* v) {
@@ -46,6 +57,7 @@ namespace slua {
     DefLuaClass(Foo)
         DefLuaMethod(bar,&Foo::bar)
         DefLuaMethod(getStr,&Foo::getStr)
+        DefLuaMethod(getInstance,&Foo::getInstance)
     EndDef(Foo,&Foo::create)
 }
 

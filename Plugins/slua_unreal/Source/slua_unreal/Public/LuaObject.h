@@ -18,6 +18,7 @@
 #include "UObject/UnrealType.h"
 #include "UObject/WeakObjectPtr.h"
 #include "Blueprint/UserWidget.h"
+#include "SluaUtil.h"
 #include "LuaObject.generated.h"
 
 
@@ -45,10 +46,12 @@ private:
     lua_pushcfunction(L,METHOD); \
     lua_setfield(L,-2,#METHOD);
 
-#define NewUD(T, v) auto ud = lua_newuserdata(L, sizeof(UserData<T*>)); \
+#define NewUD(T, v, o) auto ud = lua_newuserdata(L, sizeof(UserData<T*>)); \
 	if (!ud) luaL_error(L, "out of memory to new ud"); \
 	auto udptr = reinterpret_cast< UserData<T*>* >(ud); \
-	udptr->ud = v
+	udptr->ud = const_cast<T*>(v); \
+    udptr->owned = o;
+
 
 namespace slua {
 
@@ -76,6 +79,7 @@ namespace slua {
     template<class T>
     struct UserData {
         T ud;
+        bool owned;
     };
 
     template<typename T>
@@ -87,6 +91,12 @@ namespace slua {
         }
 
         static const char* value_();
+    };
+
+    template<typename T>
+    struct LuaOwnedPtr {
+        T* ptr;
+        LuaOwnedPtr(T* p):ptr(p) {}
     };
 
     class SLUA_UNREAL_API LuaObject
@@ -125,18 +135,9 @@ namespace slua {
         }
 
 		template<class T>
-		static int push(lua_State* L, const char* fn, T* v) {
-			NewUD(T, v);
+		static int push(lua_State* L, const char* fn, const T* v, bool owned=false) {
+			NewUD(T, v, owned);
 			getInstanceTypeTable(L, fn);
-			lua_setmetatable(L, -2);
-            return 1;
-		}
-
-		template<class T>
-		static int push(lua_State* L, const char* fn, const T* v) {
-			auto v2 = const_cast<T*>(v);
-			NewUD(T, v2);
-			getStaticTypeTable(L, fn);
 			lua_setmetatable(L, -2);
             return 1;
 		}
@@ -148,6 +149,7 @@ namespace slua {
             if(!cls) lua_pushnil(L);
             UserData<T>* ud = reinterpret_cast< UserData<T>* >(lua_newuserdata(L, sizeof(UserData<T>)));
             ud->ud = cls;
+            ud->owned = true;
             setupMetaTable(L,tn,setupmt,gc);
             return 1;
         }
@@ -201,6 +203,11 @@ namespace slua {
         template<typename T>
         static int push(lua_State* L,T* ptr,typename std::enable_if<!std::is_base_of<UObject,T>::value>::type* = nullptr) {
             return push(L,TypeName<T>::value(),ptr);
+        }
+
+        template<typename T>
+        static int push(lua_State* L,LuaOwnedPtr<T> ptr) {
+            return push(L,TypeName<T>::value(),ptr.ptr,true);
         }
 
 		// static int push(lua_State* L, FScriptArray* array);
@@ -257,6 +264,7 @@ namespace slua {
                 
             UserData<T>* ud = reinterpret_cast< UserData<T>* >(lua_newuserdata(L, sizeof(UserData<T>)));
             ud->ud = cls;
+            ud->owned = true;
             
             setupMetaTable(L,tn,setupmt,gc);
             return 1;

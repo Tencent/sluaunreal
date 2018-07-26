@@ -164,42 +164,13 @@ namespace slua {
 	void LuaObject::finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc) {
 		lua_pushcclosure(L, ctor, 0);
 		lua_setfield(L, -3, "__call");
-
-		lua_newtable(L);             // t, mt, _instance, _static
-		lua_pushvalue(L, -2);       // t, mt, _instance, _static, _instance
-		lua_pushnil(L);              // t, mt, _instance, _static, _instance, nil
-		while (lua_next(L, -2)) {   // t, mt, _instance, _static, _instance, key, value
-			lua_pushvalue(L, -2);   // t, mt, _instance, _static, _instance, key, value, key
-			lua_insert(L, -2);      // t, mt, _instance, _static, _instance, key, key, value
-			lua_settable(L, -5);    // t, mt, _instance, _static, _instance, key				
-		}
-		lua_pop(L, 1); // t, mt, _instance, _static
-
-		lua_pushvalue(L, -1);             // t, mt, _instance, _static, _static
-		lua_setfield(L, -4, "__static"); // t, mt, _instance, _static
-		char _static[64];
-		sprintf(_static, "%s_static", tn);
-		lua_pushstring(L, _static); // t, mt, _instance, _static, t_static
-		lua_setfield(L, -2, "__name");
-        lua_setfield(L, LUA_REGISTRYINDEX, _static); // t, mt, _instance
-
-		lua_pushvalue(L, -1);             // t, mt, _instance, _instance
-		lua_setfield(L, -3, "__instance"); // t, mt, _instance
-
 		lua_pushcclosure(L, gc, 0); // t, mt, _instance, __gc
 		lua_setfield(L, -2, "__gc"); // t, mt, _instance
-	}
-
-	void LuaObject::getStaticTypeTable(lua_State* L, const char* tn) {
-		char _static[64];
-		sprintf(_static, "%s_static", tn);
-		luaL_getmetatable(L, _static);
+        lua_pop(L,3);
 	}
 
 	void LuaObject::getInstanceTypeTable(lua_State* L, const char* tn) {
-		char _inst[64];
-		sprintf(_inst, "%s_inst", tn);
-		luaL_getmetatable(L, _inst);
+		luaL_getmetatable(L, InstName<void>::value(tn));
 	}
 
 	bool LuaObject::matchType(lua_State* L, int p, const char* tn) {

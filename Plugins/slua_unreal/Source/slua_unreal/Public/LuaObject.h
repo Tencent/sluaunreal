@@ -185,10 +185,6 @@ namespace slua {
 		static int push(lua_State* L, const char* str);
         static int push(lua_State* L, UFunction* func, UClass* cls=nullptr);
         static int push(lua_State* L, UProperty* up, uint8* parms);
-        template<typename T>
-        static int push(lua_State* L,T* ptr) {
-            return 0;//push(L,TypeName<T>::value(),ptr);
-        }
 		// static int push(lua_State* L, FScriptArray* array);
         
         static int pushNil(lua_State* L) {

@@ -102,8 +102,6 @@ namespace slua {
     class SLUA_UNREAL_API LuaObject
     {
     public:
-		static void getInstanceTypeTable(lua_State* L, const char* tn);
-		static void getStaticTypeTable(lua_State* L, const char* tn);
 		static bool matchType(lua_State* L, int p, const char* tn);
 
 		static int classIndex(lua_State* L);
@@ -137,7 +135,7 @@ namespace slua {
 		template<class T>
 		static int push(lua_State* L, const char* fn, const T* v, bool owned=false) {
 			NewUD(T, v, owned);
-			getInstanceTypeTable(L, fn);
+            luaL_getmetatable(L,fn);
 			lua_setmetatable(L, -2);
             return 1;
 		}

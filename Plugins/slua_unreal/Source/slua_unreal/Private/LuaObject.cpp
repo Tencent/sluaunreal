@@ -102,15 +102,6 @@ namespace slua {
 		}
 	}
 
-	static inline bool strStartsWith(const char* str, const char* pattern) {
-		while (*pattern) {
-			if (*pattern++ != *str++) {
-				return false;
-			}
-		}
-		return true;
-	}
-
 	static void setMetaMethods(lua_State* L) {
 		lua_newtable(L);
 		lua_pushvalue(L, -1);
@@ -131,12 +122,12 @@ namespace slua {
 		lua_setfield(L, -3, tn);					// _G[tn] = t
 		lua_remove(L, -2);						// remove global table;
 
-		luaL_newmetatable(L, tn);				// local mt = {}; _G[tn] = mt
+        lua_newtable(L);
 		lua_pushvalue(L, -1);
 		lua_setmetatable(L, -3);					// setmetatable(t, mt)
 		setMetaMethods(L);
 
-		luaL_newmetatable(L, InstName<void>::value(tn));
+		luaL_newmetatable(L, tn);
 		setMetaMethods(L);
 	}
 
@@ -169,10 +160,6 @@ namespace slua {
         lua_pop(L,3);
 	}
 
-	void LuaObject::getInstanceTypeTable(lua_State* L, const char* tn) {
-		luaL_getmetatable(L, InstName<void>::value(tn));
-	}
-
 	bool LuaObject::matchType(lua_State* L, int p, const char* tn) {
 		AutoStack autoStack(L);
 		if (!lua_isuserdata(L, p)) {
@@ -187,8 +174,7 @@ namespace slua {
 			return false;
 		}
 		auto name = luaL_checkstring(L, -1);
-		auto ret = strStartsWith(name, tn);
-		return ret;
+        return strcmp(name,tn)==0;
 	}
 
     PushPropertyFunction getPusher(UClass* cls) {

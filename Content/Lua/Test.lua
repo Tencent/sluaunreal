@@ -1,13 +1,7 @@
 require 'TestCase'
 require 'TestStruct'
+require 'TestCppBinding'
 
--- test cpp binding
-local f1=Foo(1024)
-local str=Foo.getStr()
--- f2 not collect
-local f2=Foo.getInstance()
-f1:bar(str)
-f2:bar(str)
 
 
 local Test=import('SluaTestCase');
@@ -120,7 +114,6 @@ function update(dt,actor)
     -- test free event twice
     edit.OnTextChanged:Remove(evt);
 
-    local f1=Foo(1024)
     collectgarbage("collect")
 
     return 1024,2,"s",{1,2,3,4},function() end

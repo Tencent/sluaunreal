@@ -4,6 +4,8 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 
 目前该项目作为潘多拉系统的一部分，用于剑侠，刺激战场，全军出击业务，构建这些业务的周边系统、运营系统，上线质量稳定。
 
+欢迎issue，pr，star，fork。
+
 # slua-unreal 有什么功能
 
 * 通过蓝图反射机制，自动导出unreal 4的蓝图api到lua接口
@@ -75,4 +77,3 @@ Slua:     call from bp    1024    Hello World 3.1400001049042 UObject: 0x1364861
 slua-unreal依赖dot-clang做c++静态代码生成的工具稍后开源，目前常用FVector等常用类的静态生成代码已经附带。
 
 [详细介绍](https://github.com/Tencent/sluaunreal/wiki/%E8%AF%A6%E7%BB%86%E8%AF%B4%E6%98%8E)
-

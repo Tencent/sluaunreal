@@ -1,0 +1,13 @@
+Binaries
+Intermediate
+Saved
+.DS_Store
+.vscode
+.vs
+DerivedDataCache
+democpp.xcworkspace/xcuserdata/siney.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
+democpp.xcworkspace/xcuserdata/siney.xcuserdatad/UserInterfaceState.xcuserstate
+democpp.xcworkspace/contents.xcworkspacedata
+Build
+democpp.code-workspace
+Config

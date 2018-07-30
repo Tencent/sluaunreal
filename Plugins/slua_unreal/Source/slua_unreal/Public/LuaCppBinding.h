@@ -203,7 +203,7 @@ namespace slua {
         }
     };
 
-    struct LuaClass {
+    struct SLUA_UNREAL_API LuaClass {
         LuaClass(lua_CFunction reg);
 
         static void reg(lua_State* L);

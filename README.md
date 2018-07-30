@@ -73,3 +73,6 @@ Slua:     call from bp    1024    Hello World 3.1400001049042 UObject: 0x1364861
 # 相关参考
 
 slua-unreal依赖dot-clang做c++静态代码生成的工具稍后开源，目前常用FVector等常用类的静态生成代码已经附带。
+
+[详细介绍](https://github.com/Tencent/sluaunreal/wiki/%E8%AF%A6%E7%BB%86%E8%AF%B4%E6%98%8E)
+

@@ -190,6 +190,7 @@ namespace slua {
 		static int push(lua_State* L, int v);
 		static int push(lua_State* L, bool v);
 		static int push(lua_State* L, uint32 v);
+		static int push(lua_State* L, void* v);
 		static int push(lua_State* L, const FText& v);
 		static int push(lua_State* L, const FString& str);
 		static int push(lua_State* L, const FName& str);
@@ -356,5 +357,11 @@ namespace slua {
     inline FName LuaObject::checkValue(lua_State* L, int p) {
         const char* s = luaL_checkstring(L, p);
         return FName(UTF8_TO_TCHAR(s));
+    }
+
+    template<>
+    inline void* LuaObject::checkValue(lua_State* L, int p) {
+        luaL_checktype(L,p,LUA_TLIGHTUSERDATA);
+        return lua_touserdata(L,p);
     }
 }

@@ -743,6 +743,11 @@ namespace slua {
 		return 1;
 	}
 
+    int LuaObject::push(lua_State* L, void* ptr) {
+		lua_pushlightuserdata(L,ptr);
+		return 1;
+	}
+
 	int LuaObject::push(lua_State* L, const FText& v) {
 		FString str = v.ToString();
 		lua_pushstring(L, TCHAR_TO_UTF8(*str));

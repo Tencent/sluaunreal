@@ -86,6 +86,7 @@ namespace slua {
         Type type() const;
 
         int asInt() const;
+        int64 asInt64() const;
         float asFloat() const;
         double asDouble() const;
         const char* asString() const;

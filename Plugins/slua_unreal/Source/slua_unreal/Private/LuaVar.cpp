@@ -254,6 +254,18 @@ namespace slua {
         }
     }
 
+    int64 LuaVar::asInt64() const {
+        ensure(numOfVar==1);
+        switch(vars[0].luatype) {
+        case LV_INT:
+            return vars[0].i;
+        case LV_NUMBER:
+            return vars[0].d;
+        default:
+            return -1;
+        }
+    }
+
     float LuaVar::asFloat() const {
         ensure(numOfVar==1);
         switch(vars[0].luatype) {

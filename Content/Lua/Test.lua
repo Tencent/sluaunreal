@@ -1,6 +1,7 @@
 require 'TestCase'
 require 'TestStruct'
 require 'TestCppBinding'
+require 'TestArray'
 
 
 
@@ -28,15 +29,6 @@ assert(r2==FVector(200,400,600))
 assert(r3==1024)
 
 print(bb)
-
--- test
-for i=1,10 do
-    local arr=t:GetArray();
-    print("arr len",arr:Num())
-    for i=0,arr:Num()-1 do
-        print("arr item",i,arr:Get(i))
-    end
-end
 
 local Button = import('Button');
 local ButtonStyle = import('ButtonStyle');

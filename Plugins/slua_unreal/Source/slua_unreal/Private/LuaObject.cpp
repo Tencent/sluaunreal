@@ -45,11 +45,8 @@ void ULuaObject::Remove(UObject* obj)
 
 namespace slua { 
 
-    typedef int (*PushPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms);
-    typedef int (*CheckPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms,int i);
-
-	TMap<UClass*,PushPropertyFunction> pusherMap;
-	TMap<UClass*,CheckPropertyFunction> checkerMap;
+	TMap<UClass*,LuaObject::PushPropertyFunction> pusherMap;
+	TMap<UClass*,LuaObject::CheckPropertyFunction> checkerMap;
     
     TMap< UClass*, TMap<FString,lua_CFunction> > extensionMMap;
 
@@ -177,35 +174,35 @@ namespace slua {
         return strcmp(name,tn)==0;
 	}
 
-    PushPropertyFunction getPusher(UClass* cls) {
+    LuaObject::PushPropertyFunction LuaObject::getPusher(UClass* cls) {
         auto it = pusherMap.Find(cls);
         if(it!=nullptr)
             return *it;
         return nullptr;
     }
 
-    CheckPropertyFunction getChecker(UClass* cls) {
+    LuaObject::CheckPropertyFunction LuaObject::getChecker(UClass* cls) {
         auto it = checkerMap.Find(cls);
         if(it!=nullptr)
             return *it;
         return nullptr;
     }
 
-    PushPropertyFunction getPusher(UProperty* prop) {
+    LuaObject::PushPropertyFunction LuaObject::getPusher(UProperty* prop) {
         return getPusher(prop->GetClass());
     }
 
-    CheckPropertyFunction getChecker(UProperty* prop) {
+    LuaObject::CheckPropertyFunction LuaObject::getChecker(UProperty* prop) {
         return getChecker(prop->GetClass());        
     }
 
     
 
-    void regPusher(UClass* cls,PushPropertyFunction func) {
+    void regPusher(UClass* cls,LuaObject::PushPropertyFunction func) {
 		pusherMap.Add(cls, func);
     }
 
-    void regChecker(UClass* cls,CheckPropertyFunction func) {
+    void regChecker(UClass* cls,LuaObject::CheckPropertyFunction func) {
 		checkerMap.Add(cls, func);
     }
 
@@ -256,7 +253,7 @@ namespace slua {
     }
 
     int fillParamFromState(lua_State* L,UProperty* prop,uint8* params,int i) {
-        auto checker = getChecker(prop);
+        auto checker = LuaObject::getChecker(prop);
         if(checker) {
             checker(L,prop,params,i);
             return prop->GetSize();
@@ -391,7 +388,7 @@ namespace slua {
         if(up->GetPropertyFlags() & CPF_BlueprintReadOnly)
             luaL_error(L,"Property %s is readonly",name);
 
-        auto checker = getChecker(up);
+        auto checker = LuaObject::getChecker(up);
         if(!up) luaL_error(L,"Can't find property named %s",name);
         
         // set property value

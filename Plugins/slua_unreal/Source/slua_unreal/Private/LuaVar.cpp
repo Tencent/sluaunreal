@@ -584,12 +584,9 @@ namespace slua {
         other.vars = nullptr;
     }
 
-    typedef int (*CheckPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms,int i);
-    CheckPropertyFunction getChecker(UClass* cls);
-
     bool LuaVar::toProperty(UProperty* p,uint8* ptr) {
 
-        auto func = slua::getChecker(p->GetClass());
+        auto func = LuaObject::getChecker(p);
         if(func) {
             // push var's value to top of stack
             push(L);

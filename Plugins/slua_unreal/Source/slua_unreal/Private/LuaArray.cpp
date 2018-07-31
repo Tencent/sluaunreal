@@ -19,6 +19,10 @@
 
 namespace slua {
 
+    void LuaArray::reg(lua_State* L) {
+
+    }
+
     LuaArray::LuaArray(UArrayProperty* prop,FScriptArray* buf)
         :prop(prop) 
     {
@@ -51,11 +55,77 @@ namespace slua {
         return LuaObject::push(L,element,((uint8*)UD->array.GetData())+i*es);
     }
 
+    int LuaArray::Add(lua_State* L) {
+        CheckUD(LuaArray,L,1);
+        // get element property
+        UProperty* element = UD->prop->Inner;
+        auto checker = LuaObject::getChecker(element);
+        if(checker) {
+            FScriptArrayHelper ArrayHelper(UD->prop, &UD->array);
+		    int NewIndex = ArrayHelper.AddValue();
+            checker(L,element,ArrayHelper.GetRawPtr(NewIndex),2);
+            // return num of array
+            return LuaObject::push(L,UD->array.Num());
+        }
+        else {
+            FString tn = element->GetClass()->GetName();
+            luaL_error(L,"unsupport param type %s to add",TCHAR_TO_UTF8(*tn));
+            return 0;
+        }
+    }
+
+    int LuaArray::Insert(lua_State* L) {
+        CheckUD(LuaArray,L,1);
+        int index = LuaObject::checkValue<int>(L,2);
+        
+        // get element property
+        UProperty* element = UD->prop->Inner;
+        auto checker = LuaObject::getChecker(element);
+        if(checker) {
+            FScriptArrayHelper ArrayHelper(UD->prop, &UD->array);
+
+            if(index<0 || index>ArrayHelper.Num())
+                luaL_error(L,"Array insert index %d out of range",index);
+
+            ArrayHelper.InsertValues(index);
+            checker(L,element,ArrayHelper.GetRawPtr(index),3);
+            // return num of array
+            return LuaObject::push(L,UD->array.Num());
+        }
+        else {
+            FString tn = element->GetClass()->GetName();
+            luaL_error(L,"unsupport param type %s to add",TCHAR_TO_UTF8(*tn));
+            return 0;
+        }
+    }
+
+    int LuaArray::Remove(lua_State* L) {
+        CheckUD(LuaArray,L,1);
+        int index = LuaObject::checkValue<int>(L,2);
+        FScriptArrayHelper ArrayHelper(UD->prop, &UD->array);
+        if(index>=0 && index<ArrayHelper.Num())
+            ArrayHelper.RemoveValues(index);
+        else
+            luaL_error(L,"Array remove index %d out of range",index);
+		return 0;
+    }
+
+    int LuaArray::Clear(lua_State* L) {
+        CheckUD(LuaArray,L,1);
+        FScriptArrayHelper ArrayHelper(UD->prop, &UD->array);
+        ArrayHelper.EmptyValues();
+		return 0;
+    }
+
     int LuaArray::setupMT(lua_State* L) {
         LuaObject::setupMTSelfSearch(L);
 
         RegMetaMethod(L,Num);
         RegMetaMethod(L,Get);
+        RegMetaMethod(L,Add);
+        RegMetaMethod(L,Insert);
+        RegMetaMethod(L,Remove);
+        RegMetaMethod(L,Clear);
         return 0;
     }
 

@@ -20,6 +20,7 @@ namespace slua {
 
     class SLUA_UNREAL_API LuaArray {
     public:
+        static void reg(lua_State* L);
         static int push(lua_State* L,UArrayProperty* prop,FScriptArray* array);
 
         LuaArray(UArrayProperty* prop,FScriptArray* buf);
@@ -27,6 +28,10 @@ namespace slua {
     protected:
         static int Num(lua_State* L);
         static int Get(lua_State* L);
+        static int Add(lua_State* L);
+        static int Remove(lua_State* L);
+        static int Insert(lua_State* L);
+        static int Clear(lua_State* L);
     private:
         UArrayProperty* prop;
         FScriptArray array;

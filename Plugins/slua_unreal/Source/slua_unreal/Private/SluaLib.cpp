@@ -27,8 +27,14 @@ namespace slua {
         lua_newtable(L);
         RegMetaMethod(L,loadUI);
         RegMetaMethod(L,createDelegate);
-
         lua_setglobal(L,"slua");
+    }
+
+    void SluaUtil::reg(lua_State* L,const char* fn,lua_CFunction f) {
+        lua_getglobal(L,"slua");
+        lua_pushcclosure(L,f,0);
+        lua_setfield(L,-2,fn);
+        lua_pop(L,1);
     }
     
     int SluaUtil::loadUI(lua_State* L) {

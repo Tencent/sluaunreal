@@ -21,11 +21,17 @@ namespace slua {
     class SLUA_UNREAL_API LuaArray {
     public:
         static void reg(lua_State* L);
-        static int push(lua_State* L,UArrayProperty* prop,FScriptArray* array);
+        static int push(lua_State* L,UProperty* prop,FScriptArray* array);
 
-        LuaArray(UArrayProperty* prop,FScriptArray* buf);
+        LuaArray(UProperty* prop,FScriptArray* buf);
         ~LuaArray();
+
+        const FScriptArray& get() {
+            return array;
+        }
+
     protected:
+        static int __ctor(lua_State* L);
         static int Num(lua_State* L);
         static int Get(lua_State* L);
         static int Add(lua_State* L);
@@ -33,8 +39,20 @@ namespace slua {
         static int Insert(lua_State* L);
         static int Clear(lua_State* L);
     private:
-        UArrayProperty* prop;
+        UProperty* inner;
         FScriptArray array;
+
+        void clear();
+        uint8* getRawPtr(int index) const;
+        bool isValidIndex(int index) const;
+        uint8* insert(int index);
+        uint8* add();
+        void remove(int index);
+        int num() const;
+        void constructItems(int index,int count);
+        void destructItems(int index,int count);
+
+        
 
         static int setupMT(lua_State* L);
         static int gc(lua_State* L);

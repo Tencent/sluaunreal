@@ -18,5 +18,43 @@ arr:Insert(1,2028)
 for i=0,arr:Num()-1 do
     print("arr item",i,arr:Get(i))
 end
-assert(arr:Get(1)==2048)
+
+print('arr size',arr:Num(),arr:Get(1))
+assert(arr:Get(1)==2028)
 assert(arr:Num()==9)
+print('array<int> test successful')
+
+-- test array<fstring>
+local arr=t:GetArrayStr()
+for i=0,arr:Num()-1 do
+    print("arr item",i,arr:Get(i))
+end
+arr:Add("shijie")
+for i=0,arr:Num()-1 do
+    print("arr item",i,arr:Get(i))
+end
+assert(arr:Num()==4)
+print('array<fstring> test successful')
+
+arr:Clear()
+
+-- create TArray<int>
+local arr = slua.Array(UEnums.EPropertyClass.Int)
+arr:Add(1)
+arr:Add(2)
+arr:Add(3)
+print('size of arr',arr:Num())
+
+TestArray={}
+
+function TestArray.update()
+    -- test memory valid?
+    for i=0,arr:Num()-1 do
+        print("arr item",i,arr:Get(i))
+    end
+end
+
+
+return TestArray
+
+

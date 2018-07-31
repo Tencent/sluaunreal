@@ -435,7 +435,15 @@ namespace slua {
         auto p = Cast<UArrayProperty>(prop);
         ensure(p);
         FScriptArray* v = p->GetPropertyValuePtr(parms);
-        return LuaArray::push(L,p,v);
+        return LuaArray::push(L,p->Inner,v);
+    }
+
+    int checkUArrayProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
+        auto p = Cast<UArrayProperty>(prop);
+        ensure(p);
+        CheckUD(LuaArray,L,i);
+        p->SetPropertyValue(parms,UD->get());
+        return 0;
     }
 
     int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms) {
@@ -665,6 +673,7 @@ namespace slua {
         regChecker<UStrProperty>();
         regChecker<UEnumProperty>();
 
+        regChecker(UArrayProperty::StaticClass(),checkUArrayProperty);
         regChecker(UDelegateProperty::StaticClass(),checkUDelegateProperty);
         regChecker(UStructProperty::StaticClass(),checkUStructProperty);
 		

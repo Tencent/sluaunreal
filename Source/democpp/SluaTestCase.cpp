@@ -72,6 +72,11 @@ TArray<int> USluaTestCase::GetArray() {
     return array;
 }
 
+TArray<FString> USluaTestCase::GetArrayStr() {
+    TArray<FString> array={"hello","world","nihao"};
+    return array;
+}
+
 FVector USluaTestCase::TestStruct(FVector v, ESlateVisibility e, FVector& v2, int i, int& i2, FString str) {
 	slua::Log::Log("v.X=%f, v.Y=%f, v.Z=%f", v.X, v.Y, v.Z);
 	slua::Log::Log("i = %d", i);

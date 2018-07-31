@@ -45,11 +45,8 @@ void ULuaObject::Remove(UObject* obj)
 
 namespace slua { 
 
-    typedef int (*PushPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms);
-    typedef int (*CheckPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms,int i);
-
-	TMap<UClass*,PushPropertyFunction> pusherMap;
-	TMap<UClass*,CheckPropertyFunction> checkerMap;
+	TMap<UClass*,LuaObject::PushPropertyFunction> pusherMap;
+	TMap<UClass*,LuaObject::CheckPropertyFunction> checkerMap;
     
     TMap< UClass*, TMap<FString,lua_CFunction> > extensionMMap;
 
@@ -177,35 +174,35 @@ namespace slua {
         return strcmp(name,tn)==0;
 	}
 
-    PushPropertyFunction getPusher(UClass* cls) {
+    LuaObject::PushPropertyFunction LuaObject::getPusher(UClass* cls) {
         auto it = pusherMap.Find(cls);
         if(it!=nullptr)
             return *it;
         return nullptr;
     }
 
-    CheckPropertyFunction getChecker(UClass* cls) {
+    LuaObject::CheckPropertyFunction LuaObject::getChecker(UClass* cls) {
         auto it = checkerMap.Find(cls);
         if(it!=nullptr)
             return *it;
         return nullptr;
     }
 
-    PushPropertyFunction getPusher(UProperty* prop) {
+    LuaObject::PushPropertyFunction LuaObject::getPusher(UProperty* prop) {
         return getPusher(prop->GetClass());
     }
 
-    CheckPropertyFunction getChecker(UProperty* prop) {
+    LuaObject::CheckPropertyFunction LuaObject::getChecker(UProperty* prop) {
         return getChecker(prop->GetClass());        
     }
 
     
 
-    void regPusher(UClass* cls,PushPropertyFunction func) {
+    void regPusher(UClass* cls,LuaObject::PushPropertyFunction func) {
 		pusherMap.Add(cls, func);
     }
 
-    void regChecker(UClass* cls,CheckPropertyFunction func) {
+    void regChecker(UClass* cls,LuaObject::CheckPropertyFunction func) {
 		checkerMap.Add(cls, func);
     }
 
@@ -256,7 +253,7 @@ namespace slua {
     }
 
     int fillParamFromState(lua_State* L,UProperty* prop,uint8* params,int i) {
-        auto checker = getChecker(prop);
+        auto checker = LuaObject::getChecker(prop);
         if(checker) {
             checker(L,prop,params,i);
             return prop->GetSize();
@@ -391,7 +388,7 @@ namespace slua {
         if(up->GetPropertyFlags() & CPF_BlueprintReadOnly)
             luaL_error(L,"Property %s is readonly",name);
 
-        auto checker = getChecker(up);
+        auto checker = LuaObject::getChecker(up);
         if(!up) luaL_error(L,"Can't find property named %s",name);
         
         // set property value
@@ -438,7 +435,27 @@ namespace slua {
         auto p = Cast<UArrayProperty>(prop);
         ensure(p);
         FScriptArray* v = p->GetPropertyValuePtr(parms);
-        return LuaArray::push(L,p,v);
+        return LuaArray::push(L,p->Inner,v);
+    }
+
+    int checkUArrayProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
+        auto p = Cast<UArrayProperty>(prop);
+        ensure(p);
+        CheckUD(LuaArray,L,i);
+        // blueprint stack will destroy the TArray
+        // so deep-copy construct FScriptArray
+        // it's very expensive
+        FScriptArrayHelper helper(p,(FScriptArray*)parms);
+        const FScriptArray* srcArray = UD->get();
+        helper.AddValues(srcArray->Num());
+        uint8* dest = helper.GetRawPtr();
+        uint8* src = (uint8*)srcArray->GetData();
+        for(int n=0;n<srcArray->Num();n++) {
+            p->Inner->CopySingleValue(dest,src);
+            dest+=p->Inner->ElementSize;
+            src+=p->Inner->ElementSize;
+        }
+        return 0;
     }
 
     int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms) {
@@ -668,6 +685,7 @@ namespace slua {
         regChecker<UStrProperty>();
         regChecker<UEnumProperty>();
 
+        regChecker(UArrayProperty::StaticClass(),checkUArrayProperty);
         regChecker(UDelegateProperty::StaticClass(),checkUDelegateProperty);
         regChecker(UStructProperty::StaticClass(),checkUStructProperty);
 		

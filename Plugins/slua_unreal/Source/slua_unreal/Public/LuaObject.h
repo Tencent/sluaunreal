@@ -102,6 +102,15 @@ namespace slua {
     class SLUA_UNREAL_API LuaObject
     {
     public:
+
+        typedef int (*PushPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms);
+        typedef int (*CheckPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms,int i);
+
+        static CheckPropertyFunction getChecker(UClass* prop);
+        static PushPropertyFunction getPusher(UProperty* prop);
+        static CheckPropertyFunction getChecker(UProperty* cls);
+        static PushPropertyFunction getPusher(UClass* cls);
+
 		static bool matchType(lua_State* L, int p, const char* tn);
 
 		static int classIndex(lua_State* L);

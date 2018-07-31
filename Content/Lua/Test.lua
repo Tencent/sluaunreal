@@ -1,6 +1,7 @@
 require 'TestCase'
 require 'TestStruct'
 require 'TestCppBinding'
+local TestArray = require 'TestArray'
 
 
 
@@ -28,15 +29,6 @@ assert(r2==FVector(200,400,600))
 assert(r3==1024)
 
 print(bb)
-
--- test
-for i=1,10 do
-    local arr=t:GetArray();
-    print("arr len",arr:Num())
-    for i=0,arr:Num()-1 do
-        print("arr item",i,arr:Get(i))
-    end
-end
 
 local Button = import('Button');
 local ButtonStyle = import('ButtonStyle');
@@ -101,21 +93,15 @@ function update(dt,actor)
     local v = FVector(math.sin(tt)*100,2,3)
     local offset = FVector(0,math.cos(tt)*50,0)
     local ok,h=actor:K2_SetActorLocation(v+offset,true,h,true)
-    print("hit info",h)
-    -- test memory leak?
-    local arr=t:GetArray();
-    -- print("arr len",arr:Num())
-    for i=0,arr:Num()-1 do
-         -- print("arr item",i,arr:Get(i))
-    end
 
     local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
     edit.OnTextChanged:Remove(evt);
     -- test free event twice
     edit.OnTextChanged:Remove(evt);
 
-    collectgarbage("collect")
+    TestArray.update()
 
+    collectgarbage("collect")
     return 1024,2,"s",{1,2,3,4},function() end
 end
 

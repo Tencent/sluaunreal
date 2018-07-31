@@ -442,7 +442,19 @@ namespace slua {
         auto p = Cast<UArrayProperty>(prop);
         ensure(p);
         CheckUD(LuaArray,L,i);
-        p->SetPropertyValue(parms,UD->get());
+        // blueprint stack will destroy the TArray
+        // so deep-copy construct FScriptArray
+        // it's very expensive
+        FScriptArrayHelper helper(p,(FScriptArray*)parms);
+        const FScriptArray* srcArray = UD->get();
+        helper.AddValues(srcArray->Num());
+        uint8* dest = helper.GetRawPtr();
+        uint8* src = (uint8*)srcArray->GetData();
+        for(int n=0;n<srcArray->Num();n++) {
+            p->Inner->CopySingleValue(dest,src);
+            dest+=p->Inner->ElementSize;
+            src+=p->Inner->ElementSize;
+        }
         return 0;
     }
 

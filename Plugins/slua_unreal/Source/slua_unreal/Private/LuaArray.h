@@ -26,8 +26,8 @@ namespace slua {
         LuaArray(UProperty* prop,FScriptArray* buf);
         ~LuaArray();
 
-        const FScriptArray& get() {
-            return array;
+        const FScriptArray* get() {
+            return &array;
         }
 
     protected:

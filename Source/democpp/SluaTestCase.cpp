@@ -77,6 +77,12 @@ TArray<FString> USluaTestCase::GetArrayStr() {
     return array;
 }
 
+void USluaTestCase::SetArrayStr(const TArray<FString>& array) {
+    for(auto it:array) {
+        slua::Log::Log("output array = %s", TCHAR_TO_UTF8(*it));
+    }
+}
+
 FVector USluaTestCase::TestStruct(FVector v, ESlateVisibility e, FVector& v2, int i, int& i2, FString str) {
 	slua::Log::Log("v.X=%f, v.Y=%f, v.Z=%f", v.X, v.Y, v.Z);
 	slua::Log::Log("i = %d", i);

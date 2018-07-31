@@ -45,6 +45,14 @@ arr:Add(2)
 arr:Add(3)
 print('size of arr',arr:Num())
 
+-- create TArray<FString>
+local arr = slua.Array(UEnums.EPropertyClass.Str)
+arr:Add("jamy")
+arr:Add("valen")
+arr:Add("kyo")
+print('size of arr',arr:Num())
+t:SetArrayStr(arr)
+
 TestArray={}
 
 function TestArray.update()

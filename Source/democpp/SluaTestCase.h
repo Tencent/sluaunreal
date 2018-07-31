@@ -34,6 +34,9 @@ public:
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     TArray<FString> GetArrayStr();
 
+    UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
+    void SetArrayStr(const TArray<FString>& array);
+
     
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")

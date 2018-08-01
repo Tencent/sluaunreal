@@ -117,7 +117,7 @@ namespace slua {
         EPropertyClass type = (EPropertyClass) LuaObject::checkValue<int>(L,1);
         switch(type) {
             default:
-                check(false);
+                luaL_error(L,"unsupport type to create");
                 break;
             case EPropertyClass::Byte:
                 return createArray<UByteProperty>(L);

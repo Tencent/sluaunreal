@@ -21,7 +21,7 @@ static int finalize(lua_State *L);
 static int do_nothing(lua_State *L);
 
 /* except functions */
-static luaL_Reg func[] = {
+static luaL_Reg except_func[] = {
     {"newtry",    global_newtry},
     {"protect",   global_protect},
     {NULL,        NULL}
@@ -95,9 +95,9 @@ static int global_protect(lua_State *L) {
 \*-------------------------------------------------------------------------*/
 int except_open(lua_State *L) {
 #if LUA_VERSION_NUM > 501 && !defined(LUA_COMPAT_MODULE)
-    luaL_setfuncs(L, func, 0);
+    luaL_setfuncs(L, except_func, 0);
 #else
-    luaL_openlib(L, NULL, func, 0);
+    luaL_openlib(L, NULL, except_func, 0);
 #endif
     return 0;
 }

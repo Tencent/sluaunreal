@@ -18,59 +18,59 @@ namespace NS_SLUA {
 /*=========================================================================*\
 * Internal function prototypes
 \*=========================================================================*/
-static int global_create(lua_State *L);
-static int global_create6(lua_State *L);
-static int global_connect(lua_State *L);
-static int meth_connect(lua_State *L);
-static int meth_listen(lua_State *L);
-static int meth_getfamily(lua_State *L);
-static int meth_bind(lua_State *L);
-static int meth_send(lua_State *L);
-static int meth_getstats(lua_State *L);
-static int meth_setstats(lua_State *L);
-static int meth_getsockname(lua_State *L);
-static int meth_getpeername(lua_State *L);
-static int meth_shutdown(lua_State *L);
-static int meth_receive(lua_State *L);
-static int meth_accept(lua_State *L);
-static int meth_close(lua_State *L);
-static int meth_getoption(lua_State *L);
-static int meth_setoption(lua_State *L);
-static int meth_settimeout(lua_State *L);
-static int meth_getfd(lua_State *L);
-static int meth_setfd(lua_State *L);
-static int meth_dirty(lua_State *L);
+static int tcp_global_create(lua_State *L);
+static int tcp_global_create6(lua_State *L);
+static int tcp_global_connect(lua_State *L);
+static int tcp_meth_connect(lua_State *L);
+static int tcp_meth_listen(lua_State *L);
+static int tcp_meth_getfamily(lua_State *L);
+static int tcp_meth_bind(lua_State *L);
+static int tcp_meth_send(lua_State *L);
+static int tcp_meth_getstats(lua_State *L);
+static int tcp_meth_setstats(lua_State *L);
+static int tcp_meth_getsockname(lua_State *L);
+static int tcp_meth_getpeername(lua_State *L);
+static int tcp_meth_shutdown(lua_State *L);
+static int tcp_meth_receive(lua_State *L);
+static int tcp_meth_accept(lua_State *L);
+static int tcp_meth_close(lua_State *L);
+static int tcp_meth_getoption(lua_State *L);
+static int tcp_meth_setoption(lua_State *L);
+static int tcp_meth_settimeout(lua_State *L);
+static int tcp_meth_getfd(lua_State *L);
+static int tcp_meth_setfd(lua_State *L);
+static int tcp_meth_dirty(lua_State *L);
 
 /* tcp object methods */
 static luaL_Reg tcp_methods[] = {
-    {"__gc",        meth_close},
+    {"__gc",        tcp_meth_close},
     {"__tostring",  auxiliar_tostring},
-    {"accept",      meth_accept},
-    {"bind",        meth_bind},
-    {"close",       meth_close},
-    {"connect",     meth_connect},
-    {"dirty",       meth_dirty},
-    {"getfamily",   meth_getfamily},
-    {"getfd",       meth_getfd},
-    {"getoption",   meth_getoption},
-    {"getpeername", meth_getpeername},
-    {"getsockname", meth_getsockname},
-    {"getstats",    meth_getstats},
-    {"setstats",    meth_setstats},
-    {"listen",      meth_listen},
-    {"receive",     meth_receive},
-    {"send",        meth_send},
-    {"setfd",       meth_setfd},
-    {"setoption",   meth_setoption},
-    {"setpeername", meth_connect},
-    {"setsockname", meth_bind},
-    {"settimeout",  meth_settimeout},
-    {"shutdown",    meth_shutdown},
+    {"accept",      tcp_meth_accept},
+    {"bind",        tcp_meth_bind},
+    {"close",       tcp_meth_close},
+    {"connect",     tcp_meth_connect},
+    {"dirty",       tcp_meth_dirty},
+    {"getfamily",   tcp_meth_getfamily},
+    {"getfd",       tcp_meth_getfd},
+    {"getoption",   tcp_meth_getoption},
+    {"getpeername", tcp_meth_getpeername},
+    {"getsockname", tcp_meth_getsockname},
+    {"getstats",    tcp_meth_getstats},
+    {"setstats",    tcp_meth_setstats},
+    {"listen",      tcp_meth_listen},
+    {"receive",     tcp_meth_receive},
+    {"send",        tcp_meth_send},
+    {"setfd",       tcp_meth_setfd},
+    {"setoption",   tcp_meth_setoption},
+    {"setpeername", tcp_meth_connect},
+    {"setsockname", tcp_meth_bind},
+    {"settimeout",  tcp_meth_settimeout},
+    {"shutdown",    tcp_meth_shutdown},
     {NULL,          NULL}
 };
 
 /* socket option handlers */
-static t_opt optget[] = {
+static t_opt tcp_optget[] = {
     {"keepalive",   opt_get_keepalive},
     {"reuseaddr",   opt_get_reuseaddr},
     {"tcp-nodelay", opt_get_tcp_nodelay},
@@ -79,7 +79,7 @@ static t_opt optget[] = {
     {NULL,          NULL}
 };
 
-static t_opt optset[] = {
+static t_opt tcp_optset[] = {
     {"keepalive",   opt_set_keepalive},
     {"reuseaddr",   opt_set_reuseaddr},
     {"tcp-nodelay", opt_set_tcp_nodelay},
@@ -89,10 +89,10 @@ static t_opt optset[] = {
 };
 
 /* functions in library namespace */
-static luaL_Reg func[] = {
-    {"tcp", global_create},
-    {"tcp6", global_create6},
-    {"connect", global_connect},
+static luaL_Reg tcp_func[] = {
+    {"tcp", tcp_global_create},
+    {"tcp6", tcp_global_create6},
+    {"connect", tcp_global_connect},
     {NULL, NULL}
 };
 
@@ -111,9 +111,9 @@ int tcp_open(lua_State *L)
     auxiliar_add2group(L, "tcp{server}", "tcp{any}");
     /* define library functions */
 #if LUA_VERSION_NUM > 501 && !defined(LUA_COMPAT_MODULE)
-    luaL_setfuncs(L, func, 0);
+    luaL_setfuncs(L, tcp_func, 0);
 #else
-    luaL_openlib(L, NULL, func, 0);
+    luaL_openlib(L, NULL, tcp_func, 0);
 #endif
     return 0;
 }
@@ -124,22 +124,22 @@ int tcp_open(lua_State *L)
 /*-------------------------------------------------------------------------*\
 * Just call buffered IO methods
 \*-------------------------------------------------------------------------*/
-static int meth_send(lua_State *L) {
+static int tcp_meth_send(lua_State *L) {
     p_tcp tcp = (p_tcp) auxiliar_checkclass(L, "tcp{client}", 1);
     return buffer_meth_send(L, &tcp->buf);
 }
 
-static int meth_receive(lua_State *L) {
+static int tcp_meth_receive(lua_State *L) {
     p_tcp tcp = (p_tcp) auxiliar_checkclass(L, "tcp{client}", 1);
     return buffer_meth_receive(L, &tcp->buf);
 }
 
-static int meth_getstats(lua_State *L) {
+static int tcp_meth_getstats(lua_State *L) {
     p_tcp tcp = (p_tcp) auxiliar_checkclass(L, "tcp{client}", 1);
     return buffer_meth_getstats(L, &tcp->buf);
 }
 
-static int meth_setstats(lua_State *L) {
+static int tcp_meth_setstats(lua_State *L) {
     p_tcp tcp = (p_tcp) auxiliar_checkclass(L, "tcp{client}", 1);
     return buffer_meth_setstats(L, &tcp->buf);
 }
@@ -147,22 +147,22 @@ static int meth_setstats(lua_State *L) {
 /*-------------------------------------------------------------------------*\
 * Just call option handler
 \*-------------------------------------------------------------------------*/
-static int meth_getoption(lua_State *L)
+static int tcp_meth_getoption(lua_State *L)
 {
     p_tcp tcp = (p_tcp) auxiliar_checkgroup(L, "tcp{any}", 1);
-    return opt_meth_getoption(L, optget, &tcp->sock);
+    return opt_meth_getoption(L, tcp_optget, &tcp->sock);
 }
 
-static int meth_setoption(lua_State *L)
+static int tcp_meth_setoption(lua_State *L)
 {
     p_tcp tcp = (p_tcp) auxiliar_checkgroup(L, "tcp{any}", 1);
-    return opt_meth_setoption(L, optset, &tcp->sock);
+    return opt_meth_setoption(L, tcp_optset, &tcp->sock);
 }
 
 /*-------------------------------------------------------------------------*\
 * Select support methods
 \*-------------------------------------------------------------------------*/
-static int meth_getfd(lua_State *L)
+static int tcp_meth_getfd(lua_State *L)
 {
     p_tcp tcp = (p_tcp) auxiliar_checkgroup(L, "tcp{any}", 1);
     lua_pushnumber(L, (int) tcp->sock);
@@ -170,14 +170,14 @@ static int meth_getfd(lua_State *L)
 }
 
 /* this is very dangerous, but can be handy for those that are brave enough */
-static int meth_setfd(lua_State *L)
+static int tcp_meth_setfd(lua_State *L)
 {
     p_tcp tcp = (p_tcp) auxiliar_checkgroup(L, "tcp{any}", 1);
     tcp->sock = (t_socket) luaL_checknumber(L, 2);
     return 0;
 }
 
-static int meth_dirty(lua_State *L)
+static int tcp_meth_dirty(lua_State *L)
 {
     p_tcp tcp = (p_tcp) auxiliar_checkgroup(L, "tcp{any}", 1);
     lua_pushboolean(L, !buffer_isempty(&tcp->buf));
@@ -188,7 +188,7 @@ static int meth_dirty(lua_State *L)
 * Waits for and returns a client object attempting connection to the
 * server object
 \*-------------------------------------------------------------------------*/
-static int meth_accept(lua_State *L)
+static int tcp_meth_accept(lua_State *L)
 {
     p_tcp server = (p_tcp) auxiliar_checkclass(L, "tcp{server}", 1);
     p_timeout tm = timeout_markstart(&server->tm);
@@ -218,7 +218,7 @@ static int meth_accept(lua_State *L)
 /*-------------------------------------------------------------------------*\
 * Binds an object to an address
 \*-------------------------------------------------------------------------*/
-static int meth_bind(lua_State *L)
+static int tcp_meth_bind(lua_State *L)
 {
     p_tcp tcp = (p_tcp) auxiliar_checkclass(L, "tcp{master}", 1);
     const char *address =  luaL_checkstring(L, 2);
@@ -242,7 +242,7 @@ static int meth_bind(lua_State *L)
 /*-------------------------------------------------------------------------*\
 * Turns a master tcp object into a client object.
 \*-------------------------------------------------------------------------*/
-static int meth_connect(lua_State *L)
+static int tcp_meth_connect(lua_State *L)
 {
     p_tcp tcp = (p_tcp) auxiliar_checkgroup(L, "tcp{any}", 1);
     const char *address =  luaL_checkstring(L, 2);
@@ -270,7 +270,7 @@ static int meth_connect(lua_State *L)
 /*-------------------------------------------------------------------------*\
 * Closes socket used by object
 \*-------------------------------------------------------------------------*/
-static int meth_close(lua_State *L)
+static int tcp_meth_close(lua_State *L)
 {
     p_tcp tcp = (p_tcp) auxiliar_checkgroup(L, "tcp{any}", 1);
     socket_destroy(&tcp->sock);
@@ -281,7 +281,7 @@ static int meth_close(lua_State *L)
 /*-------------------------------------------------------------------------*\
 * Returns family as string
 \*-------------------------------------------------------------------------*/
-static int meth_getfamily(lua_State *L)
+static int tcp_meth_getfamily(lua_State *L)
 {
     p_tcp tcp = (p_tcp) auxiliar_checkgroup(L, "tcp{any}", 1);
     if (tcp->family == PF_INET6) {
@@ -296,7 +296,7 @@ static int meth_getfamily(lua_State *L)
 /*-------------------------------------------------------------------------*\
 * Puts the sockt in listen mode
 \*-------------------------------------------------------------------------*/
-static int meth_listen(lua_State *L)
+static int tcp_meth_listen(lua_State *L)
 {
     p_tcp tcp = (p_tcp) auxiliar_checkclass(L, "tcp{master}", 1);
     int backlog = (int) luaL_optnumber(L, 2, 32);
@@ -315,7 +315,7 @@ static int meth_listen(lua_State *L)
 /*-------------------------------------------------------------------------*\
 * Shuts the connection down partially
 \*-------------------------------------------------------------------------*/
-static int meth_shutdown(lua_State *L)
+static int tcp_meth_shutdown(lua_State *L)
 {
     /* SHUT_RD,  SHUT_WR,  SHUT_RDWR  have  the value 0, 1, 2, so we can use method index directly */
     static const char* methods[] = { "receive", "send", "both", NULL };
@@ -329,13 +329,13 @@ static int meth_shutdown(lua_State *L)
 /*-------------------------------------------------------------------------*\
 * Just call inet methods
 \*-------------------------------------------------------------------------*/
-static int meth_getpeername(lua_State *L)
+static int tcp_meth_getpeername(lua_State *L)
 {
     p_tcp tcp = (p_tcp) auxiliar_checkgroup(L, "tcp{any}", 1);
     return inet_meth_getpeername(L, &tcp->sock, tcp->family);
 }
 
-static int meth_getsockname(lua_State *L)
+static int tcp_meth_getsockname(lua_State *L)
 {
     p_tcp tcp = (p_tcp) auxiliar_checkgroup(L, "tcp{any}", 1);
     return inet_meth_getsockname(L, &tcp->sock, tcp->family);
@@ -344,7 +344,7 @@ static int meth_getsockname(lua_State *L)
 /*-------------------------------------------------------------------------*\
 * Just call tm methods
 \*-------------------------------------------------------------------------*/
-static int meth_settimeout(lua_State *L)
+static int tcp_meth_settimeout(lua_State *L)
 {
     p_tcp tcp = (p_tcp) auxiliar_checkgroup(L, "tcp{any}", 1);
     return timeout_meth_settimeout(L, &tcp->tm);
@@ -387,11 +387,11 @@ static int tcp_create(lua_State *L, int family) {
     }
 }
 
-static int global_create(lua_State *L) {
+static int tcp_global_create(lua_State *L) {
     return tcp_create(L, AF_INET);
 }
 
-static int global_create6(lua_State *L) {
+static int tcp_global_create6(lua_State *L) {
     return tcp_create(L, AF_INET6);
 }
 
@@ -442,7 +442,7 @@ static const char *tryconnect6(const char *remoteaddr, const char *remoteserv,
 }
 #endif
 
-static int global_connect(lua_State *L) {
+static int tcp_global_connect(lua_State *L) {
     const char *remoteaddr = luaL_checkstring(L, 1);
     const char *remoteserv = luaL_checkstring(L, 2);
     const char *localaddr  = luaL_optstring(L, 3, NULL);

@@ -24,7 +24,7 @@ static void inet_pushresolved(lua_State *L, struct hostent *hp);
 static int inet_global_gethostname(lua_State *L);
 
 /* DNS functions */
-static luaL_Reg func[] = {
+static luaL_Reg inet_func[] = {
     { "toip", inet_global_toip},
     { "getaddrinfo", inet_global_getaddrinfo},
     { "tohostname", inet_global_tohostname},
@@ -44,9 +44,9 @@ int inet_open(lua_State *L)
     lua_pushstring(L, "dns");
     lua_newtable(L);
 #if LUA_VERSION_NUM > 501 && !defined(LUA_COMPAT_MODULE)
-    luaL_setfuncs(L, func, 0);
+    luaL_setfuncs(L, inet_func, 0);
 #else
-    luaL_openlib(L, NULL, func, 0);
+    luaL_openlib(L, NULL, inet_func, 0);
 #endif
     lua_settable(L, -3);
     return 0;

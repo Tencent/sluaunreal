@@ -27,7 +27,7 @@ static void make_assoc(lua_State *L, int tab);
 static int global_select(lua_State *L);
 
 /* functions in library namespace */
-static luaL_Reg func[] = {
+static luaL_Reg select_func[] = {
     {"select", global_select},
     {NULL,     NULL}
 };
@@ -43,9 +43,9 @@ int select_open(lua_State *L) {
     lua_pushnumber(L, FD_SETSIZE);
     lua_rawset(L, -3);
 #if LUA_VERSION_NUM > 501 && !defined(LUA_COMPAT_MODULE)
-    luaL_setfuncs(L, func, 0);
+    luaL_setfuncs(L, select_func, 0);
 #else
-    luaL_openlib(L, NULL, func, 0);
+    luaL_openlib(L, NULL, select_func, 0);
 #endif
     return 0;
 }

@@ -48,7 +48,7 @@ static size_t qpencode(UC c, UC *input, size_t size,
 static size_t qppad(UC *input, size_t size, luaL_Buffer *buffer);
 
 /* code support functions */
-static luaL_Reg func[] = {
+static luaL_Reg mine_func[] = {
     { "dot", mime_global_dot },
     { "b64", mime_global_b64 },
     { "eol", mime_global_eol },
@@ -85,9 +85,9 @@ MIME_API int luaopen_mime_core(lua_State *L)
 {
 #if LUA_VERSION_NUM > 501 && !defined(LUA_COMPAT_MODULE)
     lua_newtable(L);
-    luaL_setfuncs(L, func, 0);
+    luaL_setfuncs(L, mine_func, 0);
 #else
-    luaL_openlib(L, "mime", func, 0);
+    luaL_openlib(L, "mime", mine_func, 0);
 #endif
     /* make version string available to scripts */
     lua_pushstring(L, "_VERSION");

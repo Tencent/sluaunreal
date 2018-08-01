@@ -23,52 +23,52 @@ namespace NS_SLUA {
 /*=========================================================================*\
 * Internal function prototypes
 \*=========================================================================*/
-static int global_create(lua_State *L);
-static int meth_connect(lua_State *L);
-static int meth_listen(lua_State *L);
-static int meth_bind(lua_State *L);
-static int meth_send(lua_State *L);
-static int meth_shutdown(lua_State *L);
-static int meth_receive(lua_State *L);
-static int meth_accept(lua_State *L);
-static int meth_close(lua_State *L);
-static int meth_setoption(lua_State *L);
-static int meth_settimeout(lua_State *L);
-static int meth_getfd(lua_State *L);
-static int meth_setfd(lua_State *L);
-static int meth_dirty(lua_State *L);
-static int meth_getstats(lua_State *L);
-static int meth_setstats(lua_State *L);
+static int unix_global_create(lua_State *L);
+static int unix_meth_connect(lua_State *L);
+static int unix_meth_listen(lua_State *L);
+static int unix_meth_bind(lua_State *L);
+static int unix_meth_send(lua_State *L);
+static int unix_meth_shutdown(lua_State *L);
+static int unix_meth_receive(lua_State *L);
+static int unix_meth_accept(lua_State *L);
+static int unix_meth_close(lua_State *L);
+static int unix_meth_setoption(lua_State *L);
+static int unix_meth_settimeout(lua_State *L);
+static int unix_meth_getfd(lua_State *L);
+static int unix_meth_setfd(lua_State *L);
+static int unix_meth_dirty(lua_State *L);
+static int unix_meth_getstats(lua_State *L);
+static int unix_meth_setstats(lua_State *L);
 
 static const char *unix_tryconnect(p_unix un, const char *path);
 static const char *unix_trybind(p_unix un, const char *path);
 
 /* unix object methods */
 static luaL_Reg unix_methods[] = {
-    {"__gc",        meth_close},
+    {"__gc",        unix_meth_close},
     {"__tostring",  auxiliar_tostring},
-    {"accept",      meth_accept},
-    {"bind",        meth_bind},
-    {"close",       meth_close},
-    {"connect",     meth_connect},
-    {"dirty",       meth_dirty},
-    {"getfd",       meth_getfd},
-    {"getstats",    meth_getstats},
-    {"setstats",    meth_setstats},
-    {"listen",      meth_listen},
-    {"receive",     meth_receive},
-    {"send",        meth_send},
-    {"setfd",       meth_setfd},
-    {"setoption",   meth_setoption},
-    {"setpeername", meth_connect},
-    {"setsockname", meth_bind},
-    {"settimeout",  meth_settimeout},
-    {"shutdown",    meth_shutdown},
+    {"accept",      unix_meth_accept},
+    {"bind",        unix_meth_bind},
+    {"close",       unix_meth_close},
+    {"connect",     unix_meth_connect},
+    {"dirty",       unix_meth_dirty},
+    {"getfd",       unix_meth_getfd},
+    {"getstats",    unix_meth_getstats},
+    {"setstats",    unix_meth_setstats},
+    {"listen",      unix_meth_listen},
+    {"receive",     unix_meth_receive},
+    {"send",        unix_meth_send},
+    {"setfd",       unix_meth_setfd},
+    {"setoption",   unix_meth_setoption},
+    {"setpeername", unix_meth_connect},
+    {"setsockname", unix_meth_bind},
+    {"settimeout",  unix_meth_settimeout},
+    {"shutdown",    unix_meth_shutdown},
     {NULL,          NULL}
 };
 
 /* socket option handlers */
-static t_opt optset[] = {
+static t_opt unix_optset[] = {
     {"keepalive",   opt_set_keepalive},
     {"reuseaddr",   opt_set_reuseaddr},
     {"linger",      opt_set_linger},
@@ -78,8 +78,8 @@ static t_opt optset[] = {
 /* our socket creation function */
 /* this is an ad-hoc module that returns a single function 
  * as such, do not include other functions in this array. */
-static luaL_Reg func[] = {
-    {"unix", global_create},
+static luaL_Reg unix_func[] = {
+    {"unix", unix_global_create},
     {NULL,          NULL}
 };
 
@@ -97,12 +97,12 @@ int luaopen_socket_unix(lua_State *L) {
     auxiliar_add2group(L, "unix{client}", "unix{any}");
     auxiliar_add2group(L, "unix{server}", "unix{any}");
 #if LUA_VERSION_NUM > 501 && !defined(LUA_COMPAT_MODULE)
-    lua_pushcfunction(L, global_create);
-    (void) func;
+    lua_pushcfunction(L, unix_global_create);
+    (void)unix_func;
 #else
     /* set function into socket namespace */
-    luaL_openlib(L, "socket", func, 0);
-    lua_pushcfunction(L, global_create);
+    luaL_openlib(L, "socket", unix_func, 0);
+    lua_pushcfunction(L, unix_global_create);
 #endif
     /* return the function instead of the 'socket' table */
     return 1;
@@ -114,22 +114,22 @@ int luaopen_socket_unix(lua_State *L) {
 /*-------------------------------------------------------------------------*\
 * Just call buffered IO methods
 \*-------------------------------------------------------------------------*/
-static int meth_send(lua_State *L) {
+static int unix_meth_send(lua_State *L) {
     p_unix un = (p_unix) auxiliar_checkclass(L, "unix{client}", 1);
     return buffer_meth_send(L, &un->buf);
 }
 
-static int meth_receive(lua_State *L) {
+static int unix_meth_receive(lua_State *L) {
     p_unix un = (p_unix) auxiliar_checkclass(L, "unix{client}", 1);
     return buffer_meth_receive(L, &un->buf);
 }
 
-static int meth_getstats(lua_State *L) {
+static int unix_meth_getstats(lua_State *L) {
     p_unix un = (p_unix) auxiliar_checkclass(L, "unix{client}", 1);
     return buffer_meth_getstats(L, &un->buf);
 }
 
-static int meth_setstats(lua_State *L) {
+static int unix_meth_setstats(lua_State *L) {
     p_unix un = (p_unix) auxiliar_checkclass(L, "unix{client}", 1);
     return buffer_meth_setstats(L, &un->buf);
 }
@@ -137,28 +137,28 @@ static int meth_setstats(lua_State *L) {
 /*-------------------------------------------------------------------------*\
 * Just call option handler
 \*-------------------------------------------------------------------------*/
-static int meth_setoption(lua_State *L) {
+static int unix_meth_setoption(lua_State *L) {
     p_unix un = (p_unix) auxiliar_checkgroup(L, "unix{any}", 1);
-    return opt_meth_setoption(L, optset, &un->sock);
+    return opt_meth_setoption(L, unix_optset, &un->sock);
 }
 
 /*-------------------------------------------------------------------------*\
 * Select support methods
 \*-------------------------------------------------------------------------*/
-static int meth_getfd(lua_State *L) {
+static int unix_meth_getfd(lua_State *L) {
     p_unix un = (p_unix) auxiliar_checkgroup(L, "unix{any}", 1);
     lua_pushnumber(L, (int) un->sock);
     return 1;
 }
 
 /* this is very dangerous, but can be handy for those that are brave enough */
-static int meth_setfd(lua_State *L) {
+static int unix_meth_setfd(lua_State *L) {
     p_unix un = (p_unix) auxiliar_checkgroup(L, "unix{any}", 1);
     un->sock = (t_socket) luaL_checknumber(L, 2); 
     return 0;
 }
 
-static int meth_dirty(lua_State *L) {
+static int unix_meth_dirty(lua_State *L) {
     p_unix un = (p_unix) auxiliar_checkgroup(L, "unix{any}", 1);
     lua_pushboolean(L, !buffer_isempty(&un->buf));
     return 1;
@@ -168,7 +168,7 @@ static int meth_dirty(lua_State *L) {
 * Waits for and returns a client object attempting connection to the 
 * server object 
 \*-------------------------------------------------------------------------*/
-static int meth_accept(lua_State *L) {
+static int unix_meth_accept(lua_State *L) {
     p_unix server = (p_unix) auxiliar_checkclass(L, "unix{server}", 1);
     p_timeout tm = timeout_markstart(&server->tm);
     t_socket sock;
@@ -220,7 +220,7 @@ static const char *unix_trybind(p_unix un, const char *path) {
 #endif
 }
 
-static int meth_bind(lua_State *L) {
+static int unix_meth_bind(lua_State *L) {
     p_unix un = (p_unix) auxiliar_checkclass(L, "unix{master}", 1);
     const char *path =  luaL_checkstring(L, 2);
     const char *err = unix_trybind(un, path);
@@ -262,7 +262,7 @@ static const char *unix_tryconnect(p_unix un, const char *path)
 #endif
 }
 
-static int meth_connect(lua_State *L)
+static int unix_meth_connect(lua_State *L)
 {
     p_unix un = (p_unix) auxiliar_checkclass(L, "unix{master}", 1);
     const char *path =  luaL_checkstring(L, 2);
@@ -281,7 +281,7 @@ static int meth_connect(lua_State *L)
 /*-------------------------------------------------------------------------*\
 * Closes socket used by object 
 \*-------------------------------------------------------------------------*/
-static int meth_close(lua_State *L)
+static int unix_meth_close(lua_State *L)
 {
     p_unix un = (p_unix) auxiliar_checkgroup(L, "unix{any}", 1);
     socket_destroy(&un->sock);
@@ -292,7 +292,7 @@ static int meth_close(lua_State *L)
 /*-------------------------------------------------------------------------*\
 * Puts the sockt in listen mode
 \*-------------------------------------------------------------------------*/
-static int meth_listen(lua_State *L)
+static int unix_meth_listen(lua_State *L)
 {
     p_unix un = (p_unix) auxiliar_checkclass(L, "unix{master}", 1);
     int backlog = (int) luaL_optnumber(L, 2, 32);
@@ -311,7 +311,7 @@ static int meth_listen(lua_State *L)
 /*-------------------------------------------------------------------------*\
 * Shuts the connection down partially
 \*-------------------------------------------------------------------------*/
-static int meth_shutdown(lua_State *L)
+static int unix_meth_shutdown(lua_State *L)
 {
     /* SHUT_RD,  SHUT_WR,  SHUT_RDWR  have  the value 0, 1, 2, so we can use method index directly */
     static const char* methods[] = { "receive", "send", "both", NULL };
@@ -325,7 +325,7 @@ static int meth_shutdown(lua_State *L)
 /*-------------------------------------------------------------------------*\
 * Just call tm methods
 \*-------------------------------------------------------------------------*/
-static int meth_settimeout(lua_State *L) {
+static int unix_meth_settimeout(lua_State *L) {
     p_unix un = (p_unix) auxiliar_checkgroup(L, "unix{any}", 1);
     return timeout_meth_settimeout(L, &un->tm);
 }
@@ -336,7 +336,7 @@ static int meth_settimeout(lua_State *L) {
 /*-------------------------------------------------------------------------*\
 * Creates a master unix object 
 \*-------------------------------------------------------------------------*/
-static int global_create(lua_State *L) {
+static int unix_global_create(lua_State *L) {
     t_socket sock;
     int err = socket_create(&sock, AF_UNIX, SOCK_STREAM, 0);
     /* try to allocate a system socket */

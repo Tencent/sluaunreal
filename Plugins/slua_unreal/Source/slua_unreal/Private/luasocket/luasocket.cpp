@@ -44,7 +44,7 @@ static int base_open(lua_State *L);
 /*-------------------------------------------------------------------------*\
 * Modules and functions
 \*-------------------------------------------------------------------------*/
-static const luaL_Reg mod[] = {
+static const luaL_Reg luasocket_mod[] = {
     {"auxiliar", auxiliar_open},
     {"except", except_open},
     {"timeout", timeout_open},
@@ -56,7 +56,7 @@ static const luaL_Reg mod[] = {
     {NULL, NULL}
 };
 
-static luaL_Reg func[] = {
+static luaL_Reg luasocket_func[] = {
     {"skip",      global_skip},
     {"__unload",  global_unload},
     {NULL,        NULL}
@@ -96,9 +96,9 @@ static int base_open(lua_State *L) {
         /* export functions (and leave namespace table on top of stack) */
 #if LUA_VERSION_NUM > 501 && !defined(LUA_COMPAT_MODULE)
         lua_newtable(L);
-        luaL_setfuncs(L, func, 0);
+        luaL_setfuncs(L, luasocket_func, 0);
 #else
-        luaL_openlib(L, "socket", func, 0);
+        luaL_openlib(L, "socket", luasocket_func, 0);
 #endif
 #ifdef LUASOCKET_DEBUG
         lua_pushstring(L, "_DEBUG");
@@ -123,7 +123,7 @@ static int base_open(lua_State *L) {
 LUASOCKET_API int luaopen_socket_core(lua_State *L) {
     int i;
     base_open(L);
-    for (i = 0; mod[i].name; i++) mod[i].func(L);
+    for (i = 0; luasocket_mod[i].name; i++) luasocket_mod[i].func(L);
     return 1;
 }
 

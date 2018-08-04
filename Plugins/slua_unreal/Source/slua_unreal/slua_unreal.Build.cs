@@ -21,7 +21,7 @@ public class slua_unreal : ModuleRules
         // enable exception
         bEnableExceptions = true;
         bEnforceIWYU = false;
-	bEnableUndefinedIdentifierWarnings = false;
+	 bEnableUndefinedIdentifierWarnings = false;
 
         if (Target.Platform == UnrealTargetPlatform.Win64)
         {

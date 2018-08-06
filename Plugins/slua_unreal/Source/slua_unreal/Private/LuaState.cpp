@@ -27,6 +27,7 @@
 #include "LuaEnums.h"
 #include "LuaCppBinding.h"
 #include "LuaArray.h"
+#include "LuaDebugExtension.h"
 
 namespace slua {
 
@@ -221,7 +222,7 @@ namespace slua {
         lua_pushvalue(L,loaderFunc);
         lua_rawseti(L,loaderTable,2);
 		lua_settop(L, 0);
-
+		initDebugExtension(L);
         LuaObject::init(L);
         SluaUtil::openLib(L);
         LuaClass::reg(L);

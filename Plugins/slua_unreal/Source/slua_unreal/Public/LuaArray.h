@@ -30,6 +30,12 @@ namespace slua {
             return &array;
         }
 
+        template<typename T>
+        TArray<T> asTArray() const {
+            // TODO
+            return TArray<T>();
+        }
+        
     protected:
         static int __ctor(lua_State* L);
         static int Num(lua_State* L);
@@ -50,9 +56,7 @@ namespace slua {
         void remove(int index);
         int num() const;
         void constructItems(int index,int count);
-        void destructItems(int index,int count);
-
-        
+        void destructItems(int index,int count);      
 
         static int setupMT(lua_State* L);
         static int gc(lua_State* L);

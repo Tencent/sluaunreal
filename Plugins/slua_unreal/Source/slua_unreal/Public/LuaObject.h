@@ -19,6 +19,7 @@
 #include "UObject/WeakObjectPtr.h"
 #include "Blueprint/UserWidget.h"
 #include "SluaUtil.h"
+#include "LuaArray.h"
 #include "LuaObject.generated.h"
 
 
@@ -132,6 +133,13 @@ namespace slua {
 			void* ud = lua_touserdata(L, p);
 			UserData<T> *udptr = reinterpret_cast<UserData<T>*>(ud);
 			return udptr->ud;
+		}
+
+        // check value if it's TArray
+        template<class T>
+		static T checkTArray(lua_State* L, int p) {
+            CheckUD(LuaArray,L,p);
+			return UD->asTArray<typename T::ElementType>();
 		}
 
         template<class T>

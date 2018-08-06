@@ -61,10 +61,16 @@ namespace slua {
     EndDef(Foo,&Foo::create)
 }
 
+
+#define REG_EXTENSION_METHOD(U,N,M) { \
+            LuaObject::addExtensionMethod(U::StaticClass(),N,LuaCppBinding<decltype(M),M>::LuaCFunction); }
+
 USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
     this->Value=2048;
+    using namespace slua;
+    REG_EXTENSION_METHOD(USluaTestCase,"SetArrayStrEx",&USluaTestCase::SetArrayStrEx);
 }
 
 TArray<int> USluaTestCase::GetArray() {
@@ -78,6 +84,12 @@ TArray<FString> USluaTestCase::GetArrayStr() {
 }
 
 void USluaTestCase::SetArrayStr(const TArray<FString>& array) {
+    for(auto it:array) {
+        slua::Log::Log("output array = %s", TCHAR_TO_UTF8(*it));
+    }
+}
+
+void USluaTestCase::SetArrayStrEx(const TArray<FString>& array) {
     for(auto it:array) {
         slua::Log::Log("output array = %s", TCHAR_TO_UTF8(*it));
     }

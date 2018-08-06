@@ -37,6 +37,8 @@ public:
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     void SetArrayStr(const TArray<FString>& array);
 
+    // reg as extension method
+    void SetArrayStrEx(const TArray<FString>& array);
     
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")

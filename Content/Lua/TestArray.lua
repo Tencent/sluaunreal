@@ -52,6 +52,7 @@ arr:Add("valen")
 arr:Add("kyo")
 print('size of arr',arr:Num())
 t:SetArrayStr(arr)
+t:SetArrayStrEx(arr)
 
 TestArray={}
 

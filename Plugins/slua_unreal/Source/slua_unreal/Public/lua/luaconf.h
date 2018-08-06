@@ -604,7 +604,7 @@
 #if !defined(LUA_USE_C89)
 #define l_sprintf(s,sz,f,i)	snprintf(s,sz,f,i)
 #else
-#define l_sprintf(s,sz,f,i)	((void)(sz), sprintf(s,f,i))
+#define l_sprintf(s,sz,f,i)	((void)(sz), snprintf(s,sz,f,i))
 #endif
 
 

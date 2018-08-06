@@ -232,7 +232,7 @@ namespace slua {
 
     #define DefLuaMethod(NAME,M) { \
         lua_CFunction x=LuaCppBinding<decltype(M),M>::LuaCFunction; \
-        bool inst=std::is_member_function_pointer<decltype(M)>::value; \
+        constexpr bool inst=std::is_member_function_pointer<decltype(M)>::value; \
         LuaObject::addMethod(L, #NAME, x, inst); \
     }
     

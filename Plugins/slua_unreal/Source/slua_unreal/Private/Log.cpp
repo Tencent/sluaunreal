@@ -55,7 +55,7 @@ namespace slua {
             va_end(args);\
 
         #define LogWBufDeclareWithFmt(buf,fmt) \
-            TCHAR buf[10240];\
+            wchar_t buf[10240];\
             va_list args;\
             va_start(args, fmt);\
             vswprintf(buf,10240,fmt,args);\

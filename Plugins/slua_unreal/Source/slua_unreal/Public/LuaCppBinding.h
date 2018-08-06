@@ -115,8 +115,13 @@ namespace slua {
         struct Functor<IntList<index...>> {
 
             template <typename AT>
-            static AT readArg(lua_State * L, int p) {
+            static typename TEnableIf<!TIsTArray<AT>::Value,AT>::Type readArg(lua_State * L, int p) {
                 return LuaObject::checkValue<AT>(L,p);
+            }
+
+            template <typename AT>
+            static typename TEnableIf<TIsTArray<AT>::Value,AT>::Type readArg(lua_State * L, int p) {
+                return LuaObject::checkTArray<AT>(L,p);
             }
 
             // index is int-list based 0, so should plus Offset to get first arg 

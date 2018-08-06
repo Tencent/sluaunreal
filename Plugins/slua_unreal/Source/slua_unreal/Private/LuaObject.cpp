@@ -241,17 +241,6 @@ namespace slua {
         return 0;
     }
 
-    int pushValueByPtr(lua_State* L,void* ptr,const TCHAR* tn) {
-        if(wcscmp(tn,TEXT("bool"))==0) {
-            bool* r = reinterpret_cast<bool*>(ptr);
-            lua_pushboolean(L,*r);
-            return 1;
-        }
-        else
-            slua::Log::Log(TEXT("type of %s don't suppor to push"),tn);
-        return 0;
-    }
-
     int fillParamFromState(lua_State* L,UProperty* prop,uint8* params,int i) {
         auto checker = LuaObject::getChecker(prop);
         if(checker) {

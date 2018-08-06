@@ -83,15 +83,16 @@ namespace slua {
         bool owned;
     };
 
-    template<typename T>
+    template<typename T, bool isUObject = std::is_base_of<UObject,T>::value>
     struct TypeName {
-        static const char* value() {
-            if(std::is_base_of<UObject,T>::value) 
-                return "UObject";
-            return value_();
-        }
+        static const char* value();
+    };
 
-        static const char* value_();
+    template<typename T>
+    struct TypeName<T, true> {
+        static const char* value() {
+            return "UObject";
+        }
     };
 
     template<typename T>

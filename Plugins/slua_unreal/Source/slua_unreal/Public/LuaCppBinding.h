@@ -216,7 +216,7 @@ namespace slua {
 
     #define DefLuaClass(CLS) \
         template<> \
-        const char* TypeName<CLS>::value_() { \
+        const char* TypeName<CLS>::value() { \
             return #CLS; \
         } \
         static int Lua##CLS##_gc(lua_State* L) { \

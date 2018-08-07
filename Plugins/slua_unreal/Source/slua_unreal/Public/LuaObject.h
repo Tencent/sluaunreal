@@ -235,6 +235,9 @@ namespace slua {
         }
 
         static void addExtensionMethod(UClass* cls,const char* n,lua_CFunction func);
+
+		static UProperty* getDefaultProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type);
+
     private:
         static int setupClassMT(lua_State* L);
         static int setupInstanceMT(lua_State* L);

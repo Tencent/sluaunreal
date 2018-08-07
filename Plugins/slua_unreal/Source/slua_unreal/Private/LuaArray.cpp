@@ -113,44 +113,9 @@ namespace slua {
     }
 
     int LuaArray::__ctor(lua_State* L) {
-        using namespace UE4CodeGen_Private;
-        EPropertyClass type = (EPropertyClass) LuaObject::checkValue<int>(L,1);
-        switch(type) {
-            default:
-                luaL_error(L,"unsupport type to create");
-                break;
-            case EPropertyClass::Byte:
-                return createArray<UByteProperty>(L);
-            case EPropertyClass::Int8:
-                return createArray<UInt8Property>(L);
-            case EPropertyClass::Int16:
-                return createArray<UInt16Property>(L);
-            case EPropertyClass::Int:
-                return createArray<UIntProperty>(L);
-            case EPropertyClass::Int64:
-                return createArray<UInt64Property>(L);
-            case EPropertyClass::UInt16:
-                return createArray<UUInt16Property>(L);
-            case EPropertyClass::UInt32:
-                return createArray<UUInt32Property>(L);
-            case EPropertyClass::UInt64:
-                return createArray<UUInt64Property>(L);
-            case EPropertyClass::UnsizedInt:
-                return createArray<UUInt64Property>(L);
-            case EPropertyClass::UnsizedUInt:
-                return createArray<UUInt64Property>(L);
-            case EPropertyClass::Float:
-                return createArray<UFloatProperty>(L);
-            case EPropertyClass::Double:
-                return createArray<UDoubleProperty>(L);
-            case EPropertyClass::Bool:
-                return createArray<UBoolProperty>(L);
-            case EPropertyClass::Object:
-                return createArray<UObjectProperty>(L);
-            case EPropertyClass::Str:
-                return createArray<UStrProperty>(L);
-        }
-        return 0;
+		auto type = (UE4CodeGen_Private::EPropertyClass) LuaObject::checkValue<int>(L,1);
+		auto array = FScriptArray();
+		return push(L, LuaObject::getDefaultProperty(L, type), &array);
     }
 
     int LuaArray::Num(lua_State* L) {

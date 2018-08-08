@@ -30,10 +30,12 @@ namespace slua {
             return &array;
         }
 
+        // Cast FScriptArray to TArray<T> if ElementSize matched
         template<typename T>
-        TArray<T> asTArray() const {
-            // TODO
-            return TArray<T>();
+        const TArray<T>& asTArray(lua_State* L) const {
+            if(sizeof(T)!=inner->ElementSize)
+                luaL_error(L,"Cast to TArray error, element size isn't mathed(%d,%d)",sizeof(T),inner->ElementSize);
+            return *(reinterpret_cast<const TArray<T>*>( &array ));
         }
         
     protected:

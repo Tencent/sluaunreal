@@ -2,9 +2,7 @@
 
 slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射能力，结合libclang静态c++代码分析，自动化导出蓝图接口和静态c++接口，提供给lua语言，使得可以通过lua语言开发unreal游戏业务逻辑，方便游戏高效迭代开发，上线热更新，同时支持lua到c++双向，lua到蓝图双向调用，使用lua语言完美替代unreal的c++开发方式，修改业务逻辑不需要等待c++编译，大大提升开发速度。
 
-目前该项目作为潘多拉系统的一部分，用于部分腾讯游戏业务，构建这些业务的周边系统、运营系统，上线质量稳定。
-
-欢迎issue，pr，star，fork。
+目前该项目作为潘多拉系统的一部分，用于剑侠，刺激战场，全军出击业务，构建这些业务的周边系统、运营系统，上线质量稳定。
 
 # slua-unreal 有什么功能
 
@@ -74,6 +72,14 @@ Slua:     call from bp    1024    Hello World 3.1400001049042 UObject: 0x1364861
 
 # 相关参考
 
-slua-unreal依赖dot-clang做c++静态代码生成的工具稍后开源，目前常用FVector等常用类的静态生成代码已经附带。
+slua-unreal依赖dot-clang做c++静态代码生成，请参考：
 
-[详细介绍](https://github.com/Tencent/sluaunreal/wiki/%E8%AF%A6%E7%BB%86%E8%AF%B4%E6%98%8E)
+http://git.code.oa.com/leeyi/dot-clang.git
+
+更详细介绍
+
+http://km.oa.com/articles/show/369593
+
+可视化调试器，基于vscode扩展
+
+http://km.oa.com/group/545/articles/show/350096

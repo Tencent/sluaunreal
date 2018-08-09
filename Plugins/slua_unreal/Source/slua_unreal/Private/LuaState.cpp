@@ -27,6 +27,7 @@
 #include "LuaEnums.h"
 #include "LuaCppBinding.h"
 #include "LuaArray.h"
+#include "LuaMap.h"
 
 namespace slua {
 
@@ -226,6 +227,7 @@ namespace slua {
         SluaUtil::openLib(L);
         LuaClass::reg(L);
         LuaArray::reg(L);
+        LuaMap::reg(L);
 
         lua_settop(L,0);
 

@@ -1,6 +1,7 @@
 require 'TestCase'
 require 'TestStruct'
 require 'TestCppBinding'
+require 'TestMap'
 local TestArray = require 'TestArray'
 
 

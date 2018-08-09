@@ -20,6 +20,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "LuaWidgetTree.h"
 #include "LuaArray.h"
+#include "LuaMap.h"
 #include "Log.h"
 #include "LuaCppBinding.h"
 #include "LuaState.h"
@@ -69,6 +70,44 @@ namespace slua {
         auto& extmap = extensionMMap.FindOrAdd(cls);
         extmap.Add(n,func);
     }
+
+	UProperty* LuaObject::getDefaultProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type) {
+		switch (type) {
+			case UE4CodeGen_Private::EPropertyClass::Byte:
+				return Cast<UProperty>(UByteProperty::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Int8:
+				return Cast<UProperty>(UInt8Property::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Int16:
+				return Cast<UProperty>(UInt16Property::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Int:
+				return Cast<UProperty>(UIntProperty::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Int64:
+				return Cast<UProperty>(UInt64Property::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::UInt16:
+				return Cast<UProperty>(UUInt16Property::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::UInt32:
+				return Cast<UProperty>(UUInt32Property::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::UInt64:
+				return Cast<UProperty>(UUInt64Property::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::UnsizedInt:
+				return Cast<UProperty>(UUInt64Property::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::UnsizedUInt:
+				return Cast<UProperty>(UUInt64Property::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Float:
+				return Cast<UProperty>(UFloatProperty::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Double:
+				return Cast<UProperty>(UDoubleProperty::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Bool:
+				return Cast<UProperty>(UBoolProperty::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Object:
+				return Cast<UProperty>(UObjectProperty::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Str:
+				return Cast<UProperty>(UStrProperty::StaticClass()->GetDefaultObject());
+			default:
+				luaL_error(L, "unsupport property type");
+				return nullptr;
+		}
+	}
 
 	int LuaObject::classIndex(lua_State* L) {
 		lua_getmetatable(L, 1);
@@ -427,6 +466,13 @@ namespace slua {
         return LuaArray::push(L,p->Inner,v);
     }
 
+    int pushUMapProperty(lua_State* L,UProperty* prop,uint8* parms) {
+        auto p = Cast<UMapProperty>(prop);
+        ensure(p);
+		FScriptMap* v = p->GetPropertyValuePtr(parms);
+		return LuaMap::push(L, p->KeyProp, p->ValueProp, v);
+    }
+
     int checkUArrayProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UArrayProperty>(prop);
         ensure(p);
@@ -446,6 +492,20 @@ namespace slua {
         }
         return 0;
     }
+
+	int checkUMapProperty(lua_State* L, UProperty* prop, uint8* parms, int i) {
+		auto p = Cast<UMapProperty>(prop);
+		ensure(p);
+		CheckUD(LuaMap, L, i);
+		FScriptMapHelper dstHelper(p, (FScriptMap*)parms);
+		FScriptMapHelper srcHelper(p, UD->get());
+		for (auto n = 0; n < srcHelper.Num(); n++) {
+			auto keyPtr = srcHelper.GetKeyPtr(n);
+			auto valuePtr = srcHelper.GetValuePtr(n);
+			dstHelper.AddPair(keyPtr, valuePtr);
+		}
+		return 0;
+	}
 
     int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p = Cast<UStructProperty>(prop);
@@ -659,6 +719,7 @@ namespace slua {
         regPusher(UMulticastDelegateProperty::StaticClass(),pushUMulticastDelegateProperty);
         regPusher(UObjectProperty::StaticClass(),pushUObjectProperty);
         regPusher(UArrayProperty::StaticClass(),pushUArrayProperty);
+        regPusher(UMapProperty::StaticClass(),pushUMapProperty);
         regPusher(UStructProperty::StaticClass(),pushUStructProperty);
 		regPusher(UEnumProperty::StaticClass(), pushEnumProperty);
 		
@@ -675,11 +736,10 @@ namespace slua {
         regChecker<UEnumProperty>();
 
         regChecker(UArrayProperty::StaticClass(),checkUArrayProperty);
+        regChecker(UMapProperty::StaticClass(),checkUMapProperty);
         regChecker(UDelegateProperty::StaticClass(),checkUDelegateProperty);
         regChecker(UStructProperty::StaticClass(),checkUStructProperty);
 		
-		
-
 		LuaWrapper::init(L);
 		LuaEnums::init(L);
         ExtensionMethod::init();

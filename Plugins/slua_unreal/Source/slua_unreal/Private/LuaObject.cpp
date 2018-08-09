@@ -712,7 +712,7 @@ namespace slua {
 	}
 
 	int LuaObject::push(lua_State* L, LuaStruct* ls) {
-		return pushType<LuaStruct*>(L, ls, "LuaStruct", setupInstanceMT, gcStruct);
+		return pushType<LuaStruct*>(L, ls, "LuaStruct", setupInstanceStructMT, gcStruct);
 	}
 
 	int LuaObject::push(lua_State* L, double v) {

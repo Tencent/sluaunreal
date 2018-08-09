@@ -78,6 +78,21 @@ TArray<int> USluaTestCase::GetArray() {
     return array;
 }
 
+TMap<int, FString> USluaTestCase::GetMap(/*TMap<int, FString> _map*/) {
+//	for (TMap<int32, FString>::TConstIterator iter = _map.CreateConstIterator(); iter; ++iter) {
+//		slua::Log::Log(TEXT("--- key:%d, value222:%s "),iter->Key, *iter->Value);
+//	}
+
+	TMap<int, FString> FruitMap;
+
+//	FruitMap.Add(5, TEXT("Banana"));
+//	FruitMap.Add(2, TEXT("Grapefruit"));
+//	FruitMap.Add(7, TEXT("Pineapple"));
+//	FruitMap.Add(2, TEXT("Grapefruit"));
+//	FruitMap.Add(7, TEXT("Pineapple"));
+	return FruitMap;
+}
+
 TArray<FString> USluaTestCase::GetArrayStr() {
     TArray<FString> array={"hello","world","nihao"};
     return array;

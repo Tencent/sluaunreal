@@ -395,6 +395,22 @@ namespace slua {
         return LuaObject::push(L,up,ls->buf+up->GetOffset_ForInternal());
     }
 
+    int newinstanceStructIndex(lua_State* L) {
+        LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L, 1);
+        const char* name = LuaObject::checkValue<const char*>(L, 2);
+
+        auto* cls = ls->uss;
+        UProperty* up = cls->FindPropertyByName(UTF8_TO_TCHAR(name));
+        if (up->GetPropertyFlags() & CPF_BlueprintReadOnly)
+            luaL_error(L, "Property %s is readonly", name);
+
+        auto checker = LuaObject::getChecker(up);
+        if (!up) luaL_error(L, "Can't find property named %s", name);
+
+        checker(L, up, ls->buf + up->GetOffset_ForInternal(), 3);
+        return 0;
+    }
+
     int instanceIndexSelf(lua_State* L) {
         lua_getmetatable(L,1);
         const char* name = LuaObject::checkValue<const char*>(L, 2);
@@ -808,6 +824,8 @@ namespace slua {
     int LuaObject::setupInstanceStructMT(lua_State* L) {
         lua_pushcfunction(L,instanceStructIndex);
         lua_setfield(L, -2, "__index");
+        lua_pushcfunction(L, newinstanceStructIndex);
+        lua_setfield(L, -2, "__newindex");
         return 0;
     }
 }

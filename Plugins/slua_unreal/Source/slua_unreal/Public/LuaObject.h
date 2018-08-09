@@ -140,7 +140,7 @@ namespace slua {
         template<class T>
 		static T checkTArray(lua_State* L, int p) {
             CheckUD(LuaArray,L,p);
-			return UD->asTArray<typename T::ElementType>();
+			return UD->asTArray<typename T::ElementType>(L);
 		}
 
         template<class T>

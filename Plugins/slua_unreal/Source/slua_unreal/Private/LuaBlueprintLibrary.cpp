@@ -135,7 +135,7 @@ namespace {
 
     bool getValue(const LuaVar& lv,int index,FString& value) {
         if(index==1 && lv.count()>=index && lv.isString()) {
-            value = lv.asString();
+            value = UTF8_TO_TCHAR(lv.asString());
             return true;
         }
         else if(lv.isTable() || lv.isTuple()) {

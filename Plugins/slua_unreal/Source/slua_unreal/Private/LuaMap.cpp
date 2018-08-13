@@ -15,8 +15,10 @@
 #include "SluaLib.h"
 #include "LuaObject.h"
 #include "Log.h"
+#include <algorithm>
 
-#define GET_HELPER() auto helper = FScriptMapHelper::CreateHelperFormInnerProperties(UD->keyProp, UD->valueProp, &UD->map)
+#define GET_HELPER_EX(t) auto helper = FScriptMapHelper::CreateHelperFormInnerProperties(t->keyProp, t->valueProp, &t->map)
+#define GET_HELPER() GET_HELPER_EX(UD)
 #define GET_HELPER_INTERNAL() auto helper = FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, &map)
 
 #define GET_CHECKER(tag) \
@@ -40,8 +42,13 @@ namespace slua {
 
 	LuaMap::LuaMap(UProperty* keyProp, UProperty* valueProp, FScriptMap* buf) : keyProp(keyProp), valueProp(valueProp) {
 		keyProp->PropertyFlags |= CPF_HasGetValueTypeHash;
-		// just hack to clone FScriptMap construct by bp stack
-		if(buf) FMemory::Memcpy(&map, buf, sizeof(FScriptMap));
+		if (buf) {
+			// just hack to clone FScriptMap construct by bp stack
+			FMemory::Memcpy(&map, buf, sizeof(FScriptMap));
+			createdByBp = true;
+		} else {
+			createdByBp = false;
+		}
 	} 
 
 	LuaMap::~LuaMap() {
@@ -59,8 +66,86 @@ namespace slua {
 	}
 
 	void LuaMap::Clear() {
+		EmptyValues();
+	}
+
+	void LuaMap::EmptyValues(int32 Slack) {
 		GET_HELPER_INTERNAL();
-		helper.EmptyValues();
+		checkSlow(Slack >= 0);
+
+		int32 OldNum = Num();
+		if (OldNum) {
+			DestructItems(helper, 0, OldNum);
+		}
+		if (OldNum || Slack) {
+			map.Empty(Slack, helper.MapLayout);
+		}
+	}
+
+	void LuaMap::DestructItems(const FScriptMapHelper& helper, uint8* PairPtr, uint32 Stride, int32 Index, int32 Count, bool bDestroyKeys, bool bDestroyValues) {
+		auto valueOffset = createdByBp ? 0 : helper.MapLayout.ValueOffset;
+		for (; Count; ++Index) {
+			if (helper.IsValidIndex(Index)) {
+				if (bDestroyKeys) {
+					keyProp->DestroyValue_InContainer(PairPtr);
+				}
+				if (bDestroyValues) {
+					valueProp->DestroyValue_InContainer(PairPtr + valueOffset);
+				}
+				--Count;
+			}
+			PairPtr += Stride;
+		}
+	}
+
+	void LuaMap::DestructItems(const FScriptMapHelper& helper, int32 Index, int32 Count) {
+		check(Index >= 0);
+		check(Count >= 0);
+
+		if (Count == 0) {
+			return;
+		}
+
+		bool bDestroyKeys = !(keyProp->PropertyFlags & (CPF_IsPlainOldData | CPF_NoDestructor));
+		bool bDestroyValues = !(valueProp->PropertyFlags & (CPF_IsPlainOldData | CPF_NoDestructor));
+
+		if (bDestroyKeys || bDestroyValues) {
+			uint32 Stride = helper.MapLayout.SetLayout.Size;
+			uint8* PairPtr = (uint8*)map.GetData(Index, helper.MapLayout);
+			DestructItems(helper, PairPtr, Stride, Index, Count, bDestroyKeys, bDestroyValues);
+		}
+	}
+
+	bool LuaMap::RemovePair(const void* KeyPtr) {
+		GET_HELPER_INTERNAL();
+		UProperty* LocalKeyPropForCapture = keyProp;
+		if (uint8* Entry = map.FindValue(KeyPtr, helper.MapLayout,
+			[LocalKeyPropForCapture](const void* ElementKey) { return LocalKeyPropForCapture->GetValueTypeHash(ElementKey); },
+			[LocalKeyPropForCapture](const void* A, const void* B) { return LocalKeyPropForCapture->Identical(A, B); }
+		)) {
+			int32 Idx = (Entry - (uint8*)map.GetData(0, helper.MapLayout)) / helper.MapLayout.SetLayout.Size;
+			RemoveAt(Idx);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	void LuaMap::RemoveAt(int32 Index, int32 Count) {
+		GET_HELPER_INTERNAL();
+		check(helper.IsValidIndex(Index));
+		DestructItems(helper, Index, Count);
+		for (; Count; ++Index) {
+			if (helper.IsValidIndex(Index)) {
+				map.RemoveAt(Index, helper.MapLayout);
+				--Count;
+			}
+		}
+	}
+
+	int32 LuaMap::Num() const {
+		GET_HELPER_INTERNAL();
+		return helper.Num();
 	}
 
 	int LuaMap::__ctor(lua_State* L) {
@@ -73,8 +158,7 @@ namespace slua {
 
 	int LuaMap::Num(lua_State* L) {
 		CheckUD(LuaMap, L, 1);
-		GET_HELPER();
-		return LuaObject::push(L, helper.Num());
+		return LuaObject::push(L, UD->Num());
 	}
 
 	int LuaMap::Get(lua_State* L) {
@@ -86,14 +170,14 @@ namespace slua {
 		keyChecker(L, UD->keyProp, (uint8*)keyPtr, 2);
 
 		auto valuePtr = helper.FindValueFromHash(keyPtr);
-		if (!valuePtr) {
-			auto tn = UD->keyProp->GetClass()->GetName();
-			luaL_error(L, "can not find key %s", TCHAR_TO_UTF8(*tn));
-			return 0;
+		if (valuePtr) {
+			LuaObject::push(L, UD->valueProp, valuePtr);
+			LuaObject::push(L, true);
+		} else {
+			LuaObject::pushNil(L);
+			LuaObject::push(L, false);
 		}
-
-		auto ret = LuaObject::push(L, UD->valueProp, valuePtr);
-		return ret;
+		return 2;
 	}
 
 	int LuaMap::Add(lua_State* L) {
@@ -118,7 +202,7 @@ namespace slua {
 		FDefaultConstructedPropertyElement tempKey(UD->keyProp);
 		auto keyPtr = tempKey.GetObjAddress();
 		keyChecker(L, UD->keyProp, (uint8*)keyPtr, 2);
-		return LuaObject::push(L, helper.RemovePair(keyPtr));
+		return LuaObject::push(L, UD->RemovePair(keyPtr));
 	}
 
 	int LuaMap::Clear(lua_State* L) {
@@ -127,20 +211,63 @@ namespace slua {
 		return 0;
 	}
 
-	int LuaMap::setupMT(lua_State* L) {
-		LuaObject::setupMTSelfSearch(L);
+	int LuaMap::Pairs(lua_State* L) {
+		CheckUD(LuaMap, L, 1);
+		GET_HELPER();
+		auto iter = new LuaMap::Enumerator();
+		iter->map = UD;
+		iter->index = 0;
+		iter->size = std::min(helper.GetMaxIndex(), helper.Num());
+		lua_pushcfunction(L, LuaMap::Enumerable);
+		LuaObject::pushType(L, iter, "LuaMap::Enumerator", nullptr, LuaMap::Enumerator::gc);
+		LuaObject::pushNil(L);
+		return 3;
+	}
 
-		RegMetaMethod(L, Num);
-		RegMetaMethod(L, Get);
-		RegMetaMethod(L, Add);
-		RegMetaMethod(L, Remove);
-		RegMetaMethod(L, Clear);
+	int LuaMap::Enumerable(lua_State* L) {
+		CheckUD(LuaMap::Enumerator, L, 1);
+		auto map = UD->map;
+		GET_HELPER_EX(map);
+		while (true) {
+			if (helper.IsValidIndex(UD->index)) {
+				auto pairPtr = helper.GetPairPtr(UD->index);
+				auto keyPtr = pairPtr + helper.MapLayout.KeyOffset;
+				auto valuePtr = pairPtr + helper.MapLayout.ValueOffset;
+				LuaObject::push(L, map->keyProp, keyPtr);
+				LuaObject::push(L, map->valueProp, valuePtr);
+				UD->index += 1;
+				return 2;
+			} else {
+				UD->index += 1;
+			}
+			if (UD->index >= UD->size) {
+				lua_settop(L, 0);
+				return 0;
+			}
+		}
+	}
+
+	int LuaMap::Enumerator::gc(lua_State* L) {
+		CheckUD(LuaMap::Enumerator, L, 1);
+		delete UD;
 		return 0;
 	}
 
 	int LuaMap::gc(lua_State* L) {
 		CheckUD(LuaMap, L, 1);
 		delete UD;
+		return 0;
+	}
+
+	int LuaMap::setupMT(lua_State* L) {
+		LuaObject::setupMTSelfSearch(L);
+
+		RegMetaMethod(L, Pairs);
+		RegMetaMethod(L, Num);
+		RegMetaMethod(L, Get);
+		RegMetaMethod(L, Add);
+		RegMetaMethod(L, Remove);
+		RegMetaMethod(L, Clear);
 		return 0;
 	}
 

@@ -38,11 +38,14 @@ namespace slua {
         static int Add(lua_State* L);
         static int Remove(lua_State* L);
         static int Clear(lua_State* L);
+		static int Pairs(lua_State* L);
+		static int Enumerable(lua_State* L);
 
 	private:
 		FScriptMap map;
 		UProperty* keyProp;
 		UProperty* valueProp;
+		bool createdByBp;
 
 		static int setupMT(lua_State* L);
 		static int gc(lua_State* L);
@@ -50,6 +53,22 @@ namespace slua {
 		uint8* getKeyPtr(uint8* pairPtr);
 		uint8* getValuePtr(uint8* pairPtr);
 		void Clear();
+		int32 Num() const;
+		void EmptyValues(int32 Slack = 0);
+		void DestructItems(const FScriptMapHelper& helper, int32 Index, int32 Count);
+		void DestructItems(const FScriptMapHelper& helper, uint8* PairPtr, uint32 Stride, int32 Index, int32 Count, bool bDestroyKeys, bool bDestroyValues);
+		bool RemovePair(const void* KeyPtr);
+		void RemoveAt(int32 Index, int32 Count = 1);
+
+		struct Enumerator {
+
+			LuaMap* map;
+			int32 index;
+			int32 size;
+
+			static int gc(lua_State* L);
+
+		};
 
 	};
 	

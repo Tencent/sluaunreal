@@ -73,6 +73,10 @@ function bpcall(a,b,c,d)
     return 1024,"return from lua 虚幻引擎"
 end
 
+function bpcall2()
+    print "bpcall2 with empty args"
+end
+
 local HitResult = import('HitResult');
 local count=0
 local tt=0

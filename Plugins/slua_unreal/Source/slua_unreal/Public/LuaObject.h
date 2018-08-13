@@ -165,7 +165,7 @@ namespace slua {
             if(!cls) lua_pushnil(L);
             UserData<T>* ud = reinterpret_cast< UserData<T>* >(lua_newuserdata(L, sizeof(UserData<T>)));
             ud->ud = cls;
-            ud->owned = true;
+            ud->owned = gc!=nullptr;
             setupMetaTable(L,tn,setupmt,gc);
             return 1;
         }

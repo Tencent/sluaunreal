@@ -30,7 +30,7 @@
 namespace slua {
 
 	void LuaMap::reg(lua_State* L) {
-//		SluaUtil::reg(L, "Map", __ctor);
+		SluaUtil::reg(L, "Map", __ctor);
 	}
 
 	int LuaMap::push(lua_State* L, UProperty* keyProp, UProperty* valueProp, FScriptMap* buf) {
@@ -39,7 +39,9 @@ namespace slua {
 	}
 
 	LuaMap::LuaMap(UProperty* keyProp, UProperty* valueProp, FScriptMap* buf) : keyProp(keyProp), valueProp(valueProp) {
-		FMemory::Memcpy(&map, buf, sizeof(FScriptMap));
+		keyProp->PropertyFlags |= CPF_HasGetValueTypeHash;
+		// just hack to clone FScriptMap construct by bp stack
+		if(buf) FMemory::Memcpy(&map, buf, sizeof(FScriptMap));
 	} 
 
 	LuaMap::~LuaMap() {
@@ -64,8 +66,9 @@ namespace slua {
 	int LuaMap::__ctor(lua_State* L) {
 		auto keyType = (UE4CodeGen_Private::EPropertyClass)LuaObject::checkValue<int>(L, 1);
 		auto valueType = (UE4CodeGen_Private::EPropertyClass)LuaObject::checkValue<int>(L, 2);
-		FScriptMap map;
-		return push(L, LuaObject::getDefaultProperty(L, keyType), LuaObject::getDefaultProperty(L, valueType), &map);
+		auto keyProp = LuaObject::getDefaultProperty(L, keyType);
+		auto valueProp = LuaObject::getDefaultProperty(L, valueType);
+		return push(L, keyProp, valueProp, nullptr);
 	}
 
 	int LuaMap::Num(lua_State* L) {

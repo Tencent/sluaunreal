@@ -79,8 +79,11 @@ namespace slua {
 				return Cast<UProperty>(UInt8Property::StaticClass()->GetDefaultObject());
 			case UE4CodeGen_Private::EPropertyClass::Int16:
 				return Cast<UProperty>(UInt16Property::StaticClass()->GetDefaultObject());
-			case UE4CodeGen_Private::EPropertyClass::Int:
-				return Cast<UProperty>(UIntProperty::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Int: {
+				auto p = Cast<UProperty>(UIntProperty::StaticClass()->GetDefaultObject());
+                p->PropertyFlags |= CPF_IsPlainOldData;
+                return p;
+            }
 			case UE4CodeGen_Private::EPropertyClass::Int64:
 				return Cast<UProperty>(UInt64Property::StaticClass()->GetDefaultObject());
 			case UE4CodeGen_Private::EPropertyClass::UInt16:

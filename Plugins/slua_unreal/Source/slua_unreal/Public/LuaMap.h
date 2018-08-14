@@ -43,6 +43,7 @@ namespace slua {
 
 	private:
 		FScriptMap map;
+		FScriptMapHelper helper;
 		UProperty* keyProp;
 		UProperty* valueProp;
 		bool createdByBp;
@@ -55,8 +56,8 @@ namespace slua {
 		void Clear();
 		int32 Num() const;
 		void EmptyValues(int32 Slack = 0);
-		void DestructItems(const FScriptMapHelper& helper, int32 Index, int32 Count);
-		void DestructItems(const FScriptMapHelper& helper, uint8* PairPtr, uint32 Stride, int32 Index, int32 Count, bool bDestroyKeys, bool bDestroyValues);
+		void DestructItems(int32 Index, int32 Count);
+		void DestructItems(uint8* PairPtr, uint32 Stride, int32 Index, int32 Count, bool bDestroyKeys, bool bDestroyValues);
 		bool RemovePair(const void* KeyPtr);
 		void RemoveAt(int32 Index, int32 Count = 1);
 

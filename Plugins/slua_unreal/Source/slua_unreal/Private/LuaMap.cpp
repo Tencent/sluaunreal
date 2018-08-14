@@ -17,10 +17,6 @@
 #include "Log.h"
 #include <algorithm>
 
-#define GET_HELPER_EX(t) auto helper = FScriptMapHelper::CreateHelperFormInnerProperties(t->keyProp, t->valueProp, &t->map)
-#define GET_HELPER() GET_HELPER_EX(UD)
-#define GET_HELPER_INTERNAL() auto helper = FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, &map)
-
 #define GET_CHECKER(tag) \
 	auto tag##Checker = LuaObject::getChecker(UD->tag##Prop);\
 	if (!tag##Checker) { \
@@ -40,7 +36,10 @@ namespace slua {
 		return LuaObject::pushType(L, map, "LuaMap", setupMT, gc);
 	}
 
-	LuaMap::LuaMap(UProperty* keyProp, UProperty* valueProp, FScriptMap* buf) : keyProp(keyProp), valueProp(valueProp) {
+	LuaMap::LuaMap(UProperty* keyProp, UProperty* valueProp, FScriptMap* buf) : 
+		keyProp(keyProp), 
+		valueProp(valueProp) ,
+		helper(FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, &map)) {
 		keyProp->PropertyFlags |= CPF_HasGetValueTypeHash;
 		if (buf) {
 			// just hack to clone FScriptMap construct by bp stack
@@ -49,6 +48,7 @@ namespace slua {
 		} else {
 			createdByBp = false;
 		}
+		
 	} 
 
 	LuaMap::~LuaMap() {
@@ -56,12 +56,10 @@ namespace slua {
 	}
 
 	uint8* LuaMap::getKeyPtr(uint8* pairPtr) {
-		GET_HELPER_INTERNAL();
 		return pairPtr + helper.MapLayout.KeyOffset;
 	}
 
 	uint8* LuaMap::getValuePtr(uint8* pairPtr) {
-		GET_HELPER_INTERNAL();
 		return pairPtr + helper.MapLayout.ValueOffset;
 	}
 
@@ -71,12 +69,11 @@ namespace slua {
 
 	// modified FScriptMapHelper::EmptyValues function to add value property offset on value ptr 
 	void LuaMap::EmptyValues(int32 Slack) {
-		GET_HELPER_INTERNAL();
 		checkSlow(Slack >= 0);
 
 		int32 OldNum = Num();
 		if (OldNum) {
-			DestructItems(helper, 0, OldNum);
+			DestructItems(0, OldNum);
 		}
 		if (OldNum || Slack) {
 			map.Empty(Slack, helper.MapLayout);
@@ -84,7 +81,7 @@ namespace slua {
 	}
 
 	// modified FScriptMapHelper::DestructItems function to add value property offset on value ptr 
-	void LuaMap::DestructItems(const FScriptMapHelper& helper, uint8* PairPtr, uint32 Stride, int32 Index, int32 Count, bool bDestroyKeys, bool bDestroyValues) {
+	void LuaMap::DestructItems(uint8* PairPtr, uint32 Stride, int32 Index, int32 Count, bool bDestroyKeys, bool bDestroyValues) {
 		auto valueOffset = createdByBp ? 0 : helper.MapLayout.ValueOffset;
 		for (; Count; ++Index) {
 			if (helper.IsValidIndex(Index)) {
@@ -101,7 +98,7 @@ namespace slua {
 	}
 
 	// modified FScriptMapHelper::DestructItems function to add value property offset on value ptr 
-	void LuaMap::DestructItems(const FScriptMapHelper& helper, int32 Index, int32 Count) {
+	void LuaMap::DestructItems(int32 Index, int32 Count) {
 		check(Index >= 0);
 		check(Count >= 0);
 
@@ -115,13 +112,12 @@ namespace slua {
 		if (bDestroyKeys || bDestroyValues) {
 			uint32 Stride = helper.MapLayout.SetLayout.Size;
 			uint8* PairPtr = (uint8*)map.GetData(Index, helper.MapLayout);
-			DestructItems(helper, PairPtr, Stride, Index, Count, bDestroyKeys, bDestroyValues);
+			DestructItems(PairPtr, Stride, Index, Count, bDestroyKeys, bDestroyValues);
 		}
 	}
 
 	// modified FScriptMapHelper::RemovePair function to call LuaMap::RemoveAt
 	bool LuaMap::RemovePair(const void* KeyPtr) {
-		GET_HELPER_INTERNAL();
 		UProperty* LocalKeyPropForCapture = keyProp;
 		if (uint8* Entry = map.FindValue(KeyPtr, helper.MapLayout,
 			[LocalKeyPropForCapture](const void* ElementKey) { return LocalKeyPropForCapture->GetValueTypeHash(ElementKey); },
@@ -137,9 +133,8 @@ namespace slua {
 
 	// modified FScriptMapHelper::RemoveAt function to call LuaMap::DestructItems
 	void LuaMap::RemoveAt(int32 Index, int32 Count) {
-		GET_HELPER_INTERNAL();
 		check(helper.IsValidIndex(Index));
-		DestructItems(helper, Index, Count);
+		DestructItems(Index, Count);
 		for (; Count; ++Index) {
 			if (helper.IsValidIndex(Index)) {
 				map.RemoveAt(Index, helper.MapLayout);
@@ -149,7 +144,6 @@ namespace slua {
 	}
 
 	int32 LuaMap::Num() const {
-		GET_HELPER_INTERNAL();
 		return helper.Num();
 	}
 
@@ -168,13 +162,12 @@ namespace slua {
 
 	int LuaMap::Get(lua_State* L) {
 		CheckUD(LuaMap, L, 1);
-		GET_HELPER();
 		GET_CHECKER(key);
 		FDefaultConstructedPropertyElement tempKey(UD->keyProp);
 		auto keyPtr = tempKey.GetObjAddress();
 		keyChecker(L, UD->keyProp, (uint8*)keyPtr, 2);
 
-		auto valuePtr = helper.FindValueFromHash(keyPtr);
+		auto valuePtr = UD->helper.FindValueFromHash(keyPtr);
 		if (valuePtr) {
 			LuaObject::push(L, UD->valueProp, valuePtr);
 			LuaObject::push(L, true);
@@ -187,7 +180,6 @@ namespace slua {
 
 	int LuaMap::Add(lua_State* L) {
 		CheckUD(LuaMap, L, 1);
-		GET_HELPER();
 		GET_CHECKER(key);
 		GET_CHECKER(value);
 		FDefaultConstructedPropertyElement tempKey(UD->keyProp);
@@ -196,13 +188,12 @@ namespace slua {
 		auto valuePtr = tempValue.GetObjAddress();
 		keyChecker(L, UD->keyProp, (uint8*)keyPtr, 2);
 		valueChecker(L, UD->valueProp, (uint8*)valuePtr, 3);
-		helper.AddPair(keyPtr, valuePtr);
+		UD->helper.AddPair(keyPtr, valuePtr);
 		return 0;
 	}
 
 	int LuaMap::Remove(lua_State* L) {
 		CheckUD(LuaMap, L, 1);
-		GET_HELPER();
 		GET_CHECKER(key);
 		FDefaultConstructedPropertyElement tempKey(UD->keyProp);
 		auto keyPtr = tempKey.GetObjAddress();
@@ -218,11 +209,10 @@ namespace slua {
 
 	int LuaMap::Pairs(lua_State* L) {
 		CheckUD(LuaMap, L, 1);
-		GET_HELPER();
 		auto iter = new LuaMap::Enumerator();
 		iter->map = UD;
 		iter->index = 0;
-		iter->num = helper.Num();
+		iter->num = UD->helper.Num();
 		lua_pushcfunction(L, LuaMap::Enumerable);
 		LuaObject::pushType(L, iter, "LuaMap::Enumerator", nullptr, LuaMap::Enumerator::gc);
 		LuaObject::pushNil(L);
@@ -232,7 +222,7 @@ namespace slua {
 	int LuaMap::Enumerable(lua_State* L) {
 		CheckUD(LuaMap::Enumerator, L, 1);
 		auto map = UD->map;
-		GET_HELPER_EX(map);
+		auto& helper = map->helper;
 		auto maxIndex = helper.GetMaxIndex();
 		do {
 			if (UD->num <= 0 || UD->index >= maxIndex) {

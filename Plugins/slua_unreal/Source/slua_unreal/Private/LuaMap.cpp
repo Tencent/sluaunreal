@@ -69,6 +69,7 @@ namespace slua {
 		EmptyValues();
 	}
 
+	// modified FScriptMapHelper::EmptyValues function to add value property offset on value ptr 
 	void LuaMap::EmptyValues(int32 Slack) {
 		GET_HELPER_INTERNAL();
 		checkSlow(Slack >= 0);
@@ -82,6 +83,7 @@ namespace slua {
 		}
 	}
 
+	// modified FScriptMapHelper::DestructItems function to add value property offset on value ptr 
 	void LuaMap::DestructItems(const FScriptMapHelper& helper, uint8* PairPtr, uint32 Stride, int32 Index, int32 Count, bool bDestroyKeys, bool bDestroyValues) {
 		auto valueOffset = createdByBp ? 0 : helper.MapLayout.ValueOffset;
 		for (; Count; ++Index) {
@@ -98,6 +100,7 @@ namespace slua {
 		}
 	}
 
+	// modified FScriptMapHelper::DestructItems function to add value property offset on value ptr 
 	void LuaMap::DestructItems(const FScriptMapHelper& helper, int32 Index, int32 Count) {
 		check(Index >= 0);
 		check(Count >= 0);
@@ -116,6 +119,7 @@ namespace slua {
 		}
 	}
 
+	// modified FScriptMapHelper::RemovePair function to call LuaMap::RemoveAt
 	bool LuaMap::RemovePair(const void* KeyPtr) {
 		GET_HELPER_INTERNAL();
 		UProperty* LocalKeyPropForCapture = keyProp;
@@ -131,6 +135,7 @@ namespace slua {
 		}
 	}
 
+	// modified FScriptMapHelper::RemoveAt function to call LuaMap::DestructItems
 	void LuaMap::RemoveAt(int32 Index, int32 Count) {
 		GET_HELPER_INTERNAL();
 		check(helper.IsValidIndex(Index));

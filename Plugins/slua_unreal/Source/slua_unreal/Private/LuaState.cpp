@@ -264,10 +264,9 @@ namespace slua {
     LuaVar LuaState::doString(const char* str) {
         #if WITH_EDITOR
         FMD5 md5;
-        uint8 digest[17];
+        uint8 digest[17]={0};
         md5.Update((const uint8*)str,strlen(str));
         md5.Final(digest);
-        digest[16]=0;
 
         TArray<FStringFormatArg> Args;
 		Args.Add(UTF8_TO_TCHAR(digest));

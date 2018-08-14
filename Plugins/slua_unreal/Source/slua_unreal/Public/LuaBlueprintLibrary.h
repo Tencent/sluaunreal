@@ -39,8 +39,11 @@ class SLUA_UNREAL_API ULuaBlueprintLibrary : public UBlueprintFunctionLibrary
 public:
 
 	/** Call a lua function with args */
+	UFUNCTION(BlueprintCallable, meta=( DisplayName="Call To Lua With Arguments" ), Category="slua")
+	static FLuaBPVar CallToLuaWithArgs(FString FunctionName,const TArray<FLuaBPVar>& Args);
+
 	UFUNCTION(BlueprintCallable, meta=( DisplayName="Call To Lua" ), Category="slua")
-	static FLuaBPVar CallToLua(FString FunctionName,const TArray<FLuaBPVar>& Args);
+	static FLuaBPVar CallToLua(FString FunctionName);
 
 	UFUNCTION(BlueprintCallable, Category="slua")
 	static FLuaBPVar CreateVarFromInt(int Value);

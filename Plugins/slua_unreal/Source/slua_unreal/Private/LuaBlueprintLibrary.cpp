@@ -41,7 +41,7 @@ ULuaBlueprintLibrary::ULuaBlueprintLibrary(const FObjectInitializer& ObjectIniti
 	);
 }
 
-FLuaBPVar ULuaBlueprintLibrary::CallToLua(FString funcname,const TArray<FLuaBPVar>& args) {
+FLuaBPVar ULuaBlueprintLibrary::CallToLuaWithArgs(FString funcname,const TArray<FLuaBPVar>& args) {
     using namespace slua;
     // get main state
     auto ls = LuaState::get();
@@ -56,6 +56,20 @@ FLuaBPVar ULuaBlueprintLibrary::CallToLua(FString funcname,const TArray<FLuaBPVa
     }
     return FLuaBPVar();
 }
+
+FLuaBPVar ULuaBlueprintLibrary::CallToLua(FString funcname) {
+    using namespace slua;
+    // get main state
+    auto ls = LuaState::get();
+    if(!ls) return FLuaBPVar();
+    LuaVar f = ls->get(TCHAR_TO_UTF8(*funcname));
+    if(f.isFunction()) {
+        LuaVar r = f.callWithNArg(0);
+        return FLuaBPVar(r);
+    }
+    return FLuaBPVar();
+}
+
 
 FLuaBPVar ULuaBlueprintLibrary::CreateVarFromInt(int i) {
     FLuaBPVar v;

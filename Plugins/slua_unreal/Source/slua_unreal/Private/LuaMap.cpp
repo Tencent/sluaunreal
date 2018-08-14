@@ -217,7 +217,7 @@ namespace slua {
 		auto iter = new LuaMap::Enumerator();
 		iter->map = UD;
 		iter->index = 0;
-		iter->size = std::min(helper.GetMaxIndex(), helper.Num());
+		iter->num = helper.Num();
 		lua_pushcfunction(L, LuaMap::Enumerable);
 		LuaObject::pushType(L, iter, "LuaMap::Enumerator", nullptr, LuaMap::Enumerator::gc);
 		LuaObject::pushNil(L);
@@ -228,7 +228,12 @@ namespace slua {
 		CheckUD(LuaMap::Enumerator, L, 1);
 		auto map = UD->map;
 		GET_HELPER_EX(map);
-		while (true) {
+		auto maxIndex = helper.GetMaxIndex();
+		do {
+			if (UD->num <= 0 || UD->index >= maxIndex) {
+				lua_settop(L, 0);
+				return 0;
+			}
 			if (helper.IsValidIndex(UD->index)) {
 				auto pairPtr = helper.GetPairPtr(UD->index);
 				auto keyPtr = pairPtr + helper.MapLayout.KeyOffset;
@@ -236,15 +241,12 @@ namespace slua {
 				LuaObject::push(L, map->keyProp, keyPtr);
 				LuaObject::push(L, map->valueProp, valuePtr);
 				UD->index += 1;
+				UD->num -= 1;
 				return 2;
 			} else {
 				UD->index += 1;
 			}
-			if (UD->index >= UD->size) {
-				lua_settop(L, 0);
-				return 0;
-			}
-		}
+		} while (true);
 	}
 
 	int LuaMap::Enumerator::gc(lua_State* L) {

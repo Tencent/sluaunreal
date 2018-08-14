@@ -64,7 +64,7 @@ namespace slua {
 
 			LuaMap* map;
 			int32 index;
-			int32 size;
+			int32 num;
 
 			static int gc(lua_State* L);
 

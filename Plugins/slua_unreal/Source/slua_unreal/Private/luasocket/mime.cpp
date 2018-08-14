@@ -736,5 +736,6 @@ static int mime_global_dot(lua_State *L)
 
 
 } // end NS_SLUA
-
+#ifndef _WIN32
 #pragma clang diagnostic pop
+#endif

@@ -43,9 +43,9 @@ namespace slua {
 
 	private:
 		FScriptMap map;
-		FScriptMapHelper helper;
 		UProperty* keyProp;
 		UProperty* valueProp;
+		FScriptMapHelper helper;
 		bool createdByBp;
 
 		static int setupMT(lua_State* L);

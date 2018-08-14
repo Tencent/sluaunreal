@@ -13,6 +13,10 @@
 
 #include "mime.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wchar-subscripts"
+
+
 namespace NS_SLUA {    
 
 /*=========================================================================*\
@@ -730,3 +734,5 @@ static int mime_global_dot(lua_State *L)
 
 
 } // end NS_SLUA
+
+#pragma clang diagnostic pop

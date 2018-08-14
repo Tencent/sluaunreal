@@ -22,6 +22,10 @@
 #define MAX(x, y) ((x) > (y) ? x : y)
 #endif
 
+#ifdef _WIN32
+#define gai_strerror gai_strerrorA
+#endif
+
 namespace NS_SLUA {    
 
 /*=========================================================================*\
@@ -180,7 +184,7 @@ static int udp_meth_sendto(lua_State *L) {
     err = getaddrinfo(ip, port, &aihint, &ai);
 	if (err) {
         lua_pushnil(L);
-        lua_pushstring(L, gai_strerrorA(err));
+        lua_pushstring(L, gai_strerror(err));
         return 2;
     }
     timeout_markstart(tm);
@@ -250,7 +254,7 @@ static int udp_meth_receivefrom(lua_State *L)
         INET6_ADDRSTRLEN, portstr, 6, NI_NUMERICHOST | NI_NUMERICSERV);
 	if (err) {
         lua_pushnil(L);
-        lua_pushstring(L, gai_strerrorA(err));
+        lua_pushstring(L, gai_strerror(err));
         return 2;
     }
     lua_pushlstring(L, buffer, got);

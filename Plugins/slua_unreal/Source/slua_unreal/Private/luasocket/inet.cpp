@@ -11,7 +11,11 @@
 
 #include "inet.h"
 
-namespace NS_SLUA {    
+ #ifdef _WIN32
+#define gai_strerror gai_strerrorA
+#endif
+
+namespace NS_SLUA {
 
 /*=========================================================================*\
 * Internal function prototypes.
@@ -253,7 +257,7 @@ int inet_meth_getpeername(lua_State *L, p_socket ps, int family)
         port, sizeof(port), NI_NUMERICHOST | NI_NUMERICSERV);
     if (err) {
         lua_pushnil(L);
-        lua_pushstring(L, gai_strerrorA(err));
+        lua_pushstring(L, gai_strerror(err));
         return 2;
     }
     lua_pushstring(L, name);
@@ -287,7 +291,7 @@ int inet_meth_getsockname(lua_State *L, p_socket ps, int family)
 		name, INET6_ADDRSTRLEN, port, 6, NI_NUMERICHOST | NI_NUMERICSERV);
     if (err) {
         lua_pushnil(L);
-        lua_pushstring(L, gai_strerrorA(err));
+        lua_pushstring(L, gai_strerror(err));
         return 2;
     }
     lua_pushstring(L, name);

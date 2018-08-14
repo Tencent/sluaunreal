@@ -13,8 +13,10 @@
 
 #include "mime.h"
 
+#ifndef _WIN32
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wchar-subscripts"
+#endif
 
 
 namespace NS_SLUA {    

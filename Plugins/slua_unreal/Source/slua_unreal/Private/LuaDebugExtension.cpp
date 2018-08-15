@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #include "LuaObject.h"
+#include "LuaState.h"
 #include "LuaSocket/luasocket.h"
 
 namespace slua {
@@ -19,6 +20,20 @@ namespace slua {
     int luasocket(lua_State *L){
         luaopen_socket_core(L);
         return 1;
+    }
+
+    void initLuaSocketExt(lua_State *L) {
+		auto state = LuaState::get(L);
+		#include "luasocket/url.lua.inc"
+		#include "luasocket/tp.lua.inc"
+		#include "luasocket/socket.lua.inc"
+		#include "luasocket/smtp.lua.inc"
+		#include "luasocket/mime.lua.inc"
+		#include "luasocket/mbox.lua.inc"
+		#include "luasocket/ltn12.lua.inc"
+		#include "luasocket/http.lua.inc"
+		#include "luasocket/headers.lua.inc"
+		#include "luasocket/ftp.lua.inc"
     }
 
     void initDebugExtension(lua_State *L){

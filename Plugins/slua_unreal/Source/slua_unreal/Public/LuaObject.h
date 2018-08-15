@@ -43,9 +43,11 @@ private:
 #define CheckUDEX(Type,UD,L,P) UserData<Type*>* UD = reinterpret_cast<UserData<Type*>*>(luaL_checkudata(L, P,#Type)); \
     if(!UD) { luaL_error(L, "checkValue error at %d",P); } \
 
-#define RegMetaMethod(L,METHOD) \
+#define RegMetaMethodByName(L,NAME,METHOD) \
     lua_pushcfunction(L,METHOD); \
-    lua_setfield(L,-2,#METHOD);
+    lua_setfield(L,-2,NAME);
+
+#define RegMetaMethod(L,METHOD) RegMetaMethodByName(L,#METHOD,METHOD)
 
 #define NewUD(T, v, o) auto ud = lua_newuserdata(L, sizeof(UserData<T*>)); \
 	if (!ud) luaL_error(L, "out of memory to new ud"); \

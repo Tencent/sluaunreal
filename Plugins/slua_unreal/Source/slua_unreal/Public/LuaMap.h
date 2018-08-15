@@ -62,13 +62,11 @@ namespace slua {
 		void RemoveAt(int32 Index, int32 Count = 1);
 
 		struct Enumerator {
-
 			LuaMap* map;
 			int32 index;
 			int32 num;
 
 			static int gc(lua_State* L);
-
 		};
 
 	};

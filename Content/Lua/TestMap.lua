@@ -35,6 +35,12 @@ for i,v in ipairs(t) do
     end
     print("foreach end...")
 
+    print("foreach begin...")
+    for k,v in pairs(map) do
+        print(k,v)
+    end
+    print("foreach end...")
+
     map:Clear()
     print("map num", map:Num())
 end

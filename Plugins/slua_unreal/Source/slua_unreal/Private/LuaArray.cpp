@@ -185,15 +185,45 @@ namespace slua {
 		return 0;
     }
 
+	int LuaArray::Pairs(lua_State* L) {
+		CheckUD(LuaArray, L, 1);
+		auto iter = new LuaArray::Enumerator();
+		iter->arr = UD;
+		iter->index = 0;
+		lua_pushcfunction(L, LuaArray::Enumerable);
+		LuaObject::pushType(L, iter, "LuaArray::Enumerator", nullptr, LuaArray::Enumerator::gc);
+		LuaObject::pushNil(L);
+		return 3;
+	}
+
+	int LuaArray::Enumerable(lua_State* L) {
+		CheckUD(LuaArray::Enumerator, L, 1);
+		auto arr = UD->arr;
+		if (arr->isValidIndex(UD->index)) {
+			auto element = arr->inner;
+			auto es = element->ElementSize;
+			auto parms = ((uint8*)arr->array.GetData()) + UD->index * es;
+			LuaObject::push(L, UD->index);
+			LuaObject::push(L, element, parms);
+			UD->index += 1;
+			return 2;
+		} 
+		return 0;
+	}
+
     int LuaArray::setupMT(lua_State* L) {
         LuaObject::setupMTSelfSearch(L);
 
+		RegMetaMethod(L,Pairs);
         RegMetaMethod(L,Num);
         RegMetaMethod(L,Get);
         RegMetaMethod(L,Add);
         RegMetaMethod(L,Insert);
         RegMetaMethod(L,Remove);
         RegMetaMethod(L,Clear);
+
+		RegMetaMethodByName(L, "__pairs", Pairs);
+
         return 0;
     }
 
@@ -202,4 +232,11 @@ namespace slua {
         delete UD;
         return 0;   
     }
+
+	int LuaArray::Enumerator::gc(lua_State* L) {
+		CheckUD(LuaArray::Enumerator, L, 1);
+		delete UD;
+		return 0;
+	}
+
 }

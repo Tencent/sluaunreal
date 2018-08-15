@@ -223,13 +223,10 @@ namespace slua {
 		CheckUD(LuaMap::Enumerator, L, 1);
 		auto map = UD->map;
 		auto& helper = map->helper;
-		auto maxIndex = helper.GetMaxIndex();
 		do {
-			if (UD->num <= 0 || UD->index >= maxIndex) {
-				lua_settop(L, 0);
+			if (UD->num <= 0) {
 				return 0;
-			}
-			if (helper.IsValidIndex(UD->index)) {
+			} else if (helper.IsValidIndex(UD->index)) {
 				auto pairPtr = helper.GetPairPtr(UD->index);
 				auto keyPtr = pairPtr + helper.MapLayout.KeyOffset;
 				auto valuePtr = pairPtr + helper.MapLayout.ValueOffset;
@@ -265,6 +262,9 @@ namespace slua {
 		RegMetaMethod(L, Add);
 		RegMetaMethod(L, Remove);
 		RegMetaMethod(L, Clear);
+
+		RegMetaMethodByName(L, "__pairs", Pairs);
+
 		return 0;
 	}
 

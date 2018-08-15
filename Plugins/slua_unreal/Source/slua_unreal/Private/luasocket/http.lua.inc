@@ -1,4 +1,4 @@
-state->doString(R"+*(
+state->doString(R"-++**++-(
 -----------------------------------------------------------------------------
 -- HTTP/1.1 client support for the Lua language.
 -- LuaSocket toolkit.
@@ -353,4 +353,4 @@ _M.request = socket.protect(function(reqt, body)
 end)
 
 return _M
-)+*");
+)-++**++-");

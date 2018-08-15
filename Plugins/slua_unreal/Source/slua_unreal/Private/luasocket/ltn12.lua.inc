@@ -1,4 +1,4 @@
-state->doString(R"+*(
+state->doString(R"-++**++-(
 -----------------------------------------------------------------------------
 -- LTN12 - Filters, sources, sinks and pumps.
 -- LuaSocket toolkit.
@@ -65,7 +65,7 @@ function filter.chain(...)
                 elseif chunk then
                     if index == n then return chunk
                     else index = index + 1 end
-                else base.errostate->doString(R"+*(filter returned inappropriate nil") end
+                else base.error("filter returned inappropriate nil") end
             end
         end
     end
@@ -297,4 +297,4 @@ function pump.all(src, snk, step)
 end
 
 return _M
-)+*");
+)-++**++-");

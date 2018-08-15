@@ -1,4 +1,4 @@
-state->doString(R"+*(
+state->doString(R"-++**++-(
 -----------------------------------------------------------------------------
 -- LuaSocket helper module
 -- Author: Diego Nehab
@@ -62,7 +62,7 @@ function _M.choose(table)
             name, opt1, opt2 = "default", name, opt1
         end
         local f = table[name or "nil"]
-        if not f then base.errostate->doString(R"+*(unknown key (".. base.tostring(name) ..")", 3)
+        if not f then base.error("unknown key (".. base.tostring(name) ..")", 3)
         else return f(opt1, opt2) end
     end
 end
@@ -148,4 +148,4 @@ sourcet["default"] = sourcet["until-closed"]
 _M.source = _M.choose(sourcet)
 
 return _M
-)+*");
+)-++**++-");

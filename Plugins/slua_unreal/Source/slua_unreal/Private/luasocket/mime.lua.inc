@@ -1,5 +1,5 @@
-state->doString(R"+*(
------------------------------------------------------------------------------
+state->doString(R"-++**++-(
+-------------------------------------------------------------------
 -- MIME support for the Lua language.
 -- Author: Diego Nehab
 -- Conforming to RFCs 2045-2049
@@ -30,7 +30,7 @@ local function choose(table)
         end
         local f = table[name or "nil"]
         if not f then 
-            base.errostate->doString(R"+*(unknown key (" .. base.tostring(name) .. ")", 3)
+            base.error("unknown key (" .. base.tostring(name) .. ")", 3)
         else return f(opt1, opt2) end
     end
 end
@@ -89,4 +89,4 @@ function _M.stuff()
 end
 
 return _M
-)+*");
+)-++**++-");

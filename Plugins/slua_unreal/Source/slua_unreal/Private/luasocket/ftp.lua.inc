@@ -1,5 +1,5 @@
-state->doString(R"+*(
------------------------------------------------------------------------------
+state->doString(R"-++**++-(
+-------------------------------------------------------------------
 -- FTP support for the Lua language
 -- LuaSocket toolkit.
 -- Author: Diego Nehab
@@ -284,4 +284,4 @@ _M.get = socket.protect(function(gett)
 end)
 
 return _M
-)+*");
+)-++**++-");

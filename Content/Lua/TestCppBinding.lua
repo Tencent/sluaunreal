@@ -5,3 +5,5 @@ local str=Foo.getStr()
 local f2=Foo.getInstance()
 f1:bar(str)
 f2:bar(str)
+-- call base function
+f1:baseFunc1()

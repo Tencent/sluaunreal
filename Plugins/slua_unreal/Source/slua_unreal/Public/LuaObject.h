@@ -121,6 +121,7 @@ namespace slua {
 		static int classNewindex(lua_State* L);
 
 		static void newType(lua_State* L, const char* tn);
+        static void newTypeWithBase(lua_State* L, const char* tn, std::initializer_list<const char*> bases);
 		static void addMethod(lua_State* L, const char* name, lua_CFunction func, bool isInstance = true);
 		static void addField(lua_State* L, const char* name, lua_CFunction getter, lua_CFunction setter, bool isInstance = true);
 		static void addOperator(lua_State* L, const char* name, lua_CFunction func);
@@ -218,6 +219,8 @@ namespace slua {
         static int push(lua_State* L, UFunction* func, UClass* cls=nullptr);
         static int push(lua_State* L, UProperty* up, uint8* parms);
 
+        // check tn is base of base
+        static bool isBaseTypeOf(lua_State* L,const char* tn,const char* base);
 
         template<typename T>
         static int push(lua_State* L,T* ptr,typename std::enable_if<!std::is_base_of<UObject,T>::value>::type* = nullptr) {

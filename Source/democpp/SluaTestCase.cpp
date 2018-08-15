@@ -24,7 +24,19 @@
 
 namespace slua {
 
-    class Foo {
+    class Base {
+    public:
+
+        void baseFunc1() {
+            Log::Log("baseFunc1 call");
+        }
+    };
+
+    DefLuaClass(Base)
+        DefLuaMethod(baseFunc1,&Base::baseFunc1)
+    EndDef(Base,nullptr)
+
+    class Foo : public Base {
     public:
         Foo(int v):value(v) {}
         ~Foo() {
@@ -54,7 +66,7 @@ namespace slua {
         int value;
     };
 
-    DefLuaClass(Foo)
+    DefLuaClass(Foo,Base)
         DefLuaMethod(bar,&Foo::bar)
         DefLuaMethod(getStr,&Foo::getStr)
         DefLuaMethod(getInstance,&Foo::getInstance)

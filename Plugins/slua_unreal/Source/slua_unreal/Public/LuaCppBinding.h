@@ -156,6 +156,27 @@ namespace slua {
     };
 
 
+    template<typename T>
+    void* luaL_checkclass(lua_State* L,int p) {
+    
+        void* ret = luaL_testudata(L,p,TypeName<T>::value());
+        if(ret) return ret;
+
+        const char *typearg = nullptr;
+        if (luaL_getmetafield(L, p, "__name") == LUA_TSTRING)
+            typearg = lua_tostring(L, -1);
+            
+        lua_pop(L,1);
+
+        if(!typearg)
+            luaL_error(L,"expect userdata at %d",p);
+
+        if(LuaObject::isBaseTypeOf(L,typearg,TypeName<T>::value()))
+            return lua_touserdata(L,p);
+        luaL_error(L,"expect userdata %s, but got %s",TypeName<T>::value(),typearg);
+        return nullptr;
+    }
+
 
     template<typename T,typename RET,typename ...ARG,RET (T::*func)(ARG...) const>
     struct LuaCppBinding< RET (T::*)(ARG...) const, func> {
@@ -168,7 +189,7 @@ namespace slua {
 
         static int LuaCFunction(lua_State* L) {
             // check and get obj ptr;
-            void* p = luaL_checkudata(L,1,TypeName<T>::value());
+            void* p = luaL_checkclass<T>(L,1);
             using f = FunctionBind<RET (*)(lua_State *, void*, ARG...), invoke, 2>;
             return f::invoke(L,p);
         }
@@ -185,7 +206,7 @@ namespace slua {
 
         static int LuaCFunction(lua_State* L) {
             // check and get obj ptr;
-            void* p = luaL_checkudata(L,1,TypeName<T>::value());
+            void* p = luaL_checkclass<T>(L,1);
             using f = FunctionBind<RET (*)(lua_State *, void*, ARG...), invoke, 2>;
             return f::invoke(L,p);
         }
@@ -202,9 +223,17 @@ namespace slua {
 
         static int LuaCFunction(lua_State* L) {
             // check and get obj ptr;
-            void* p = luaL_checkudata(L,1,TypeName<T>::value());
+            void* p = luaL_checkclass<T>(L,1);
             using f = FunctionBind<void (*)(lua_State *, void*, ARG...), invoke, 2>;
             return f::invoke(L,p);
+        }
+    };
+
+    template<int Offset>
+    struct LuaCppBinding< nullptr_t, nullptr, Offset > {
+        static int LuaCFunction(lua_State* L) {
+            luaL_error(L,"Can't be called");
+            return 0;
         }
     };
 
@@ -214,7 +243,7 @@ namespace slua {
         static void reg(lua_State* L);
     };
 
-    #define DefLuaClass(CLS) \
+    #define DefLuaClassBase(CLS) \
         template<> \
         const char* TypeName<CLS>::value() { \
             return #CLS; \
@@ -228,7 +257,10 @@ namespace slua {
         LuaClass Lua##CLS##__(Lua##CLS##_setup); \
         int Lua##CLS##_setup(lua_State* L) { \
             AutoStack autoStack(L); \
-            LuaObject::newType(L,#CLS); \
+
+    #define DefLuaClass(CLS, BASE...) \
+            DefLuaClassBase(CLS) \
+            LuaObject::newTypeWithBase(L,#CLS,std::initializer_list<const char*>{#BASE}); \
 
     #define EndDef(CLS,M)  \
         lua_CFunction x=LuaCppBinding<decltype(M),M,2>::LuaCFunction; \

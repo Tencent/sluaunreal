@@ -112,19 +112,44 @@ namespace slua {
 		}
 	}
 
-	int LuaObject::classIndex(lua_State* L) {
-		lua_getmetatable(L, 1);
-		const char* name = checkValue<const char*>(L, 2);
-		if (lua_getfield(L, -1, name) != 0) {
+    static int findMember(lua_State* L,const char* name) {
+        if (lua_getfield(L, -1, name) != 0) {
 			return 1;
 		} else if (lua_getfield(L, lua_upvalueindex(1)/*.get*/, name) != 0) {
 			lua_pushvalue(L, 1);
 			lua_call(L, 1, 1);
 			return 1;
 		} else {
-			lua_pushnil(L);
-			return 1;
+            // find base
+            lua_pop(L,2);
+            int t = lua_getfield(L,-1, "__base");
+            if(t==LUA_TTABLE) {
+                size_t cnt = lua_rawlen(L,-1);
+                int r = 0;
+                for(size_t n=0;n<cnt;n++) {
+                    lua_geti(L,-1,n+1);
+                    const char* tn = lua_tostring(L,-1);
+                    lua_pop(L,1); // pop tn
+                    t = luaL_getmetatable(L,tn);
+                    if(t==LUA_TTABLE) r = findMember(L,name);
+                    lua_remove(L,-2); // remove tn table
+                    if(r!=0) break;
+                }
+                lua_remove(L,-2); // remove __base
+                return r;
+            }
+			else {
+                // pop __base
+                lua_pop(L,1);
+                return 0;
+            }
 		}
+    }
+
+	int LuaObject::classIndex(lua_State* L) {
+		lua_getmetatable(L, 1);
+		const char* name = checkValue<const char*>(L, 2);
+		return findMember(L,name);
 	}
 
 	int LuaObject::classNewindex(lua_State* L) {
@@ -170,6 +195,45 @@ namespace slua {
 		setMetaMethods(L);
 	}
 
+    void LuaObject::newTypeWithBase(lua_State* L, const char* tn, std::initializer_list<const char*> bases) {
+		newType(L,tn);
+
+        // create base table
+        lua_newtable(L);
+        lua_pushvalue(L,-1);
+        lua_setfield(L,-3,"__base");
+        
+        for(auto base:bases) {
+            if(strlen(base)>0) {
+                lua_pushstring(L,base);
+                size_t p = lua_rawlen(L,-2);
+                lua_seti(L,-2,p+1);
+            }
+        }
+        // pop __base table
+        lua_pop(L,1);
+	}
+
+    bool LuaObject::isBaseTypeOf(lua_State* L,const char* tn,const char* base) {
+        AutoStack as(L);
+        int t = luaL_getmetatable(L,tn);
+        if(t!=LUA_TTABLE)
+            return false;
+
+        if(lua_getfield(L,-1,"__base")==LUA_TTABLE) {
+            size_t len = lua_rawlen(L,-1);
+            for(int n=0;n<len;n++) {
+                if(lua_geti(L,-1,n+1)==LUA_TSTRING) {
+                    const char* maybeBase = lua_tostring(L,-1);
+                    if(strcmp(maybeBase,base)==0) return true;
+                    else return isBaseTypeOf(L,maybeBase,base);
+                }
+            }
+            return false;
+        }
+        return false;
+    }
+
 	void LuaObject::addMethod(lua_State* L, const char* name, lua_CFunction func, bool isInstance) {
 		lua_pushcfunction(L, func);
 		lua_setfield(L, isInstance ? -2 : -3, name);
@@ -192,10 +256,14 @@ namespace slua {
 	}
 
 	void LuaObject::finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc) {
-		lua_pushcclosure(L, ctor, 0);
-		lua_setfield(L, -3, "__call");
-		lua_pushcclosure(L, gc, 0); // t, mt, _instance, __gc
-		lua_setfield(L, -2, "__gc"); // t, mt, _instance
+        if(ctor!=nullptr) {
+		    lua_pushcclosure(L, ctor, 0);
+		    lua_setfield(L, -3, "__call");
+        }
+        if(gc!=nullptr) {
+		    lua_pushcclosure(L, gc, 0); // t, mt, _instance, __gc
+    		lua_setfield(L, -2, "__gc"); // t, mt, _instance
+        }
         lua_pop(L,3);
 	}
 

@@ -39,7 +39,7 @@ namespace slua {
     class Foo : public Base {
     public:
         Foo(int v):value(v) {}
-        ~Foo() {
+        virtual ~Foo() {
             Log::Log("Foo object %p had been freed",this);
         }
 
@@ -63,6 +63,10 @@ namespace slua {
             return FString(UTF8_TO_TCHAR("some text"));
         }
 
+        virtual void virtualFunc() {
+            Log::Log("virtual func from Foo");
+        }
+
         int value;
     };
 
@@ -70,7 +74,32 @@ namespace slua {
         DefLuaMethod(bar,&Foo::bar)
         DefLuaMethod(getStr,&Foo::getStr)
         DefLuaMethod(getInstance,&Foo::getInstance)
+        DefLuaMethod(virtualFunc,&Foo::virtualFunc)
     EndDef(Foo,&Foo::create)
+
+    class FooChild : public Foo {
+    public:
+        FooChild(int v):Foo(v) {
+
+        }
+
+        void fooChildFunc1() {
+            Log::Log("baseFunc1 call");
+        }
+
+        static LuaOwnedPtr<Foo> create(int v) {
+            return new FooChild(v);
+        }
+
+        virtual void virtualFunc() {
+            Log::Log("virtual func from FooChild");
+        }
+    };
+
+    DefLuaClass(FooChild,Foo)
+        DefLuaMethod(fooChildFunc1,&FooChild::fooChildFunc1)
+        DefLuaMethod(virtualFunc,&FooChild::virtualFunc)
+    EndDef(FooChild,&FooChild::create)
 }
 
 

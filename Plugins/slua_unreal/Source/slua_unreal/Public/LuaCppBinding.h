@@ -258,9 +258,9 @@ namespace slua {
         int Lua##CLS##_setup(lua_State* L) { \
             AutoStack autoStack(L); \
 
-    #define DefLuaClass(CLS, BASE...) \
+    #define DefLuaClass(CLS, ...) \
             DefLuaClassBase(CLS) \
-            LuaObject::newTypeWithBase(L,#CLS,std::initializer_list<const char*>{#BASE}); \
+            LuaObject::newTypeWithBase(L,#CLS,std::initializer_list<const char*>{#__VA_ARGS__}); \
 
     #define EndDef(CLS,M)  \
         lua_CFunction x=LuaCppBinding<decltype(M),M,2>::LuaCFunction; \

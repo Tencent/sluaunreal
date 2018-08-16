@@ -239,9 +239,38 @@ namespace slua {
 
     struct SLUA_UNREAL_API LuaClass {
         LuaClass(lua_CFunction reg);
-
         static void reg(lua_State* L);
     };
+
+    template <typename C,typename U=void>
+    struct TypeNameFromPtr {
+        static const char* value(C*) {
+            return nullptr;
+        }
+    };
+
+    template <typename C>
+    struct TypeNameFromPtr<C,
+        typename std::enable_if<
+            // check if C has a member function named LUA_typename
+            std::is_convertible< decltype(std::declval<C>().LUA_typename()), const char*>::value
+        >::type
+    > {
+        static const char* value(C* ptr) {
+            return ptr->LUA_typename();
+        }
+    };
+
+    template<typename T>
+    inline const char* typeNameFromPtr(T* ptr) {
+        return TypeNameFromPtr<T>::value(ptr);
+    }
+
+    #define LuaClassBody() \
+        public: \
+        virtual const char* LUA_typename() const { \
+            return TypeName<decltype(this)>::value(); \
+        } \
 
     #define DefLuaClassBase(CLS) \
         template<> \
@@ -259,8 +288,8 @@ namespace slua {
             AutoStack autoStack(L); \
 
     #define DefLuaClass(CLS, ...) \
-            DefLuaClassBase(CLS) \
-            LuaObject::newTypeWithBase(L,#CLS,std::initializer_list<const char*>{#__VA_ARGS__}); \
+        DefLuaClassBase(CLS) \
+        LuaObject::newTypeWithBase(L,#CLS,std::initializer_list<const char*>{#__VA_ARGS__}); \
 
     #define EndDef(CLS,M)  \
         lua_CFunction x=LuaCppBinding<decltype(M),M,2>::LuaCFunction; \

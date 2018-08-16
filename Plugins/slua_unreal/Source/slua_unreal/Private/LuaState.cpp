@@ -283,8 +283,6 @@ namespace slua {
     LuaVar LuaState::doString(const char* str) {
         #if WITH_EDITOR
 		FString md5FString = FMD5::HashAnsiString(UTF8_TO_TCHAR(str));
-
-        // addSourceToDebug(chunk,str);
 		debugStringMap.Add(md5FString, UTF8_TO_TCHAR(str));
         return doBuffer((const uint8*)str,strlen(str),TCHAR_TO_UTF8(*md5FString));
         #else

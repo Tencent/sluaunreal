@@ -25,7 +25,11 @@
 namespace slua {
 
     class Base {
+        LuaClassBody()
     public:
+        virtual ~Base() {
+            Log::Log("Base object %p had been freed",this);
+        }
 
         void baseFunc1() {
             Log::Log("baseFunc1 call");
@@ -37,6 +41,9 @@ namespace slua {
     EndDef(Base,nullptr)
 
     class Foo : public Base {
+
+        LuaClassBody()
+
     public:
         Foo(int v):value(v) {}
         virtual ~Foo() {
@@ -78,6 +85,9 @@ namespace slua {
     EndDef(Foo,&Foo::create)
 
     class FooChild : public Foo {
+
+        LuaClassBody()
+
     public:
         FooChild(int v):Foo(v) {
 
@@ -92,7 +102,7 @@ namespace slua {
         }
 
         virtual void virtualFunc() {
-            Log::Log("virtual func from FooChild");
+            Log::Log("virtual func from %s",typeNameFromPtr(this));
         }
     };
 

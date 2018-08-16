@@ -84,6 +84,7 @@ namespace slua {
         LoadFileDelegate loadFileDelegate;
         uint8* loadFile(const char* fn,uint32& len,FString& filepath);
 		static int loader(lua_State* L);
+		static int getStringFromMD5(lua_State* L);
     private:
         friend class LuaObject;
         friend class SluaUtil;
@@ -95,5 +96,7 @@ namespace slua {
         ULuaObject* root;
         int stackCount;
         static LuaState* mainState;
+		TMap<FString, FString> debugStringMap;
+
     };
 }

@@ -132,7 +132,7 @@ namespace slua {
             set(lua_tostring(l,p));
             break;
         case LV_BOOL:
-            set(lua_toboolean(l,p));
+            set(!!lua_toboolean(l,p));
             break;
         case LV_LIGHTUD:
             alloc(1);

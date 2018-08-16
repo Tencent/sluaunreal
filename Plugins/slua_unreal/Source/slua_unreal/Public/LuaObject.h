@@ -97,6 +97,13 @@ namespace slua {
         }
     };
 
+    template<typename T, bool isUObject>
+    struct TypeName<const T*, isUObject> {
+        static const char* value() {
+            return TypeName<T>::value();
+        }
+    };
+
     template<typename T>
     struct LuaOwnedPtr {
         T* ptr;

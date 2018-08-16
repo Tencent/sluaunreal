@@ -12,3 +12,7 @@ local f3=FooChild(2048)
 f3:virtualFunc()
 f3:bar("f3")
 f3:baseFunc1()
+-- f3 is a FooChild, but pushed as Foo
+-- should downcast to Foo, but how to do it?
+-- local f3 = slua.cast(f3,Foo)
+-- f3:fooChildFunc1()

@@ -27,9 +27,10 @@
 #include "LuaEnums.h"
 #include "LuaCppBinding.h"
 #include "LuaArray.h"
+#include "LuaMap.h"
+#include "LuaDebugExtension.h"
 
 namespace slua {
-
     int import(lua_State *L) {
         const char* name = LuaObject::checkValue<const char*>(L,1);
         if(name) {
@@ -71,6 +72,21 @@ namespace slua {
         lua_pop(L,1);
         return 0;
     }
+
+	int LuaState::getStringFromMD5(lua_State* L) {
+		const char* md5String = lua_tostring(L, 1);
+		LuaState* state = LuaState::get(L);
+		FString md5FString = UTF8_TO_TCHAR(md5String);
+		bool hasValue = state->debugStringMap.Contains(md5FString);
+		if (hasValue) {
+			auto value = state->debugStringMap[md5FString];
+			lua_pushstring(L, TCHAR_TO_UTF8(*value));
+		}
+		else {
+			lua_pushstring(L, "");
+		}
+		return 1;
+	}
 
     int LuaState::loader(lua_State* L) {
         LuaState* state = LuaState::get(L);
@@ -206,6 +222,9 @@ namespace slua {
         lua_pushcfunction(L,print);
         lua_setglobal(L, "print");
 
+		lua_pushcfunction(L, getStringFromMD5);
+		lua_setglobal(L, "getStringFromMD5");
+		
         lua_pushcfunction(L,loader);
         int loaderFunc = lua_gettop(L);
 
@@ -221,11 +240,13 @@ namespace slua {
         lua_pushvalue(L,loaderFunc);
         lua_rawseti(L,loaderTable,2);
 		lua_settop(L, 0);
-
+        
+		initDebugExtension(L);
         LuaObject::init(L);
         SluaUtil::openLib(L);
         LuaClass::reg(L);
         LuaArray::reg(L);
+        LuaMap::reg(L);
 
         lua_settop(L,0);
 
@@ -261,18 +282,11 @@ namespace slua {
 
     LuaVar LuaState::doString(const char* str) {
         #if WITH_EDITOR
-        FMD5 md5;
-        uint8 digest[17];
-        md5.Update((const uint8*)str,strlen(str));
-        md5.Final(digest);
-        digest[16]=0;
-
-        TArray<FStringFormatArg> Args;
-		Args.Add(UTF8_TO_TCHAR(digest));
-        FString chunk = FString::Format(TEXT("@codechunk_{0}"),Args);
+		FString md5FString = FMD5::HashAnsiString(UTF8_TO_TCHAR(str));
 
         // addSourceToDebug(chunk,str);
-        return doBuffer((const uint8*)str,strlen(str),TCHAR_TO_UTF8(*chunk));
+		debugStringMap.Add(md5FString, UTF8_TO_TCHAR(str));
+        return doBuffer((const uint8*)str,strlen(str),TCHAR_TO_UTF8(*md5FString));
         #else
         return doBuffer((const uint8*)str,strlen(str),str);
         #endif

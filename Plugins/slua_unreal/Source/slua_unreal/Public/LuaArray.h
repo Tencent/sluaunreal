@@ -46,6 +46,9 @@ namespace slua {
         static int Remove(lua_State* L);
         static int Insert(lua_State* L);
         static int Clear(lua_State* L);
+		static int Pairs(lua_State* L);
+		static int Enumerable(lua_State* L);
+
     private:
         UProperty* inner;
         FScriptArray array;
@@ -62,6 +65,13 @@ namespace slua {
 
         static int setupMT(lua_State* L);
         static int gc(lua_State* L);
+
+		struct Enumerator {
+			LuaArray* arr;
+			int32 index;
+
+			static int gc(lua_State* L);
+		};
     };
 
 }

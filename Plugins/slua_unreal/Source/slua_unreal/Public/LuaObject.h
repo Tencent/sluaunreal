@@ -43,9 +43,11 @@ private:
 #define CheckUDEX(Type,UD,L,P) UserData<Type*>* UD = reinterpret_cast<UserData<Type*>*>(luaL_checkudata(L, P,#Type)); \
     if(!UD) { luaL_error(L, "checkValue error at %d",P); } \
 
-#define RegMetaMethod(L,METHOD) \
+#define RegMetaMethodByName(L,NAME,METHOD) \
     lua_pushcfunction(L,METHOD); \
-    lua_setfield(L,-2,#METHOD);
+    lua_setfield(L,-2,NAME);
+
+#define RegMetaMethod(L,METHOD) RegMetaMethodByName(L,#METHOD,METHOD)
 
 #define NewUD(T, v, o) auto ud = lua_newuserdata(L, sizeof(UserData<T*>)); \
 	if (!ud) luaL_error(L, "out of memory to new ud"); \
@@ -95,6 +97,13 @@ namespace slua {
         }
     };
 
+    template<typename T, bool isUObject>
+    struct TypeName<const T*, isUObject> {
+        static const char* value() {
+            return TypeName<T>::value();
+        }
+    };
+
     template<typename T>
     struct LuaOwnedPtr {
         T* ptr;
@@ -119,6 +128,7 @@ namespace slua {
 		static int classNewindex(lua_State* L);
 
 		static void newType(lua_State* L, const char* tn);
+        static void newTypeWithBase(lua_State* L, const char* tn, std::initializer_list<const char*> bases);
 		static void addMethod(lua_State* L, const char* name, lua_CFunction func, bool isInstance = true);
 		static void addField(lua_State* L, const char* name, lua_CFunction getter, lua_CFunction setter, bool isInstance = true);
 		static void addOperator(lua_State* L, const char* name, lua_CFunction func);
@@ -165,7 +175,7 @@ namespace slua {
             if(!cls) lua_pushnil(L);
             UserData<T>* ud = reinterpret_cast< UserData<T>* >(lua_newuserdata(L, sizeof(UserData<T>)));
             ud->ud = cls;
-            ud->owned = true;
+            ud->owned = gc!=nullptr;
             setupMetaTable(L,tn,setupmt,gc);
             return 1;
         }
@@ -216,6 +226,8 @@ namespace slua {
         static int push(lua_State* L, UFunction* func, UClass* cls=nullptr);
         static int push(lua_State* L, UProperty* up, uint8* parms);
 
+        // check tn is base of base
+        static bool isBaseTypeOf(lua_State* L,const char* tn,const char* base);
 
         template<typename T>
         static int push(lua_State* L,T* ptr,typename std::enable_if<!std::is_base_of<UObject,T>::value>::type* = nullptr) {
@@ -235,6 +247,9 @@ namespace slua {
         }
 
         static void addExtensionMethod(UClass* cls,const char* n,lua_CFunction func);
+
+		static UProperty* getDefaultProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type);
+
     private:
         static int setupClassMT(lua_State* L);
         static int setupInstanceMT(lua_State* L);

@@ -96,6 +96,9 @@ namespace slua {
             case LUA_TLIGHTUSERDATA:
                 type = LV_LIGHTUD;
                 break;
+            case LUA_TBOOLEAN:
+                type = LV_BOOL;
+                break;
             case LUA_TNIL:
             default:
                 type = LV_NIL;
@@ -127,6 +130,9 @@ namespace slua {
             break;
         case LV_STRING:
             set(lua_tostring(l,p));
+            break;
+        case LV_BOOL:
+            set(!!lua_toboolean(l,p));
             break;
         case LV_LIGHTUD:
             alloc(1);

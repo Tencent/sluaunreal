@@ -20,6 +20,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "LuaWidgetTree.h"
 #include "LuaArray.h"
+#include "LuaMap.h"
 #include "Log.h"
 #include "LuaCppBinding.h"
 #include "LuaState.h"
@@ -70,19 +71,85 @@ namespace slua {
         extmap.Add(n,func);
     }
 
-	int LuaObject::classIndex(lua_State* L) {
-		lua_getmetatable(L, 1);
-		const char* name = checkValue<const char*>(L, 2);
-		if (lua_getfield(L, -1, name) != 0) {
+	UProperty* LuaObject::getDefaultProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type) {
+		switch (type) {
+			case UE4CodeGen_Private::EPropertyClass::Byte:
+				return Cast<UProperty>(UByteProperty::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Int8:
+				return Cast<UProperty>(UInt8Property::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Int16:
+				return Cast<UProperty>(UInt16Property::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Int: {
+				auto p = Cast<UProperty>(UIntProperty::StaticClass()->GetDefaultObject());
+                p->PropertyFlags |= CPF_IsPlainOldData;
+                return p;
+            }
+			case UE4CodeGen_Private::EPropertyClass::Int64:
+				return Cast<UProperty>(UInt64Property::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::UInt16:
+				return Cast<UProperty>(UUInt16Property::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::UInt32:
+				return Cast<UProperty>(UUInt32Property::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::UInt64:
+				return Cast<UProperty>(UUInt64Property::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::UnsizedInt:
+				return Cast<UProperty>(UUInt64Property::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::UnsizedUInt:
+				return Cast<UProperty>(UUInt64Property::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Float:
+				return Cast<UProperty>(UFloatProperty::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Double:
+				return Cast<UProperty>(UDoubleProperty::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Bool:
+				return Cast<UProperty>(UBoolProperty::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Object:
+				return Cast<UProperty>(UObjectProperty::StaticClass()->GetDefaultObject());
+			case UE4CodeGen_Private::EPropertyClass::Str:
+				return Cast<UProperty>(UStrProperty::StaticClass()->GetDefaultObject());
+			default:
+				luaL_error(L, "unsupport property type");
+				return nullptr;
+		}
+	}
+
+    static int findMember(lua_State* L,const char* name) {
+        if (lua_getfield(L, -1, name) != 0) {
 			return 1;
 		} else if (lua_getfield(L, lua_upvalueindex(1)/*.get*/, name) != 0) {
 			lua_pushvalue(L, 1);
 			lua_call(L, 1, 1);
 			return 1;
 		} else {
-			lua_pushnil(L);
-			return 1;
+            // find base
+            lua_pop(L,2);
+            int t = lua_getfield(L,-1, "__base");
+            if(t==LUA_TTABLE) {
+                size_t cnt = lua_rawlen(L,-1);
+                int r = 0;
+                for(size_t n=0;n<cnt;n++) {
+                    lua_geti(L,-1,n+1);
+                    const char* tn = lua_tostring(L,-1);
+                    lua_pop(L,1); // pop tn
+                    t = luaL_getmetatable(L,tn);
+                    if(t==LUA_TTABLE) r = findMember(L,name);
+                    lua_remove(L,-2); // remove tn table
+                    if(r!=0) break;
+                }
+                lua_remove(L,-2); // remove __base
+                return r;
+            }
+			else {
+                // pop __base
+                lua_pop(L,1);
+                return 0;
+            }
 		}
+    }
+
+	int LuaObject::classIndex(lua_State* L) {
+		lua_getmetatable(L, 1);
+		const char* name = checkValue<const char*>(L, 2);
+		return findMember(L,name);
 	}
 
 	int LuaObject::classNewindex(lua_State* L) {
@@ -128,6 +195,45 @@ namespace slua {
 		setMetaMethods(L);
 	}
 
+    void LuaObject::newTypeWithBase(lua_State* L, const char* tn, std::initializer_list<const char*> bases) {
+		newType(L,tn);
+
+        // create base table
+        lua_newtable(L);
+        lua_pushvalue(L,-1);
+        lua_setfield(L,-3,"__base");
+        
+        for(auto base:bases) {
+            if(strlen(base)>0) {
+                lua_pushstring(L,base);
+                size_t p = lua_rawlen(L,-2);
+                lua_seti(L,-2,p+1);
+            }
+        }
+        // pop __base table
+        lua_pop(L,1);
+	}
+
+    bool LuaObject::isBaseTypeOf(lua_State* L,const char* tn,const char* base) {
+        AutoStack as(L);
+        int t = luaL_getmetatable(L,tn);
+        if(t!=LUA_TTABLE)
+            return false;
+
+        if(lua_getfield(L,-1,"__base")==LUA_TTABLE) {
+            size_t len = lua_rawlen(L,-1);
+            for(int n=0;n<len;n++) {
+                if(lua_geti(L,-1,n+1)==LUA_TSTRING) {
+                    const char* maybeBase = lua_tostring(L,-1);
+                    if(strcmp(maybeBase,base)==0) return true;
+                    else return isBaseTypeOf(L,maybeBase,base);
+                }
+            }
+            return false;
+        }
+        return false;
+    }
+
 	void LuaObject::addMethod(lua_State* L, const char* name, lua_CFunction func, bool isInstance) {
 		lua_pushcfunction(L, func);
 		lua_setfield(L, isInstance ? -2 : -3, name);
@@ -150,10 +256,14 @@ namespace slua {
 	}
 
 	void LuaObject::finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc) {
-		lua_pushcclosure(L, ctor, 0);
-		lua_setfield(L, -3, "__call");
-		lua_pushcclosure(L, gc, 0); // t, mt, _instance, __gc
-		lua_setfield(L, -2, "__gc"); // t, mt, _instance
+        if(ctor!=nullptr) {
+		    lua_pushcclosure(L, ctor, 0);
+		    lua_setfield(L, -3, "__call");
+        }
+        if(gc!=nullptr) {
+		    lua_pushcclosure(L, gc, 0); // t, mt, _instance, __gc
+    		lua_setfield(L, -2, "__gc"); // t, mt, _instance
+        }
         lua_pop(L,3);
 	}
 
@@ -443,6 +553,13 @@ namespace slua {
         return LuaArray::push(L,p->Inner,v);
     }
 
+    int pushUMapProperty(lua_State* L,UProperty* prop,uint8* parms) {
+        auto p = Cast<UMapProperty>(prop);
+        ensure(p);
+		FScriptMap* v = p->GetPropertyValuePtr(parms);
+		return LuaMap::push(L, p->KeyProp, p->ValueProp, v);
+    }
+
     int checkUArrayProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UArrayProperty>(prop);
         ensure(p);
@@ -462,6 +579,20 @@ namespace slua {
         }
         return 0;
     }
+
+	int checkUMapProperty(lua_State* L, UProperty* prop, uint8* parms, int i) {
+		auto p = Cast<UMapProperty>(prop);
+		ensure(p);
+		CheckUD(LuaMap, L, i);
+		FScriptMapHelper dstHelper(p, (FScriptMap*)parms);
+		FScriptMapHelper srcHelper(p, UD->get());
+		for (auto n = 0; n < srcHelper.Num(); n++) {
+			auto keyPtr = srcHelper.GetKeyPtr(n);
+			auto valuePtr = srcHelper.GetValuePtr(n);
+			dstHelper.AddPair(keyPtr, valuePtr);
+		}
+		return 0;
+	}
 
     int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p = Cast<UStructProperty>(prop);
@@ -675,6 +806,7 @@ namespace slua {
         regPusher(UMulticastDelegateProperty::StaticClass(),pushUMulticastDelegateProperty);
         regPusher(UObjectProperty::StaticClass(),pushUObjectProperty);
         regPusher(UArrayProperty::StaticClass(),pushUArrayProperty);
+        regPusher(UMapProperty::StaticClass(),pushUMapProperty);
         regPusher(UStructProperty::StaticClass(),pushUStructProperty);
 		regPusher(UEnumProperty::StaticClass(), pushEnumProperty);
 		
@@ -691,11 +823,10 @@ namespace slua {
         regChecker<UEnumProperty>();
 
         regChecker(UArrayProperty::StaticClass(),checkUArrayProperty);
+        regChecker(UMapProperty::StaticClass(),checkUMapProperty);
         regChecker(UDelegateProperty::StaticClass(),checkUDelegateProperty);
         regChecker(UStructProperty::StaticClass(),checkUStructProperty);
 		
-		
-
 		LuaWrapper::init(L);
 		LuaEnums::init(L);
         ExtensionMethod::init();

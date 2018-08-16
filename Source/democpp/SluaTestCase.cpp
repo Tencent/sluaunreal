@@ -24,10 +24,22 @@
 
 namespace slua {
 
-    class Foo {
+    class Base {
+    public:
+
+        void baseFunc1() {
+            Log::Log("baseFunc1 call");
+        }
+    };
+
+    DefLuaClass(Base)
+        DefLuaMethod(baseFunc1,&Base::baseFunc1)
+    EndDef(Base,nullptr)
+
+    class Foo : public Base {
     public:
         Foo(int v):value(v) {}
-        ~Foo() {
+        virtual ~Foo() {
             Log::Log("Foo object %p had been freed",this);
         }
 
@@ -51,14 +63,43 @@ namespace slua {
             return FString(UTF8_TO_TCHAR("some text"));
         }
 
+        virtual void virtualFunc() {
+            Log::Log("virtual func from Foo");
+        }
+
         int value;
     };
 
-    DefLuaClass(Foo)
+    DefLuaClass(Foo,Base)
         DefLuaMethod(bar,&Foo::bar)
         DefLuaMethod(getStr,&Foo::getStr)
         DefLuaMethod(getInstance,&Foo::getInstance)
+        DefLuaMethod(virtualFunc,&Foo::virtualFunc)
     EndDef(Foo,&Foo::create)
+
+    class FooChild : public Foo {
+    public:
+        FooChild(int v):Foo(v) {
+
+        }
+
+        void fooChildFunc1() {
+            Log::Log("baseFunc1 call");
+        }
+
+        static LuaOwnedPtr<Foo> create(int v) {
+            return new FooChild(v);
+        }
+
+        virtual void virtualFunc() {
+            Log::Log("virtual func from FooChild");
+        }
+    };
+
+    DefLuaClass(FooChild,Foo)
+        DefLuaMethod(fooChildFunc1,&FooChild::fooChildFunc1)
+        DefLuaMethod(virtualFunc,&FooChild::virtualFunc)
+    EndDef(FooChild,&FooChild::create)
 }
 
 
@@ -76,6 +117,21 @@ USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
 TArray<int> USluaTestCase::GetArray() {
     TArray<int> array={1,0,2,4,2,0,4,8};
     return array;
+}
+
+TMap<int, FString> USluaTestCase::GetMap(/*TMap<int, FString> _map*/) {
+//	for (TMap<int32, FString>::TConstIterator iter = _map.CreateConstIterator(); iter; ++iter) {
+//		slua::Log::Log(TEXT("--- key:%d, value222:%s "),iter->Key, *iter->Value);
+//	}
+
+	TMap<int, FString> FruitMap;
+
+//	FruitMap.Add(5, TEXT("Banana"));
+//	FruitMap.Add(2, TEXT("Grapefruit"));
+//	FruitMap.Add(7, TEXT("Pineapple"));
+//	FruitMap.Add(2, TEXT("Grapefruit"));
+//	FruitMap.Add(7, TEXT("Pineapple"));
+	return FruitMap;
 }
 
 TArray<FString> USluaTestCase::GetArrayStr() {

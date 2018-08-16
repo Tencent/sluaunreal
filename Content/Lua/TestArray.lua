@@ -9,6 +9,11 @@ assert(arr:Num()==8)
 for i=0,arr:Num()-1 do
     print("arr item",i,arr:Get(i))
 end
+print("begin for paris...")
+for i,v in pairs(arr) do
+    print("arr item",i,v)
+end
+print("end for paris...")
 local num = arr:Add(1024)
 assert(arr:Num()==9)
 assert(arr:Get(8)==1024)

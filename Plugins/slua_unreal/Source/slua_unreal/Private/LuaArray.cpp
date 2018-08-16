@@ -111,44 +111,9 @@ namespace slua {
     }
 
     int LuaArray::__ctor(lua_State* L) {
-        using namespace UE4CodeGen_Private;
-        EPropertyClass type = (EPropertyClass) LuaObject::checkValue<int>(L,1);
-        switch(type) {
-            default:
-                luaL_error(L,"unsupport type to create");
-                break;
-            case EPropertyClass::Byte:
-                return createArray<UByteProperty>(L);
-            case EPropertyClass::Int8:
-                return createArray<UInt8Property>(L);
-            case EPropertyClass::Int16:
-                return createArray<UInt16Property>(L);
-            case EPropertyClass::Int:
-                return createArray<UIntProperty>(L);
-            case EPropertyClass::Int64:
-                return createArray<UInt64Property>(L);
-            case EPropertyClass::UInt16:
-                return createArray<UUInt16Property>(L);
-            case EPropertyClass::UInt32:
-                return createArray<UUInt32Property>(L);
-            case EPropertyClass::UInt64:
-                return createArray<UUInt64Property>(L);
-            case EPropertyClass::UnsizedInt:
-                return createArray<UUInt64Property>(L);
-            case EPropertyClass::UnsizedUInt:
-                return createArray<UUInt64Property>(L);
-            case EPropertyClass::Float:
-                return createArray<UFloatProperty>(L);
-            case EPropertyClass::Double:
-                return createArray<UDoubleProperty>(L);
-            case EPropertyClass::Bool:
-                return createArray<UBoolProperty>(L);
-            case EPropertyClass::Object:
-                return createArray<UObjectProperty>(L);
-            case EPropertyClass::Str:
-                return createArray<UStrProperty>(L);
-        }
-        return 0;
+		auto type = (UE4CodeGen_Private::EPropertyClass) LuaObject::checkValue<int>(L,1);
+		auto array = FScriptArray();
+		return push(L, LuaObject::getDefaultProperty(L, type), &array);
     }
 
     int LuaArray::Num(lua_State* L) {
@@ -220,15 +185,45 @@ namespace slua {
 		return 0;
     }
 
+	int LuaArray::Pairs(lua_State* L) {
+		CheckUD(LuaArray, L, 1);
+		auto iter = new LuaArray::Enumerator();
+		iter->arr = UD;
+		iter->index = 0;
+		lua_pushcfunction(L, LuaArray::Enumerable);
+		LuaObject::pushType(L, iter, "LuaArray::Enumerator", nullptr, LuaArray::Enumerator::gc);
+		LuaObject::pushNil(L);
+		return 3;
+	}
+
+	int LuaArray::Enumerable(lua_State* L) {
+		CheckUD(LuaArray::Enumerator, L, 1);
+		auto arr = UD->arr;
+		if (arr->isValidIndex(UD->index)) {
+			auto element = arr->inner;
+			auto es = element->ElementSize;
+			auto parms = ((uint8*)arr->array.GetData()) + UD->index * es;
+			LuaObject::push(L, UD->index);
+			LuaObject::push(L, element, parms);
+			UD->index += 1;
+			return 2;
+		} 
+		return 0;
+	}
+
     int LuaArray::setupMT(lua_State* L) {
         LuaObject::setupMTSelfSearch(L);
 
+		RegMetaMethod(L,Pairs);
         RegMetaMethod(L,Num);
         RegMetaMethod(L,Get);
         RegMetaMethod(L,Add);
         RegMetaMethod(L,Insert);
         RegMetaMethod(L,Remove);
         RegMetaMethod(L,Clear);
+
+		RegMetaMethodByName(L, "__pairs", Pairs);
+
         return 0;
     }
 
@@ -237,4 +232,11 @@ namespace slua {
         delete UD;
         return 0;   
     }
+
+	int LuaArray::Enumerator::gc(lua_State* L) {
+		CheckUD(LuaArray::Enumerator, L, 1);
+		delete UD;
+		return 0;
+	}
+
 }

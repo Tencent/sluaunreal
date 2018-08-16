@@ -96,5 +96,7 @@ namespace slua {
         ULuaObject* root;
         int stackCount;
         static LuaState* mainState;
+		TMap<FString, FString> debugStringMap;
+
     };
 }

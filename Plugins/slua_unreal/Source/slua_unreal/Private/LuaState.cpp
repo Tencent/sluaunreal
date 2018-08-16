@@ -30,7 +30,6 @@
 #include "LuaDebugExtension.h"
 
 namespace slua {
-	static TMap<FString, FString> debugStringMap = TMap<FString, FString>();;
     int import(lua_State *L) {
         const char* name = LuaObject::checkValue<const char*>(L,1);
         if(name) {
@@ -75,10 +74,11 @@ namespace slua {
 
 	int LuaState::getStringFromMD5(lua_State* L) {
 		const char* md5String = lua_tostring(L, 1);
+		LuaState* state = LuaState::get(L);
 		FString md5FString = UTF8_TO_TCHAR(md5String);
-		bool hasValue = debugStringMap.Contains(md5FString);
+		bool hasValue = state->debugStringMap.Contains(md5FString);
 		if (hasValue) {
-			auto value = debugStringMap[md5FString];
+			auto value = state->debugStringMap[md5FString];
 			lua_pushstring(L, TCHAR_TO_UTF8(*value));
 		}
 		else {

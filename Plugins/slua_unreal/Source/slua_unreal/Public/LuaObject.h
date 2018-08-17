@@ -354,8 +354,38 @@ namespace slua {
     }
 
     template<>
+    inline double LuaObject::checkValue(lua_State* L, int p) {
+        return luaL_checknumber(L, p);
+    }
+
+    template<>
     inline int LuaObject::checkValue(lua_State* L, int p) {
         return luaL_checkinteger(L, p);
+    }
+
+    template<>
+    inline uint32 LuaObject::checkValue(lua_State* L, int p) {
+        return (uint32) luaL_checkinteger(L, p);
+    }
+
+    template<>
+    inline int8 LuaObject::checkValue(lua_State* L, int p) {
+        return (int8) luaL_checkinteger(L, p);
+    }
+
+    template<>
+    inline uint8 LuaObject::checkValue(lua_State* L, int p) {
+        return (uint8) luaL_checkinteger(L, p);
+    }
+
+    template<>
+    inline int16 LuaObject::checkValue(lua_State* L, int p) {
+        return (int16) luaL_checkinteger(L, p);
+    }
+
+    template<>
+    inline uint16 LuaObject::checkValue(lua_State* L, int p) {
+        return (uint16) luaL_checkinteger(L, p);
     }
 
     template<>

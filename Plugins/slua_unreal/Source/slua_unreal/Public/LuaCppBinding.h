@@ -139,23 +139,6 @@ namespace slua {
         }
     };
 
-    template<typename T,T,int Offset=1>
-    struct LuaCppBinding;
-
-    template<typename RET,typename ...ARG,RET (*func)(ARG...),int Offset>
-    struct LuaCppBinding< RET (*)(ARG...), func, Offset> {
-
-        static RET invoke(lua_State* L,void* ptr,ARG... args) {
-            return func( std::forward<ARG>(args)... );
-        }
-
-        static int LuaCFunction(lua_State* L) {
-            using f = FunctionBind<RET (*)(lua_State *, void*, ARG...), invoke, Offset>;
-            return f::invoke(L,nullptr);
-        }
-    };
-
-
     template<typename T>
     void* luaL_checkclass(lua_State* L,int p) {
     
@@ -177,6 +160,21 @@ namespace slua {
         return nullptr;
     }
 
+    template<typename T,T,int Offset=1>
+    struct LuaCppBinding;
+
+    template<typename RET,typename ...ARG,RET (*func)(ARG...),int Offset>
+    struct LuaCppBinding< RET (*)(ARG...), func, Offset> {
+
+        static RET invoke(lua_State* L,void* ptr,ARG... args) {
+            return func( std::forward<ARG>(args)... );
+        }
+
+        static int LuaCFunction(lua_State* L) {
+            using f = FunctionBind<decltype(&invoke), invoke, Offset>;
+            return f::invoke(L,nullptr);
+        }
+    };
 
     template<typename T,typename RET,typename ...ARG,RET (T::*func)(ARG...) const>
     struct LuaCppBinding< RET (T::*)(ARG...) const, func> {
@@ -190,7 +188,7 @@ namespace slua {
         static int LuaCFunction(lua_State* L) {
             // check and get obj ptr;
             void* p = luaL_checkclass<T>(L,1);
-            using f = FunctionBind<RET (*)(lua_State *, void*, ARG...), invoke, 2>;
+            using f = FunctionBind<decltype(&invoke), invoke, 2>;
             return f::invoke(L,p);
         }
     };
@@ -207,7 +205,7 @@ namespace slua {
         static int LuaCFunction(lua_State* L) {
             // check and get obj ptr;
             void* p = luaL_checkclass<T>(L,1);
-            using f = FunctionBind<RET (*)(lua_State *, void*, ARG...), invoke, 2>;
+            using f = FunctionBind<decltype(&invoke), invoke, 2>;
             return f::invoke(L,p);
         }
     };
@@ -224,7 +222,7 @@ namespace slua {
         static int LuaCFunction(lua_State* L) {
             // check and get obj ptr;
             void* p = luaL_checkclass<T>(L,1);
-            using f = FunctionBind<void (*)(lua_State *, void*, ARG...), invoke, 2>;
+            using f = FunctionBind<decltype(&invoke), invoke, 2>;
             return f::invoke(L,p);
         }
     };

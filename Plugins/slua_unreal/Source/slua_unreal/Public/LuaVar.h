@@ -142,7 +142,7 @@ namespace slua {
         // call luavar if it's funciton
         // args is arguments passed to lua
         template<class ...ARGS>
-        LuaVar call(ARGS ...args) {
+        LuaVar call(ARGS&& ...args) {
             if(!isFunction()) {
                 Log::Error("LuaVar is not a function, can't be called");
                 return LuaVar();
@@ -160,7 +160,7 @@ namespace slua {
         }
 
         template<class RET,class ...ARGS>
-        RET call(ARGS ...args) {
+        RET call(ARGS&& ...args) {
             LuaVar ret = call(std::forward<ARGS>(args)...);
             return castTo<RET>(ret);
         }
@@ -243,9 +243,9 @@ namespace slua {
         size_t numOfVar;
     
         template<class F,class ...ARGS>
-        int pushArg(F f,ARGS ...args) {
+        int pushArg(F f,ARGS&& ...args) {
             LuaObject::push(L,f);
-            return 1+pushArg(args...);
+            return 1+pushArg(std::forward<ARGS>(args)...);
         }
 
         int pushArg() {

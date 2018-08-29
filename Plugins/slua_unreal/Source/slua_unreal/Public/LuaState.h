@@ -36,8 +36,10 @@ namespace slua {
         typedef uint8* (*LoadFileDelegate) (const char* fn, uint32& len, FString& filepath);
 
         static LuaState* get(lua_State* L=nullptr);
-        static bool isValid(lua_State* L);
+        static LuaState* get(int index);
+        static bool isValid(int index);
         static lua_State* mainThread(lua_State* L);
+        int stateIndex() const { return si; }
         
         virtual bool init(USceneComponent* wld);
         virtual void tick(float dtime);
@@ -59,11 +61,11 @@ namespace slua {
 
 		void setLoadFileDelegate(LoadFileDelegate func);
 
-		lua_State* getLuaState()
+		lua_State* getLuaState() const
 		{
 			return L;
 		}
-		operator lua_State*()
+		operator lua_State*() const
 		{
 			return L;
 		}
@@ -95,6 +97,7 @@ namespace slua {
         static int _atPanic(lua_State* L);
         ULuaObject* root;
         int stackCount;
+        int si;
         static LuaState* mainState;
 		TMap<FString, FString> debugStringMap;
 

@@ -118,8 +118,9 @@ namespace slua {
     }
 
     LuaState* LuaState::mainState = nullptr;
-
     TMap<lua_State*,LuaState*> stateMap;
+    TMap<int,LuaState*> stateMapFromIndex;
+    static int StateIndex = 0;
 
     LuaState::LuaState()
         :loadFileDelegate(nullptr)
@@ -127,6 +128,7 @@ namespace slua {
         ,cacheObjRef(LUA_NOREF)
         ,root(nullptr)
         ,stackCount(0)
+        ,si(++StateIndex)
     {
         
     }
@@ -154,10 +156,14 @@ namespace slua {
         return nullptr;
     }
 
-    bool LuaState::isValid(lua_State* L) {
-        if(!L) return false;
-        auto it = stateMap.Find(L);
-        return it!=nullptr;
+    LuaState* LuaState::get(int index) {
+        auto it = stateMapFromIndex.Find(index);
+        if(it) return *it;
+        return nullptr;
+    }
+
+    bool LuaState::isValid(int index) {
+        return get(index)!=nullptr;
     }
 
     void LuaState::tick(float dtime) {
@@ -173,6 +179,7 @@ namespace slua {
         
         if(L) {
             lua_close(L);
+            stateMapFromIndex.Remove(si);
             stateMap.Remove(L);
             L=nullptr;
         }
@@ -200,6 +207,7 @@ namespace slua {
 
         L = luaL_newstate();
         stateMap.Add(L,this);
+        stateMapFromIndex.Add(si,this);
 
         lua_atpanic(L,_atPanic);
 

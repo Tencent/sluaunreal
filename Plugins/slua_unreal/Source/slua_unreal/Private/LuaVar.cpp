@@ -22,7 +22,7 @@
 namespace slua {
 
     LuaVar::LuaVar()
-        :L(nullptr)
+        :stateIndex(-1)
     {
         vars = nullptr;
         numOfVar = 0;
@@ -118,6 +118,11 @@ namespace slua {
         init(l,n,LV_TUPLE);
     }
 
+    lua_State* LuaVar::getState() const
+    {
+        return *LuaState::get(stateIndex);
+    }
+
     void LuaVar::init(lua_State* l,int p,LuaVar::Type type) {
         switch(type) {
         case LV_NIL:
@@ -142,14 +147,14 @@ namespace slua {
         case LV_FUNCTION: 
         case LV_TABLE:
         case LV_USERDATA:
-            this->L = LuaState::mainThread(l);
+            stateIndex = LuaState::get(l)->stateIndex();
             alloc(1);
             lua_pushvalue(l,p);
             vars[0].ref = new RefRef(l);
             vars[0].luatype=type;
             break;
         case LV_TUPLE:
-            this->L = LuaState::mainThread(l);
+            stateIndex = LuaState::get(l)->stateIndex();
             ensure(p>0 && lua_gettop(l)>=p);
             initTuple(l,p);
             break;
@@ -210,12 +215,14 @@ namespace slua {
         :LuaVar::Ref() 
     {
         ref=luaL_ref(l,LUA_REGISTRYINDEX);
-        this->L = LuaState::mainThread(l);
+        stateIndex = LuaState::get(l)->stateIndex();
     }
 
     LuaVar::RefRef::~RefRef() {
-        if(LuaState::isValid(L))
-            luaL_unref(L,LUA_REGISTRYINDEX,ref);
+        if(LuaState::isValid(stateIndex)) {
+            auto state = LuaState::get(stateIndex);
+            luaL_unref(state->getLuaState(),LUA_REGISTRYINDEX,ref);
+        }
     }
 
     void LuaVar::free() {
@@ -240,6 +247,7 @@ namespace slua {
 
     size_t LuaVar::count() const {
         if(isTable()) {
+            auto L = getState();
             push(L);
             size_t n = lua_rawlen(L,-1);
             lua_pop(L,1);
@@ -312,6 +320,7 @@ namespace slua {
     }
 
     LuaVar LuaVar::getAt(size_t index) const {
+        auto L = getState();
         if(isTable()) {
             push(L); // push this table
             lua_geti(L,-1,index); // get by index
@@ -324,7 +333,7 @@ namespace slua {
             ensure(numOfVar>=index);
             LuaVar r;
             r.alloc(1);
-            r.L = this->L;
+            r.stateIndex = this->stateIndex;
             varClone(r.vars[0],vars[index-1]);
             return r;
         }
@@ -332,6 +341,7 @@ namespace slua {
 
     void LuaVar::setAt(const LuaVar& var,int pos) {
         ensure(isTable());
+        auto L = getState();
         push(L);
         if(pos<=0) pos = lua_rawlen(L,-1)+1;
         var.push(L);
@@ -341,6 +351,7 @@ namespace slua {
 
     LuaVar LuaVar::getFromTable(const LuaVar& key) const {
         ensure(isTable());
+        auto L = getState();
         push(L);
         key.push(L);
         lua_gettable(L,-2);
@@ -413,7 +424,7 @@ namespace slua {
     }
 
     int LuaVar::push(lua_State* l) const {
-        if(l==nullptr) l=L;
+        if(l==nullptr) l=getState();
         if(l==nullptr) return 0;
 
         if(vars==nullptr || numOfVar==0) {
@@ -435,7 +446,7 @@ namespace slua {
     }
 
     bool LuaVar::isValid() const {
-        return L!=nullptr && LuaState::isValid(L);
+        return stateIndex>0 && LuaState::isValid(stateIndex);
     }
 
     bool LuaVar::isNil() const {
@@ -468,6 +479,7 @@ namespace slua {
 
     bool LuaVar::isUserdata(const char* t) const {
         if(numOfVar==1 && vars[0].luatype==LV_USERDATA) {
+            auto L = getState();
             push(L);
             void* p = luaL_testudata(L, -1, t);
             lua_pop(L,1);
@@ -498,6 +510,7 @@ namespace slua {
             Log::Error("State of lua function is invalid");
             return 0;
         }
+        auto L = getState();
         int top = lua_gettop(L);
         top=top-argn+1;
         LuaState::pushErrorHandler(L);
@@ -512,6 +525,7 @@ namespace slua {
     }
 
     int LuaVar::pushArgByParms(UProperty* prop,uint8* parms) {
+        auto L = getState();
         if (LuaObject::push(L,prop,parms))
             return prop->ElementSize;
         return 0;
@@ -571,7 +585,7 @@ namespace slua {
     }
 
     void LuaVar::clone(const LuaVar& other) {
-        L = other.L;
+        stateIndex = other.stateIndex;
         numOfVar = other.numOfVar;
         if(numOfVar>0 && other.vars) {
             vars = new lua_var[numOfVar];
@@ -582,7 +596,7 @@ namespace slua {
     }
 
     void LuaVar::move(LuaVar&& other) {
-        L = other.L;
+        stateIndex = other.stateIndex;
         numOfVar = other.numOfVar;
         vars = other.vars;
 
@@ -595,6 +609,7 @@ namespace slua {
         auto func = LuaObject::getChecker(p);
         if(func) {
             // push var's value to top of stack
+            auto L = getState();
             push(L);
             (*func)(L,p,ptr,lua_absindex(L,-1));
             lua_pop(L,1);

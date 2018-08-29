@@ -94,6 +94,7 @@ namespace slua {
         void* asLightUD() const;
         template<typename T>
         T* asUserdata(const char* t) const {
+            auto L = getState();
             push(L);
             UserData<T*>* ud = reinterpret_cast<UserData<T*>*>(luaL_testudata(L, -1, t));
             lua_pop(L,1);
@@ -132,6 +133,7 @@ namespace slua {
         // set table by key and value
         void setToTable(const LuaVar& key,const LuaVar& value) {
             ensure(isTable());
+            auto L = getState();
             push(L);
             key.push(L);
             value.push(L);
@@ -151,7 +153,7 @@ namespace slua {
                 Log::Error("State of lua function is invalid");
                 return LuaVar();
             }
-
+            auto L = getState();
             int n = pushArg(std::forward<ARGS>(args)...);
             int nret = docall(n);
             auto ret = LuaVar::wrapReturn(L,nret);
@@ -168,6 +170,7 @@ namespace slua {
         // call function with pre-pushed n args
         inline LuaVar callWithNArg(int n) {
             int nret = docall(n);
+            auto L = getState();
             auto ret = LuaVar::wrapReturn(L,nret);
             lua_pop(L,nret);
             return ret;
@@ -223,10 +226,12 @@ namespace slua {
                 lua_geti(l,LUA_REGISTRYINDEX,ref);
             }
             int ref;
-            lua_State* L;
+            int stateIndex;
         };
 
-        lua_State* L;
+        int stateIndex;
+        lua_State* getState() const;
+
         typedef struct {
             union {
                 RefRef* ref;
@@ -244,6 +249,7 @@ namespace slua {
     
         template<class F,class ...ARGS>
         int pushArg(F f,ARGS&& ...args) {
+            auto L = getState();
             LuaObject::push(L,f);
             return 1+pushArg(std::forward<ARGS>(args)...);
         }

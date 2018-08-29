@@ -145,6 +145,9 @@ namespace slua {
         }
     };
 
+    // check arg at p is exported lua class named __name in field 
+    // of metable of the class, if T is base of class or class is T, 
+    // return the pointer of class, otherwise return nullptr
     template<typename T>
     void* luaL_checkclass(lua_State* L,int p) {
     

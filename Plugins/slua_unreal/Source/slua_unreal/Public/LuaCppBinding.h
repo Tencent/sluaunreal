@@ -64,6 +64,12 @@ namespace slua {
 		typedef typename remove_cr<T>::type type;
 	};
 
+    template<typename T>
+	struct remove_cr<T&&>
+	{
+		typedef typename remove_cr<T>::type type;
+	};
+
     template <typename T, T,int Offset>
     struct FunctionBind;
 
@@ -166,7 +172,7 @@ namespace slua {
     template<typename RET,typename ...ARG,RET (*func)(ARG...),int Offset>
     struct LuaCppBinding< RET (*)(ARG...), func, Offset> {
 
-        static RET invoke(lua_State* L,void* ptr,ARG... args) {
+        static RET invoke(lua_State* L,void* ptr,ARG&&... args) {
             return func( std::forward<ARG>(args)... );
         }
 
@@ -179,7 +185,7 @@ namespace slua {
     template<typename T,typename RET,typename ...ARG,RET (T::*func)(ARG...) const>
     struct LuaCppBinding< RET (T::*)(ARG...) const, func> {
 
-        static RET invoke(lua_State* L,void* ptr,ARG... args) {
+        static RET invoke(lua_State* L,void* ptr,ARG&&... args) {
             UserData<T*>* ud = reinterpret_cast<UserData<T*>*>(ptr);
             T* thisptr = ud->ud;
             return (thisptr->*func)( std::forward<ARG>(args)... );
@@ -196,7 +202,7 @@ namespace slua {
     template<typename T,typename RET,typename ...ARG,RET (T::*func)(ARG...)>
     struct LuaCppBinding< RET (T::*)(ARG...), func> {
 
-        static RET invoke(lua_State* L,void* ptr,ARG... args) {
+        static RET invoke(lua_State* L,void* ptr,ARG&&... args) {
             UserData<T*>* ud = reinterpret_cast<UserData<T*>*>(ptr);
             T* thisptr = ud->ud;
             return (thisptr->*func)( std::forward<ARG>(args)... );
@@ -213,7 +219,7 @@ namespace slua {
     template<typename T,typename ...ARG,void (T::*func)(ARG...)>
     struct LuaCppBinding< void (T::*)(ARG...), func> {
 
-        static void invoke(lua_State* L,void* ptr,ARG... args) {
+        static void invoke(lua_State* L,void* ptr,ARG&&... args) {
             UserData<T*>* ud = reinterpret_cast<UserData<T*>*>(ptr);
             T* thisptr = ud->ud;
             (thisptr->*func)( std::forward<ARG>(args)... );
@@ -228,7 +234,7 @@ namespace slua {
     };
 
     template<int Offset>
-    struct LuaCppBinding< nullptr_t, nullptr, Offset > {
+    struct LuaCppBinding< nullptr_t, nullptr, Offset> {
         static int LuaCFunction(lua_State* L) {
             luaL_error(L,"Can't be called");
             return 0;
@@ -298,7 +304,7 @@ namespace slua {
         lua_CFunction x=LuaCppBinding<decltype(M),M>::LuaCFunction; \
         constexpr bool inst=std::is_member_function_pointer<decltype(M)>::value; \
         LuaObject::addMethod(L, #NAME, x, inst); \
-    }
+    } \
     
 }
 

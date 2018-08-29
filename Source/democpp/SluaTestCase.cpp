@@ -70,8 +70,9 @@ namespace slua {
             return FString(UTF8_TO_TCHAR("some text"));
         }
 
-        virtual void virtualFunc() {
+        virtual int virtualFunc() const {
             Log::Log("virtual func from Foo");
+            return 1;
         }
 
         int value;
@@ -101,8 +102,9 @@ namespace slua {
             return new FooChild(v);
         }
 
-        virtual void virtualFunc() {
+        virtual int virtualFunc() const {
             Log::Log("virtual func from %s",typeNameFromPtr(this));
+            return 2;
         }
     };
 

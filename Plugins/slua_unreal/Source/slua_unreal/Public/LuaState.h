@@ -35,10 +35,19 @@ namespace slua {
          */
         typedef uint8* (*LoadFileDelegate) (const char* fn, uint32& len, FString& filepath);
 
-        static LuaState* get(lua_State* L=nullptr);
+        inline static LuaState* get(lua_State* l=nullptr) {
+            // if L is nullptr, return main state
+            if(!l) return mainState;
+            return (LuaState*)*((void**)lua_getextraspace(l));
+        }
+
         static LuaState* get(int index);
-        static bool isValid(int index);
-        static lua_State* mainThread(lua_State* L);
+
+        inline static bool isValid(int index)  {
+            return get(index)!=nullptr;
+        }
+        
+
         int stateIndex() const { return si; }
         
         virtual bool init(USceneComponent* wld);
@@ -99,7 +108,10 @@ namespace slua {
         int stackCount;
         int si;
         static LuaState* mainState;
-		TMap<FString, FString> debugStringMap;
 
+        #if WITH_EDITOR
+        // used for debug
+		TMap<FString, FString> debugStringMap;
+        #endif
     };
 }

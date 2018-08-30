@@ -72,7 +72,8 @@ namespace slua {
         lua_pop(L,1);
         return 0;
     }
-
+     #if WITH_EDITOR
+     // used for debug
 	int LuaState::getStringFromMD5(lua_State* L) {
 		const char* md5String = lua_tostring(L, 1);
 		LuaState* state = LuaState::get(L);
@@ -87,6 +88,7 @@ namespace slua {
 		}
 		return 1;
 	}
+    #endif
 
     int LuaState::loader(lua_State* L) {
         LuaState* state = LuaState::get(L);
@@ -118,7 +120,6 @@ namespace slua {
     }
 
     LuaState* LuaState::mainState = nullptr;
-    TMap<lua_State*,LuaState*> stateMap;
     TMap<int,LuaState*> stateMapFromIndex;
     static int StateIndex = 0;
 
@@ -138,32 +139,10 @@ namespace slua {
         close();
     }
 
-    lua_State* LuaState::mainThread(lua_State* l) {
-        // get main thread
-        lua_geti(l,LUA_REGISTRYINDEX,LUA_RIDX_MAINTHREAD);
-        lua_State* ml = lua_tothread(l,-1);
-        lua_pop(l,1);
-        return ml;
-    }
-
-    LuaState* LuaState::get(lua_State* L) {
-        // if L is nullptr, return main state
-        if(!L) return mainState;
-        // get main thread
-        lua_State* ml = mainThread(L);
-        auto it = stateMap.Find(ml);
-        if(it) return *it;
-        return nullptr;
-    }
-
     LuaState* LuaState::get(int index) {
         auto it = stateMapFromIndex.Find(index);
         if(it) return *it;
         return nullptr;
-    }
-
-    bool LuaState::isValid(int index) {
-        return get(index)!=nullptr;
     }
 
     void LuaState::tick(float dtime) {
@@ -180,7 +159,6 @@ namespace slua {
         if(L) {
             lua_close(L);
             stateMapFromIndex.Remove(si);
-            stateMap.Remove(L);
             L=nullptr;
         }
 
@@ -208,7 +186,8 @@ namespace slua {
         sluaComponent = comp;
 
         L = luaL_newstate();
-        stateMap.Add(L,this);
+        // bind this to L
+        *((void**)lua_getextraspace(L)) = this;
         stateMapFromIndex.Add(si,this);
 
         lua_atpanic(L,_atPanic);
@@ -232,8 +211,11 @@ namespace slua {
         lua_pushcfunction(L,print);
         lua_setglobal(L, "print");
 
+        #if WITH_EDITOR
+        // used for debug
 		lua_pushcfunction(L, getStringFromMD5);
 		lua_setglobal(L, "getStringFromMD5");
+        #endif
 		
         lua_pushcfunction(L,loader);
         int loaderFunc = lua_gettop(L);

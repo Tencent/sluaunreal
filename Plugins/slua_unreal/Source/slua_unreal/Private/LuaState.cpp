@@ -128,7 +128,7 @@ namespace slua {
         ,cacheObjRef(LUA_NOREF)
         ,root(nullptr)
         ,stackCount(0)
-        ,si(++StateIndex)
+        ,si(0)
     {
         
     }
@@ -200,6 +200,8 @@ namespace slua {
         if(!mainState) 
             mainState = this;
 
+        stackCount = 0;
+        si = ++StateIndex;
         root = NewObject<ULuaObject>();
 		root->AddToRoot();
 

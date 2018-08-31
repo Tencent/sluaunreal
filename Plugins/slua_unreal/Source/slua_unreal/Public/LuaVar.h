@@ -304,5 +304,9 @@ namespace slua {
         return asString();
     }
 
+    template<>
+    inline LuaVar LuaObject::checkValue(lua_State* L, int p) {
+        return LuaVar(L,p);
+    }
     
 }

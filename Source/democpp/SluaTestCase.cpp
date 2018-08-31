@@ -21,6 +21,7 @@
 #include "UObject/Package.h"
 #include "Blueprint/UserWidget.h"
 #include "Misc/AssertionMacros.h"
+#include "LuaVar.h"
 
 namespace slua {
 
@@ -98,7 +99,7 @@ namespace slua {
             Log::Log("baseFunc1 call");
         }
 
-        static LuaOwnedPtr<Foo> create(int v) {
+        static LuaOwnedPtr<FooChild> create(int v) {
             return new FooChild(v);
         }
 
@@ -106,11 +107,23 @@ namespace slua {
             Log::Log("virtual func from %s",typeNameFromPtr(this));
             return 2;
         }
+
+        void setEventListener(LuaVar lv) {
+            event = lv;
+        }
+
+        void eventTrigger() {
+            event.call();
+        }
+
+        LuaVar event;
     };
 
     DefLuaClass(FooChild,Foo)
         DefLuaMethod(fooChildFunc1,&FooChild::fooChildFunc1)
         DefLuaMethod(virtualFunc,&FooChild::virtualFunc)
+        DefLuaMethod(setEventListener,&FooChild::setEventListener)
+        DefLuaMethod(eventTrigger,&FooChild::eventTrigger)
     EndDef(FooChild,&FooChild::create)
 }
 

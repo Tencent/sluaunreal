@@ -87,4 +87,17 @@ public:
 	static void LoadAssetClass(FOnAssetClassLoaded OnLoaded);
 
     static void callback();
+
+    // for performance test
+    UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
+    void EmptyFunc();
+
+    UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
+    int ReturnInt();
+
+    UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
+    int ReturnIntWithInt(int i);
+
+    UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
+    int FuncWithStr(FString str);
 };

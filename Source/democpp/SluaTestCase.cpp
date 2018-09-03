@@ -125,6 +125,36 @@ namespace slua {
         DefLuaMethod(setEventListener,&FooChild::setEventListener)
         DefLuaMethod(eventTrigger,&FooChild::eventTrigger)
     EndDef(FooChild,&FooChild::create)
+
+
+    class PerfTest {
+    public:
+
+        static LuaOwnedPtr<PerfTest> create(int v) {
+            return new PerfTest();
+        }
+
+        void EmptyFunc() {}
+
+        int ReturnInt() {
+            return 1024;
+        }
+
+        int ReturnIntWithInt(int i) {
+            return i;
+        }
+
+        int FuncWithStr(const FString& str) {
+            return str.Len();
+        }
+    };
+
+    DefLuaClass(PerfTest)
+        DefLuaMethod(EmptyFunc,&PerfTest::EmptyFunc)
+        DefLuaMethod(ReturnInt,&PerfTest::ReturnInt)
+        DefLuaMethod(ReturnIntWithInt,&PerfTest::ReturnIntWithInt)
+        DefLuaMethod(FuncWithStr,&PerfTest::FuncWithStr)
+    EndDef(PerfTest,&PerfTest::create)
 }
 
 
@@ -253,4 +283,18 @@ void USluaTestCase::LoadAssetClass(FOnAssetClassLoaded OnLoaded) {
 
 void USluaTestCase::callback() {
     s_onloaded.ExecuteIfBound(1024);
+}
+
+void USluaTestCase::EmptyFunc() {}
+
+int USluaTestCase::ReturnInt() {
+    return 1024;
+}
+
+int USluaTestCase::ReturnIntWithInt(int i) {
+    return i;
+}
+
+int USluaTestCase::FuncWithStr(FString str) {
+    return str.Len();
 }

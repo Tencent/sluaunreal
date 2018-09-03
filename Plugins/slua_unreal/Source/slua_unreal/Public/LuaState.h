@@ -107,6 +107,10 @@ namespace slua {
         ULuaObject* root;
         int stackCount;
         int si;
+
+        TMap<FString,TMap<const char*,UFunction*>*> classMap;
+        TMap<const char*,UFunction*> instanceFuncMap;
+
         static LuaState* mainState;
 
         #if WITH_EDITOR

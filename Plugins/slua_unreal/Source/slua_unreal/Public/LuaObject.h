@@ -250,6 +250,8 @@ namespace slua {
 
 		static UProperty* getDefaultProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type);
 
+        static UFunction* findCacheFunction(lua_State* L,const FString& cname,const char* fname);
+        static void cacheFunction(lua_State* L,const FString& cname,const char* fame,UFunction* func);
     private:
         static int setupClassMT(lua_State* L);
         static int setupInstanceMT(lua_State* L);

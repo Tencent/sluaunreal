@@ -1,3 +1,4 @@
+-- require 'TestPerf'
 require 'TestCase'
 require 'TestStruct'
 require 'TestCppBinding'

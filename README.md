@@ -95,6 +95,8 @@ slua-unreal提供3中技术绑定lua接口，包括：
 | 传入int函数返回int     | 0.587115     | 0.097639       |
 | 传入Fstring函数返回int | 0.930042     | 0.223207       |
 
+与slua unity版本相比，因为unreal的蓝图反射更高效，没有gc alloc开销，基于蓝图反射的方法的性能比slua unity的静态代码生成还要快1倍，而cppbinding则快一个数量级。
+
 # 相关参考
 
 slua-unreal依赖dot-clang做c++静态代码生成的工具稍后开源，目前常用FVector等常用类的静态生成代码已经附带。

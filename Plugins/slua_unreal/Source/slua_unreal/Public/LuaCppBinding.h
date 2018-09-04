@@ -236,13 +236,14 @@ namespace slua {
         }
     };
 
-    template<int Offset>
-    struct LuaCppBinding< nullptr_t, nullptr, Offset> {
+    template<int (*func)(lua_State* L),int Offset>
+    struct LuaCppBinding< int (lua_State* L), func, Offset> {
+
         static int LuaCFunction(lua_State* L) {
-            luaL_error(L,"Can't be called");
-            return 0;
+            return func(L);
         }
     };
+
 
     struct SLUA_UNREAL_API LuaClass {
         LuaClass(lua_CFunction reg);
@@ -271,6 +272,11 @@ namespace slua {
     template<typename T>
     inline const char* typeNameFromPtr(T* ptr) {
         return TypeNameFromPtr<T>::value(ptr);
+    }
+
+    static int NoConstructor(lua_State* L) {
+        luaL_error(L,"Can't be call");
+        return 0;
     }
 
     #define LuaClassBody() \

@@ -39,7 +39,7 @@ namespace slua {
 
     DefLuaClass(Base)
         DefLuaMethod(baseFunc1,&Base::baseFunc1)
-    EndDef(Base,nullptr)
+    EndDef(Base,NoConstructor)
 
     class Foo : public Base {
 

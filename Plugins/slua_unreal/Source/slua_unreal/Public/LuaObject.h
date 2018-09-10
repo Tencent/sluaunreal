@@ -158,8 +158,8 @@ namespace slua {
 		template<class T>
 		static T checkTMap(lua_State* L, int p) {
 			CheckUD(LuaMap, L, p);
-			using KeyType	= TPairTraits<typename T::ElementType>::KeyType;
-			using ValueType = TPairTraits<typename T::ElementType>::ValueType;
+			using KeyType	= typename TPairTraits<typename T::ElementType>::KeyType;
+			using ValueType = typename TPairTraits<typename T::ElementType>::ValueType;
 			return UD->asTMap<KeyType, ValueType>(L);
 		}
 

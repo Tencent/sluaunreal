@@ -20,6 +20,7 @@
 #include "Blueprint/UserWidget.h"
 #include "SluaUtil.h"
 #include "LuaArray.h"
+#include "LuaMap.h"
 #include "LuaObject.generated.h"
 
 
@@ -151,6 +152,15 @@ namespace slua {
 		static T checkTArray(lua_State* L, int p) {
             CheckUD(LuaArray,L,p);
 			return UD->asTArray<typename T::ElementType>(L);
+		}
+
+		// check value if it's TMap
+		template<class T>
+		static T checkTMap(lua_State* L, int p) {
+			CheckUD(LuaMap, L, p);
+			using KeyType	= TPairTraits<typename T::ElementType>::KeyType;
+			using ValueType = TPairTraits<typename T::ElementType>::ValueType;
+			return UD->asTMap<KeyType, ValueType>(L);
 		}
 
         template<class T>

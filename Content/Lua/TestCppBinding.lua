@@ -16,3 +16,8 @@ f3:setEventListener(function()
     print("event fired")
 end)
 f3:eventTrigger()
+
+local m = slua.Map(UEnums.EPropertyClass.Int, UEnums.EPropertyClass.Str)
+m:Add(5,"500")
+m:Add(4,"400")
+f3:testMap(m)

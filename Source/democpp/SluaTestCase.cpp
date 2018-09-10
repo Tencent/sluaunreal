@@ -39,7 +39,7 @@ namespace slua {
 
     DefLuaClass(Base)
         DefLuaMethod(baseFunc1,&Base::baseFunc1)
-    EndDef(Base,NoConstructor)
+    EndDef(Base,&NoConstructor)
 
     class Foo : public Base {
 
@@ -116,6 +116,12 @@ namespace slua {
             event.call();
         }
 
+		void testMap(TMap<int, FString> map) {
+			for (TPair<int, FString>& element : map) {
+				Log::Log("key=%d, value=%s", element.Key, *element.Value);
+			}
+		}
+
         LuaVar event;
     };
 
@@ -124,6 +130,7 @@ namespace slua {
         DefLuaMethod(virtualFunc,&FooChild::virtualFunc)
         DefLuaMethod(setEventListener,&FooChild::setEventListener)
         DefLuaMethod(eventTrigger,&FooChild::eventTrigger)
+		DefLuaMethod(testMap, &FooChild::testMap)
     EndDef(FooChild,&FooChild::create)
 
 

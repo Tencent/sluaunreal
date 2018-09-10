@@ -18,6 +18,27 @@
 
 namespace slua {
 
+	template<typename T>
+	struct TPairTraits;
+
+	template <typename TKey, typename TValue>
+	struct TPairTraits<TPair<TKey, TValue>> {
+		typedef TKey	KeyType;
+		typedef TValue	ValueType;
+	};
+
+	template <typename T> 
+	struct TIsTMap { enum { Value = false }; };
+
+	template<typename KeyType, typename ValueType, typename SetAllocator, typename KeyFuncs> 
+	struct TIsTMap<TMap<KeyType, ValueType, SetAllocator, KeyFuncs>> { enum { Value = true }; };
+	template<typename KeyType, typename ValueType, typename SetAllocator, typename KeyFuncs> 
+	struct TIsTMap<const TMap<KeyType, ValueType, SetAllocator, KeyFuncs>> { enum { Value = true }; };
+	template<typename KeyType, typename ValueType, typename SetAllocator, typename KeyFuncs> 
+	struct TIsTMap<volatile TMap<KeyType, ValueType, SetAllocator, KeyFuncs>> { enum { Value = true }; };
+	template<typename KeyType, typename ValueType, typename SetAllocator, typename KeyFuncs> 
+	struct TIsTMap<const volatile TMap<KeyType, ValueType, SetAllocator, KeyFuncs>> { enum { Value = true }; };
+
 	class SLUA_UNREAL_API LuaMap {
 
 	public:
@@ -29,6 +50,16 @@ namespace slua {
 
 		const FScriptMap* get() {
 			return &map;
+		}
+
+		// Cast FScriptMap to TMap<TKey, TValue> if ElementSize matched
+		template<typename TKey, typename TValue>
+		const TMap<TKey, TValue>& asTMap(lua_State* L) const {
+			if (sizeof(TKey) != keyProp->ElementSize)
+				luaL_error(L, "Cast to TMap error, key element size isn't mathed(%d,%d)", sizeof(TKey), keyProp->ElementSize);
+			if (sizeof(TValue) != valueProp->ElementSize)
+				luaL_error(L, "Cast to TMap error, value element size isn't mathed(%d,%d)", sizeof(TValue), valueProp->ElementSize);
+			return *(reinterpret_cast<const TMap<TKey, TValue>*>(&map));
 		}
 
 	protected:

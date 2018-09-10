@@ -70,6 +70,32 @@ namespace slua {
 		typedef typename remove_cr<T>::type type;
 	};
 
+	template<bool...>
+	struct AndTraits;
+
+	template<bool v, bool... REST>
+	struct AndTraits<v, REST...> {
+		enum { value = v && AndTraits<REST...>::value };
+	};
+
+	template<bool v>
+	struct AndTraits<v> {
+		enum { value = v };
+	};
+
+	template<bool...>
+	struct OrTraits;
+
+	template<bool v, bool... REST>
+	struct OrTraits<v, REST...> {
+		enum { value = v || AndTraits<REST...>::value };
+	};
+
+	template<bool v>
+	struct OrTraits<v> {
+		enum { value = v };
+	};
+
     template <typename T, T,int Offset>
     struct FunctionBind;
 
@@ -121,14 +147,19 @@ namespace slua {
         struct Functor<IntList<index...>> {
 
             template <typename AT>
-            static typename TEnableIf<!TIsTArray<AT>::Value,AT>::Type readArg(lua_State * L, int p) {
-                return LuaObject::checkValue<AT>(L,p);
-            }
-
-            template <typename AT>
             static typename TEnableIf<TIsTArray<AT>::Value,AT>::Type readArg(lua_State * L, int p) {
                 return LuaObject::checkTArray<AT>(L,p);
             }
+
+			template <typename AT>
+			static typename TEnableIf<TIsTMap<AT>::Value, AT>::Type readArg(lua_State * L, int p) {
+				return LuaObject::checkTMap<AT>(L, p);
+			}
+
+			template <typename AT>
+			static typename TEnableIf<AndTraits<!TIsTArray<AT>::Value, !TIsTMap<AT>::Value>::value, AT>::Type readArg(lua_State * L, int p) {
+				return LuaObject::checkValue<AT>(L, p);
+			}
 
             // index is int-list based 0, so should plus Offset to get first arg 
             // (not include obj ptr if it's a member function)
@@ -274,7 +305,7 @@ namespace slua {
         return TypeNameFromPtr<T>::value(ptr);
     }
 
-    static int NoConstructor(lua_State* L) {
+    int NoConstructor(lua_State* L) {
         luaL_error(L,"Can't be call");
         return 0;
     }

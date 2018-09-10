@@ -118,7 +118,7 @@ namespace slua {
 
 		void testMap(TMap<int, FString> map) {
 			for (TPair<int, FString>& element : map) {
-				Log::Log("key=%d, value=%s", element.Key, *element.Value);
+				Log::Log("key=%d, value=%s", element.Key, TCHAR_TO_UTF8(*element.Value));
 			}
 		}
 

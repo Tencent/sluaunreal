@@ -59,6 +59,20 @@ namespace slua {
 				luaL_error(L, "Cast to TMap error, key element size isn't mathed(%d,%d)", sizeof(TKey), keyProp->ElementSize);
 			if (sizeof(TValue) != valueProp->ElementSize)
 				luaL_error(L, "Cast to TMap error, value element size isn't mathed(%d,%d)", sizeof(TValue), valueProp->ElementSize);
+
+			// modified FScriptMap::CheckConstraints function to check type constraints
+			typedef FScriptMap ScriptType;
+			typedef TMap<TKey, TValue> RealType;
+
+			// Check that the class footprint is the same
+			static_assert(sizeof(ScriptType) == sizeof(RealType), "FScriptMap's size doesn't match TMap");
+			static_assert(alignof(ScriptType) == alignof(RealType), "FScriptMap's alignment doesn't match TMap");
+
+			// Check member sizes
+			typedef FScriptSet ScriptPairsType;
+			typedef TSet<typename RealType::ElementType> RealPairsType;
+			static_assert(sizeof(FScriptSet) == sizeof(RealPairsType), "FScriptMap's Pairs member size does not match TMap's");
+
 			return *(reinterpret_cast<const TMap<TKey, TValue>*>(&map));
 		}
 

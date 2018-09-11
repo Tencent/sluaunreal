@@ -116,10 +116,25 @@ namespace slua {
             event.call();
         }
 
-		void testMap(TMap<int, FString> map) {
+		void testArrMap(float f, TArray<int> arr, TMap<int, FString> map) {
+			Log::Log("f=%f", f);
+			for (auto& i : arr) {
+				Log::Log("i=%d", i);
+			}
 			for (TPair<int, FString>& element : map) {
 				Log::Log("key=%d, value=%s", element.Key, TCHAR_TO_UTF8(*element.Value));
 			}
+		}
+
+		int testArrMap2(float f, TArray<int> arr, TMap<int, FString> map) {
+			Log::Log("f=%f", f);
+			for (auto& i : arr) {
+				Log::Log("i=%d", i);
+			}
+			for (TPair<int, FString>& element : map) {
+				Log::Log("key=%d, value=%s", element.Key, TCHAR_TO_UTF8(*element.Value));
+			}
+			return 100;
 		}
 
         LuaVar event;
@@ -130,7 +145,8 @@ namespace slua {
         DefLuaMethod(virtualFunc,&FooChild::virtualFunc)
         DefLuaMethod(setEventListener,&FooChild::setEventListener)
         DefLuaMethod(eventTrigger,&FooChild::eventTrigger)
-		DefLuaMethod(testMap, &FooChild::testMap)
+		DefLuaMethod(testArrMap, &FooChild::testArrMap)
+		DefLuaMethod(testArrMap2, &FooChild::testArrMap2)
     EndDef(FooChild,&FooChild::create)
 
 

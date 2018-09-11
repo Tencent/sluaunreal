@@ -70,30 +70,23 @@ namespace slua {
 		typedef typename remove_cr<T>::type type;
 	};
 
-	template<bool...>
-	struct AndTraits;
+	struct ArgOperator {
 
-	template<bool v, bool... REST>
-	struct AndTraits<v, REST...> {
-		enum { value = v && AndTraits<REST...>::value };
-	};
+		template <typename AT>
+		static typename TEnableIf<TIsTArray<AT>::Value, AT>::Type readArg(lua_State * L, int p) {
+			return LuaObject::checkTArray<AT>(L, p);
+		}
 
-	template<bool v>
-	struct AndTraits<v> {
-		enum { value = v };
-	};
+		template <typename AT>
+		static typename TEnableIf<TIsTMap<AT>::Value, AT>::Type readArg(lua_State * L, int p) {
+			return LuaObject::checkTMap<AT>(L, p);
+		}
 
-	template<bool...>
-	struct OrTraits;
+		template <typename AT>
+		static typename TEnableIf<!TIsTArray<AT>::Value && !TIsTMap<AT>::Value, AT>::Type readArg(lua_State * L, int p) {
+			return LuaObject::checkValue<AT>(L, p);
+		}
 
-	template<bool v, bool... REST>
-	struct OrTraits<v, REST...> {
-		enum { value = v || AndTraits<REST...>::value };
-	};
-
-	template<bool v>
-	struct OrTraits<v> {
-		enum { value = v };
 	};
 
     template <typename T, T,int Offset>
@@ -116,15 +109,10 @@ namespace slua {
         template <int... index>
         struct Functor<IntList<index...>> {
 
-            template <typename AT>
-            static AT readArg(lua_State * L, int p) {
-                return LuaObject::checkValue<AT>(L,p);
-            }
-
             // index is int-list based 0, so should plus Offset to get first arg 
             // (not include obj ptr if it's a member function)
             static T invoke(lua_State * L,void* ptr) {
-                return target(L, ptr, readArg<typename remove_cr<Args>::type>(L, index + Offset)...);
+                return target(L, ptr, ArgOperator::readArg<typename remove_cr<Args>::type>(L, index + Offset)...);
             }
         };
 
@@ -162,25 +150,10 @@ namespace slua {
         template <int... index>
         struct Functor<IntList<index...>> {
 
-            template <typename AT>
-            static typename TEnableIf<TIsTArray<AT>::Value,AT>::Type readArg(lua_State * L, int p) {
-                return LuaObject::checkTArray<AT>(L,p);
-            }
-
-			template <typename AT>
-			static typename TEnableIf<TIsTMap<AT>::Value, AT>::Type readArg(lua_State * L, int p) {
-				return LuaObject::checkTMap<AT>(L, p);
-			}
-
-			template <typename AT>
-			static typename TEnableIf<AndTraits<!TIsTArray<AT>::Value, !TIsTMap<AT>::Value>::value, AT>::Type readArg(lua_State * L, int p) {
-				return LuaObject::checkValue<AT>(L, p);
-			}
-
             // index is int-list based 0, so should plus Offset to get first arg 
             // (not include obj ptr if it's a member function)
             static void invoke(lua_State * L,void* ptr) {
-                target(L, ptr, readArg<typename remove_cr<Args>::type>(L, index + Offset)...);
+                target(L, ptr, ArgOperator::readArg<typename remove_cr<Args>::type>(L, index + Offset)...);
             }
         };
 

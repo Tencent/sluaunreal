@@ -576,39 +576,6 @@ namespace slua {
 			return 0;
 		}
 
-		static int __PPO__ResourceObject(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				auto ret = FSlateBrush::__PPO__ResourceObject();
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			luaL_error(L, "call FSlateBrush::__PPO__ResourceObject error, argc=%d", argc);
-			return 0;
-		}
-
-		static int __PPO__ResourceName(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				auto ret = FSlateBrush::__PPO__ResourceName();
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			luaL_error(L, "call FSlateBrush::__PPO__ResourceName error, argc=%d", argc);
-			return 0;
-		}
-
-		static int __PPO__UVRegion(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				auto ret = FSlateBrush::__PPO__UVRegion();
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			luaL_error(L, "call FSlateBrush::__PPO__UVRegion error, argc=%d", argc);
-			return 0;
-		}
-
 		static int UTextureIdentifier(lua_State* L) {
 			auto argc = lua_gettop(L);
 			if (argc == 1) {
@@ -631,9 +598,6 @@ namespace slua {
 			LuaObject::addMethod(L, "IsDynamicallyLoaded", IsDynamicallyLoaded, true);
 			LuaObject::addMethod(L, "GetUVRegion", GetUVRegion, true);
 			LuaObject::addMethod(L, "SetUVRegion", SetUVRegion, true);
-			LuaObject::addMethod(L, "__PPO__ResourceObject", __PPO__ResourceObject, false);
-			LuaObject::addMethod(L, "__PPO__ResourceName", __PPO__ResourceName, false);
-			LuaObject::addMethod(L, "__PPO__UVRegion", __PPO__UVRegion, false);
 			LuaObject::addMethod(L, "UTextureIdentifier", UTextureIdentifier, false);
 			LuaObject::finishType(L, "FSlateBrush", __ctor, __gc);
 		}
@@ -893,28 +857,6 @@ namespace slua {
 			return 0;
 		}
 
-		static int __PPO__SpecifiedColor(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				auto ret = FSlateColor::__PPO__SpecifiedColor();
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			luaL_error(L, "call FSlateColor::__PPO__SpecifiedColor error, argc=%d", argc);
-			return 0;
-		}
-
-		static int __PPO__ColorUseRule(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				auto ret = FSlateColor::__PPO__ColorUseRule();
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			luaL_error(L, "call FSlateColor::__PPO__ColorUseRule error, argc=%d", argc);
-			return 0;
-		}
-
 		static int UseForeground(lua_State* L) {
 			auto argc = lua_gettop(L);
 			if (argc == 1) {
@@ -945,8 +887,6 @@ namespace slua {
 			LuaObject::addOperator(L, "__eq", __eq);
 			LuaObject::addMethod(L, "GetSpecifiedColor", GetSpecifiedColor, true);
 			LuaObject::addMethod(L, "IsColorSpecified", IsColorSpecified, true);
-			LuaObject::addMethod(L, "__PPO__SpecifiedColor", __PPO__SpecifiedColor, false);
-			LuaObject::addMethod(L, "__PPO__ColorUseRule", __PPO__ColorUseRule, false);
 			LuaObject::addMethod(L, "UseForeground", UseForeground, false);
 			LuaObject::addMethod(L, "UseSubduedForeground", UseSubduedForeground, false);
 			LuaObject::finishType(L, "FSlateColor", __ctor, __gc);

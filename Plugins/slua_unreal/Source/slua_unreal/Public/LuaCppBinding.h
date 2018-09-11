@@ -128,10 +128,26 @@ namespace slua {
             }
         };
 
+        template<typename VT, bool value = std::is_pointer<T>::value>
+        struct ReturnPointer {
+            constexpr static void* GetValue(VT& t) {
+                return (void*)t;
+            }
+        };
+
+        template<typename VT>
+        struct ReturnPointer<VT, false> {
+            constexpr static void* GetValue(VT& t) {
+                return (void*)(&t);
+            }
+        };
+
         static int invoke(lua_State * L,void* ptr) {
             // make int list for arg index
             using I = MakeIntList<sizeof...(Args)>;
             T ret = Functor<I>::invoke(L,ptr);
+            void* v = ReturnPointer<T>::GetValue(ret);
+            if(v==nullptr) return LuaObject::pushNil(L);
             return LuaObject::push(L,ret);
         }
     };

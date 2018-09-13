@@ -1,0 +1,33 @@
+{
+    "solution_dir": "F:/Documents/github/slua-unreal",
+    "ue4_dir": "c:/Program Files/Epic Games/UE_4.18",
+    "ue_vcproj": "{solution_dir}/Intermediate/ProjectFiles/UE4.vcxproj",
+    "output_dir": "{solution_dir}/Plugins/slua_unreal/Source/slua_unreal/Private/",
+    "filter": [
+        {
+            "type": "FTransform",
+            "methods": [
+                "Accumulate",
+                "LerpTranslationScale3D",
+                "AccumulateWithShortestRotation",
+                "AccumulateWithAdditiveScale",
+                "BlendFromIdentityAndAccumulate"
+            ],
+            "operators": [
+                "*:float"
+            ]
+        }
+    ],
+    "struct_files": {
+        "TBaseStructure": "{ue4_dir}/Engine/Source/Runtime/CoreUObject/Public/UObject/Class.h",
+        "Customs": {
+            "FSlateFontInfo": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Fonts/SlateFontInfo.h",
+            "FSlateBrush": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Styling/SlateBrush.h",
+            "FMargin": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Layout/Margin.h",
+            "FSlateColor": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Styling/SlateColor.h"
+        }
+    },
+    "preprocess": [
+        "PLATFORM_ENABLE_VECTORINTRINSICS=1"
+    ]
+}

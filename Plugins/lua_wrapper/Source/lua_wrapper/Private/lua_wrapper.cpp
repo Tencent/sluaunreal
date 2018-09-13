@@ -108,8 +108,6 @@ void Flua_wrapperModule::PluginButtonClicked()
 	FString FullPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*RelativePath);
 	auto wrapperExe = FullPath + TEXT("/../Tools/lua-wrapper.exe");
 	system(TCHAR_TO_UTF8(*wrapperExe));
-#else
-	
 #endif
 }
 

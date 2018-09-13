@@ -7,7 +7,7 @@
 void Flua_wrapperCommands::RegisterCommands()
 {
 #ifdef _MSC_VER
-	UI_COMMAND(OpenPluginWindow, "LuaWrapper", "Bring up lua_wrapper window", EUserInterfaceActionType::Button, FInputGesture());
+	UI_COMMAND(OpenPluginWindow, "LuaWrapper", "Generate Lua Interface", EUserInterfaceActionType::Button, FInputGesture());
 #endif
 }
 

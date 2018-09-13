@@ -1,0 +1,23 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "lua_wrapper",
+	"Description": "lua wrapper",
+	"Category": "Other",
+	"CreatedBy": "leeyi",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "lua_wrapper",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}

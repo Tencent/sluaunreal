@@ -88,14 +88,6 @@ TSharedRef<SDockTab> Flua_wrapperModule::OnSpawnPluginTab(const FSpawnTabArgs& S
 					SNew(STextBlock)
 					.Text(WidgetText)
 				]
-				+ SVerticalBox::Slot()[
-					SNew(STextBlock)
-					.Text(WidgetText)
-				]
-				+ SVerticalBox::Slot()[
-					SNew(SEditableTextBox)
-					.Text(WidgetText)
-				]
 			]
 		];
 }

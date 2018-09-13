@@ -6,9 +6,7 @@
 
 void Flua_wrapperCommands::RegisterCommands()
 {
-#ifdef _MSC_VER
 	UI_COMMAND(OpenPluginWindow, "LuaWrapper", "Generate Lua Interface", EUserInterfaceActionType::Button, FInputGesture());
-#endif
 }
 
 #undef LOCTEXT_NAMESPACE

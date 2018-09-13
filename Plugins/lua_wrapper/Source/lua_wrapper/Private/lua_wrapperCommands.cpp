@@ -6,7 +6,7 @@
 
 void Flua_wrapperCommands::RegisterCommands()
 {
-	UI_COMMAND(OpenPluginWindow, "LuaWrapper", "Generate Lua Interface", EUserInterfaceActionType::Button, FInputGesture());
+	UI_COMMAND(OpenPluginWindow, "LuaWrapper", "Generate Lua Interface (Windows only)", EUserInterfaceActionType::Button, FInputGesture());
 }
 
 #undef LOCTEXT_NAMESPACE

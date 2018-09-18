@@ -68,7 +68,7 @@ xx={}
 
 function xx.text(uworld)
     local class = import("SluaActor")
-    local actor = uworld:SpawnActor(class)
+    local actor = uworld:SpawnActor(class,nil,nil,nil)
 end
 
 function bpcall(a,b,c,d)

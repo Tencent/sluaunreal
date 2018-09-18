@@ -945,6 +945,10 @@ namespace slua {
 		return 1;
 	}
 
+    int LuaObject::push(lua_State* L, const LuaVar& v) {
+        return v.push(L);
+	}
+
     int LuaObject::push(lua_State* L, void* ptr) {
 		lua_pushlightuserdata(L,ptr);
 		return 1;

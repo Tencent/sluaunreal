@@ -165,30 +165,6 @@ namespace slua {
         }
     };
 
-    // check arg at p is exported lua class named __name in field 
-    // of metable of the class, if T is base of class or class is T, 
-    // return the pointer of class, otherwise return nullptr
-    template<typename T>
-    void* luaL_checkclass(lua_State* L,int p) {
-    
-        void* ret = luaL_testudata(L,p,TypeName<T>::value());
-        if(ret) return ret;
-
-        const char *typearg = nullptr;
-        if (luaL_getmetafield(L, p, "__name") == LUA_TSTRING)
-            typearg = lua_tostring(L, -1);
-            
-        lua_pop(L,1);
-
-        if(!typearg)
-            luaL_error(L,"expect userdata at %d",p);
-
-        if(LuaObject::isBaseTypeOf(L,typearg,TypeName<T>::value()))
-            return lua_touserdata(L,p);
-        luaL_error(L,"expect userdata %s, but got %s",TypeName<T>::value(),typearg);
-        return nullptr;
-    }
-
     template<typename T,T,int Offset=1>
     struct LuaCppBinding;
 
@@ -209,14 +185,13 @@ namespace slua {
     struct LuaCppBinding< RET (T::*)(ARG...) const, func> {
 
         static RET invoke(lua_State* L,void* ptr,ARG&&... args) {
-            UserData<T*>* ud = reinterpret_cast<UserData<T*>*>(ptr);
-            T* thisptr = ud->ud;
+            T* thisptr = (T*)ptr;
             return (thisptr->*func)( std::forward<ARG>(args)... );
         }
 
         static int LuaCFunction(lua_State* L) {
             // check and get obj ptr;
-            void* p = luaL_checkclass<T>(L,1);
+            void* p = LuaObject::checkUD<T>(L,1);
             using f = FunctionBind<decltype(&invoke), invoke, 2>;
             return f::invoke(L,p);
         }
@@ -226,14 +201,13 @@ namespace slua {
     struct LuaCppBinding< RET (T::*)(ARG...), func> {
 
         static RET invoke(lua_State* L,void* ptr,ARG&&... args) {
-            UserData<T*>* ud = reinterpret_cast<UserData<T*>*>(ptr);
-            T* thisptr = ud->ud;
+            T* thisptr = (T*)ptr;
             return (thisptr->*func)( std::forward<ARG>(args)... );
         }
 
         static int LuaCFunction(lua_State* L) {
             // check and get obj ptr;
-            void* p = luaL_checkclass<T>(L,1);
+            void* p = LuaObject::checkUD<T>(L,1);
             using f = FunctionBind<decltype(&invoke), invoke, 2>;
             return f::invoke(L,p);
         }
@@ -243,14 +217,13 @@ namespace slua {
     struct LuaCppBinding< void (T::*)(ARG...), func> {
 
         static void invoke(lua_State* L,void* ptr,ARG&&... args) {
-            UserData<T*>* ud = reinterpret_cast<UserData<T*>*>(ptr);
-            T* thisptr = ud->ud;
+            T* thisptr = (T*)ptr;
             (thisptr->*func)( std::forward<ARG>(args)... );
         }
 
         static int LuaCFunction(lua_State* L) {
             // check and get obj ptr;
-            void* p = luaL_checkclass<T>(L,1);
+            T* p = LuaObject::checkUD<T>(L,1);
             using f = FunctionBind<decltype(&invoke), invoke, 2>;
             return f::invoke(L,p);
         }
@@ -294,7 +267,7 @@ namespace slua {
         return TypeNameFromPtr<T>::value(ptr);
     }
 
-    int NoConstructor(lua_State* L) {
+    inline int NoConstructor(lua_State* L) {
         luaL_error(L,"Can't be call");
         return 0;
     }
@@ -334,6 +307,16 @@ namespace slua {
         constexpr bool inst=std::is_member_function_pointer<decltype(M)>::value; \
         LuaObject::addMethod(L, #NAME, x, inst); \
     } \
+
+
+    #define REG_EXTENSION_METHOD(U,N,M) { \
+        LuaObject::addExtensionMethod(U::StaticClass(),N,LuaCppBinding<decltype(M),M>::LuaCFunction); }
+
+    #define REG_EXTENSION_METHOD_WITHTYPE(U,N,M,T) { \
+        LuaObject::addExtensionMethod(U::StaticClass(),N,LuaCppBinding<T,M>::LuaCFunction); }
+
+    #define REG_EXTENSION_METHOD_IMP(U,N,BODY) { \
+        LuaObject::addExtensionMethod(U::StaticClass(),N,[](lua_State* L)->int BODY); }
     
 }
 

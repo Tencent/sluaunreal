@@ -56,6 +56,8 @@ namespace slua {
     }
     
 
+    DefTypeName(LuaStruct)
+
     // construct lua struct
     LuaStruct::LuaStruct(uint8* b,uint32 s,UScriptStruct* u)
         :buf(b),size(s),uss(u) {

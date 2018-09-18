@@ -36,10 +36,7 @@ private:
 };
 
 
-#define CheckUD(Type,L,P) UserData<Type*>* ud = reinterpret_cast<UserData<Type*>*>(luaL_checkudata(L, P,#Type)); \
-    if(!ud) { luaL_error(L, "checkValue error at %d",P); } \
-    Type* UD = ud->ud; \
-    ((void)(UD))
+#define CheckUD(Type,L,P) auto UD = LuaObject::checkUD<Type>(L,P);
 
 #define CheckUDEX(Type,UD,L,P) UserData<Type*>* UD = reinterpret_cast<UserData<Type*>*>(luaL_checkudata(L, P,#Type)); \
     if(!UD) { luaL_error(L, "checkValue error at %d",P); } \
@@ -105,6 +102,17 @@ namespace slua {
         }
     };
 
+    #define DefTypeName(T) \
+    template<> \
+    struct TypeName<T, false> { \
+        static const char* value() { \
+            return #T;\
+        }\
+    };\
+
+    DefTypeName(LuaArray);
+    DefTypeName(LuaMap);
+
     template<typename T>
     struct LuaOwnedPtr {
         T* ptr;
@@ -113,6 +121,35 @@ namespace slua {
 
     class SLUA_UNREAL_API LuaObject
     {
+    private:
+
+        // testudata, if T is base of uobject but isn't uobject, try to  cast it to T
+        template<typename T>
+        static typename TEnableIf<std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::Type testudata(lua_State* L,int p) {
+            UserData<UObject*>* ptr = (UserData<UObject*>*)luaL_testudata(L,p,"UObject");
+            T* t = ptr?Cast<T>(ptr->ud):nullptr;
+            if(!t) {
+                FString clsname = L"U" + T::StaticClass()->GetName();
+                UserData<T*>* tptr = (UserData<T*>*) luaL_testudata(L,p,TCHAR_TO_UTF8(*clsname));
+                t = tptr?tptr->ud:nullptr;
+            }
+            return t;
+        }
+
+        // testudata, if T is uobject
+        template<typename T>
+        static typename TEnableIf<std::is_same<UObject,T>::value, T*>::Type testudata(lua_State* L,int p) {
+            auto ptr = (UserData<T*>*)luaL_testudata(L,p,"UObject");
+            return ptr?ptr->ud:nullptr;
+        }
+
+        // testudata, if T isn't uobject
+        template<typename T>
+        static typename TEnableIf<!std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::Type testudata(lua_State* L,int p) {
+            auto ptr = (UserData<T*>*)luaL_testudata(L,p,TypeName<T>::value());
+            return ptr?ptr->ud:nullptr;
+        }
+
     public:
 
         typedef int (*PushPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms);
@@ -136,6 +173,34 @@ namespace slua {
 		static void finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc);
 
         static void init(lua_State* L);
+
+
+        
+
+
+        // check arg at p is exported lua class named __name in field 
+        // of metable of the class, if T is base of class or class is T, 
+        // return the pointer of class, otherwise return nullptr
+        template<typename T>
+        static T* checkUD(lua_State* L,int p) {
+        
+            T* ret = testudata<T>(L,p);
+            if(ret) return ret;
+
+            const char *typearg = nullptr;
+            if (luaL_getmetafield(L, p, "__name") == LUA_TSTRING)
+                typearg = lua_tostring(L, -1);
+                
+            lua_pop(L,1);
+
+            if(!typearg)
+                luaL_error(L,"expect userdata at %d",p);
+
+            if(LuaObject::isBaseTypeOf(L,typearg,TypeName<T>::value()))
+                return (T*) lua_touserdata(L,p);
+            luaL_error(L,"expect userdata %s, but got %s",TypeName<T>::value(),typearg);
+            return nullptr;
+        }
         
         template<class T>
 		static T checkValue(lua_State* L, int p) {

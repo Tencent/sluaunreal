@@ -27,6 +27,8 @@
 
 namespace slua {
 
+	DefTypeName(LuaMap::Enumerator);
+
 	void LuaMap::reg(lua_State* L) {
 		SluaUtil::reg(L, "Map", __ctor);
 	}

@@ -19,6 +19,9 @@
 
 namespace slua {
 
+    DefTypeName(LuaArray::Enumerator);
+    
+
     void LuaArray::reg(lua_State* L) {
         SluaUtil::reg(L,"Array",__ctor);
     }

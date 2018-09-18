@@ -73,5 +73,4 @@ namespace slua {
 			static int gc(lua_State* L);
 		};
     };
-
 }

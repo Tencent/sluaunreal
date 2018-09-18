@@ -1,4 +1,4 @@
--- require 'TestPerf'
+require 'TestPerf'
 require 'TestCase'
 require 'TestStruct'
 require 'TestCppBinding'
@@ -66,7 +66,9 @@ end);
 
 xx={}
 
-function xx.text()
+function xx.text(uworld)
+    local class = import("SluaActor")
+    local actor = uworld:SpawnActor(class)
 end
 
 function bpcall(a,b,c,d)

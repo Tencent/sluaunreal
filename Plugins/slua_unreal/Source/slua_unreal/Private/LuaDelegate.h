@@ -35,7 +35,7 @@ public:
     void bindFunction(slua::lua_State *L, int p, UFunction *func);
     void bindFunction(slua::lua_State *L, int p);
     void bindFunction(UFunction *func);
-  private:
+private:
     slua::LuaVar* luafunction;
     UFunction* ufunction;
 };

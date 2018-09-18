@@ -14,17 +14,11 @@
 #include "LuaObject.h"
 #include "LuaCppBinding.h"
 #include "Blueprint/WidgetTree.h"
+#include "Log.h"
 
 namespace slua {
 
     namespace ExtensionMethod {
-
-        #define REG_EXTENSION_METHOD(U,N,M) { \
-            LuaObject::addExtensionMethod(U::StaticClass(),N,LuaCppBinding<decltype(M),M>::LuaCFunction); }
-
-        #define REG_EXTENSION_METHOD_IMP(U,N,BODY) { \
-            LuaObject::addExtensionMethod(U::StaticClass(),N,[](lua_State* L)->int BODY); }
-
         void init() {
             REG_EXTENSION_METHOD(UUserWidget,"FindWidget",&UUserWidget::GetWidgetFromName);
             REG_EXTENSION_METHOD_IMP(UUserWidget,"RemoveWidget",{
@@ -33,6 +27,18 @@ namespace slua {
                 bool ret = UD->WidgetTree->RemoveWidget(widget->ud);
                 return LuaObject::push(L,ret);
             });
+
+            REG_EXTENSION_METHOD_IMP(UWorld,"SpawnActor",{
+                auto wld = LuaObject::checkUD<UWorld>(L,1);
+                auto cls = LuaObject::checkUD<UClass>(L,2);
+                Log::Log("Spawn class %s",TCHAR_TO_UTF8(*cls->GetName()));
+                auto actor = wld->SpawnActor(cls);
+                return LuaObject::push(L,actor);
+                return 0;
+            });
+
+            // resolve overloaded member function
+            // REG_EXTENSION_METHOD_WITHTYPE(UWorld,"SpawnActor",&UWorld::SpawnActor,AActor* (UWorld::*)( UClass*, FVector const*,FRotator const*, const FActorSpawnParameters&));
         }
     }
 }

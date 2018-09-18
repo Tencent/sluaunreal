@@ -43,6 +43,8 @@ void ASluaActor::BeginPlay()
 	Super::BeginPlay();
 	
 	auto slua = FindComponentByClass<USluaComponent>();
+	if(!slua) return;
+
 	auto state = slua->State();
 	state->setLoadFileDelegate([](const char* fn,uint32& len,FString& filepath)->uint8* {
 
@@ -76,7 +78,7 @@ void ASluaActor::BeginPlay()
 		ensure(t.getFromTable<int>(5)==1024);
 	}
 
-	state->call("xx.text");
+	state->call("xx.text",this->GetWorld());
 }
 
 // Called every frame
@@ -85,6 +87,8 @@ void ASluaActor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	auto slua = FindComponentByClass<USluaComponent>();
+	if(!slua) return;
+	
 	auto state = slua->State();
 	slua::LuaVar v = state->call("update",DeltaTime,this);
 	if(!v.isNil()) {

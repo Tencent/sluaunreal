@@ -60,6 +60,8 @@ namespace slua {
         UFunction* ufunc;
     };
 
+    DefTypeName(LuaDelegateWrap);
+
     int LuaDelegate::Add(lua_State* L) {
         CheckUD(LuaDelegateWrap,L,1);
 

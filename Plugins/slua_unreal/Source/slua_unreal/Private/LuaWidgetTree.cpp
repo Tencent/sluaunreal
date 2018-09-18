@@ -33,8 +33,8 @@ namespace slua {
     // deprecated function, use RemoveWidgetFromName
     int LuaWidgetTree::RemoveWidget(lua_State* L) {
         CheckUD(UWidgetTree,L,1);
-        CheckUDEX(UWidget,widget,L,2);
-        bool ret = UD->RemoveWidget(widget->ud);
+        auto widget = LuaObject::checkUD<UWidget>(L,2);
+        bool ret = UD->RemoveWidget(widget);
         return LuaObject::push(L,ret);
     }
 

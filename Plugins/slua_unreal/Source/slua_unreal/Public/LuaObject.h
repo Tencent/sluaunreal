@@ -56,6 +56,8 @@ private:
 
 namespace slua {
 
+    class LuaVar;
+
     struct AutoStack {
         AutoStack(lua_State* l) {
             this->L = l;
@@ -289,6 +291,10 @@ namespace slua {
 		static int push(lua_State* L, double v);
         static int push(lua_State* L, int64 v);
         static int push(lua_State* L, uint64 v);
+        static int push(lua_State* L, int8 v);
+        static int push(lua_State* L, uint8 v);
+        static int push(lua_State* L, int16 v);
+        static int push(lua_State* L, uint16 v);
 		static int push(lua_State* L, float v);
 		static int push(lua_State* L, int v);
 		static int push(lua_State* L, bool v);
@@ -298,6 +304,7 @@ namespace slua {
 		static int push(lua_State* L, const FString& str);
 		static int push(lua_State* L, const FName& str);
 		static int push(lua_State* L, const char* str);
+		static int push(lua_State* L, const LuaVar& v);
         static int push(lua_State* L, UFunction* func, UClass* cls=nullptr);
         static int push(lua_State* L, UProperty* up, uint8* parms);
 

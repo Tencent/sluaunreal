@@ -921,8 +921,32 @@ namespace slua {
 	}
 
 	int LuaObject::push(lua_State* L, uint32 v) {
-		lua_pushnumber(L, v);
+		lua_pushinteger(L, v);
 		return 1;
+	}
+
+    int LuaObject::push(lua_State* L, int16 v) {
+		lua_pushinteger(L, v);
+		return 1;
+	}
+
+    int LuaObject::push(lua_State* L, uint16 v) {
+		lua_pushinteger(L, v);
+		return 1;
+	}
+
+    int LuaObject::push(lua_State* L, int8 v) {
+		lua_pushinteger(L, v);
+		return 1;
+	}
+
+    int LuaObject::push(lua_State* L, uint8 v) {
+		lua_pushinteger(L, v);
+		return 1;
+	}
+
+    int LuaObject::push(lua_State* L, const LuaVar& v) {
+        return v.push(L);
 	}
 
     int LuaObject::push(lua_State* L, void* ptr) {

@@ -38,9 +38,9 @@ namespace slua {
 		return LuaObject::pushType(L, map, "LuaMap", setupMT, gc);
 	}
 
-	LuaMap::LuaMap(UProperty* keyProp, UProperty* valueProp, FScriptMap* buf) : 
-		keyProp(keyProp), 
-		valueProp(valueProp) ,
+	LuaMap::LuaMap(UProperty* kp, UProperty* vp, FScriptMap* buf) : 
+		keyProp(kp), 
+		valueProp(vp) ,
 		helper(FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, &map)) {
 		keyProp->PropertyFlags |= CPF_HasGetValueTypeHash;
 		if (buf) {

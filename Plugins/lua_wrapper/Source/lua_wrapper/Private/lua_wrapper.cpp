@@ -10,8 +10,16 @@
 #include "Widgets/Input/SEditableTextBox.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "FileManager.h"
+#include "Engine/GameEngine.h"
+
+#include <iostream>
+#include <stdexcept>
+#include <stdio.h>
+#include <string>
+#include <unistd.h>
 
 #ifdef _MSC_VER
+#define WIN32_LEAN_AND_MEAN
 #include "windows.h"
 #endif
 
@@ -92,14 +100,40 @@ TSharedRef<SDockTab> Flua_wrapperModule::OnSpawnPluginTab(const FSpawnTabArgs& S
 		];
 }
 
+std::string exec(const char* cmd) {
+    char buffer[128];
+    std::string result = "";
+    FILE* f = popen(cmd, "r");
+    if (!f) {
+        return "popen() failed...";
+    }
+    try {
+        while (!feof(f)) {
+            if (fgets(buffer, 128, f) != NULL) {
+                result += buffer;
+            }
+        }
+    } catch (...) {
+        pclose(f);
+        return "run cmd failed...";
+    }
+    pclose(f);
+    return result;
+}
+
 void Flua_wrapperModule::PluginButtonClicked()
 {
 	//FGlobalTabmanager::Get()->InvokeTab(lua_wrapperTabName);
 #ifdef _MSC_VER
-	FString RelativePath = FPaths::GameContentDir();
-	FString FullPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*RelativePath);
-	auto wrapperExe = FullPath + TEXT("/../Tools/lua-wrapper.exe");
-	system(TCHAR_TO_UTF8(*wrapperExe));
+	auto contentDir = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FPaths::GameContentDir());
+	auto cmd = contentDir + TEXT("/../Tools/lua-wrapper.exe");
+	system(TCHAR_TO_UTF8(*cmd));
+#else
+    auto contentDir = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FPaths::ProjectContentDir());
+    auto toolsDir = contentDir + TEXT("../Tools/");
+    chdir(TCHAR_TO_UTF8(*toolsDir));
+    auto ret = exec("/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono lua-wrapper.exe");
+    GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, ret.c_str());
 #endif
 }
 

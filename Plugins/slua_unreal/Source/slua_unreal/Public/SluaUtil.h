@@ -22,7 +22,7 @@ namespace slua {
 
     template<typename T>
     struct AutoDeleteArray {
-        AutoDeleteArray(T* ptr):ptr(ptr) {}
+        AutoDeleteArray(T* p):ptr(p) {}
         ~AutoDeleteArray() { delete[] ptr; }
         T* ptr;
     };

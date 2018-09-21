@@ -57,4 +57,16 @@ namespace slua {
 		typedef typename remove_cr<T>::type type;
 	};
 
+	template<class T>
+	struct remove_ptr_const
+	{
+		typedef T type;
+	};
+
+	template<class T>
+	struct remove_ptr_const<const T*>
+	{
+		typedef T* type;
+	};
+
 }

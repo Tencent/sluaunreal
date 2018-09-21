@@ -123,7 +123,7 @@ namespace slua {
 
         // testudata, if T is base of uobject but isn't uobject, try to  cast it to T
         template<typename T>
-        static typename TEnableIf<std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::Type testudata(lua_State* L,int p) {
+        static typename std::enable_if<std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p) {
             UserData<UObject*>* ptr = (UserData<UObject*>*)luaL_testudata(L,p,"UObject");
             T* t = ptr?Cast<T>(ptr->ud):nullptr;
             if(!t) {
@@ -136,14 +136,14 @@ namespace slua {
 
         // testudata, if T is uobject
         template<typename T>
-        static typename TEnableIf<std::is_same<UObject,T>::value, T*>::Type testudata(lua_State* L,int p) {
+        static typename std::enable_if<std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p) {
             auto ptr = (UserData<T*>*)luaL_testudata(L,p,"UObject");
             return ptr?ptr->ud:nullptr;
         }
 
         // testudata, if T isn't uobject
         template<typename T>
-        static typename TEnableIf<!std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::Type testudata(lua_State* L,int p) {
+        static typename std::enable_if<!std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p) {
             auto ptr = (UserData<T*>*)luaL_testudata(L,p,TypeName<T>::value());
             return ptr?ptr->ud:nullptr;
         }
@@ -218,6 +218,9 @@ namespace slua {
             using TT = typename remove_cr<T>::type;
             if(std::is_class<TT>::value && std::is_default_constructible<TT>::value && lua_isnil(L,p))
                 return TT();
+
+			static_assert(!std::is_same<wchar_t*, typename remove_ptr_const<T>::type>::value,
+				"checkValue does not support parameter const TCHAR*, use FString instead");
 
 			if (!lua_isuserdata(L, p))
 				luaL_error(L, "excpect userdata at arg %d", p);

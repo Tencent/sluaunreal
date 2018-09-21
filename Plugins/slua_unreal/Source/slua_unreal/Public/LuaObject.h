@@ -204,6 +204,15 @@ namespace slua {
             luaL_error(L,"expect userdata %s, but got %s",TypeName<T>::value(),typearg);
             return nullptr;
         }
+
+		template<class T>
+		static T checkValueOpt(lua_State* L, int p, const T& defaultValue) {
+			if (lua_isnone(L, p)) {
+				return defaultValue;
+			} else {
+				return checkValue<T>(L, p);
+			}
+		}
         
         template<class T>
 		static T checkValue(lua_State* L, int p) {

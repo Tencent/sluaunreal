@@ -325,8 +325,10 @@ namespace slua {
 
     int classConstruct(lua_State* L) {
         UClass* cls = LuaObject::checkValue<UClass*>(L, 1);
+		UObject* outter = LuaObject::checkValueOpt<UObject*>(L, 2, (UObject*)GetTransientPackage());
+		FName name = LuaObject::checkValueOpt<FName>(L, 3, FName(NAME_None));
         if(cls) {
-            UObject* obj = NewObject<UObject>((UObject*)GetTransientPackage(),cls);
+            UObject* obj = NewObject<UObject>(outter,cls,name);
             if(obj) {
                 LuaObject::push(L,obj);
                 return 1;

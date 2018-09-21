@@ -33,4 +33,28 @@ namespace slua {
         const std::function<void()>& func;
     };
 
+    template<typename T>
+	struct remove_cr
+	{
+		typedef T type;
+	};
+
+    template<typename T>
+	struct remove_cr<const T&>
+	{
+		typedef typename remove_cr<T>::type type;
+	};
+
+    template<typename T>
+	struct remove_cr<T&>
+	{
+		typedef typename remove_cr<T>::type type;
+	};
+
+    template<typename T>
+	struct remove_cr<T&&>
+	{
+		typedef typename remove_cr<T>::type type;
+	};
+
 }

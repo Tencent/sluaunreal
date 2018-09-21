@@ -37,10 +37,6 @@ private:
 
 
 #define CheckUD(Type,L,P) auto UD = LuaObject::checkUD<Type>(L,P);
-
-#define CheckUDEX(Type,UD,L,P) UserData<Type*>* UD = reinterpret_cast<UserData<Type*>*>(luaL_checkudata(L, P,#Type)); \
-    if(!UD) { luaL_error(L, "checkValue error at %d",P); } \
-
 #define RegMetaMethodByName(L,NAME,METHOD) \
     lua_pushcfunction(L,METHOD); \
     lua_setfield(L,-2,NAME);
@@ -207,6 +203,13 @@ namespace slua {
         
         template<class T>
 		static T checkValue(lua_State* L, int p) {
+            if(std::is_pointer<T>::value && lua_isnil(L,p))
+                return T();
+
+            using TT = typename remove_cr<T>::type;
+            if(std::is_class<TT>::value && std::is_default_constructible<TT>::value && lua_isnil(L,p))
+                return TT();
+
 			if (!lua_isuserdata(L, p))
 				luaL_error(L, "excpect userdata at arg %d", p);
 

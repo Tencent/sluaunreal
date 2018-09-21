@@ -12,15 +12,16 @@
 #include "FileManager.h"
 #include "Engine/GameEngine.h"
 
+
+#ifdef _MSC_VER
+#define WIN32_LEAN_AND_MEAN
+#include "windows.h"
+#else
 #include <iostream>
 #include <stdexcept>
 #include <stdio.h>
 #include <string>
 #include <unistd.h>
-
-#ifdef _MSC_VER
-#define WIN32_LEAN_AND_MEAN
-#include "windows.h"
 #endif
 
 static const FName lua_wrapperTabName("LuaWrapper");
@@ -100,6 +101,7 @@ TSharedRef<SDockTab> Flua_wrapperModule::OnSpawnPluginTab(const FSpawnTabArgs& S
 		];
 }
 
+#ifndef _MSC_VER
 std::string exec(const char* cmd) {
     char buffer[128];
     std::string result = "";
@@ -120,6 +122,7 @@ std::string exec(const char* cmd) {
     pclose(f);
     return result;
 }
+#endif
 
 void Flua_wrapperModule::PluginButtonClicked()
 {

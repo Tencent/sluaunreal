@@ -108,8 +108,8 @@ namespace slua {
         int stackCount;
         int si;
 
-        TMap<FString,TMap<const char*,UFunction*>*> classMap;
-        TMap<const char*,UFunction*> instanceFuncMap;
+        TMap<FString,TMap<FString,UFunction*>*> classMap;
+        TMap<FString,UFunction*> instanceFuncMap;
 
         static LuaState* mainState;
 

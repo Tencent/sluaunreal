@@ -466,7 +466,7 @@ namespace slua {
         auto state = LuaState::get(L);
         auto clsmap = state->classMap.Find(cname);
         if(!clsmap) return nullptr;
-        auto it = (*clsmap)->Find(fname);
+        auto it = (*clsmap)->Find(UTF8_TO_TCHAR(fname));
         if(it!=nullptr) return * it;
         return nullptr;
     }
@@ -475,10 +475,10 @@ namespace slua {
     void LuaObject::cacheFunction(lua_State* L,const FString& cname,const char* fname,UFunction* func) {
         auto state = LuaState::get(L);
         auto clsmap = state->classMap.Find(cname);
-        TMap<const char*,UFunction*>* clsmapPtr = nullptr;
-        if(!clsmap) clsmapPtr = state->classMap.Add(cname,new TMap<const char*,UFunction*>());
+        TMap<FString,UFunction*>* clsmapPtr = nullptr;
+        if(!clsmap) clsmapPtr = state->classMap.Add(cname,new TMap<FString,UFunction*>());
         else clsmapPtr = *clsmap;
-        clsmapPtr->Add(fname,func);
+        clsmapPtr->Add(UTF8_TO_TCHAR(fname),func);
     }
 
     

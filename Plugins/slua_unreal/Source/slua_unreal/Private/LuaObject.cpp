@@ -241,6 +241,11 @@ namespace slua {
 		lua_setfield(L, isInstance ? -2 : -3, name);
 	}
 
+    void LuaObject::addGlobalMethod(lua_State* L, const char* name, lua_CFunction func) {
+		lua_pushcfunction(L, func);
+        lua_setglobal(L,name);
+	}
+
 	void LuaObject::addField(lua_State* L, const char* name, lua_CFunction getter, lua_CFunction setter, bool isInstance) {
 		lua_getfield(L, isInstance ? -1 : -2, ".get");
 		lua_pushcfunction(L, getter);

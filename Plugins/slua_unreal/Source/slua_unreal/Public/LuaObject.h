@@ -170,6 +170,7 @@ namespace slua {
 		static void newType(lua_State* L, const char* tn);
         static void newTypeWithBase(lua_State* L, const char* tn, std::initializer_list<const char*> bases);
 		static void addMethod(lua_State* L, const char* name, lua_CFunction func, bool isInstance = true);
+		static void addGlobalMethod(lua_State* L, const char* name, lua_CFunction func);
 		static void addField(lua_State* L, const char* name, lua_CFunction getter, lua_CFunction setter, bool isInstance = true);
 		static void addOperator(lua_State* L, const char* name, lua_CFunction func);
 		static void finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc);

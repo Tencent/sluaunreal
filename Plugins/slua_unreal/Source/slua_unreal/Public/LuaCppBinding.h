@@ -308,6 +308,11 @@ namespace slua {
         LuaObject::addMethod(L, #NAME, x, inst); \
     } \
 
+    #define DefGlobalMethod(NAME,M) { \
+        lua_CFunction x=LuaCppBinding<decltype(M),M>::LuaCFunction; \
+        LuaObject::addGlobalMethod(L, #NAME, x); \
+    } \
+
 
     #define REG_EXTENSION_METHOD(U,N,M) { \
         LuaObject::addExtensionMethod(U::StaticClass(),N,LuaCppBinding<decltype(M),M>::LuaCFunction); }

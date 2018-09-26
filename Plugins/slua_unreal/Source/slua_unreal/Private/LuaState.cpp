@@ -29,6 +29,7 @@
 #include "LuaArray.h"
 #include "LuaMap.h"
 #include "LuaDebugExtension.h"
+#include "LuaMemoryProfile.h"
 
 namespace slua {
     int import(lua_State *L) {
@@ -185,12 +186,12 @@ namespace slua {
 
         sluaComponent = comp;
 
-        L = luaL_newstate();
+        // use custom memory alloc func to profile memory footprint
+        L = lua_newstate(LuaMemoryProfile::alloc,nullptr);
+        lua_atpanic(L,_atPanic);
         // bind this to L
         *((void**)lua_getextraspace(L)) = this;
         stateMapFromIndex.Add(si,this);
-
-        lua_atpanic(L,_atPanic);
 
         // init obj cache table
         lua_newtable(L);

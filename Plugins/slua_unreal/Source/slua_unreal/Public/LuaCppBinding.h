@@ -50,19 +50,24 @@ namespace slua {
 
 	struct ArgOperator {
 
-		template <typename AT>
-		static typename TEnableIf<TIsTArray<AT>::Value, AT>::Type readArg(lua_State * L, int p) {
-			return LuaObject::checkTArray<AT>(L, p);
+		template <typename T>
+		static typename std::enable_if<TIsTArray<T>::Value, T>::type readArg(lua_State * L, int p) {
+			return LuaObject::checkTArray<T>(L, p);
 		}
 
-		template <typename AT>
-		static typename TEnableIf<TIsTMap<AT>::Value, AT>::Type readArg(lua_State * L, int p) {
-			return LuaObject::checkTMap<AT>(L, p);
+		template <typename T>
+		static typename std::enable_if<TIsTMap<T>::Value, T>::type readArg(lua_State * L, int p) {
+			return LuaObject::checkTMap<T>(L, p);
 		}
 
-		template <typename AT>
-		static typename TEnableIf<!TIsTArray<AT>::Value && !TIsTMap<AT>::Value, AT>::Type readArg(lua_State * L, int p) {
-			return LuaObject::checkValue<AT>(L, p);
+		template <typename T>
+		static typename std::enable_if<std::is_enum<T>::value, T>::type readArg(lua_State * L, int p) {
+			return LuaObject::checkEnumValue<T>(L, p);
+		}
+
+		template <typename T>
+		static typename std::enable_if<!TIsTArray<T>::Value && !TIsTMap<T>::Value && !std::is_enum<T>::value, T>::type readArg(lua_State * L, int p) {
+			return LuaObject::checkValue<T>(L, p);
 		}
 
 	};

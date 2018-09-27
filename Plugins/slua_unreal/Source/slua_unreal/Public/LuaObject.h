@@ -230,6 +230,12 @@ namespace slua {
 			return udptr->ud;
 		}
 
+		// check value if it's enum
+		template<typename T>
+		static T checkEnumValue(lua_State* L, int p) {
+			return static_cast<T>(luaL_checkinteger(L, p));
+		}
+
         // check value if it's TArray
         template<class T>
 		static T checkTArray(lua_State* L, int p) {
@@ -241,7 +247,7 @@ namespace slua {
 		template<class T>
 		static T checkTMap(lua_State* L, int p) {
 			CheckUD(LuaMap, L, p);
-			using KeyType	= typename TPairTraits<typename T::ElementType>::KeyType;
+			using KeyType = typename TPairTraits<typename T::ElementType>::KeyType;
 			using ValueType = typename TPairTraits<typename T::ElementType>::ValueType;
 			return UD->asTMap<KeyType, ValueType>(L);
 		}
@@ -336,6 +342,12 @@ namespace slua {
         static int push(lua_State* L,LuaOwnedPtr<T> ptr) {
             return push(L,TypeName<T>::value(),ptr.ptr,true);
         }
+
+		template<typename T>
+		static int push(lua_State* L, typename std::enable_if<std::is_enum<T>::value, T>::type v) {
+			lua_pushinteger(L, static_cast<int>(v));
+			return 1;
+		}
 
 		// static int push(lua_State* L, FScriptArray* array);
         

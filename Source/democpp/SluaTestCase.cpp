@@ -63,6 +63,11 @@ namespace slua {
             return &s_inst;
         }
 
+		EInputEvent testEnum(const char* v, EInputEvent evt) {
+			Log::Log("get text %s, evt is %d", v, evt);
+			return evt;
+		}
+
         void bar(const char* v) {
             Log::Log("get text %s and value is %d",v,value);
         }
@@ -80,6 +85,7 @@ namespace slua {
     };
 
     DefLuaClass(Foo,Base)
+		DefLuaMethod(testEnum, &Foo::testEnum)
         DefLuaMethod(bar,&Foo::bar)
         DefLuaMethod(getStr,&Foo::getStr)
         DefLuaMethod(getInstance,&Foo::getInstance)

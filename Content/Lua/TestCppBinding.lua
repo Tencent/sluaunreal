@@ -1,5 +1,7 @@
 -- test cpp binding
 local f1=Foo(1024)
+local ee =f1:testEnum("hi",3)
+print("enum is " ..  type(ee) .. " " .. tostring(ee))
 local str=Foo.getStr()
 -- f2 not collect
 local f2=Foo.getInstance()

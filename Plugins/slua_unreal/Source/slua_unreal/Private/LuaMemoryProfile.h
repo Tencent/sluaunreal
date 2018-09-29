@@ -20,6 +20,9 @@ namespace slua {
     class LuaMemoryProfile {
     public:
         static void* alloc (void *ud, void *ptr, size_t osize, size_t nsize);
+    private:
+        static void addRecord(class LuaState* LS,void* ptr,size_t size);
+        static void removeRecord(class LuaState* LS,void* ptr,size_t size);
     };
 
 }

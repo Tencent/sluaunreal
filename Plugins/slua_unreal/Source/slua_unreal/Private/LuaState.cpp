@@ -187,7 +187,7 @@ namespace slua {
         sluaComponent = comp;
 
         // use custom memory alloc func to profile memory footprint
-        L = lua_newstate(LuaMemoryProfile::alloc,nullptr);
+        L = lua_newstate(LuaMemoryProfile::alloc,this);
         lua_atpanic(L,_atPanic);
         // bind this to L
         *((void**)lua_getextraspace(L)) = this;

@@ -35,7 +35,7 @@ ULuaObject::ULuaObject(const FObjectInitializer& ObjectInitializer)
 
 void ULuaObject::AddRef(UObject* obj)
 {
-    Cache.Add(obj);
+    Cache.Add(obj,obj);
 }
 
 void ULuaObject::Remove(UObject* obj)

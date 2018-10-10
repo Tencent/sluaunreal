@@ -32,7 +32,7 @@ public:
     void Remove(UObject* obj);
 private:
     UPROPERTY()
-    TArray<UObject*> Cache;
+    TMap<UObject*,UObject*> Cache;
 };
 
 

@@ -1,6 +1,6 @@
 {
     "solution_dir": "F:/Documents/github/slua-unreal",
-    "ue4_dir": "f:/Documents/visual studio/UnrealEngine-4.18.3-release",
+    "ue4_dir": "d:/Program Files/Epic Games/UE_4.20",
     "ue_vcproj": "{solution_dir}/Intermediate/ProjectFiles/UE4.vcxproj",
     "output_dir": "{solution_dir}/Plugins/slua_unreal/Source/slua_unreal/Private/",
     "filter": [

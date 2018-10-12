@@ -28,7 +28,7 @@
 #include "LuaCppBinding.h"
 #include "LuaArray.h"
 #include "LuaMap.h"
-#include "LuaSocket.h"
+#include "LuaSocketWrap.h"
 #include "LuaMemoryProfile.h"
 
 namespace slua {

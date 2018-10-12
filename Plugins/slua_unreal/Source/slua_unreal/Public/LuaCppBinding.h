@@ -261,11 +261,19 @@ namespace slua {
             return TypeName<decltype(this)>::value(); \
         } \
 
-    #define DefLuaClassBase(CLS) \
+    #define __DefTypeName(CLS) \
         template<> \
         const char* TypeName<CLS>::value() { \
             return #CLS; \
         } \
+
+    #define __DefTypeNameExtern(MODULE_API,CLS) \
+        template<> \
+        MODULE_API const char* TypeName<CLS>::value() { \
+            return #CLS; \
+        } \
+    
+    #define __DefLuaClassTail(CLS) \
         static int Lua##CLS##_gc(lua_State* L) { \
             UserData<CLS*>* UD = reinterpret_cast<UserData<CLS*>*>(lua_touserdata(L,1)); \
             if(UD->owned) delete UD->ud; \
@@ -276,8 +284,20 @@ namespace slua {
         int Lua##CLS##_setup(lua_State* L) { \
             AutoStack autoStack(L); \
 
+    #define DefLuaClassBase(CLS) \
+        __DefTypeName(CLS) \
+        __DefLuaClassTail(CLS) \
+
+    #define DefLuaClassBaseExtern(MODULE_API,CLS) \
+        __DefTypeNameExtern(CLS,MODULE_API) \
+        __DefLuaClassTail(CLS) \
+
     #define DefLuaClass(CLS, ...) \
         DefLuaClassBase(CLS) \
+        LuaObject::newTypeWithBase(L,#CLS,std::initializer_list<const char*>{#__VA_ARGS__}); \
+
+    #define DefLuaClassExtern(MODULE_API,CLS, ...) \
+        DefLuaClassBaseExtern(MODULE_API,CLS) \
         LuaObject::newTypeWithBase(L,#CLS,std::initializer_list<const char*>{#__VA_ARGS__}); \
 
     #define EndDef(CLS,M)  \
@@ -295,7 +315,6 @@ namespace slua {
         lua_CFunction x=LuaCppBinding<decltype(M),M>::LuaCFunction; \
         LuaObject::addGlobalMethod(L, #NAME, x); \
     } \
-
 
     #define REG_EXTENSION_METHOD(U,N,M) { \
         LuaObject::addExtensionMethod(U::StaticClass(),N,LuaCppBinding<decltype(M),M>::LuaCFunction); }

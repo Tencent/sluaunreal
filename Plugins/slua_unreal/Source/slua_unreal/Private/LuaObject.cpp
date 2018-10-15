@@ -262,14 +262,18 @@ namespace slua {
 		lua_setfield(L, -2, name);
 	}
 
-	void LuaObject::finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc) {
-        if(ctor!=nullptr) {
+	void LuaObject::finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc, lua_CFunction strHint) {
+        if(ctor) {
 		    lua_pushcclosure(L, ctor, 0);
 		    lua_setfield(L, -3, "__call");
         }
-        if(gc!=nullptr) {
+        if(gc) {
 		    lua_pushcclosure(L, gc, 0); // t, mt, _instance, __gc
     		lua_setfield(L, -2, "__gc"); // t, mt, _instance
+        }
+        if(strHint) {
+            lua_pushcfunction(L, strHint);
+            lua_setfield(L, -2, "__tostring");
         }
         lua_pop(L,3);
 	}

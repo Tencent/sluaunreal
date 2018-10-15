@@ -15,14 +15,15 @@
 #include "LuaCppBinding.h"
 
 namespace slua {
-    TArray<lua_CFunction> luaclasss;
+    TArray<lua_CFunction> *luaclasss = nullptr;
 
     LuaClass::LuaClass(lua_CFunction setup) {
-        luaclasss.Add(setup);
+        if(!luaclasss) luaclasss = new TArray<lua_CFunction>();
+        luaclasss->Add(setup);
     }
 
     void LuaClass::reg(lua_State* L) {
-        for(auto it:luaclasss)
+        for(auto it:*luaclasss)
             it(L);
     }
 }

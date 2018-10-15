@@ -279,6 +279,13 @@ namespace slua {
             if(UD->owned) delete UD->ud; \
             return 0;\
         } \
+        static int Lua##CLS##_tostring(lua_State* L) { \
+            void* p = lua_touserdata(L,1); \
+            char buf[128]; \
+            snprintf(buf,128,"%s(@%p)",#CLS,p); \
+            lua_pushstring(L,buf); \
+            return 1; \
+        } \
         static int Lua##CLS##_setup(lua_State* L); \
         LuaClass Lua##CLS##__(Lua##CLS##_setup); \
         int Lua##CLS##_setup(lua_State* L) { \
@@ -302,7 +309,7 @@ namespace slua {
 
     #define EndDef(CLS,M)  \
         lua_CFunction x=LuaCppBinding<decltype(M),M,2>::LuaCFunction; \
-        LuaObject::finishType(L, #CLS, x, Lua##CLS##_gc); \
+        LuaObject::finishType(L, #CLS, x, Lua##CLS##_gc, Lua##CLS##_tostring); \
         return 0; } \
 
     #define DefLuaMethod(NAME,M) { \

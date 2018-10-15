@@ -343,6 +343,11 @@ namespace slua {
             return push(L,TypeName<T>::value(),ptr.ptr,true);
         }
 
+        template<typename T>
+        static int push(lua_State* L,T v,typename std::enable_if<std::is_enum<T>::value>::type* = nullptr) {
+            return push(L,static_cast<int>(v));
+        }
+
 		// static int push(lua_State* L, FScriptArray* array);
         
         static int pushNil(lua_State* L) {

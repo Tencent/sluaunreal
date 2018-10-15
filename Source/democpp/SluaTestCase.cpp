@@ -41,6 +41,12 @@ namespace slua {
         DefLuaMethod(baseFunc1,&Base::baseFunc1)
     EndDef(Base,&NoConstructor)
 
+    enum class Fruit {
+        Apple=1,
+        Orange,
+        Banana,
+    };
+
     class Foo : public Base {
 
         LuaClassBody()
@@ -81,6 +87,10 @@ namespace slua {
             return 1;
         }
 
+        Fruit getFruit() {
+            return Fruit::Apple;
+        }
+
         int value;
     };
 
@@ -90,6 +100,7 @@ namespace slua {
         DefLuaMethod(getStr,&Foo::getStr)
         DefLuaMethod(getInstance,&Foo::getInstance)
         DefLuaMethod(virtualFunc,&Foo::virtualFunc)
+        DefLuaMethod(getFruit,&Foo::getFruit)
     EndDef(Foo,&Foo::create)
 
     class FooChild : public Foo {

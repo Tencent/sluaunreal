@@ -33,7 +33,7 @@ namespace {
         }
     }
 
-    void output(LogLevel level,TCHAR* buf) {
+    void output(LogLevel level,const wchar_t* buf) {
         switch(level) {
         case LogLevel::LL_Log:
             UE_LOG(Slua, Log, TEXT("%s"), buf);
@@ -71,12 +71,12 @@ namespace slua {
             output(LogLevel::LL_Log,buf);
         }
 
-        void Error(const TCHAR* fmt,...) {
+        void Error(const wchar_t* fmt,...) {
             LogWBufDeclareWithFmt(buf,fmt);
             output(LogLevel::LL_Error,buf);
         }
 
-        void Log(const TCHAR* fmt,...) {
+        void Log(const wchar_t* fmt,...) {
             LogWBufDeclareWithFmt(buf,fmt);
             output(LogLevel::LL_Log,buf);
         }

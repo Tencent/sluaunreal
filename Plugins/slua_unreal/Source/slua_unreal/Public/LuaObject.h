@@ -127,7 +127,7 @@ namespace slua {
             UserData<UObject*>* ptr = (UserData<UObject*>*)luaL_testudata(L,p,"UObject");
             T* t = ptr?Cast<T>(ptr->ud):nullptr;
             if(!t) {
-                FString clsname = L"U" + T::StaticClass()->GetName();
+                FString clsname = TEXT("U") + T::StaticClass()->GetName();
                 UserData<T*>* tptr = (UserData<T*>*) luaL_testudata(L,p,TCHAR_TO_UTF8(*clsname));
                 t = tptr?tptr->ud:nullptr;
             }

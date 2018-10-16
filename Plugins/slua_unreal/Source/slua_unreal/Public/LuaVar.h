@@ -164,7 +164,7 @@ namespace slua {
         template<class RET,class ...ARGS>
         RET call(ARGS&& ...args) {
             LuaVar ret = call(std::forward<ARGS>(args)...);
-            return castTo<RET>(ret);
+            return ret.castTo<RET>();
         }
 
         // call function with pre-pushed n args

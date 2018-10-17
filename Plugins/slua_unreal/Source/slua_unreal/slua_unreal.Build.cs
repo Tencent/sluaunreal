@@ -12,72 +12,89 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 using UnrealBuildTool;
+using System.IO;
 
 public class slua_unreal : ModuleRules
 {
-	public slua_unreal(ReadOnlyTargetRules Target) : base(Target)
-	{
-		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+    public slua_unreal(ReadOnlyTargetRules Target) : base(Target)
+    {
+        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         // enable exception
         bEnableExceptions = true;
         bEnforceIWYU = false;
-	 	bEnableUndefinedIdentifierWarnings = false;
+        bEnableUndefinedIdentifierWarnings = false;
 
-        if (Target.Platform == UnrealTargetPlatform.Win64)
-        {
-            Definitions.Add("LUA_BUILD_AS_DLL");
-        }
-		else if (Target.Platform == UnrealTargetPlatform.IOS)
-		{
-			Definitions.Add("_DARWIN_C_SOURCE=1");
-		}
+        var externalSource = Path.Combine(ModuleDirectory, "../../External");
+        var externalLib = Path.Combine(ModuleDirectory, "../../Library");
 
         PublicIncludePaths.AddRange(
-			new string[] {
-				"slua_unreal/Public",
-				"slua_unreal/Private",
+            new string[] {
+                externalSource,
+                Path.Combine(externalSource, "lua"),
 				// ... add public include paths required here ...
 			}
-			);
-				
-		
-		PrivateIncludePaths.AddRange(
-			new string[] {
-				"slua_unreal/Private",
-				"slua_unreal/Public",
-				// ... add other private include paths required here ...
-			}
-			);
-			
-		
-		PublicDependencyModuleNames.AddRange(
-			new string[]
-			{
-				"Core",
+            );
+
+        switch (Target.Platform)
+        {
+            case UnrealTargetPlatform.IOS:
+                {
+                    PublicLibraryPaths.Add(Path.Combine(externalLib, "iOS"));
+                    PublicAdditionalLibraries.Add("lua");
+                    break;
+                }
+            case UnrealTargetPlatform.Android:
+                {
+                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/armeabi-v7a"));
+                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/x86"));
+                    PublicAdditionalLibraries.Add("lua");
+                    break;
+                }
+            case UnrealTargetPlatform.Win32:
+            case UnrealTargetPlatform.Win64:
+                {
+                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Win32"));
+                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Win64"));
+                    PublicAdditionalLibraries.Add("lua.lib");
+                    break;
+                }
+            case UnrealTargetPlatform.Mac:
+                {
+					// Unreal ignores PublicLibraryPaths on Mac. But why? 
+                    // PublicLibraryPaths.Add(Path.Combine(externalLib, "Mac"));
+                    PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Mac/liblua.a"));
+                    break;
+                }
+        }
+
+        PublicDependencyModuleNames.AddRange(
+            new string[]
+            {
+                "Core",
 				
 				// ... add other public dependencies that you statically link with here ...
 			}
-			);
-			
-		
-		PrivateDependencyModuleNames.AddRange(
-			new string[]
-			{
-				"CoreUObject",
-				"Engine",
-				"Slate",
-				"SlateCore",
-				"UMG",
+            );
+
+
+        PrivateDependencyModuleNames.AddRange(
+            new string[]
+            {
+                "CoreUObject",
+                "Engine",
+                "Slate",
+                "SlateCore",
+                "UMG",
 				// ... add private dependencies that you statically link with here ...	
 			}
-			);
-		
-		
-		DynamicallyLoadedModuleNames.AddRange(
-			new string[]
-			{
+            );
+
+
+        DynamicallyLoadedModuleNames.AddRange(
+            new string[]
+            {
 				// ... add any modules that your module loads dynamically here ...
 			}
-			);
-	}
+            );
+    }
 }

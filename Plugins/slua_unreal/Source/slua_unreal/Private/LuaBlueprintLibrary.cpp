@@ -11,6 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 
+#ifdef _WIN32
+#pragma warning (push)
+#pragma warning (disable : 4018)
+#endif
+
 #include "LuaBlueprintLibrary.h"
 #include "Kismet/KismetArrayLibrary.h"
 #include "Blueprint/BlueprintSupport.h"
@@ -214,3 +219,9 @@ FString ULuaBlueprintLibrary::GetStringFromVar(FLuaBPVar Value,int Index) {
 UObject* ULuaBlueprintLibrary::GetObjectFromVar(FLuaBPVar Value,int Index) {
     return getValueFromVar<UObject*>(Value,Index);
 }
+
+#undef LOCTEXT_NAMESPACE
+
+#ifdef _WIN32
+#pragma warning (pop)
+#endif

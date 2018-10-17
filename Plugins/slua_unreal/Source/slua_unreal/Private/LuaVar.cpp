@@ -11,6 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 
+#ifdef _WIN32
+#pragma warning (push)
+#pragma warning (disable : 4018)
+#endif
+
 #include "LuaVar.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/Class.h"
@@ -619,3 +624,7 @@ namespace slua {
         return false;
     }
 }
+
+#ifdef _WIN32
+#pragma warning (pop)
+#endif

@@ -113,7 +113,9 @@ include_directories(
     ${THIRDPART_INC_PATH}
 )
 
-ADD_LIBRARY(lua STATIC
+add_definitions("-DLUA_USE_C89")
+
+add_library(lua STATIC
     ${LUA_SRC_FILES}
     ${THIRDPART_SRC_FILES}
 )

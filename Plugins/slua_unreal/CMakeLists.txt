@@ -115,6 +115,10 @@ include_directories(
 
 add_definitions("-DLUA_USE_C89")
 
+if (IOS)
+    set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD)")
+endif()
+
 add_library(lua STATIC
     ${LUA_SRC_FILES}
     ${THIRDPART_SRC_FILES}

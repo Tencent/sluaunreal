@@ -214,3 +214,5 @@ FString ULuaBlueprintLibrary::GetStringFromVar(FLuaBPVar Value,int Index) {
 UObject* ULuaBlueprintLibrary::GetObjectFromVar(FLuaBPVar Value,int Index) {
     return getValueFromVar<UObject*>(Value,Index);
 }
+
+#undef LOCTEXT_NAMESPACE

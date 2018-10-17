@@ -7,6 +7,7 @@
 #include "Misc/Paths.h"
 #include "GenericPlatformFile.h"
 #include "SluaTestCase.h"
+#include "Engine/Engine.h"
 
 
 ASluaActor* ASluaActor::instance=nullptr;

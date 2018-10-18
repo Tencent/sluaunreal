@@ -51,9 +51,13 @@ public class slua_unreal : ModuleRules
                     break;
                 }
             case UnrealTargetPlatform.Win32:
-            case UnrealTargetPlatform.Win64:
                 {
                     PublicLibraryPaths.Add(Path.Combine(externalLib, "Win32"));
+                    PublicAdditionalLibraries.Add("lua.lib");
+                    break;
+                }
+            case UnrealTargetPlatform.Win64:
+                {
                     PublicLibraryPaths.Add(Path.Combine(externalLib, "Win64"));
                     PublicAdditionalLibraries.Add("lua.lib");
                     break;

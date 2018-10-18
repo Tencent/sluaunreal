@@ -22,74 +22,74 @@ namespace slua {
 		int luaopen_url(lua_State *L) {
 			auto str =
 #include "luasocket/url.lua.inc"
-				luaL_dostring(L, str);
+			luaL_dostring(L, str);
 			return 1;
 		}
 
 		int luaopen_tp(lua_State *L) {
 			auto str =
 #include "luasocket/tp.lua.inc"
-				luaL_dostring(L, str);
+			luaL_dostring(L, str);
 			return 1;
 		}
 
 		int luaopen_socket(lua_State *L) {
 			auto str =
 #include "luasocket/socket.lua.inc"
-				luaL_dostring(L, str);
+			luaL_dostring(L, str);
 			return 1;
 		}
 
 		int luaopen_smtp(lua_State *L) {
 			auto str =
 #include "luasocket/smtp.lua.inc"
-				luaL_dostring(L, str);
+			luaL_dostring(L, str);
 			return 1;
 		}
 
 		int luaopen_mime(lua_State *L) {
 			auto str =
 #include "luasocket/mime.lua.inc"
-				luaL_dostring(L, str);
+			luaL_dostring(L, str);
 			return 1;
 		}
 
 		int luaopen_mbox(lua_State *L) {
 			auto str =
 #include "luasocket/mbox.lua.inc"
-				luaL_dostring(L, str);
+			luaL_dostring(L, str);
 			return 1;
 		}
 
 		int luaopen_ltn12(lua_State *L) {
 			auto str =
 #include "luasocket/ltn12.lua.inc"
-				luaL_dostring(L, str);
+			luaL_dostring(L, str);
 			return 1;
 		}
 
 		int luaopen_http(lua_State *L) {
 			auto str =
 #include "luasocket/http.lua.inc"
-				luaL_dostring(L, str);
+			luaL_dostring(L, str);
 			return 1;
 		}
 
 		int luaopen_headers(lua_State *L) {
 			auto str =
 #include "luasocket/ftp.lua.inc"
-				luaL_dostring(L, str);
+			luaL_dostring(L, str);
 			return 1;
 		}
 
 		int luaopen_ftp(lua_State *L) {
 			auto str =
 #include "luasocket/ftp.lua.inc"
-				luaL_dostring(L, str);
+			luaL_dostring(L, str);
 			return 1;
 		}
 
-		void initDebugExtension(lua_State *L) {
+		void init(lua_State *L) {
 			luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
 
 			lua_pushcfunction(L, luaopen_socket_core);

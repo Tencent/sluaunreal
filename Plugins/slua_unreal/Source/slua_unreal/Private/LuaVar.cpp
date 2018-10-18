@@ -129,6 +129,8 @@ namespace slua {
     }
 
     void LuaVar::init(lua_State* l,int p,LuaVar::Type type) {
+        auto state = LuaState::get(l);
+        stateIndex = state->stateIndex();
         switch(type) {
         case LV_NIL:
             break;

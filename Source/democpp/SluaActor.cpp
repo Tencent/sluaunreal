@@ -77,6 +77,7 @@ void ASluaActor::BeginPlay()
 		ensure(t.getAt<int>(1)==1);
 		t.setToTable(5,1024);
 		ensure(t.getFromTable<int>(5)==1024);
+		t.setToTable("this",this);
 	}
 
 	state->call("xx.text",this->GetWorld());

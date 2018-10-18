@@ -142,6 +142,17 @@ namespace slua {
             lua_pop(L,1);
         }
 
+        template<typename K,typename V>
+        void setToTable(K k,V v) {
+            ensure(isTable());
+            auto L = getState();
+            push(L);
+            LuaObject::push(L,k);
+            LuaObject::push(L,v);
+            lua_settable(L,-3);
+            lua_pop(L,1);
+        }
+
         // call luavar if it's funciton
         // args is arguments passed to lua
         template<class ...ARGS>

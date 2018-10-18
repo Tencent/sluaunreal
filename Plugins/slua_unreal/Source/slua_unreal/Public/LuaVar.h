@@ -83,6 +83,7 @@ namespace slua {
         bool isBool() const;
         bool isUserdata(const char* t) const;
         bool isLightUserdata() const;
+        bool isValid() const;
         Type type() const;
 
         int asInt() const;
@@ -275,7 +276,6 @@ namespace slua {
         void move(LuaVar&& other);
         void varClone(lua_var& tv,const lua_var& ov) const;
         void pushVar(lua_State* l,const lua_var& ov) const;
-        bool isValid() const;
     };
 
 

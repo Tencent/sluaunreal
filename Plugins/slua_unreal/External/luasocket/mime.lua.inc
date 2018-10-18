@@ -1,4 +1,4 @@
-state->doString(R"-++**++-(
+R"-++**++-(
 -------------------------------------------------------------------
 -- MIME support for the Lua language.
 -- Author: Diego Nehab
@@ -89,4 +89,4 @@ function _M.stuff()
 end
 
 return _M
-)-++**++-");
+)-++**++-";

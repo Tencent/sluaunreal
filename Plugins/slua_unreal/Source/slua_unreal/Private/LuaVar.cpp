@@ -344,27 +344,6 @@ namespace slua {
         }
     }
 
-    void LuaVar::setAt(const LuaVar& var,int pos) {
-        ensure(isTable());
-        auto L = getState();
-        push(L);
-        if(pos<=0) pos = lua_rawlen(L,-1)+1;
-        var.push(L);
-        lua_seti(L,-2,pos);
-        lua_pop(L,1);
-    }
-
-    LuaVar LuaVar::getFromTable(const LuaVar& key) const {
-        ensure(isTable());
-        auto L = getState();
-        push(L);
-        key.push(L);
-        lua_gettable(L,-2);
-        LuaVar r(L,-1);
-        lua_pop(L,2);
-        return r;
-    }
-
     void LuaVar::set(lua_Integer v) {
         free();
         alloc(1);

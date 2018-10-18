@@ -15,7 +15,7 @@
 #define LUA_LIB
 #include "CoreMinimal.h"
 #include "LuaObject.h"
-#include "lua/lua.hpp"
+#include "LuaCppBinding.h"
 #include "Log.h"
 #include <string>
 #include <exception>
@@ -103,8 +103,14 @@ namespace slua {
         }
 
 
-        template<class T>
-        inline T castTo();
+        template<class R>
+        inline R castTo() {
+            auto L = getState();
+            push(L);
+            R r = ArgOperator::readArg<typename remove_cr<R>::type>(L,-1);
+            lua_pop(L,1);
+            return r;
+        }
 
         // return count of luavar if it's table or tuple, 
         // otherwise it's return 1
@@ -114,34 +120,37 @@ namespace slua {
         LuaVar getAt(size_t index) const;
 
         // template function for return value
-        template<class R>
+        template<typename R>
         R getAt(size_t index) const {
             return getAt(index).castTo<R>();
         }
 
         // if pos==-1 setAt push var to back of table,
         // otherwise push var to given position at pos
-        void setAt(const LuaVar& var,int pos=-1);
-
-        // get table by key, if luavar is table
-        LuaVar getFromTable(const LuaVar& key) const;
-        
-        template<class R>
-        R getFromTable(const LuaVar& key) const {
-            return getFromTable(key).castTo<R>();
-        }
-
-        // set table by key and value
-        void setToTable(const LuaVar& key,const LuaVar& value) {
+        template<typename T>
+        void setAt(T v,int pos=-1) {
             ensure(isTable());
             auto L = getState();
             push(L);
-            key.push(L);
-            value.push(L);
-            lua_settable(L,-3);
+            if(pos<=0) pos = lua_rawlen(L,-1)+1;
+            LuaObject::push(L,v);
+            lua_seti(L,-2,pos);
             lua_pop(L,1);
         }
 
+        // get table by key, if luavar is table
+        template<typename R,typename T>
+        R getFromTable(T key) const {
+            ensure(isTable());
+            auto L = getState();
+            AutoStack as(L);
+            push(L);
+            LuaObject::push(L,key);
+            lua_gettable(L,-2);
+            return ArgOperator::readArg<typename remove_cr<R>::type>(L,-1);
+        }
+
+        // set table by key and value
         template<typename K,typename V>
         void setToTable(K k,V v) {
             ensure(isTable());
@@ -288,32 +297,6 @@ namespace slua {
         void varClone(lua_var& tv,const lua_var& ov) const;
         void pushVar(lua_State* l,const lua_var& ov) const;
     };
-
-
-    template<>
-    inline int LuaVar::castTo() {
-        return asInt();
-    }
-
-    template<>
-    inline float LuaVar::castTo() {
-        return asFloat();
-    }
-
-    template<>
-    inline double LuaVar::castTo() {
-        return asDouble();
-    }
-
-    template<>
-    inline bool LuaVar::castTo() {
-        return asBool();
-    }
-
-    template<>
-    inline const char* LuaVar::castTo() {
-        return asString();
-    }
 
     template<>
     inline LuaVar LuaObject::checkValue(lua_State* L, int p) {

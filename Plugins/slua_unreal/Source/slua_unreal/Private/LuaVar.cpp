@@ -154,14 +154,14 @@ namespace slua {
         case LV_FUNCTION: 
         case LV_TABLE:
         case LV_USERDATA:
-            stateIndex = LuaState::get(l)->stateIndex();
+            //stateIndex = LuaState::get(l)->stateIndex();
             alloc(1);
             lua_pushvalue(l,p);
             vars[0].ref = new RefRef(l);
             vars[0].luatype=type;
             break;
         case LV_TUPLE:
-            stateIndex = LuaState::get(l)->stateIndex();
+            //stateIndex = LuaState::get(l)->stateIndex();
             ensure(p>0 && lua_gettop(l)>=p);
             initTuple(l,p);
             break;
@@ -250,6 +250,38 @@ namespace slua {
             vars = new lua_var[n];
             numOfVar = n;
         }
+    }
+
+    bool LuaVar::next(LuaVar& key,LuaVar& value) {
+        if(!isTable())
+            return false;
+
+        auto L = getState();
+        push(L);
+        key.push(L);
+        if(lua_next(L,-2)!=0) {
+            key.set(L,-2);
+            value.set(L,-1);
+            lua_pop(L,3);
+            return true;
+        }
+        else {
+            key.free();
+            value.free();
+            lua_pop(L,1);
+            return false;
+        }
+    }
+
+    const char* LuaVar::toString() {
+        auto L = getState();
+        push(L);
+        int t = lua_type(L,-1);
+        const char* ret;
+        size_t len;
+        ret = luaL_tolstring(L,-1,&len);
+        lua_pop(L,1);
+        return ret;
     }
 
     size_t LuaVar::count() const {

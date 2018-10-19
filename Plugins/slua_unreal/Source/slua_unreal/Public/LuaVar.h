@@ -102,6 +102,13 @@ namespace slua {
             return ud?ud->ud:nullptr;
         }
 
+        // iterate LuaVar if it's table
+        // return true if has next item
+        bool next(LuaVar& key,LuaVar& value);
+
+        // return desc string for luavar, call luaL_tolstring
+        const char* toString();
+
 
         template<class R>
         inline R castTo() {

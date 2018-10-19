@@ -78,6 +78,12 @@ void ASluaActor::BeginPlay()
 		t.setToTable(5,1024);
 		ensure(t.getFromTable<int>(5)==1024);
 		t.setToTable("this",this);
+
+		// test iterator function
+		slua::LuaVar key,value;
+		while(t.next(key,value)) {
+			slua::Log::Log("for each table %s,%s",key.toString(),value.toString());
+		}
 	}
 
 	state->call("xx.text",this->GetWorld());

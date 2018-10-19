@@ -1,4 +1,4 @@
-state->doString(R"-++**++-(
+R"-++**++-(
 -----------------------------------------------------------------------------
 -- LTN12 - Filters, sources, sinks and pumps.
 -- LuaSocket toolkit.
@@ -297,4 +297,4 @@ function pump.all(src, snk, step)
 end
 
 return _M
-)-++**++-");
+)-++**++-";

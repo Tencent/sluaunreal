@@ -1,4 +1,4 @@
-state->doString(R"-++**++-(
+R"-++**++-(
 -------------------------------------------------------------------
 -- FTP support for the Lua language
 -- LuaSocket toolkit.
@@ -284,4 +284,4 @@ _M.get = socket.protect(function(gett)
 end)
 
 return _M
-)-++**++-");
+)-++**++-";

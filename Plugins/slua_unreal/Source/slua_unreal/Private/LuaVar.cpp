@@ -11,6 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 
+#ifdef _WIN32
+#pragma warning (push)
+#pragma warning (disable : 4018)
+#endif
+
 #include "LuaVar.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/Class.h"
@@ -124,6 +129,8 @@ namespace slua {
     }
 
     void LuaVar::init(lua_State* l,int p,LuaVar::Type type) {
+        auto state = LuaState::get(l);
+        stateIndex = state->stateIndex();
         switch(type) {
         case LV_NIL:
             break;
@@ -147,14 +154,14 @@ namespace slua {
         case LV_FUNCTION: 
         case LV_TABLE:
         case LV_USERDATA:
-            stateIndex = LuaState::get(l)->stateIndex();
+            //stateIndex = LuaState::get(l)->stateIndex();
             alloc(1);
             lua_pushvalue(l,p);
             vars[0].ref = new RefRef(l);
             vars[0].luatype=type;
             break;
         case LV_TUPLE:
-            stateIndex = LuaState::get(l)->stateIndex();
+            //stateIndex = LuaState::get(l)->stateIndex();
             ensure(p>0 && lua_gettop(l)>=p);
             initTuple(l,p);
             break;
@@ -243,6 +250,36 @@ namespace slua {
             vars = new lua_var[n];
             numOfVar = n;
         }
+    }
+
+    bool LuaVar::next(LuaVar& key,LuaVar& value) {
+        if(!isTable())
+            return false;
+
+        auto L = getState();
+        push(L);
+        key.push(L);
+        if(lua_next(L,-2)!=0) {
+            key.set(L,-2);
+            value.set(L,-1);
+            lua_pop(L,3);
+            return true;
+        }
+        else {
+            key.free();
+            value.free();
+            lua_pop(L,1);
+            return false;
+        }
+    }
+
+    const char* LuaVar::toString() {
+        auto L = getState();
+        push(L);
+        const char* ret;
+        ret = luaL_tolstring(L,-1,NULL);
+        lua_pop(L,2);
+        return ret;
     }
 
     size_t LuaVar::count() const {
@@ -337,27 +374,6 @@ namespace slua {
             varClone(r.vars[0],vars[index-1]);
             return r;
         }
-    }
-
-    void LuaVar::setAt(const LuaVar& var,int pos) {
-        ensure(isTable());
-        auto L = getState();
-        push(L);
-        if(pos<=0) pos = lua_rawlen(L,-1)+1;
-        var.push(L);
-        lua_seti(L,-2,pos);
-        lua_pop(L,1);
-    }
-
-    LuaVar LuaVar::getFromTable(const LuaVar& key) const {
-        ensure(isTable());
-        auto L = getState();
-        push(L);
-        key.push(L);
-        lua_gettable(L,-2);
-        LuaVar r(L,-1);
-        lua_pop(L,2);
-        return r;
     }
 
     void LuaVar::set(lua_Integer v) {
@@ -619,3 +635,7 @@ namespace slua {
         return false;
     }
 }
+
+#ifdef _WIN32
+#pragma warning (pop)
+#endif

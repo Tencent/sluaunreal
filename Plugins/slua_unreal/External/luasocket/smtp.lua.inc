@@ -1,4 +1,4 @@
-state->doString(R"-++**++-(
+R"-++**++-(
 -----------------------------------------------------------------------------
 -- SMTP client support for the Lua language.
 -- LuaSocket toolkit.
@@ -255,4 +255,4 @@ _M.send = socket.protect(function(mailt)
 end)
 
 return _M
-)-++**++-");
+)-++**++-";

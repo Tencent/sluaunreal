@@ -7,6 +7,7 @@
 #include "Misc/Paths.h"
 #include "GenericPlatformFile.h"
 #include "SluaTestCase.h"
+#include "Engine/Engine.h"
 
 
 ASluaActor* ASluaActor::instance=nullptr;
@@ -76,6 +77,13 @@ void ASluaActor::BeginPlay()
 		ensure(t.getAt<int>(1)==1);
 		t.setToTable(5,1024);
 		ensure(t.getFromTable<int>(5)==1024);
+		t.setToTable("this",this);
+
+		// test iterator function
+		slua::LuaVar key,value;
+		while(t.next(key,value)) {
+			slua::Log::Log("for each table %s,%s",key.toString(),value.toString());
+		}
 	}
 
 	state->call("xx.text",this->GetWorld());

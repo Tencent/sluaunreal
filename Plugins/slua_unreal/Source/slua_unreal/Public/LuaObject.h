@@ -127,7 +127,7 @@ namespace slua {
             UserData<UObject*>* ptr = (UserData<UObject*>*)luaL_testudata(L,p,"UObject");
             T* t = ptr?Cast<T>(ptr->ud):nullptr;
             if(!t) {
-                FString clsname = L"U" + T::StaticClass()->GetName();
+                FString clsname = TEXT("U") + T::StaticClass()->GetName();
                 UserData<T*>* tptr = (UserData<T*>*) luaL_testudata(L,p,TCHAR_TO_UTF8(*clsname));
                 t = tptr?tptr->ud:nullptr;
             }
@@ -169,7 +169,7 @@ namespace slua {
 		static void addGlobalMethod(lua_State* L, const char* name, lua_CFunction func);
 		static void addField(lua_State* L, const char* name, lua_CFunction getter, lua_CFunction setter, bool isInstance = true);
 		static void addOperator(lua_State* L, const char* name, lua_CFunction func);
-		static void finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc);
+		static void finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc, lua_CFunction strHint=nullptr);
 
         static void init(lua_State* L);
 
@@ -343,6 +343,11 @@ namespace slua {
             return push(L,TypeName<T>::value(),ptr.ptr,true);
         }
 
+        template<typename T>
+        static int push(lua_State* L,T v,typename std::enable_if<std::is_enum<T>::value>::type* = nullptr) {
+            return push(L,static_cast<int>(v));
+        }
+
 		// static int push(lua_State* L, FScriptArray* array);
         
         static int pushNil(lua_State* L) {
@@ -432,6 +437,8 @@ namespace slua {
                 return ud->ud;
             }
         }
+        else if(lt == LUA_TNIL)
+            return nullptr;
     errorpath:
         luaL_error(L, "checkValue error at %d",p);
         return nullptr;

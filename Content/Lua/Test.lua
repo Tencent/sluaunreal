@@ -1,4 +1,4 @@
-require 'TestPerf'
+--require 'TestPerf'
 require 'TestCase'
 require 'TestStruct'
 require 'TestCppBinding'
@@ -83,13 +83,15 @@ end
 local HitResult = import('HitResult');
 local count=0
 local tt=0
-
+local ret={1,2,3,4,5}
 -- test coroutine
 local co = coroutine.create( function()
     ccb = slua.createDelegate(function(p)
         print("LoadAssetClass callback in coroutine",p) 
     end)
     Test.LoadAssetClass(ccb)
+
+    
 end )
 coroutine.resume( co )
 co = nil
@@ -109,8 +111,12 @@ function update(dt,actor)
 
     TestArray.update()
 
+    for k,v in pairs(ret) do
+        print("ret table",k,v)
+    end
+
     collectgarbage("collect")
-    return 1024,2,"s",{1,2,3,4},function() end
+    return 1024,2,"s",ret,function() end
 end
 
 function print_table(t)
@@ -144,4 +150,4 @@ for k,v in pairs(FVector) do
     print_table(getmetatable(v))
 end
 
-return 1024,2,"s",{1,2,3,4,5},function() end
+return 1024,2,"s",ret,function() end

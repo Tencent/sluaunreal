@@ -1,4 +1,4 @@
-state->doString(R"-++**++-(
+R"-++**++-(
 ---------------------------------------------------
 -- Canonic header field capitalization
 -- LuaSocket toolkit.
@@ -103,4 +103,4 @@ _M.canonic = {
 }
 
 return _M
-)-++**++-");
+)-++**++-";

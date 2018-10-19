@@ -276,11 +276,9 @@ namespace slua {
     const char* LuaVar::toString() {
         auto L = getState();
         push(L);
-        int t = lua_type(L,-1);
         const char* ret;
-        size_t len;
-        ret = luaL_tolstring(L,-1,&len);
-        lua_pop(L,1);
+        ret = luaL_tolstring(L,-1,NULL);
+        lua_pop(L,2);
         return ret;
     }
 

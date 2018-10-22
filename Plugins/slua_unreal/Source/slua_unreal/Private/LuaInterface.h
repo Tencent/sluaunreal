@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 
-#pragma pragma
+#pragma once
 #include "lua/lua.hpp"
 // for debugger integrate
 #define PURE_API =0
@@ -43,7 +43,12 @@ namespace slua {
         virtual int lua_getglobal (lua_State *L, const char *name) PURE_API;
     };
 }
-#if defined(LUA_BUILD_AS_DLL)
-__declspec(dllexport)
+
+extern "C" {
+#if defined(_WIN32)
+	__declspec(dllexport)
+#else
+	extern
 #endif
-extern "C" slua::LuaInterface* GetLuaInterface();
+	slua::LuaInterface* GetLuaInterface();
+}

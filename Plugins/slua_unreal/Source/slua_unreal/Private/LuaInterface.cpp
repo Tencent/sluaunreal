@@ -80,10 +80,15 @@ namespace slua {
     };
 }
 
-#if defined(LUA_BUILD_AS_DLL)
-__declspec(dllexport)
+
+extern "C" {
+#if defined(_WIN32)
+	__declspec(dllexport)
+#else
+	extern
 #endif
-extern "C" slua::LuaInterface* GetLuaInterface() {
-    static slua::LuaInterfaceImp interface;
-    return &interface;
+	slua::LuaInterface* GetLuaInterface() {
+		static slua::LuaInterfaceImp interface;
+		return &interface;
+	}
 }

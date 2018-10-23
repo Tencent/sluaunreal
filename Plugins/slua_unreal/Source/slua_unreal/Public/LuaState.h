@@ -40,18 +40,24 @@ namespace slua {
             if(!l) return mainState;
             return (LuaState*)*((void**)lua_getextraspace(l));
         }
-
+        // get LuaState from state index
         static LuaState* get(int index);
 
+        // return specified index is valid state index
         inline static bool isValid(int index)  {
             return get(index)!=nullptr;
         }
         
-
+        // return state index
         int stateIndex() const { return si; }
         
+        // init lua state by USceneComponent
+        // lua state depend on pointer of game instance
+        // pass USceneComponent to get uworld and game instance
         virtual bool init(USceneComponent* wld);
+        // tick function
         virtual void tick(float dtime);
+        // close lua state
         virtual void close();
 
         LuaVar doString(const char* str);
@@ -59,15 +65,18 @@ namespace slua {
         LuaVar doFile(const char* fn);
 
        
-
+        // call function that specified by key
+        // any supported c++ value can be passed as argument to lua 
         template<typename ...ARGS>
         LuaVar call(const char* key,ARGS&& ...args) {
             LuaVar f = get(key);
             return f.call(std::forward<ARGS>(args)...);
         }
 
+        // get field from _G, support "x.x.x.x" to search children field
         LuaVar get(const char* key);
 
+        // set load delegation function to load lua code
 		void setLoadFileDelegate(LoadFileDelegate func);
 
 		lua_State* getLuaState() const

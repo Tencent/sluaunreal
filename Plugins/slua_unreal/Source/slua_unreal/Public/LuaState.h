@@ -60,8 +60,13 @@ namespace slua {
         // close lua state
         virtual void close();
 
+        // execute lua string
         LuaVar doString(const char* str);
+        // execute bytes buffer and named buffer to chunk
         LuaVar doBuffer(const uint8* buf,uint32 len, const char* chunk);
+        // load file and execute it
+        // file how to loading depend on load delegation
+        // see setLoadFileDelegate function
         LuaVar doFile(const char* fn);
 
        

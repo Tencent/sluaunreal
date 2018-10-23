@@ -601,6 +601,15 @@ namespace slua {
         return 1;
     }
 
+	int objectToString(lua_State* L)
+	{
+        static char buffer[0x400] = { 0 };
+		UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
+        snprintf(buffer, sizeof(buffer), "%s: %s %p", obj->GetClass()->GetFName().GetPlainANSIString(), obj->GetFName().GetPlainANSIString(), obj);
+		lua_pushstring(L, buffer);
+		return 1;
+	}
+
     template<typename T>
     int pushUProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p=Cast<T>(prop);
@@ -1036,7 +1045,9 @@ namespace slua {
 
     int LuaObject::setupMTSelfSearch(lua_State* L) {
         lua_pushcfunction(L,instanceIndexSelf);
-        lua_setfield(L, -2, "__index");
+		lua_setfield(L, -2, "__index");
+		lua_pushcfunction(L, objectToString);
+		lua_setfield(L, -2, "__tostring");
         return 0;
     }
 
@@ -1045,13 +1056,17 @@ namespace slua {
         lua_pushcfunction(L,classConstruct);
         lua_setfield(L, -2, "__call");
         lua_pushcfunction(L,slua::classIndex);
-        lua_setfield(L, -2, "__index");
+		lua_setfield(L, -2, "__index");
+		lua_pushcfunction(L, objectToString);
+		lua_setfield(L, -2, "__tostring");
         return 0;
     }
 
     int LuaObject::setupStructMT(lua_State* L) {
         lua_pushcfunction(L,structConstruct);
-        lua_setfield(L, -2, "__call");
+		lua_setfield(L, -2, "__call");
+		lua_pushcfunction(L, objectToString);
+		lua_setfield(L, -2, "__tostring");
         return 0;
     }
 
@@ -1060,6 +1075,8 @@ namespace slua {
         lua_setfield(L, -2, "__index");
         lua_pushcfunction(L,newinstanceIndex);
         lua_setfield(L, -2, "__newindex");
+		lua_pushcfunction(L, objectToString);
+		lua_setfield(L, -2, "__tostring");
         return 0;
     }
 
@@ -1067,7 +1084,9 @@ namespace slua {
         lua_pushcfunction(L,instanceStructIndex);
         lua_setfield(L, -2, "__index");
         lua_pushcfunction(L, newinstanceStructIndex);
-        lua_setfield(L, -2, "__newindex");
+		lua_setfield(L, -2, "__newindex");
+		lua_pushcfunction(L, objectToString);
+		lua_setfield(L, -2, "__tostring");
         return 0;
     }
 }

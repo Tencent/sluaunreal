@@ -371,6 +371,7 @@ namespace slua {
         static int gcClass(lua_State* L);
         static int gcStructClass(lua_State* L);
 		static int gcStruct(lua_State* L);
+        static int objectToString(lua_State* L);
 
 		static int removeFromCacheGC(lua_State* L);
 		static bool getFromCache(lua_State* L, void* obj);

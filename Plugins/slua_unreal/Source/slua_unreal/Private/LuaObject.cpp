@@ -601,11 +601,25 @@ namespace slua {
         return 1;
     }
 
-	int objectToString(lua_State* L)
+	int LuaObject::objectToString(lua_State* L)
 	{
-        static char buffer[0x400] = { 0 };
-		UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
-        snprintf(buffer, sizeof(buffer), "%s: %s %p", obj->GetClass()->GetFName().GetPlainANSIString(), obj->GetFName().GetPlainANSIString(), obj);
+        const int BufMax = 128;
+        static char buffer[BufMax] = { 0 };
+		UObject* obj = LuaObject::testudata<UObject>(L, 1);
+        if(obj)
+            snprintf(buffer, BufMax, "%s: %s %p", obj->GetClass()->GetFName().GetPlainANSIString(), obj->GetFName().GetPlainANSIString(), obj);
+        else {
+            // if ud isn't a uobject, get __name of metatable to cast it to string
+            const void* ptr = lua_topointer(L,1);
+            luaL_getmetafield(L,1,"__name");
+            // should have __name field
+            if(lua_type(L,-1)==LUA_TSTRING) {
+                const char* metaname = lua_tostring(L,-1);
+                snprintf(buffer, BufMax, "%s: %p", metaname,ptr);
+            }
+            lua_pop(L,1);
+        }
+
 		lua_pushstring(L, buffer);
 		return 1;
 	}

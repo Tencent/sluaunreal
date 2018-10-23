@@ -116,7 +116,7 @@ namespace slua {
             push(L);
             R r = ArgOperator::readArg<typename remove_cr<R>::type>(L,-1);
             lua_pop(L,1);
-            return r;
+            return std::move(r);
         }
 
         // return count of luavar if it's table or tuple, 

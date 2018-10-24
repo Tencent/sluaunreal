@@ -256,7 +256,7 @@ namespace slua {
 		loadFileDelegate = func;
 	}
 
-    LuaVar LuaState::doBuffer(const uint8* buf,uint32 len, const char* chunk) {
+    LuaVar LuaState::doBuffer(const uint8* buf,uint32 len, const char* chunk, LuaVar* pEnv) {
         AutoStack g(L);
         int errfunc = pushErrorHandler(L);
 
@@ -266,6 +266,12 @@ namespace slua {
             return LuaVar();
         }
         
+        if(pEnv != nullptr)
+        {
+            pEnv->push(L);
+            lua_setupvalue(L, -2, 1);
+        }
+        
         if(!lua_pcall(L, 0, LUA_MULTRET, errfunc)) {
             int n = lua_gettop(L) - errfunc;
             return LuaVar::wrapReturn(L,n);
@@ -273,24 +279,24 @@ namespace slua {
         return LuaVar();
     }
 
-    LuaVar LuaState::doString(const char* str) {
+    LuaVar LuaState::doString(const char* str, LuaVar* pEnv) {
         #if WITH_EDITOR
 		FString md5FString = FMD5::HashAnsiString(UTF8_TO_TCHAR(str));
 		debugStringMap.Add(md5FString, UTF8_TO_TCHAR(str));
-        return doBuffer((const uint8*)str,strlen(str),TCHAR_TO_UTF8(*md5FString));
+        return doBuffer((const uint8*)str,strlen(str),TCHAR_TO_UTF8(*md5FString),pEnv);
         #else
-        return doBuffer((const uint8*)str,strlen(str),str);
+        return doBuffer((const uint8*)str,strlen(str),str,pEnv);
         #endif
     }
 
-    LuaVar LuaState::doFile(const char* fn) {
+    LuaVar LuaState::doFile(const char* fn, LuaVar* pEnv) {
         uint32 len;
         FString filepath;
         if(uint8* buf=loadFile(fn,len,filepath)) {
             char chunk[256];
             snprintf(chunk,256,"@%s",TCHAR_TO_UTF8(*filepath));
 
-            LuaVar r = doBuffer( buf,len,chunk );
+            LuaVar r = doBuffer( buf,len,chunk,pEnv );
             delete[] buf;
             return r;
         }

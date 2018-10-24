@@ -198,15 +198,18 @@ namespace slua {
 }
 
 
-#define REG_EXTENSION_METHOD(U,N,M) { \
-            LuaObject::addExtensionMethod(U::StaticClass(),N,LuaCppBinding<decltype(M),M>::LuaCFunction); }
-
 USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
     this->Value=2048;
     using namespace slua;
     REG_EXTENSION_METHOD(USluaTestCase,"SetArrayStrEx",&USluaTestCase::SetArrayStrEx);
+    REG_EXTENSION_METHOD_IMP(UObject,"IsA",{
+        CheckUD(UObject,L,1);
+        auto clazz = LuaObject::checkUD<UClass>(L,2);
+        bool ret = UD->IsA(clazz);
+        return LuaObject::push(L,ret);
+    });
 }
 
 TArray<int> USluaTestCase::GetArray() {

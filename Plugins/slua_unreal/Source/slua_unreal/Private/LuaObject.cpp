@@ -601,6 +601,29 @@ namespace slua {
         return 1;
     }
 
+	int LuaObject::objectToString(lua_State* L)
+	{
+        const int BufMax = 128;
+        static char buffer[BufMax] = { 0 };
+		UObject* obj = LuaObject::testudata<UObject>(L, 1);
+        if(obj)
+            snprintf(buffer, BufMax, "%s: %s %p", obj->GetClass()->GetFName().GetPlainANSIString(), obj->GetFName().GetPlainANSIString(), obj);
+        else {
+            // if ud isn't a uobject, get __name of metatable to cast it to string
+            const void* ptr = lua_topointer(L,1);
+            luaL_getmetafield(L,1,"__name");
+            // should have __name field
+            if(lua_type(L,-1)==LUA_TSTRING) {
+                const char* metaname = lua_tostring(L,-1);
+                snprintf(buffer, BufMax, "%s: %p", metaname,ptr);
+            }
+            lua_pop(L,1);
+        }
+
+		lua_pushstring(L, buffer);
+		return 1;
+	}
+
     template<typename T>
     int pushUProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p=Cast<T>(prop);
@@ -1036,7 +1059,9 @@ namespace slua {
 
     int LuaObject::setupMTSelfSearch(lua_State* L) {
         lua_pushcfunction(L,instanceIndexSelf);
-        lua_setfield(L, -2, "__index");
+		lua_setfield(L, -2, "__index");
+		lua_pushcfunction(L, objectToString);
+		lua_setfield(L, -2, "__tostring");
         return 0;
     }
 
@@ -1045,13 +1070,17 @@ namespace slua {
         lua_pushcfunction(L,classConstruct);
         lua_setfield(L, -2, "__call");
         lua_pushcfunction(L,slua::classIndex);
-        lua_setfield(L, -2, "__index");
+		lua_setfield(L, -2, "__index");
+		lua_pushcfunction(L, objectToString);
+		lua_setfield(L, -2, "__tostring");
         return 0;
     }
 
     int LuaObject::setupStructMT(lua_State* L) {
         lua_pushcfunction(L,structConstruct);
-        lua_setfield(L, -2, "__call");
+		lua_setfield(L, -2, "__call");
+		lua_pushcfunction(L, objectToString);
+		lua_setfield(L, -2, "__tostring");
         return 0;
     }
 
@@ -1060,6 +1089,8 @@ namespace slua {
         lua_setfield(L, -2, "__index");
         lua_pushcfunction(L,newinstanceIndex);
         lua_setfield(L, -2, "__newindex");
+		lua_pushcfunction(L, objectToString);
+		lua_setfield(L, -2, "__tostring");
         return 0;
     }
 
@@ -1067,7 +1098,9 @@ namespace slua {
         lua_pushcfunction(L,instanceStructIndex);
         lua_setfield(L, -2, "__index");
         lua_pushcfunction(L, newinstanceStructIndex);
-        lua_setfield(L, -2, "__newindex");
+		lua_setfield(L, -2, "__newindex");
+		lua_pushcfunction(L, objectToString);
+		lua_setfield(L, -2, "__tostring");
         return 0;
     }
 }

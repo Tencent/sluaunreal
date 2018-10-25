@@ -266,7 +266,7 @@ namespace slua {
             return LuaVar();
         }
         
-        if(pEnv != nullptr)
+        if(pEnv != nullptr && pEnv->isTable())
         {
             pEnv->push(L);
             lua_setupvalue(L, -2, 1);

@@ -15,8 +15,10 @@
 #include "LuaMemoryProfile.h"
 #include "LuaState.h"
 #include "Log.h"
-
+#include "lua/lstate.h"
 namespace slua {
+
+     TMap<void*,FString> memoryRecord;
 
     void* LuaMemoryProfile::alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
         (void)osize;  /* not used */
@@ -41,6 +43,9 @@ namespace slua {
         bool isvalid = false;
         for(int i=0;;i++) {
             if(lua_getstack(L,i,&ar) && lua_getinfo(L,"nS",&ar)) {
+                CallInfo* ci = (CallInfo*) ar.i_ci;
+                if(!isLua(ci))
+                    break;
                 info += ">";
                 if(strcmp(ar.what,"Lua")==0) {
                     isvalid = true;
@@ -50,8 +55,6 @@ namespace slua {
                     isvalid = true;
                     info += "[main]";
                 }
-                else if(strcmp(ar.what,"C")==0)
-                    info += (ar.name?ar.name:"[C]]");
             }
             else
                 break;
@@ -60,14 +63,14 @@ namespace slua {
     }
 
     void LuaMemoryProfile::addRecord(LuaState* LS,void* ptr,size_t size) {
-        // // skip if lua_State is null, lua_State hadn't binded to LS
-        // lua_State* L = *LS;
-        // if(!L) return;
+        // skip if lua_State is null, lua_State hadn't binded to LS
+        lua_State* L = *LS;
+        if(!L) return;
 
-        // FString trackInfo;
-        // if(getTrackInfo(L,trackInfo)) {
-        //     Log::Log("alloc memory %d from %s",size,TCHAR_TO_UTF8(*trackInfo));
-        // }
+        FString trackInfo;
+        if(getTrackInfo(L,trackInfo)) {
+            Log::Log("alloc memory %d from %s",size,TCHAR_TO_UTF8(*trackInfo));
+        }
     }
 
     void LuaMemoryProfile::removeRecord(LuaState* LS,void* ptr,size_t size) {

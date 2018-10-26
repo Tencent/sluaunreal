@@ -1,6 +1,7 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
+using System.IO;
 
 public class lua_wrapper : ModuleRules
 {
@@ -10,7 +11,7 @@ public class lua_wrapper : ModuleRules
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
-				"lua_wrapper/Public"
+                Path.Combine(ModuleDirectory, "Public")
 				// ... add public include paths required here ...
 			}
 			);
@@ -18,7 +19,7 @@ public class lua_wrapper : ModuleRules
 		
 		PrivateIncludePaths.AddRange(
 			new string[] {
-				"lua_wrapper/Private",
+				Path.Combine(ModuleDirectory, "Private"),
 				// ... add other private include paths required here ...
 			}
 			);

@@ -259,11 +259,23 @@ namespace slua {
             return Cast<T>(ud->ud);
         }
 
+        template<typename T>
+        static void* void_cast( const T* v ) {
+            return reinterpret_cast<void *>(const_cast< T* >(v));
+        }
+
+        template<typename T>
+        static void* void_cast( T* v ) {
+            return reinterpret_cast<void *>(v);
+        }
+
 		template<class T>
 		static int push(lua_State* L, const char* fn, const T* v, bool owned=false) {
+            if(getFromCache(L,void_cast(v))) return 1;
 			NewUD(T, v, owned);
             luaL_getmetatable(L,fn);
 			lua_setmetatable(L, -2);
+            cacheObj(L,void_cast(v));
             return 1;
 		}
 

@@ -355,4 +355,11 @@ namespace slua {
         return rt;
     }
 
+    LuaVar LuaState::createTable() {
+        lua_newtable(L);
+        LuaVar ret(L,-1);
+        lua_pop(L,1);
+        return ret;
+    }
+
 }

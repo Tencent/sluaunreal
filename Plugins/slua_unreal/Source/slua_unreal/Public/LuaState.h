@@ -93,6 +93,9 @@ namespace slua {
 			return L;
 		}
 
+        // create a empty table
+        LuaVar createTable();
+
 
         void addRef(UObject* obj) {
             ensure(root);

@@ -163,7 +163,6 @@ namespace slua {
             L=nullptr;
         }
 
-        sluaComponent=nullptr;
         if(root) {
             root->RemoveFromRoot();
             root = nullptr;
@@ -171,9 +170,9 @@ namespace slua {
     }
 
 
-    bool LuaState::init(USceneComponent* comp) {
+    bool LuaState::init() {
 
-        if(!comp || root)
+        if(root)
             return false;
 
         if(!mainState) 
@@ -183,8 +182,6 @@ namespace slua {
         si = ++StateIndex;
         root = NewObject<ULuaObject>();
 		root->AddToRoot();
-
-        sluaComponent = comp;
 
         // use custom memory alloc func to profile memory footprint
         L = lua_newstate(LuaMemoryProfile::alloc,this);

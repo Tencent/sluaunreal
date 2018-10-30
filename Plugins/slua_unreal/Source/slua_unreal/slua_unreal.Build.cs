@@ -80,6 +80,11 @@ public class slua_unreal : ModuleRules
 			}
             );
 
+        if (Target.Type == TargetRules.TargetType.Editor)
+        {
+            PrivateDependencyModuleNames.Add("UnrealEd");
+        }
+
 
         PrivateDependencyModuleNames.AddRange(
             new string[]

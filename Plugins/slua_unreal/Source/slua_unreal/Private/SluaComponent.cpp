@@ -34,7 +34,7 @@ void USluaComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-    state.init(this);
+    state.init();
 }
 
 

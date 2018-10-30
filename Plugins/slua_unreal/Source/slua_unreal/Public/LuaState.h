@@ -51,10 +51,8 @@ namespace slua {
         // return state index
         int stateIndex() const { return si; }
         
-        // init lua state by USceneComponent
-        // lua state depend on pointer of game instance
-        // pass USceneComponent to get uworld and game instance
-        virtual bool init(USceneComponent* wld);
+        // init lua state
+        virtual bool init();
         // tick function
         virtual void tick(float dtime);
         // close lua state
@@ -117,7 +115,6 @@ namespace slua {
         friend class LuaObject;
         friend class SluaUtil;
         lua_State* L;
-        USceneComponent* sluaComponent;
         int cacheObjRef;
         int _pushErrorHandler(lua_State* L);
         static int _atPanic(lua_State* L);

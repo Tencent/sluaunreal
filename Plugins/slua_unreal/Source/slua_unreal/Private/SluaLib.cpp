@@ -21,6 +21,10 @@
 #include "Misc/AssertionMacros.h"
 #include "LuaDelegate.h"
 #if WITH_EDITOR
+// Fix compile issue when using unity build
+#ifdef G
+#undef G
+#endif
 #include "Editor/EditorEngine.h"
 #include "Editor/UnrealEdEngine.h"
 #else

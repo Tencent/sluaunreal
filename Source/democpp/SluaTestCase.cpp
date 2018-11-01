@@ -91,6 +91,11 @@ namespace slua {
             return Fruit::Apple;
         }
 
+        // overriade version
+        Fruit getFruit(int) {
+            return Fruit::Apple;
+        }
+
         int value;
     };
 
@@ -100,7 +105,8 @@ namespace slua {
         DefLuaMethod(getStr,&Foo::getStr)
         DefLuaMethod(getInstance,&Foo::getInstance)
         DefLuaMethod(virtualFunc,&Foo::virtualFunc)
-        DefLuaMethod(getFruit,&Foo::getFruit)
+        DefLuaMethod_WITHTYPE(getFruit_1,&Foo::getFruit,Fruit (Foo::*) ())
+        DefLuaMethod_WITHTYPE(getFruit_2,&Foo::getFruit,Fruit (Foo::*) (int))
     EndDef(Foo,&Foo::create)
 
     class FooChild : public Foo {

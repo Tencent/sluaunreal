@@ -437,17 +437,17 @@ namespace slua {
     inline UObject* LuaObject::checkValue(lua_State* L, int p) {
         int lt = lua_type(L,p);
         if(lt == LUA_TUSERDATA) {
-            UserData<UObject*>* ud = reinterpret_cast<UserData<UObject*>*>(luaL_checkudata(L, p, "UObject")); 
+            UObject* ud = checkUD<UObject>(L,p);
             if(!ud) goto errorpath;
-            return ud->ud;
+            return ud;
         }
         else if(lt == LUA_TTABLE) {
             AutoStack g(L);
             lua_getfield(L,p,"__cppinst");
             if(lua_type(L,-1)==LUA_TUSERDATA) {
-                UserData<UObject*>* ud = reinterpret_cast<UserData<UObject*>*>(luaL_checkudata(L, -1, "UObject"));
+                UObject* ud = checkUD<UObject>(L,-1);
                 if(!ud) goto errorpath;
-                return ud->ud;
+                return ud;
             }
         }
         else if(lt == LUA_TNIL)

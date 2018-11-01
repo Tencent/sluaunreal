@@ -146,6 +146,7 @@ namespace slua {
         return nullptr;
     }
 
+    // check lua top , this function can omit
     void LuaState::tick(float dtime) {
         int top = lua_gettop(L);
         if(top!=stackCount) {

@@ -318,6 +318,12 @@ namespace slua {
         LuaObject::addMethod(L, #NAME, x, inst); \
     } \
 
+    #define DefLuaMethod_WITHTYPE(NAME,M,T) { \
+        lua_CFunction x=LuaCppBinding<T,M>::LuaCFunction; \
+        constexpr bool inst=std::is_member_function_pointer<T>::value; \
+        LuaObject::addMethod(L, #NAME, x, inst); \
+    } \
+
     #define DefGlobalMethod(NAME,M) { \
         lua_CFunction x=LuaCppBinding<decltype(M),M>::LuaCFunction; \
         LuaObject::addGlobalMethod(L, #NAME, x); \

@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <type_traits>
 #include "SluaUtil.h"
+#include "LuaObject.h"
 
 namespace slua {
 
@@ -154,6 +155,8 @@ namespace slua {
     template<typename RET,typename ...ARG,RET (*func)(ARG...),int Offset>
     struct LuaCppBinding< RET (*)(ARG...), func, Offset> {
 
+		static constexpr bool IsStatic = !std::is_member_function_pointer<decltype(func)>::value;
+
         static RET invoke(lua_State* L,void* ptr,ARG&&... args) {
             return func( std::forward<ARG>(args)... );
         }
@@ -166,6 +169,8 @@ namespace slua {
 
     template<typename T,typename RET,typename ...ARG,RET (T::*func)(ARG...) const>
     struct LuaCppBinding< RET (T::*)(ARG...) const, func> {
+
+		static constexpr bool IsStatic = !std::is_member_function_pointer<decltype(func)>::value;
 
         static RET invoke(lua_State* L,void* ptr,ARG&&... args) {
             T* thisptr = (T*)ptr;
@@ -183,6 +188,8 @@ namespace slua {
     template<typename T,typename RET,typename ...ARG,RET (T::*func)(ARG...)>
     struct LuaCppBinding< RET (T::*)(ARG...), func> {
 
+		static constexpr bool IsStatic = !std::is_member_function_pointer<decltype(func)>::value;
+
         static RET invoke(lua_State* L,void* ptr,ARG&&... args) {
             T* thisptr = (T*)ptr;
             return (thisptr->*func)( std::forward<ARG>(args)... );
@@ -198,6 +205,8 @@ namespace slua {
 
     template<typename T,typename ...ARG,void (T::*func)(ARG...)>
     struct LuaCppBinding< void (T::*)(ARG...), func> {
+
+		static constexpr bool IsStatic = !std::is_member_function_pointer<decltype(func)>::value;
 
         static void invoke(lua_State* L,void* ptr,ARG&&... args) {
             T* thisptr = (T*)ptr;
@@ -289,6 +298,7 @@ namespace slua {
         static int Lua##CLS##_setup(lua_State* L); \
         LuaClass Lua##CLS##__(Lua##CLS##_setup); \
         int Lua##CLS##_setup(lua_State* L) { \
+			static_assert(!std::is_base_of<UObject, CLS>::value, "UObject class shouldn't use LuaCppBinding. Use REG_EXTENSION instead."); \
             AutoStack autoStack(L); \
 
     #define DefLuaClassBase(CLS) \
@@ -330,12 +340,12 @@ namespace slua {
     } \
 
     #define REG_EXTENSION_METHOD(U,N,M) { \
-        constexpr bool inst=std::is_member_function_pointer<U>::value; \
-        LuaObject::addExtensionMethod(U::StaticClass(),N,LuaCppBinding<decltype(M),M>::LuaCFunction,!inst); }
+		using BindType = LuaCppBinding<decltype(M),M>; \
+        LuaObject::addExtensionMethod(U::StaticClass(),N,BindType::LuaCFunction, BindType::IsStatic); }
 
     #define REG_EXTENSION_METHOD_WITHTYPE(U,N,M,T) { \
-        constexpr bool inst=std::is_member_function_pointer<U>::value; \
-        LuaObject::addExtensionMethod(U::StaticClass(),N,LuaCppBinding<T,M>::LuaCFunction,!inst); }
+		using BindType = LuaCppBinding<T,M>; \
+        LuaObject::addExtensionMethod(U::StaticClass(),N,BindType::LuaCFunction, BindType::IsStatic); }
 
     #define REG_EXTENSION_METHOD_IMP(U,N,BODY) { \
         LuaObject::addExtensionMethod(U::StaticClass(),N,[](lua_State* L)->int BODY); }

@@ -229,14 +229,14 @@ namespace slua {
         }
     };
 
-	template<typename ReturnType, typename ... ArgTypes>
+	template<typename LambdaType, typename ReturnType, typename ... ArgTypes>
 	struct LambdaPrototype
 	{
-		typedef ReturnType(*FuncType)(ArgTypes ...);
+		typedef LambdaType* FuncType;
 
 		static ReturnType invoke(lua_State* L, void* ptr, ArgTypes&& ... args)
 		{
-			return Func != nullptr ? Func(std::forward<ArgTypes>(args)...) : ReturnType();
+			return Func != nullptr ? (*Func)(std::forward<ArgTypes>(args)...) : ReturnType();
 		}
 
 		static int LuaCFunction(lua_State* L)
@@ -247,8 +247,8 @@ namespace slua {
 		static FuncType Func;
 	};
 
-	template<typename ReturnType, typename ... ArgTypes>
-	typename LambdaPrototype<ReturnType, ArgTypes ...>::FuncType LambdaPrototype<ReturnType, ArgTypes ...>::Func = nullptr;
+	template<typename LambdaType, typename ReturnType, typename ... ArgTypes>
+	typename LambdaPrototype<LambdaType, ReturnType, ArgTypes ...>::FuncType LambdaPrototype<LambdaType, ReturnType, ArgTypes ...>::Func = nullptr;
 
 	template<typename LambdaType>
 	struct LuaLambdaBinding
@@ -256,7 +256,13 @@ namespace slua {
 		template<typename ClassType, typename ReturnType, typename ... ArgType>
 		static auto DeducePrototype(ReturnType(ClassType::*)(ArgType ...) const)
 		{
-			return LambdaPrototype<ReturnType, ArgType ...>();
+			return LambdaPrototype<LambdaType, ReturnType, ArgType ...>();
+		}
+
+		template<typename ClassType, typename ReturnType, typename ... ArgType>
+		static auto DeducePrototype(ReturnType(ClassType::*)(ArgType ...))
+		{
+			return LambdaPrototype<LambdaType, ReturnType, ArgType ...>();
 		}
 
 		typedef decltype(DeducePrototype(&LambdaType::operator())) Prototype;
@@ -387,9 +393,9 @@ namespace slua {
         LuaObject::addExtensionMethod(U::StaticClass(),N,[](lua_State* L)->int BODY,true); }
 
 	#define REG_EXTENSION_METHOD_LAMBDA(U,N,L) { \
-		auto lambda = L; \
+		static auto lambda = L; \
 		using BindType = LuaLambdaBinding<decltype(lambda)>::Prototype; \
-		BindType::Func = lambda; \
+		BindType::Func = &lambda; \
 		LuaObject::addExtensionMethod(U::StaticClass(), N, BindType::LuaCFunction, true); \
 	}
     

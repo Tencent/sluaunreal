@@ -259,7 +259,7 @@ namespace slua {
 			return LambdaPrototype<ReturnType, ArgType ...>();
 		}
 
-		typedef decltype(DeducePrototype(&LambdaType::operator())) SignatureType;
+		typedef decltype(DeducePrototype(&LambdaType::operator())) Prototype;
 	};
 
 
@@ -388,7 +388,7 @@ namespace slua {
 
 	#define REG_EXTENSION_METHOD_LAMBDA(U,N,L) { \
 		auto lambda = L; \
-		using BindType = LuaLambdaBinding<decltype(lambda)>::SignatureType; \
+		using BindType = LuaLambdaBinding<decltype(lambda)>::Prototype; \
 		BindType::Func = lambda; \
 		LuaObject::addExtensionMethod(U::StaticClass(), N, BindType::LuaCFunction, true); \
 	}

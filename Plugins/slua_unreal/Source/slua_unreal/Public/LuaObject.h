@@ -367,7 +367,7 @@ namespace slua {
             return 1;
         }
 
-        static void addExtensionMethod(UClass* cls,const char* n,lua_CFunction func);
+        static void addExtensionMethod(UClass* cls,const char* n,lua_CFunction func,bool isStatic=false);
 
 		static UProperty* getDefaultProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type);
 

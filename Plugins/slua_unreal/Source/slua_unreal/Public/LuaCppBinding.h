@@ -330,13 +330,18 @@ namespace slua {
     } \
 
     #define REG_EXTENSION_METHOD(U,N,M) { \
-        LuaObject::addExtensionMethod(U::StaticClass(),N,LuaCppBinding<decltype(M),M>::LuaCFunction); }
+        constexpr bool inst=std::is_member_function_pointer<U>::value; \
+        LuaObject::addExtensionMethod(U::StaticClass(),N,LuaCppBinding<decltype(M),M>::LuaCFunction,!inst); }
 
     #define REG_EXTENSION_METHOD_WITHTYPE(U,N,M,T) { \
-        LuaObject::addExtensionMethod(U::StaticClass(),N,LuaCppBinding<T,M>::LuaCFunction); }
+        constexpr bool inst=std::is_member_function_pointer<U>::value; \
+        LuaObject::addExtensionMethod(U::StaticClass(),N,LuaCppBinding<T,M>::LuaCFunction,!inst); }
 
     #define REG_EXTENSION_METHOD_IMP(U,N,BODY) { \
         LuaObject::addExtensionMethod(U::StaticClass(),N,[](lua_State* L)->int BODY); }
+
+    #define REG_EXTENSION_METHOD_IMP_STATIC(U,N,BODY) { \
+        LuaObject::addExtensionMethod(U::StaticClass(),N,[](lua_State* L)->int BODY,true); }
     
 }
 

@@ -55,6 +55,7 @@ namespace slua {
 	TMap<UClass*,LuaObject::CheckPropertyFunction> checkerMap;
     
     TMap< UClass*, TMap<FString,lua_CFunction> > extensionMMap;
+    TMap< UClass*, TMap<FString,lua_CFunction> > extensionMMap_static;
 
     namespace ExtensionMethod{
         void init();
@@ -73,9 +74,15 @@ namespace slua {
         buf = nullptr;
     }
 
-    void LuaObject::addExtensionMethod(UClass* cls,const char* n,lua_CFunction func) {
-        auto& extmap = extensionMMap.FindOrAdd(cls);
-        extmap.Add(n,func);
+    void LuaObject::addExtensionMethod(UClass* cls,const char* n,lua_CFunction func,bool isStatic) {
+        if(isStatic) {
+            auto& extmap = extensionMMap_static.FindOrAdd(cls);
+            extmap.Add(n,func);
+        }
+        else {
+            auto& extmap = extensionMMap.FindOrAdd(cls);
+            extmap.Add(n,func);
+        }
     }
 
 	UProperty* LuaObject::getDefaultProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type) {
@@ -373,13 +380,37 @@ namespace slua {
         return 0;
     }
 
+    int searchExtensionMethod(lua_State* L,UClass* cls,const char* name,bool isStatic=false) {
+
+        // search class and its super
+        TMap<FString,lua_CFunction>* mapptr=nullptr;
+        while(cls!=nullptr) {
+            mapptr = isStatic?extensionMMap_static.Find(cls):extensionMMap.Find(cls);
+            if(mapptr!=nullptr) {
+                // find function
+                auto funcptr = mapptr->Find(name);
+                if(funcptr!=nullptr) {
+                    lua_pushcfunction(L,*funcptr);
+                    return 1;
+                }
+            }
+            cls=cls->GetSuperClass();
+        }   
+        return 0;
+    }
+
+    int searchExtensionMethod(lua_State* L,UObject* o,const char* name,bool isStatic=false) {
+        auto cls = o->GetClass();
+        return searchExtensionMethod(L,cls,name,isStatic);
+    }
+
     int classIndex(lua_State* L) {
         UClass* cls = LuaObject::checkValue<UClass*>(L, 1);
         const char* name = LuaObject::checkValue<const char*>(L, 2);
         // get blueprint member
         UFunction* func = cls->FindFunctionByName(UTF8_TO_TCHAR(name));
         if(func) return LuaObject::push(L,func,cls);
-        return 0;
+        return searchExtensionMethod(L,cls,name,true);
     }
 
     int structConstruct(lua_State* L) {
@@ -482,26 +513,6 @@ namespace slua {
         obj->ProcessEvent(func,params);
         // return value to push lua stack
         return returnValue(L,func,params);
-    }
-
-    int searchExtensionMethod(lua_State* L,UObject* o,const char* name) {
-
-        // search class and its super
-        TMap<FString,lua_CFunction>* mapptr=nullptr;
-        auto cls = o->GetClass();
-        while(cls!=nullptr) {
-            mapptr = extensionMMap.Find(cls);
-            if(mapptr!=nullptr) {
-                // find function
-                auto funcptr = mapptr->Find(name);
-                if(funcptr!=nullptr) {
-                    lua_pushcfunction(L,*funcptr);
-                    return 1;
-                }
-            }
-            cls=cls->GetSuperClass();
-        }   
-        return 0;
     }
 
     // find ufunction from cache

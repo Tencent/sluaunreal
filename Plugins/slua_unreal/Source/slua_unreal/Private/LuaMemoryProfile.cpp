@@ -27,13 +27,15 @@ namespace slua {
         (void)ls;
 
         if (nsize == 0) {
-            removeRecord(ls,ptr,nsize);
+            // Not completed
+            //removeRecord(ls,ptr,nsize);
             FMemory::Free(ptr);
             return NULL;
         }
         else {
             ptr = FMemory::Realloc(ptr,nsize);
-            addRecord(ls,ptr,nsize);
+            // Not completed
+            //addRecord(ls,ptr,nsize);
             return ptr;
         }
     }

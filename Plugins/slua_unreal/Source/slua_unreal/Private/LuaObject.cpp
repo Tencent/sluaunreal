@@ -27,7 +27,6 @@
 #include "LuaArray.h"
 #include "LuaMap.h"
 #include "Log.h"
-#include "LuaCppBinding.h"
 #include "LuaState.h"
 #include "LuaWrapper.h"
 #include "LuaEnums.h"

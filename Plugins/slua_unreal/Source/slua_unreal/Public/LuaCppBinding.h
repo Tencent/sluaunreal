@@ -17,7 +17,6 @@
 #include <utility>
 #include <cstddef>
 #include <type_traits>
-#include "LuaObject.h"
 
 namespace slua {
 
@@ -49,35 +48,16 @@ namespace slua {
 	struct CallableExpand
 	{
 		typedef CallableType* FuncType;
+		typedef TFunction<ReturnType(ArgTypes...)> TFunctionType;
 
 		inline static ReturnType invoke(lua_State* L, void* ptr, ArgTypes&& ... args)
 		{
 			return Func != nullptr ? (*Func)(std::forward<ArgTypes>(args)...) : ReturnType();
 		}
 
-		template<typename T>
-		inline static T resultCast(LuaVar&& Var, typename std::enable_if<!std::is_void<T>::value, int>::type = 0)
-		{
-			return Var.castTo<T>();
-		}
+		inline static TFunctionType makeTFunctionProxy(lua_State* L, int p);
 
-		template<typename T>
-		inline static T resultCast(LuaVar&& Var, typename std::enable_if<std::is_void<T>::value, int>::type = 0) {}
-
-		inline static TFunction<ReturnType(ArgTypes...)> makeTFunctionProxy(lua_State* L, int p)
-		{
-			LuaVar func(L, p);
-			return [=](ArgTypes&& ... args) mutable -> ReturnType
-			{
-				LuaVar result = func.call(std::forward<ArgTypes>(args) ...);
-				return resultCast<ReturnType>(std::move(result));
-			};
-		}
-
-		static int LuaCFunction(lua_State* L)
-		{
-			return FunctionBind<decltype(&invoke), invoke, 1>::invoke(L, nullptr);
-		}
+		static int LuaCFunction(lua_State* L);
 
 		static FuncType Func;
 	};
@@ -125,7 +105,7 @@ namespace slua {
 
 		template <typename T>
 		static typename std::enable_if<TIsTFunction<T>::Value, T>::type readArg(lua_State * L, int p) {
-			return LuaCallableBinding<T>::Prototype::makeTFunctionProxy(L, p);
+			return LuaCallableBinding<T>::Prototype::makeTFunctionProxy(L, p); 
 		}
 
 		template <typename T>
@@ -289,7 +269,13 @@ namespace slua {
         static int LuaCFunction(lua_State* L) {
             return func(L);
         }
-    };
+	};
+
+	template<typename CallableType, typename ReturnType, typename ... ArgTypes>
+	int CallableExpand<CallableType, ReturnType, ArgTypes...>::LuaCFunction(lua_State* L)
+	{
+		return FunctionBind<decltype(&invoke), invoke, 1>::invoke(L, nullptr);
+	}
 
     struct SLUA_UNREAL_API LuaClass {
         LuaClass(lua_CFunction reg);

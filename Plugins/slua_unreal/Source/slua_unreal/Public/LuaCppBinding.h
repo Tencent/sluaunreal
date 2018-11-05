@@ -229,6 +229,44 @@ namespace slua {
         }
     };
 
+	template<typename LambdaType, typename ReturnType, typename ... ArgTypes>
+	struct LambdaPrototype
+	{
+		typedef LambdaType* FuncType;
+
+		static ReturnType invoke(lua_State* L, void* ptr, ArgTypes&& ... args)
+		{
+			return Func != nullptr ? (*Func)(std::forward<ArgTypes>(args)...) : ReturnType();
+		}
+
+		static int LuaCFunction(lua_State* L)
+		{
+			return FunctionBind<decltype(&invoke), invoke, 1>::invoke(L, nullptr);
+		}
+
+		static FuncType Func;
+	};
+
+	template<typename LambdaType, typename ReturnType, typename ... ArgTypes>
+	typename LambdaPrototype<LambdaType, ReturnType, ArgTypes ...>::FuncType LambdaPrototype<LambdaType, ReturnType, ArgTypes ...>::Func = nullptr;
+
+	template<typename LambdaType>
+	struct LuaLambdaBinding
+	{
+		template<typename ClassType, typename ReturnType, typename ... ArgType>
+		static auto DeducePrototype(ReturnType(ClassType::*)(ArgType ...) const)
+		{
+			return LambdaPrototype<LambdaType, ReturnType, ArgType ...>();
+		}
+
+		template<typename ClassType, typename ReturnType, typename ... ArgType>
+		static auto DeducePrototype(ReturnType(ClassType::*)(ArgType ...))
+		{
+			return LambdaPrototype<LambdaType, ReturnType, ArgType ...>();
+		}
+
+		typedef decltype(DeducePrototype(&LambdaType::operator())) Prototype;
+	};
 
     struct SLUA_UNREAL_API LuaClass {
         LuaClass(lua_CFunction reg);
@@ -352,6 +390,13 @@ namespace slua {
 
     #define REG_EXTENSION_METHOD_IMP_STATIC(U,N,BODY) { \
         LuaObject::addExtensionMethod(U::StaticClass(),N,[](lua_State* L)->int BODY,true); }
+
+	#define REG_EXTENSION_METHOD_LAMBDA(U,N, Static, ...) { \
+		static auto lambda = __VA_ARGS__; \
+		using BindType = LuaLambdaBinding<decltype(lambda)>::Prototype; \
+		BindType::Func = &lambda; \
+		LuaObject::addExtensionMethod(U::StaticClass(), N, BindType::LuaCFunction, Static); \
+	}
     
 }
 

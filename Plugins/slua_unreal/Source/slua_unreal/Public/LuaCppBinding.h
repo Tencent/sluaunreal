@@ -268,7 +268,6 @@ namespace slua {
 		typedef decltype(DeducePrototype(&LambdaType::operator())) Prototype;
 	};
 
-
     struct SLUA_UNREAL_API LuaClass {
         LuaClass(lua_CFunction reg);
         static void reg(lua_State* L);
@@ -392,11 +391,11 @@ namespace slua {
     #define REG_EXTENSION_METHOD_IMP_STATIC(U,N,BODY) { \
         LuaObject::addExtensionMethod(U::StaticClass(),N,[](lua_State* L)->int BODY,true); }
 
-	#define REG_EXTENSION_METHOD_LAMBDA(U,N,L) { \
-		static auto lambda = L; \
+	#define REG_EXTENSION_METHOD_LAMBDA(U,N, Static, ...) { \
+		static auto lambda = __VA_ARGS__; \
 		using BindType = LuaLambdaBinding<decltype(lambda)>::Prototype; \
 		BindType::Func = &lambda; \
-		LuaObject::addExtensionMethod(U::StaticClass(), N, BindType::LuaCFunction, true); \
+		LuaObject::addExtensionMethod(U::StaticClass(), N, BindType::LuaCFunction, Static); \
 	}
     
 }

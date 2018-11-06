@@ -174,7 +174,7 @@ namespace slua {
         ensure(lua_gettop(l)>=n);
         alloc(n);
         int f = lua_gettop(l)-n+1;
-        for(int i=0;i<n;i++) {
+        for(size_t i=0;i<n;i++) {
             
             int p = i+f;
             int t = lua_type(l,p);
@@ -233,7 +233,7 @@ namespace slua {
     }
 
     void LuaVar::free() {
-        for(int n=0;n<numOfVar;n++) {
+        for(size_t n=0;n<numOfVar;n++) {
             if( (vars[n].luatype==LV_FUNCTION || vars[n].luatype==LV_TABLE) 
                 && vars[n].ref->isValid() )
                 vars[n].ref->release();
@@ -453,7 +453,7 @@ namespace slua {
             pushVar(l,ov);
             return 1;
         }
-        else for(int n=0;n<numOfVar;n++) {
+        else for(size_t n=0;n<numOfVar;n++) {
             const lua_var& ov = vars[n];
             pushVar(l,ov);
             return numOfVar;
@@ -612,7 +612,7 @@ namespace slua {
         numOfVar = other.numOfVar;
         if(numOfVar>0 && other.vars) {
             vars = new lua_var[numOfVar];
-            for(int n=0;n<numOfVar;n++) {
+            for(size_t n=0;n<numOfVar;n++) {
                 varClone( vars[n], other.vars[n] );
             }
         }

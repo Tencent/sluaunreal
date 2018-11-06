@@ -375,11 +375,18 @@ namespace slua {
         LuaObject::addMethod(L, #NAME, x, inst); \
     } \
 
-    #define DefLuaMethod_WITHTYPE(NAME,M,T) { \
+    #define DefLuaMethod_With_Type(NAME,M,T) { \
         lua_CFunction x=LuaCppBinding<T,M>::LuaCFunction; \
         constexpr bool inst=std::is_member_function_pointer<T>::value; \
         LuaObject::addMethod(L, #NAME, x, inst); \
     } \
+
+    #define DefLuaMethod_With_Lambda(NAME,Static,...) { \
+        static auto lambda = __VA_ARGS__; \
+		using BindType = LuaCallableBinding<decltype(lambda)>::Prototype; \
+		BindType::Func = &lambda; \
+		LuaObject::addMethod(L, #NAME, BindType::LuaCFunction, !Static); \
+    }
 
     #define DefGlobalMethod(NAME,M) { \
         lua_CFunction x=LuaCppBinding<decltype(M),M>::LuaCFunction; \

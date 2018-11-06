@@ -22,6 +22,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Misc/AssertionMacros.h"
 #include "LuaVar.h"
+#include "LuaCppBindingPost.h"
 
 namespace slua {
 
@@ -96,6 +97,16 @@ namespace slua {
             return Fruit::Apple;
         }
 
+        void setCallback(const TFunction<void(int)>& func) {
+            callback = func;
+        }
+
+        void docall() {
+            callback(1024);
+            callback = nullptr;
+        }
+
+        TFunction<void(int)> callback;
         int value;
     };
 
@@ -105,8 +116,13 @@ namespace slua {
         DefLuaMethod(getStr,&Foo::getStr)
         DefLuaMethod(getInstance,&Foo::getInstance)
         DefLuaMethod(virtualFunc,&Foo::virtualFunc)
-        DefLuaMethod_WITHTYPE(getFruit_1,&Foo::getFruit,Fruit (Foo::*) ())
-        DefLuaMethod_WITHTYPE(getFruit_2,&Foo::getFruit,Fruit (Foo::*) (int))
+        DefLuaMethod(setCallback,&Foo::setCallback)
+        DefLuaMethod(docall,&Foo::docall)
+        DefLuaMethod_With_Type(getFruit_1,&Foo::getFruit,Fruit (Foo::*) ())
+        DefLuaMethod_With_Type(getFruit_2,&Foo::getFruit,Fruit (Foo::*) (int))
+        DefLuaMethod_With_Lambda(helloWorld,false,[]()->void {
+            slua::Log::Log("Hello World from slua");
+        })
     EndDef(Foo,&Foo::create)
 
     class FooChild : public Foo {

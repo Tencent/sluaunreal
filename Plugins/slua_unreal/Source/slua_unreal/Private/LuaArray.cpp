@@ -13,7 +13,6 @@
 
 #include "LuaArray.h"
 #include "LuaObject.h"
-#include "LuaCppBinding.h"
 #include <string>
 #include "SluaLib.h"
 

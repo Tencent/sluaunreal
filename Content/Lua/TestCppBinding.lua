@@ -10,6 +10,12 @@ f2:bar(str)
 -- call base function
 f1:baseFunc1()
 
+-- test tfunction
+f1:setCallback(function(i) print("callback from cppbinding",i) end)
+f1:docall()
+-- test lambda 
+f1:helloWorld()
+
 local f3=FooChild(2048)
 f3:virtualFunc()
 f3:bar("f3")

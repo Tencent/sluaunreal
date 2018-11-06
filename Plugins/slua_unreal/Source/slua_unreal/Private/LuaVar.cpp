@@ -580,6 +580,9 @@ namespace slua {
         case LV_INT:
             tv.i = ov.i;
             break;
+        case LV_BOOL:
+            tv.b = ov.b;
+            break;
         case LV_NUMBER:
             tv.d = ov.d;
             break;
@@ -595,6 +598,10 @@ namespace slua {
             break;
         case LV_LIGHTUD:
             tv.ptr = ov.ptr;
+            break;
+        // nil and tuple not need to clone
+        case LV_NIL:
+        case LV_TUPLE:
             break;
         }
         tv.luatype = ov.luatype;

@@ -117,6 +117,7 @@ namespace slua {
             R r = ArgOperator::readArg<typename remove_cr<R>::type>(L,-1);
             lua_pop(L,1);
             return std::move(r);
+        }
 		template<typename R>
 		inline void castTo(R& target) {
 			if (isValid())

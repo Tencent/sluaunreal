@@ -117,7 +117,13 @@ namespace slua {
             R r = ArgOperator::readArg<typename remove_cr<R>::type>(L,-1);
             lua_pop(L,1);
             return std::move(r);
-        }
+		template<typename R>
+		inline void castTo(R& target) {
+			if (isValid())
+			{
+				target = castTo<R>();
+			}
+		}
 
         // return count of luavar if it's table or tuple, 
         // otherwise it's return 1
@@ -156,6 +162,11 @@ namespace slua {
             lua_gettable(L,-2);
             return ArgOperator::readArg<typename remove_cr<R>::type>(L,-1);
         }
+
+		template<typename R, typename T>
+		void getFromTable(T key, R& target) const {
+			target = getFromTable<R>(key);
+		}
 
         // set table by key and value
         template<typename K,typename V>

@@ -271,6 +271,15 @@ namespace slua {
         }
 	};
 
+    template<int Offset>
+    struct LuaCppBinding<decltype(nullptr), nullptr, Offset> {
+
+        static int LuaCFunction(lua_State* L) {
+            luaL_error(L,"Can't be accessed");
+            return 0;
+        }
+    };
+
 	template<typename CallableType, typename ReturnType, typename ... ArgTypes>
 	int CallableExpand<CallableType, ReturnType, ArgTypes...>::LuaCFunction(lua_State* L)
 	{

@@ -20,6 +20,16 @@
 #include "Blueprint/UserWidget.h"
 #include "Misc/AssertionMacros.h"
 #include "LuaDelegate.h"
+#if WITH_EDITOR
+// Fix compile issue when using unity build
+#ifdef G
+#undef G
+#endif
+#include "Editor/EditorEngine.h"
+#include "Editor/UnrealEdEngine.h"
+#else
+#include "Engine/GameEngine.h"
+#endif
 
 namespace slua {
 
@@ -38,21 +48,30 @@ namespace slua {
     }
     
     int SluaUtil::loadUI(lua_State* L) {
+        
+        UGameInstance* GameInstance = nullptr;
+        #if WITH_EDITOR
+        UUnrealEdEngine* engine = Cast<UUnrealEdEngine>(GEngine);
+        if(engine && engine->PlayWorld) GameInstance = engine->PlayWorld->GetGameInstance();
+        #else
+        UGameEngine* engine = Cast<UGameEngine>(GEngine);
+        if(engine) GameInstance = engine->GameInstance;
+        #endif
+        
+        if(!GameInstance)
+            luaL_error(L,"GameInstance is null");
+
         const char* ui = luaL_checkstring(L,1);
 
         TArray<FStringFormatArg> Args;
-		Args.Add(UTF8_TO_TCHAR(ui));
+        Args.Add(UTF8_TO_TCHAR(ui));
 
         // load blueprint widget from cpp, need add '_C' tail
         auto cui = FString::Format(TEXT("Blueprint'{0}_C'"),Args);
         TSubclassOf<UUserWidget> uclass = LoadClass<UUserWidget>(NULL, *cui);
         if(uclass==nullptr) luaL_error(L,"Can't find ui named %s",ui);
         
-        auto ls = LuaState::get(L);
-        UWorld* wld = ls->sluaComponent?ls->sluaComponent->GetWorld():nullptr;
-        if(!wld) luaL_error(L,"World missed");
-        UGameInstance* instance = wld->GetGameInstance();
-        UUserWidget* widget = CreateWidget<UUserWidget>(instance,uclass);
+        UUserWidget* widget = CreateWidget<UUserWidget>(GameInstance,uclass);
         return LuaObject::push(L,widget);
     }
 

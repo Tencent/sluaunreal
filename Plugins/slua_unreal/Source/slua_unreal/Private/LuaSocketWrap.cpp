@@ -14,118 +14,122 @@
 #include "LuaObject.h"
 #include "LuaState.h"
 #include "LuaSocket/luasocket.h"
+#include "LuaSocket/mime.h"
 
 namespace slua {
 
-	namespace LuaSocket {
+    namespace LuaSocket {
 
-		int luaopen_url(lua_State *L) {
-			auto str =
+        int luaopen_url(lua_State *L) {
+            auto str =
 #include "luasocket/url.lua.inc"
-			luaL_dostring(L, str);
-			return 1;
-		}
+                luaL_dostring(L, str);
+            return 1;
+        }
 
-		int luaopen_tp(lua_State *L) {
-			auto str =
+        int luaopen_tp(lua_State *L) {
+            auto str =
 #include "luasocket/tp.lua.inc"
-			luaL_dostring(L, str);
-			return 1;
-		}
+                luaL_dostring(L, str);
+            return 1;
+        }
 
-		int luaopen_socket(lua_State *L) {
-			auto str =
+        int luaopen_socket(lua_State *L) {
+            auto str =
 #include "luasocket/socket.lua.inc"
-			luaL_dostring(L, str);
-			return 1;
-		}
+                luaL_dostring(L, str);
+            return 1;
+        }
 
-		int luaopen_smtp(lua_State *L) {
-			auto str =
+        int luaopen_smtp(lua_State *L) {
+            auto str =
 #include "luasocket/smtp.lua.inc"
-			luaL_dostring(L, str);
-			return 1;
-		}
+                luaL_dostring(L, str);
+            return 1;
+        }
 
-		int luaopen_mime(lua_State *L) {
-			auto str =
+        int luaopen_mime(lua_State *L) {
+            auto str =
 #include "luasocket/mime.lua.inc"
-			luaL_dostring(L, str);
-			return 1;
-		}
+                luaL_dostring(L, str);
+            return 1;
+        }
 
-		int luaopen_mbox(lua_State *L) {
-			auto str =
+        int luaopen_mbox(lua_State *L) {
+            auto str =
 #include "luasocket/mbox.lua.inc"
-			luaL_dostring(L, str);
-			return 1;
-		}
+                luaL_dostring(L, str);
+            return 1;
+        }
 
-		int luaopen_ltn12(lua_State *L) {
-			auto str =
+        int luaopen_ltn12(lua_State *L) {
+            auto str =
 #include "luasocket/ltn12.lua.inc"
-			luaL_dostring(L, str);
-			return 1;
-		}
+                luaL_dostring(L, str);
+            return 1;
+        }
 
-		int luaopen_http(lua_State *L) {
-			auto str =
+        int luaopen_socket_headers(lua_State *L) {
+            auto str =
+#include "luasocket/headers.lua.inc"
+                luaL_dostring(L, str);
+            return 1;
+        }
+
+        int luaopen_http(lua_State *L) {
+            auto str =
 #include "luasocket/http.lua.inc"
-			luaL_dostring(L, str);
-			return 1;
-		}
+                luaL_dostring(L, str);
+            return 1;
+        }
 
-		int luaopen_headers(lua_State *L) {
-			auto str =
+        int luaopen_ftp(lua_State *L) {
+            auto str =
 #include "luasocket/ftp.lua.inc"
-			luaL_dostring(L, str);
-			return 1;
-		}
+                luaL_dostring(L, str);
+            return 1;
+        }
 
-		int luaopen_ftp(lua_State *L) {
-			auto str =
-#include "luasocket/ftp.lua.inc"
-			luaL_dostring(L, str);
-			return 1;
-		}
+        void init(lua_State *L) {
+            luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
 
-		void init(lua_State *L) {
-			luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
+            lua_pushcfunction(L, luaopen_socket_core);
+            lua_setfield(L, -2, "socket.core");
 
-			lua_pushcfunction(L, luaopen_socket_core);
-			lua_setfield(L, -2, "socket.core");
+            lua_pushcfunction(L, luaopen_socket_headers);
+            lua_setfield(L, -2, "socket.headers");
 
-			lua_pushcfunction(L, luaopen_url);
-			lua_setfield(L, -2, "url");
+            lua_pushcfunction(L, luaopen_mime_core);
+            lua_setfield(L, -2, "mime.core");
 
-			lua_pushcfunction(L, luaopen_tp);
-			lua_setfield(L, -2, "tp");
+            lua_pushcfunction(L, luaopen_url);
+            lua_setfield(L, -2, "socket.url");
 
-			lua_pushcfunction(L, luaopen_socket);
-			lua_setfield(L, -2, "socket");
+            lua_pushcfunction(L, luaopen_tp);
+            lua_setfield(L, -2, "socket.tp");
 
-			lua_pushcfunction(L, luaopen_smtp);
-			lua_setfield(L, -2, "smtp");
+            lua_pushcfunction(L, luaopen_socket);
+            lua_setfield(L, -2, "socket");
 
-			lua_pushcfunction(L, luaopen_mime);
-			lua_setfield(L, -2, "mime");
+            lua_pushcfunction(L, luaopen_smtp);
+            lua_setfield(L, -2, "socket.smtp");
 
-			lua_pushcfunction(L, luaopen_mbox);
-			lua_setfield(L, -2, "mbox");
+            lua_pushcfunction(L, luaopen_mime);
+            lua_setfield(L, -2, "mime");
 
-			lua_pushcfunction(L, luaopen_ltn12);
-			lua_setfield(L, -2, "ltn12");
+            lua_pushcfunction(L, luaopen_mbox);
+            lua_setfield(L, -2, "mbox");
 
-			lua_pushcfunction(L, luaopen_http);
-			lua_setfield(L, -2, "http");
+            lua_pushcfunction(L, luaopen_ltn12);
+            lua_setfield(L, -2, "ltn12");
+             
+            lua_pushcfunction(L, luaopen_http);
+            lua_setfield(L, -2, "socket.http");
 
-			lua_pushcfunction(L, luaopen_headers);
-			lua_setfield(L, -2, "headers");
+            lua_pushcfunction(L, luaopen_ftp);
+            lua_setfield(L, -2, "socket.ftp");
 
-			lua_pushcfunction(L, luaopen_ftp);
-			lua_setfield(L, -2, "ftp");
-
-			lua_pop(L, 1);
-		}
-	}
+            lua_pop(L, 1);
+        }
+    }
 }

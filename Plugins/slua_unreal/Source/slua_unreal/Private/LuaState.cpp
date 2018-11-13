@@ -25,7 +25,6 @@
 #include <map>
 #include "LuaWrapper.h"
 #include "LuaEnums.h"
-#include "LuaCppBinding.h"
 #include "LuaArray.h"
 #include "LuaMap.h"
 #include "LuaSocketWrap.h"
@@ -146,6 +145,7 @@ namespace slua {
         return nullptr;
     }
 
+    // check lua top , this function can omit
     void LuaState::tick(float dtime) {
         int top = lua_gettop(L);
         if(top!=stackCount) {
@@ -163,7 +163,6 @@ namespace slua {
             L=nullptr;
         }
 
-        sluaComponent=nullptr;
         if(root) {
             root->RemoveFromRoot();
             root = nullptr;
@@ -171,9 +170,9 @@ namespace slua {
     }
 
 
-    bool LuaState::init(USceneComponent* comp) {
+    bool LuaState::init() {
 
-        if(!comp || root)
+        if(root)
             return false;
 
         if(!mainState) 
@@ -183,8 +182,6 @@ namespace slua {
         si = ++StateIndex;
         root = NewObject<ULuaObject>();
 		root->AddToRoot();
-
-        sluaComponent = comp;
 
         // use custom memory alloc func to profile memory footprint
         L = lua_newstate(LuaMemoryProfile::alloc,this);
@@ -266,7 +263,7 @@ namespace slua {
             return LuaVar();
         }
         
-        if(pEnv != nullptr)
+        if(pEnv != nullptr && pEnv->isTable())
         {
             pEnv->push(L);
             lua_setupvalue(L, -2, 1);
@@ -280,12 +277,18 @@ namespace slua {
     }
 
     LuaVar LuaState::doString(const char* str, LuaVar* pEnv) {
+        // fix #31 & #30 issue, 
+        // vc compile optimize code cause cl.exe dead loop in release mode(no WITH_EDITOR)
+        // if turn optimze flag on
+        // so just write complex code to bypass link optimize
+        // like this, WTF!
+        uint32 len = strlen(str);
         #if WITH_EDITOR
 		FString md5FString = FMD5::HashAnsiString(UTF8_TO_TCHAR(str));
 		debugStringMap.Add(md5FString, UTF8_TO_TCHAR(str));
-        return doBuffer((const uint8*)str,strlen(str),TCHAR_TO_UTF8(*md5FString),pEnv);
+        return doBuffer((const uint8*)str,len,TCHAR_TO_UTF8(*md5FString),pEnv);
         #else
-        return doBuffer((const uint8*)str,strlen(str),str,pEnv);
+        return doBuffer((const uint8*)str,len,str,pEnv);
         #endif
     }
 
@@ -353,6 +356,13 @@ namespace slua {
         }
         lua_pop(L,1);
         return rt;
+    }
+
+    LuaVar LuaState::createTable() {
+        lua_newtable(L);
+        LuaVar ret(L,-1);
+        lua_pop(L,1);
+        return ret;
     }
 
 }

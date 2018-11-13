@@ -259,11 +259,23 @@ namespace slua {
             return Cast<T>(ud->ud);
         }
 
+        template<typename T>
+        static void* void_cast( const T* v ) {
+            return reinterpret_cast<void *>(const_cast< T* >(v));
+        }
+
+        template<typename T>
+        static void* void_cast( T* v ) {
+            return reinterpret_cast<void *>(v);
+        }
+
 		template<class T>
 		static int push(lua_State* L, const char* fn, const T* v, bool owned=false) {
+            if(getFromCache(L,void_cast(v))) return 1;
 			NewUD(T, v, owned);
             luaL_getmetatable(L,fn);
 			lua_setmetatable(L, -2);
+            cacheObj(L,void_cast(v));
             return 1;
 		}
 
@@ -355,7 +367,7 @@ namespace slua {
             return 1;
         }
 
-        static void addExtensionMethod(UClass* cls,const char* n,lua_CFunction func);
+        static void addExtensionMethod(UClass* cls,const char* n,lua_CFunction func,bool isStatic=false);
 
 		static UProperty* getDefaultProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type);
 
@@ -425,17 +437,17 @@ namespace slua {
     inline UObject* LuaObject::checkValue(lua_State* L, int p) {
         int lt = lua_type(L,p);
         if(lt == LUA_TUSERDATA) {
-            UserData<UObject*>* ud = reinterpret_cast<UserData<UObject*>*>(luaL_checkudata(L, p, "UObject")); 
+            UObject* ud = checkUD<UObject>(L,p);
             if(!ud) goto errorpath;
-            return ud->ud;
+            return ud;
         }
         else if(lt == LUA_TTABLE) {
             AutoStack g(L);
             lua_getfield(L,p,"__cppinst");
             if(lua_type(L,-1)==LUA_TUSERDATA) {
-                UserData<UObject*>* ud = reinterpret_cast<UserData<UObject*>*>(luaL_checkudata(L, -1, "UObject"));
+                UObject* ud = checkUD<UObject>(L,-1);
                 if(!ud) goto errorpath;
-                return ud->ud;
+                return ud;
             }
         }
         else if(lt == LUA_TNIL)

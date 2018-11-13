@@ -277,12 +277,18 @@ namespace slua {
     }
 
     LuaVar LuaState::doString(const char* str, LuaVar* pEnv) {
+        // fix #31 & #30 issue, 
+        // vc compile optimize code cause cl.exe dead loop in release mode(no WITH_EDITOR)
+        // if turn optimze flag on
+        // so just write complex code to bypass link optimize
+        // like this, WTF!
+        uint32 len = strlen(str);
         #if WITH_EDITOR
 		FString md5FString = FMD5::HashAnsiString(UTF8_TO_TCHAR(str));
 		debugStringMap.Add(md5FString, UTF8_TO_TCHAR(str));
-        return doBuffer((const uint8*)str,strlen(str),TCHAR_TO_UTF8(*md5FString),pEnv);
+        return doBuffer((const uint8*)str,len,TCHAR_TO_UTF8(*md5FString),pEnv);
         #else
-        return doBuffer((const uint8*)str,strlen(str),str,pEnv);
+        return doBuffer((const uint8*)str,len,str,pEnv);
         #endif
     }
 

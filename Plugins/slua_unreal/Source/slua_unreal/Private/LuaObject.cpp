@@ -1,4 +1,4 @@
-// Tencent is pleased to support the open source community by making sluaunreal available.
+﻿// Tencent is pleased to support the open source community by making sluaunreal available.
 
 // Copyright (C) 2018 THL A29 Limited, a Tencent company. All rights reserved.
 // Licensed under the BSD 3-Clause License (the "License"); 
@@ -616,19 +616,25 @@ namespace slua {
         const int BufMax = 128;
         static char buffer[BufMax] = { 0 };
 		UObject* obj = LuaObject::testudata<UObject>(L, 1);
-        if(obj)
-            snprintf(buffer, BufMax, "%s: %s %p", obj->GetClass()->GetFName().GetPlainANSIString(), obj->GetFName().GetPlainANSIString(), obj);
-        else {
-            // if ud isn't a uobject, get __name of metatable to cast it to string
-            const void* ptr = lua_topointer(L,1);
-            luaL_getmetafield(L,1,"__name");
-            // should have __name field
-            if(lua_type(L,-1)==LUA_TSTRING) {
-                const char* metaname = lua_tostring(L,-1);
-                snprintf(buffer, BufMax, "%s: %p", metaname,ptr);
-            }
-            lua_pop(L,1);
-        }
+		if (obj)
+		{
+			ANSICHAR ClassName[NAME_SIZE];
+			ANSICHAR ObjName[NAME_SIZE];
+			obj->GetClass()->GetFName().GetPlainANSIString(ClassName);
+			obj->GetFName().GetPlainANSIString(ObjName);
+			snprintf(buffer, BufMax, "%s: %s %p", ClassName, ObjName, obj);
+		}
+		else {
+			// if ud isn't a uobject, get __name of metatable to cast it to string
+			const void* ptr = lua_topointer(L, 1);
+			luaL_getmetafield(L, 1, "__name");
+			// should have __name field
+			if (lua_type(L, -1) == LUA_TSTRING) {
+				const char* metaname = lua_tostring(L, -1);
+				snprintf(buffer, BufMax, "%s: %p", metaname, ptr);
+			}
+			lua_pop(L, 1);
+		}
 
 		lua_pushstring(L, buffer);
 		return 1;

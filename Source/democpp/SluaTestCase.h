@@ -100,4 +100,8 @@ public:
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     int FuncWithStr(FString str);
+
+    const USluaTestCase* constRetFunc() { return nullptr; }
+
+	__forceinline int inlineFunc() { return 1; }
 };

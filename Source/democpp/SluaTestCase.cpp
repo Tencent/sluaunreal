@@ -65,7 +65,7 @@ namespace slua {
         }
 
         // raw ptr not hold by lua, lua not collect it
-        static Foo* getInstance() {
+        static const Foo* getInstance() {
             static Foo s_inst(2048);
             return &s_inst;
         }
@@ -232,6 +232,9 @@ USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
         bool ret = UD->IsA(clazz);
         return LuaObject::push(L,ret);
     });
+
+	REG_EXTENSION_METHOD(USluaTestCase, "constRetFunc", &USluaTestCase::constRetFunc);
+	REG_EXTENSION_METHOD(USluaTestCase, "inlineFunc", &USluaTestCase::inlineFunc);
 }
 
 TArray<int> USluaTestCase::GetArray() {

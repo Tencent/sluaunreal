@@ -83,7 +83,7 @@ namespace slua {
 
     template<typename T, bool isUObject = std::is_base_of<UObject,T>::value>
     struct TypeName {
-        static const char* value();
+		static const char* value();
     };
 
     template<typename T>
@@ -93,10 +93,17 @@ namespace slua {
         }
     };
 
-    template<typename T, bool isUObject>
-    struct TypeName<const T*, isUObject> {
+	template<typename T>
+	struct TypeName<const T, false> {
+		static const char* value() {
+			return TypeName<T>::value();
+		}
+	};
+
+    template<typename T>
+    struct TypeName<const T*, false> {
         static const char* value() {
-            return TypeName<T>::value();
+			return TypeName<T>::value();
         }
     };
 
@@ -319,7 +326,10 @@ namespace slua {
         
         static int pushClass(lua_State* L,UClass* cls);
         static int pushStruct(lua_State* L,UScriptStruct* cls);
-        static int push(lua_State* L, UObject* obj);
+		static int push(lua_State* L, UObject* obj);
+		inline static int push(lua_State* L, const UObject* obj) {
+			return push(L, const_cast<UObject*>(obj));
+		}
 		static int push(lua_State* L, FScriptDelegate* obj);
 		static int push(lua_State* L, LuaStruct* ls);
 		static int push(lua_State* L, double v);

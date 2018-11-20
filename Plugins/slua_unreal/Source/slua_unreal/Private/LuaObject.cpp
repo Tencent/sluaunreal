@@ -520,7 +520,8 @@ namespace slua {
         auto clsmap = state->classMap.Find(cname);
         if(!clsmap) return nullptr;
         auto it = (*clsmap)->Find(UTF8_TO_TCHAR(fname));
-        if(it!=nullptr) return * it;
+        if(it!=nullptr && (*it)->IsValidLowLevelFast())
+			return *it;
         return nullptr;
     }
 

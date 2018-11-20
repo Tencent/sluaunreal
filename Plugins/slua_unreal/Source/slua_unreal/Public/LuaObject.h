@@ -230,7 +230,7 @@ namespace slua {
 				"checkValue does not support parameter const TCHAR*, use FString instead");
 
 			if (!lua_isuserdata(L, p))
-				luaL_error(L, "excpect userdata at arg %d", p);
+				luaL_error(L, "expect userdata at arg %d", p);
 
 			void* ud = lua_touserdata(L, p);
 			UserData<T> *udptr = reinterpret_cast<UserData<T>*>(ud);

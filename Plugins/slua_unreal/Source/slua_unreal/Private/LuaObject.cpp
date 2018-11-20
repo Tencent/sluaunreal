@@ -616,8 +616,11 @@ namespace slua {
         const int BufMax = 128;
         static char buffer[BufMax] = { 0 };
 		UObject* obj = LuaObject::testudata<UObject>(L, 1);
-        if(obj)
-            snprintf(buffer, BufMax, "%s: %s %p", obj->GetClass()->GetFName().GetPlainANSIString(), obj->GetFName().GetPlainANSIString(), obj);
+		if (obj) {
+			auto clsname = obj->GetClass()->GetFName().ToString();
+			auto objname = obj->GetFName().ToString();
+			snprintf(buffer, BufMax, "%s: %s %p",TCHAR_TO_UTF8(*clsname),TCHAR_TO_UTF8(*objname), obj);
+		}
         else {
             // if ud isn't a uobject, get __name of metatable to cast it to string
             const void* ptr = lua_topointer(L,1);

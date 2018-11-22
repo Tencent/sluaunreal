@@ -74,6 +74,10 @@ namespace slua {
 
 	void LuaMap::AddReferencedObjects( FReferenceCollector& Collector )
     {
+		// I noticed this function be called in collect thread
+        // should add a lock, but I don't find any lock code in unreal engine codebase
+        // why?
+		
         Collector.AddReferencedObject(keyProp);
         Collector.AddReferencedObject(valueProp);
 		// if is empty 

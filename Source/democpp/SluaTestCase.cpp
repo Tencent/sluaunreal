@@ -219,15 +219,6 @@ namespace slua {
     EndDef(PerfTest,&PerfTest::create)
 }
 
-UFoo::UFoo(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-{
-}
-
-UFoo::~UFoo() {
-    slua::Log::Log("ufoo freed");
-}
-
 USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -241,16 +232,16 @@ USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
         return LuaObject::push(L,ret);
     });  
     REG_EXTENSION_METHOD(USluaTestCase, "constRetFunc", &USluaTestCase::constRetFunc);
-	REG_EXTENSION_METHOD(USluaTestCase, "inlineFunc", &USluaTestCase::inlineFunc); 
+	REG_EXTENSION_METHOD(USluaTestCase, "inlineFunc", &USluaTestCase::inlineFunc);
 }
 
-void USluaTestCase::setupfoo() {
-    auto f = NewObject<UFoo>(this,UFoo::StaticClass());
-    foos.Add(f);
+void USluaTestCase::setupfoo(UObject* obj) {
+    foos.Add(obj);
 }
 
 void USluaTestCase::delfoo() {
-    foos.RemoveAt(0);
+    if(foos.Num()>0)
+        foos.RemoveAt(0);
 }
 
 TArray<int> USluaTestCase::GetArray() {

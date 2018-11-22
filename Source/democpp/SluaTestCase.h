@@ -20,14 +20,6 @@
 #include "SluaTestCase.generated.h"
 
 UCLASS()
-class UFoo : public UObject {
-    GENERATED_UCLASS_BODY()
-public:
-    ~UFoo();
-};
-
-
-UCLASS()
 class USluaTestCase : public UObject {
     GENERATED_UCLASS_BODY()
 public:
@@ -35,10 +27,10 @@ public:
     static void StaticFunc();
 
     UPROPERTY(BlueprintReadOnly)
-    TArray<UFoo*> foos;
+    TArray<UObject*> foos;
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
-    void setupfoo();
+    void setupfoo(UObject* obj);
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     void delfoo();

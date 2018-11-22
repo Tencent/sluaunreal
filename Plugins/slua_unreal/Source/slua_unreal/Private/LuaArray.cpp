@@ -74,10 +74,8 @@ namespace slua {
         auto op=Cast<UObjectProperty>(inner);
         if(op && op->ContainsObjectReference(EncounteredStructProps)) {
             for(int n=0;n<num();n++) {
-                UObject* obj = reinterpret_cast<UObject*>(getRawPtr(n));
-                // unreal should return None obj, but isn't be referenced
-                // so check it valid
-                if(obj->IsValidLowLevelFast()) Collector.AddReferencedObject(obj);
+                UObject* obj = *(reinterpret_cast<UObject**>(getRawPtr(n)));
+                Collector.AddReferencedObject(obj);
             }
         }
     }

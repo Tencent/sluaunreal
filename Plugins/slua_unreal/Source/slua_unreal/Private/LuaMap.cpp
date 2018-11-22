@@ -99,17 +99,13 @@ namespace slua {
 					auto valuePtr = getValuePtr(pairPtr);
 					// if is uobject key
 					if(kp->ContainsObjectReference(EncounteredStructProps)) {
-						UObject* obj = reinterpret_cast<UObject*>(keyPtr);
-						// unreal should return None obj, but isn't be referenced
-                		// so check it valid
-						if(obj->IsValidLowLevelFast()) Collector.AddReferencedObject(obj);
+						UObject* obj = *(reinterpret_cast<UObject**>(keyPtr));
+						Collector.AddReferencedObject(obj);
 					}
 					// if is uobject value
 					if(vp->ContainsObjectReference(EncounteredStructProps)) {
-						UObject* obj = reinterpret_cast<UObject*>(valuePtr);
-						// unreal should return None obj, but isn't be referenced
-                		// so check it valid
-						if(obj->IsValidLowLevelFast()) Collector.AddReferencedObject(obj);
+						UObject* obj = *(reinterpret_cast<UObject**>(valuePtr));
+						Collector.AddReferencedObject(obj);
 					}
 					index += 1;
 					num -= 1;

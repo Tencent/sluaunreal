@@ -40,6 +40,11 @@ namespace slua {
         }
 
         virtual void AddReferencedObjects( FReferenceCollector& Collector ) override;
+
+        virtual FString GetReferencerName() const
+        {
+            return "LuaArray";
+        }
         
     protected:
         static int __ctor(lua_State* L);

@@ -55,6 +55,11 @@ namespace slua {
 
 		virtual void AddReferencedObjects( FReferenceCollector& Collector ) override;
 
+		virtual FString GetReferencerName() const
+        {
+            return "LuaMap";
+        }
+
 		// Cast FScriptMap to TMap<TKey, TValue> if ElementSize matched
 		template<typename TKey, typename TValue>
 		const TMap<TKey, TValue>& asTMap(lua_State* L) const {

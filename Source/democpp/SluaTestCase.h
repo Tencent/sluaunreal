@@ -118,5 +118,5 @@ public:
 
     const USluaTestCase* constRetFunc() { return nullptr; }
 
-	__forceinline int inlineFunc() { return 1; }
+	FORCEINLINE int inlineFunc() { return 1; }
 };

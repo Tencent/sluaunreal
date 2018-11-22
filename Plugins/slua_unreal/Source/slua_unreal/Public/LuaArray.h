@@ -18,13 +18,13 @@
 
 namespace slua {
 
-    class SLUA_UNREAL_API LuaArray {
+    class SLUA_UNREAL_API LuaArray : public FGCObject {
     public:
         static void reg(lua_State* L);
         static void clone(FScriptArray* destArray, UProperty* p, const FScriptArray* srcArray);
         static int push(lua_State* L,UProperty* prop,FScriptArray* array);
 
-        LuaArray(lua_State* L,UProperty* prop,FScriptArray* buf);
+        LuaArray(UProperty* prop,FScriptArray* buf);
         ~LuaArray();
 
         const FScriptArray* get() {
@@ -38,6 +38,8 @@ namespace slua {
                 luaL_error(L,"Cast to TArray error, element size isn't mathed(%d,%d)",sizeof(T),inner->ElementSize);
             return *(reinterpret_cast<const TArray<T>*>( &array ));
         }
+
+        virtual void AddReferencedObjects( FReferenceCollector& Collector ) override;
         
     protected:
         static int __ctor(lua_State* L);
@@ -53,7 +55,6 @@ namespace slua {
     private:
         UProperty* inner;
         FScriptArray array;
-        int stateIndex;
 
         void clear();
         uint8* getRawPtr(int index) const;

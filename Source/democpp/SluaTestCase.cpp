@@ -219,6 +219,14 @@ namespace slua {
     EndDef(PerfTest,&PerfTest::create)
 }
 
+UFoo::UFoo(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+}
+
+UFoo::~UFoo() {
+    slua::Log::Log("ufoo freed");
+}
 
 USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -231,7 +239,16 @@ USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
         auto clazz = LuaObject::checkUD<UClass>(L,2);
         bool ret = UD->IsA(clazz);
         return LuaObject::push(L,ret);
-    });
+    });   
+}
+
+void USluaTestCase::setupfoo() {
+    auto f = NewObject<UFoo>(this,UFoo::StaticClass());
+    foos.Add(f);
+}
+
+void USluaTestCase::delfoo() {
+    foos.RemoveAt(0);
 }
 
 TArray<int> USluaTestCase::GetArray() {

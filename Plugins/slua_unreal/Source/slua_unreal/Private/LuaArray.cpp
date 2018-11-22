@@ -15,22 +15,41 @@
 #include "LuaObject.h"
 #include <string>
 #include "SluaLib.h"
+#include "LuaState.h"
 
 namespace slua {
 
-    DefTypeName(LuaArray::Enumerator);
-    
+    DefTypeName(LuaArray::Enumerator); 
 
     void LuaArray::reg(lua_State* L) {
         SluaUtil::reg(L,"Array",__ctor);
     }
 
-    LuaArray::LuaArray(UProperty* prop,FScriptArray* buf)
+    void LuaArray::clone(FScriptArray* destArray, UProperty* p, const FScriptArray* srcArray) {
+        // blueprint stack will destroy the TArray
+        // so deep-copy construct FScriptArray
+        // it's very expensive
+        if(srcArray->Num()==0)
+            return;
+            
+        FScriptArrayHelper helper = FScriptArrayHelper::CreateHelperFormInnerProperty(p,destArray);
+        helper.AddValues(srcArray->Num());
+        uint8* dest = helper.GetRawPtr();
+        uint8* src = (uint8*)srcArray->GetData();
+        for(int n=0;n<srcArray->Num();n++) {
+            p->CopySingleValue(dest,src);
+            dest+=p->ElementSize;
+            src+=p->ElementSize;
+        }
+    }
+
+    LuaArray::LuaArray(lua_State* L,UProperty* prop,FScriptArray* buf)
         :inner(prop) 
     {
-        // why FScriptArray can't be copy constructed or MoveToEmpty?
-        // just hack it, TODO deepcopy?
-        if(buf) FMemory::Memcpy(&array,buf,sizeof(FScriptArray));
+        auto state = LuaState::get(L);
+        stateIndex = state->stateIndex();
+        state->addRef(prop);
+        clone(&array,prop,buf);
     }
 
     LuaArray::~LuaArray() {
@@ -39,12 +58,17 @@ namespace slua {
     }
 
     void LuaArray::clear() {
+        if(!inner) return;
+
         uint8 *Dest = getRawPtr(0);
         for (int32 i = 0 ; i < array.Num(); i++, Dest += inner->ElementSize)
         {
             inner->DestroyValue(Dest);
         }
         array.Empty(0, inner->ElementSize);
+        auto state = LuaState::get(stateIndex);
+        state->removeRef(inner);
+        inner = nullptr;
     }
 
     uint8* LuaArray::getRawPtr(int index) const {
@@ -103,7 +127,7 @@ namespace slua {
     }
 
     int LuaArray::push(lua_State* L,UProperty* inner,FScriptArray* data) {
-        LuaArray* array = new LuaArray(inner,data);
+        LuaArray* array = new LuaArray(L,inner,data);
         return LuaObject::pushType(L,array,"LuaArray",setupMT,gc);
     }
 

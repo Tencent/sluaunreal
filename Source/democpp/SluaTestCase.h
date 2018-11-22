@@ -19,6 +19,13 @@
 #include "Blueprint/UserWidget.h"
 #include "SluaTestCase.generated.h"
 
+UCLASS()
+class UFoo : public UObject {
+    GENERATED_UCLASS_BODY()
+public:
+    ~UFoo();
+};
+
 
 UCLASS()
 class USluaTestCase : public UObject {
@@ -27,6 +34,14 @@ public:
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     static void StaticFunc();
 
+    UPROPERTY(BlueprintReadOnly)
+    TArray<UFoo*> foos;
+
+    UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
+    void setupfoo();
+
+    UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
+    void delfoo();
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     TArray<int> GetArray();

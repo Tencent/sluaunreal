@@ -21,9 +21,10 @@ namespace slua {
     class SLUA_UNREAL_API LuaArray {
     public:
         static void reg(lua_State* L);
+        static void clone(FScriptArray* destArray, UProperty* p, const FScriptArray* srcArray);
         static int push(lua_State* L,UProperty* prop,FScriptArray* array);
 
-        LuaArray(UProperty* prop,FScriptArray* buf);
+        LuaArray(lua_State* L,UProperty* prop,FScriptArray* buf);
         ~LuaArray();
 
         const FScriptArray* get() {
@@ -52,6 +53,7 @@ namespace slua {
     private:
         UProperty* inner;
         FScriptArray array;
+        int stateIndex;
 
         void clear();
         uint8* getRawPtr(int index) const;

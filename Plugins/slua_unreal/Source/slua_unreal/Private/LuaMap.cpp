@@ -16,6 +16,7 @@
 #include "LuaObject.h"
 #include "Log.h"
 #include <algorithm>
+#include "LuaState.h"
 
 #define GET_CHECKER(tag) \
 	auto tag##Checker = LuaObject::getChecker(UD->tag##Prop);\
@@ -34,18 +35,37 @@ namespace slua {
 	}
 
 	int LuaMap::push(lua_State* L, UProperty* keyProp, UProperty* valueProp, FScriptMap* buf) {
-		const auto map = new LuaMap(keyProp, valueProp, buf);
+		const auto map = new LuaMap(L,keyProp, valueProp, buf);
 		return LuaObject::pushType(L, map, "LuaMap", setupMT, gc);
 	}
 
-	LuaMap::LuaMap(UProperty* kp, UProperty* vp, FScriptMap* buf) : 
+	void LuaMap::clone(FScriptMap* dest,UProperty* keyProp, UProperty* valueProp,const FScriptMap* src) {
+		if(src->Num()==0)
+			return;
+
+		FScriptMapHelper dstHelper = FScriptMapHelper::CreateHelperFormInnerProperties(keyProp,valueProp, dest);
+		FScriptMapHelper srcHelper = FScriptMapHelper::CreateHelperFormInnerProperties(keyProp,valueProp, src);
+		for (auto n = 0; n < srcHelper.Num(); n++) {
+			auto keyPtr = srcHelper.GetKeyPtr(n);
+			auto valuePtr = srcHelper.GetValuePtr(n);
+			dstHelper.AddPair(keyPtr, valuePtr);
+		}
+	}
+
+
+	LuaMap::LuaMap(lua_State* L,UProperty* kp, UProperty* vp, FScriptMap* buf) : 
 		keyProp(kp), 
 		valueProp(vp) ,
-		helper(FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, &map)) {
+		helper(FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, &map)) 
+	{
+		auto state = LuaState::get(L);
+		stateIndex = state->stateIndex();
+		state->addRef(kp);
+		state->addRef(vp);
+
 		keyProp->PropertyFlags |= CPF_HasGetValueTypeHash;
 		if (buf) {
-			// just hack to clone FScriptMap construct by bp stack
-			FMemory::Memcpy(&map, buf, sizeof(FScriptMap));
+			clone(&map,kp,vp,buf);
 			createdByBp = true;
 		} else {
 			createdByBp = false;
@@ -66,7 +86,13 @@ namespace slua {
 	}
 
 	void LuaMap::Clear() {
+		if(!keyProp || !valueProp)
+			return;
 		EmptyValues();
+		auto state = LuaState::get(stateIndex);
+		state->removeRef(keyProp);
+		state->removeRef(valueProp);
+		keyProp = valueProp = nullptr;
 	}
 
 	// modified FScriptMapHelper::EmptyValues function to add value property offset on value ptr 

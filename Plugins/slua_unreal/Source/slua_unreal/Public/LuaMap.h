@@ -44,8 +44,9 @@ namespace slua {
 	public:
 		static void reg(lua_State* L);
 		static int push(lua_State* L, UProperty* keyProp, UProperty* valueProp, FScriptMap* buf);
+		static void clone(FScriptMap* dest,UProperty* keyProp, UProperty* valueProp,const FScriptMap* src);
 
-		LuaMap(UProperty* keyProp, UProperty* valueProp, FScriptMap* buf);
+		LuaMap(lua_State* L,UProperty* keyProp, UProperty* valueProp, FScriptMap* buf);
 		~LuaMap();
 
 		const FScriptMap* get() {
@@ -92,6 +93,7 @@ namespace slua {
 		UProperty* valueProp;
 		FScriptMapHelper helper;
 		bool createdByBp;
+		int stateIndex;
 
 		static int setupMT(lua_State* L);
 		static int gc(lua_State* L);

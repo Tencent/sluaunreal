@@ -68,7 +68,12 @@ namespace slua {
 
     void LuaArray::AddReferencedObjects( FReferenceCollector& Collector )
     {
+        // I noticed this function be called in collect thread
+        // should add a lock, but I don't find any lock code in unreal engine codebase
+        // why?
         Collector.AddReferencedObject(inner);
+        // if empty
+        if(num()==0) return;
         // if inner element is uobject ,should reference it
         TArray<const UStructProperty*> EncounteredStructProps;
         auto op=Cast<UObjectProperty>(inner);

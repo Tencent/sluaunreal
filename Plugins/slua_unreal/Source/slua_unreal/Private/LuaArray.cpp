@@ -73,11 +73,7 @@ namespace slua {
         // why?
         Collector.AddReferencedObject(inner);
         // if empty
-<<<<<<< HEAD
         if(num()==0) return;
-=======
-        if(num==0) return;
->>>>>>> 9ec6e5daf41492bf9d9ad0f091c8ab5f21782349
         // if inner element is uobject ,should reference it
         TArray<const UStructProperty*> EncounteredStructProps;
         auto op=Cast<UObjectProperty>(inner);

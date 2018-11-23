@@ -453,12 +453,11 @@ namespace slua {
             pushVar(l,ov);
             return 1;
         }
-        else for(size_t n=0;n<numOfVar;n++) {
+        for(size_t n=0;n<numOfVar;n++) {
             const lua_var& ov = vars[n];
             pushVar(l,ov);
-            return numOfVar;
         }
-        return 0;
+        return numOfVar;
     }
 
     bool LuaVar::isValid() const {

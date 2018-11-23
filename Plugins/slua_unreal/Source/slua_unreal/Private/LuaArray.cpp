@@ -43,12 +43,9 @@ namespace slua {
         }
     }
 
-    LuaArray::LuaArray(lua_State* L,UProperty* prop,FScriptArray* buf)
+    LuaArray::LuaArray(UProperty* prop,FScriptArray* buf)
         :inner(prop) 
     {
-        auto state = LuaState::get(L);
-        stateIndex = state->stateIndex();
-        state->addRef(prop);
         clone(&array,prop,buf);
     }
 
@@ -66,9 +63,26 @@ namespace slua {
             inner->DestroyValue(Dest);
         }
         array.Empty(0, inner->ElementSize);
-        auto state = LuaState::get(stateIndex);
-        state->removeRef(inner);
         inner = nullptr;
+    }
+
+    void LuaArray::AddReferencedObjects( FReferenceCollector& Collector )
+    {
+        // I noticed this function be called in collect thread
+        // should add a lock, but I don't find any lock code in unreal engine codebase
+        // why?
+        Collector.AddReferencedObject(inner);
+        // if empty
+        if(num()==0) return;
+        // if inner element is uobject ,should reference it
+        TArray<const UStructProperty*> EncounteredStructProps;
+        auto op=Cast<UObjectProperty>(inner);
+        if(op && op->ContainsObjectReference(EncounteredStructProps)) {
+            for(int n=0;n<num();n++) {
+                UObject* obj = *(reinterpret_cast<UObject**>(getRawPtr(n)));
+                Collector.AddReferencedObject(obj);
+            }
+        }
     }
 
     uint8* LuaArray::getRawPtr(int index) const {
@@ -127,7 +141,7 @@ namespace slua {
     }
 
     int LuaArray::push(lua_State* L,UProperty* inner,FScriptArray* data) {
-        LuaArray* array = new LuaArray(L,inner,data);
+        LuaArray* array = new LuaArray(inner,data);
         return LuaObject::pushType(L,array,"LuaArray",setupMT,gc);
     }
 

@@ -39,19 +39,26 @@ namespace slua {
 	template<typename KeyType, typename ValueType, typename SetAllocator, typename KeyFuncs> 
 	struct TIsTMap<const volatile TMap<KeyType, ValueType, SetAllocator, KeyFuncs>> { enum { Value = true }; };
 
-	class SLUA_UNREAL_API LuaMap {
+	class SLUA_UNREAL_API LuaMap : public FGCObject{
 
 	public:
 		static void reg(lua_State* L);
 		static int push(lua_State* L, UProperty* keyProp, UProperty* valueProp, FScriptMap* buf);
 		static void clone(FScriptMap* dest,UProperty* keyProp, UProperty* valueProp,const FScriptMap* src);
 
-		LuaMap(lua_State* L,UProperty* keyProp, UProperty* valueProp, FScriptMap* buf);
+		LuaMap(UProperty* keyProp, UProperty* valueProp, FScriptMap* buf);
 		~LuaMap();
 
 		const FScriptMap* get() {
 			return &map;
 		}
+
+		virtual void AddReferencedObjects( FReferenceCollector& Collector ) override;
+
+		virtual FString GetReferencerName() const
+        {
+            return "LuaMap";
+        }
 
 		// Cast FScriptMap to TMap<TKey, TValue> if ElementSize matched
 		template<typename TKey, typename TValue>
@@ -93,20 +100,19 @@ namespace slua {
 		UProperty* valueProp;
 		FScriptMapHelper helper;
 		bool createdByBp;
-		int stateIndex;
 
 		static int setupMT(lua_State* L);
 		static int gc(lua_State* L);
 
 		uint8* getKeyPtr(uint8* pairPtr);
 		uint8* getValuePtr(uint8* pairPtr);
-		void Clear();
-		int32 Num() const;
-		void EmptyValues(int32 Slack = 0);
-		void DestructItems(int32 Index, int32 Count);
-		void DestructItems(uint8* PairPtr, uint32 Stride, int32 Index, int32 Count, bool bDestroyKeys, bool bDestroyValues);
-		bool RemovePair(const void* KeyPtr);
-		void RemoveAt(int32 Index, int32 Count = 1);
+		void clear();
+		int32 num() const;
+		void emptyValues(int32 Slack = 0);
+		void destructItems(int32 Index, int32 Count);
+		void destructItems(uint8* PairPtr, uint32 Stride, int32 Index, int32 Count, bool bDestroyKeys, bool bDestroyValues);
+		bool removePair(const void* KeyPtr);
+		void removeAt(int32 Index, int32 Count = 1);
 
 		struct Enumerator {
 			LuaMap* map;

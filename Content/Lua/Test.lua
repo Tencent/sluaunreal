@@ -5,6 +5,7 @@ require 'TestCppBinding'
 require 'TestMap'
 local TestArray = require 'TestArray'
 local Test=import('SluaTestCase');
+local GameplayStatics=import'GameplayStatics';
 
 local t=Test();
 
@@ -85,6 +86,14 @@ function update(dt,actor)
     local v = FVector(math.sin(tt)*100,2,3)
     local offset = FVector(0,math.cos(tt)*50,0)
     local ok,h=actor:K2_SetActorLocation(v+offset,true,h,true)
+    
+    local bpClass = import("Blueprint'/Game/BallActor.BallActor_C'")
+    -- get out TArray for actors
+    local arr=GameplayStatics.GetAllActorsOfClass(actor,bpClass,nil)
+
+    for k,v in pairs(arr) do
+        print("GetAllActorsOfClass",k,v)
+    end
 
     local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
     edit.OnTextChanged:Remove(evt);

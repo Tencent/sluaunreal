@@ -427,6 +427,12 @@ namespace slua {
     }
 
     int fillParamFromState(lua_State* L,UProperty* prop,uint8* params,int i) {
+
+        // if is out param, can accept nil
+        uint64 propflag = prop->GetPropertyFlags();
+        if(propflag&CPF_OutParm && lua_isnil(L,i))
+            return prop->GetSize();
+
         auto checker = LuaObject::getChecker(prop);
         if(checker) {
             checker(L,prop,params,i);

@@ -37,6 +37,7 @@ namespace slua {
         lua_newtable(L);
         RegMetaMethod(L,loadUI);
         RegMetaMethod(L,createDelegate);
+        RegMetaMethod(L,loadClass);
         lua_setglobal(L,"slua");
     }
 
@@ -46,9 +47,27 @@ namespace slua {
         lua_setfield(L,-2,fn);
         lua_pop(L,1);
     }
+
+    template<typename T>
+    TSubclassOf<T> loadClassT(const char* cls) {
+        TArray<FStringFormatArg> Args;
+        Args.Add(UTF8_TO_TCHAR(cls));
+
+        // load blueprint widget from cpp, need add '_C' tail
+        auto cui = FString::Format(TEXT("Blueprint'{0}_C'"),Args);
+        TSubclassOf<T> uclass = LoadClass<T>(NULL, *cui);
+        return uclass;
+    }
+
+    int SluaUtil::loadClass(lua_State* L) {
+        const char* cls = luaL_checkstring(L,1);
+        auto uclass = loadClassT<UObject>(cls);
+        if(uclass==nullptr) luaL_error(L,"Can't find class named %s",cls);
+        return LuaObject::push(L,uclass);
+    }
     
     int SluaUtil::loadUI(lua_State* L) {
-        
+
         UGameInstance* GameInstance = nullptr;
         #if WITH_EDITOR
         UUnrealEdEngine* engine = Cast<UUnrealEdEngine>(GEngine);
@@ -58,18 +77,11 @@ namespace slua {
         if(engine) GameInstance = engine->GameInstance;
         #endif
         
-        if(!GameInstance)
-            luaL_error(L,"GameInstance is null");
-
-        const char* ui = luaL_checkstring(L,1);
-
-        TArray<FStringFormatArg> Args;
-        Args.Add(UTF8_TO_TCHAR(ui));
-
-        // load blueprint widget from cpp, need add '_C' tail
-        auto cui = FString::Format(TEXT("Blueprint'{0}_C'"),Args);
-        TSubclassOf<UUserWidget> uclass = LoadClass<UUserWidget>(NULL, *cui);
-        if(uclass==nullptr) luaL_error(L,"Can't find ui named %s",ui);
+        if(!GameInstance) luaL_error(L,"gameinstance missing");
+        
+        const char* cls = luaL_checkstring(L,1);
+        auto uclass = loadClassT<UUserWidget>(cls);
+        if(uclass==nullptr) luaL_error(L,"Can't find class named %s",cls);
         
         UUserWidget* widget = CreateWidget<UUserWidget>(GameInstance,uclass);
         return LuaObject::push(L,widget);

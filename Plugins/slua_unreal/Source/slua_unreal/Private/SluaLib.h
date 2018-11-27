@@ -24,6 +24,7 @@ namespace slua {
         static void reg(lua_State* L,const char* fn,lua_CFunction f);
     private:
         static int loadUI(lua_State* L);
+        static int loadClass(lua_State* L);
         static int createDelegate(lua_State* L);
     };
 

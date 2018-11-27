@@ -65,7 +65,7 @@ namespace slua {
         }
 
         // raw ptr not hold by lua, lua not collect it
-        static Foo* getInstance() {
+        static const Foo* getInstance() {
             static Foo s_inst(2048);
             return &s_inst;
         }
@@ -219,7 +219,6 @@ namespace slua {
     EndDef(PerfTest,&PerfTest::create)
 }
 
-
 USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -231,7 +230,18 @@ USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
         auto clazz = LuaObject::checkUD<UClass>(L,2);
         bool ret = UD->IsA(clazz);
         return LuaObject::push(L,ret);
-    });
+    });  
+    REG_EXTENSION_METHOD(USluaTestCase, "constRetFunc", &USluaTestCase::constRetFunc);
+	REG_EXTENSION_METHOD(USluaTestCase, "inlineFunc", &USluaTestCase::inlineFunc);
+}
+
+void USluaTestCase::setupfoo(UObject* obj) {
+    foos.Add(obj);
+}
+
+void USluaTestCase::delfoo() {
+    if(foos.Num()>0)
+        foos.RemoveAt(0);
 }
 
 TArray<int> USluaTestCase::GetArray() {

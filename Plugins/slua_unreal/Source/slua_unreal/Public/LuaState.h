@@ -123,7 +123,6 @@ namespace slua {
         int si;
 
         TMap<FString,TMap<FString,UFunction*>*> classMap;
-        TMap<FString,UFunction*> instanceFuncMap;
 
         static LuaState* mainState;
 

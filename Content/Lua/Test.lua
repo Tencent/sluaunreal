@@ -4,33 +4,12 @@ require 'TestStruct'
 require 'TestCppBinding'
 require 'TestMap'
 local TestArray = require 'TestArray'
-
-
-
 local Test=import('SluaTestCase');
-print("Test static func",Test.StaticFunc())
+local GameplayStatics=import'GameplayStatics';
 
-
-local B=require 'TestModule'
-
-print("UEnums.EForceInit.ForceInitToZero=" .. tostring(UEnums.EForceInit.ForceInitToZero))
-
-print("test require",B.foo())
-
-local r = FRotator()
-
-local Test=import('SluaTestCase');
 local t=Test();
-local brush = t:GetBrush()
-local bb = t:GetWidget("Button");
 
-local v = FVector(100,200,300)
-local r1,r2,r3=t:TestStruct(v,0,v,1024,0,"hello world")
-assert(r1==v*4)
-assert(r2==FVector(200,400,600))
-assert(r3==1024)
 
-print(bb)
 
 local Button = import('Button');
 local ButtonStyle = import('ButtonStyle');
@@ -44,6 +23,10 @@ local seq=ui.ActiveSequencePlayers;
 print('seq',seq:Num());
 local btn2=ui:FindWidget('Button1');
 local index = 1
+
+t:setupfoo(ui)
+foos=t.foos;
+t:delfoo()
 
 btn2.OnClicked:Add(function() 
     index=index+1
@@ -103,6 +86,14 @@ function update(dt,actor)
     local v = FVector(math.sin(tt)*100,2,3)
     local offset = FVector(0,math.cos(tt)*50,0)
     local ok,h=actor:K2_SetActorLocation(v+offset,true,h,true)
+    
+    local bpClass = import("Blueprint'/Game/BallActor.BallActor_C'")
+    -- get out TArray for actors
+    local arr=GameplayStatics.GetAllActorsOfClass(actor,bpClass,nil)
+
+    for k,v in pairs(arr) do
+        print("GetAllActorsOfClass",k,v)
+    end
 
     local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
     edit.OnTextChanged:Remove(evt);
@@ -114,6 +105,9 @@ function update(dt,actor)
     for k,v in pairs(ret) do
         print("ret table",k,v)
     end
+
+    foos:Add(ui)
+    foos:Remove(0)
 
     collectgarbage("collect")
     return 1024,2,"s",ret,function() end

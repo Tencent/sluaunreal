@@ -19,7 +19,6 @@
 #include "Blueprint/UserWidget.h"
 #include "SluaTestCase.generated.h"
 
-
 UCLASS()
 class USluaTestCase : public UObject {
     GENERATED_UCLASS_BODY()
@@ -27,6 +26,14 @@ public:
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     static void StaticFunc();
 
+    UPROPERTY(BlueprintReadOnly)
+    TArray<UObject*> foos;
+
+    UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
+    void setupfoo(UObject* obj);
+
+    UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
+    void delfoo();
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     TArray<int> GetArray();
@@ -100,4 +107,8 @@ public:
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     int FuncWithStr(FString str);
+
+    const USluaTestCase* constRetFunc() { return nullptr; }
+
+	FORCEINLINE int inlineFunc() { return 1; }
 };

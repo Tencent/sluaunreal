@@ -15,22 +15,38 @@
 #include "LuaObject.h"
 #include <string>
 #include "SluaLib.h"
+#include "LuaState.h"
 
 namespace slua {
 
-    DefTypeName(LuaArray::Enumerator);
-    
+    DefTypeName(LuaArray::Enumerator); 
 
     void LuaArray::reg(lua_State* L) {
         SluaUtil::reg(L,"Array",__ctor);
     }
 
+    void LuaArray::clone(FScriptArray* destArray, UProperty* p, const FScriptArray* srcArray) {
+        // blueprint stack will destroy the TArray
+        // so deep-copy construct FScriptArray
+        // it's very expensive
+        if(srcArray->Num()==0)
+            return;
+            
+        FScriptArrayHelper helper = FScriptArrayHelper::CreateHelperFormInnerProperty(p,destArray);
+        helper.AddValues(srcArray->Num());
+        uint8* dest = helper.GetRawPtr();
+        uint8* src = (uint8*)srcArray->GetData();
+        for(int n=0;n<srcArray->Num();n++) {
+            p->CopySingleValue(dest,src);
+            dest+=p->ElementSize;
+            src+=p->ElementSize;
+        }
+    }
+
     LuaArray::LuaArray(UProperty* prop,FScriptArray* buf)
         :inner(prop) 
     {
-        // why FScriptArray can't be copy constructed or MoveToEmpty?
-        // just hack it, TODO deepcopy?
-        if(buf) FMemory::Memcpy(&array,buf,sizeof(FScriptArray));
+        clone(&array,prop,buf);
     }
 
     LuaArray::~LuaArray() {
@@ -39,12 +55,34 @@ namespace slua {
     }
 
     void LuaArray::clear() {
+        if(!inner) return;
+
         uint8 *Dest = getRawPtr(0);
         for (int32 i = 0 ; i < array.Num(); i++, Dest += inner->ElementSize)
         {
             inner->DestroyValue(Dest);
         }
         array.Empty(0, inner->ElementSize);
+        inner = nullptr;
+    }
+
+    void LuaArray::AddReferencedObjects( FReferenceCollector& Collector )
+    {
+        // I noticed this function be called in collect thread
+        // should add a lock, but I don't find any lock code in unreal engine codebase
+        // why?
+        Collector.AddReferencedObject(inner);
+        // if empty
+        if(num()==0) return;
+        // if inner element is uobject ,should reference it
+        TArray<const UStructProperty*> EncounteredStructProps;
+        auto op=Cast<UObjectProperty>(inner);
+        if(op && op->ContainsObjectReference(EncounteredStructProps)) {
+            for(int n=0;n<num();n++) {
+                UObject* obj = *(reinterpret_cast<UObject**>(getRawPtr(n)));
+                Collector.AddReferencedObject(obj);
+            }
+        }
     }
 
     uint8* LuaArray::getRawPtr(int index) const {

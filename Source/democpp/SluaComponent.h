@@ -14,13 +14,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/SceneComponent.h"
 #include "LuaState.h"
 #include "SluaComponent.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class SLUA_UNREAL_API USluaComponent : public USceneComponent
+class DEMOCPP_API USluaComponent : public USceneComponent
 {
 	GENERATED_BODY()
 

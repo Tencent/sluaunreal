@@ -427,6 +427,12 @@ namespace slua {
     }
 
     int fillParamFromState(lua_State* L,UProperty* prop,uint8* params,int i) {
+
+        // if is out param, can accept nil
+        uint64 propflag = prop->GetPropertyFlags();
+        if(propflag&CPF_OutParm && lua_isnil(L,i))
+            return prop->GetSize();
+
         auto checker = LuaObject::getChecker(prop);
         if(checker) {
             checker(L,prop,params,i);
@@ -520,7 +526,8 @@ namespace slua {
         auto clsmap = state->classMap.Find(cname);
         if(!clsmap) return nullptr;
         auto it = (*clsmap)->Find(UTF8_TO_TCHAR(fname));
-        if(it!=nullptr) return * it;
+        if(it!=nullptr && (*it)->IsValidLowLevelFast())
+			return *it;
         return nullptr;
     }
 
@@ -616,8 +623,11 @@ namespace slua {
         const int BufMax = 128;
         static char buffer[BufMax] = { 0 };
 		UObject* obj = LuaObject::testudata<UObject>(L, 1);
-        if(obj)
-            snprintf(buffer, BufMax, "%s: %s %p", obj->GetClass()->GetFName().GetPlainANSIString(), obj->GetFName().GetPlainANSIString(), obj);
+		if (obj) {
+			auto clsname = obj->GetClass()->GetFName().ToString();
+			auto objname = obj->GetFName().ToString();
+			snprintf(buffer, BufMax, "%s: %s %p",TCHAR_TO_UTF8(*clsname),TCHAR_TO_UTF8(*objname), obj);
+		}
         else {
             // if ud isn't a uobject, get __name of metatable to cast it to string
             const void* ptr = lua_topointer(L,1);
@@ -668,19 +678,7 @@ namespace slua {
         auto p = Cast<UArrayProperty>(prop);
         ensure(p);
         CheckUD(LuaArray,L,i);
-        // blueprint stack will destroy the TArray
-        // so deep-copy construct FScriptArray
-        // it's very expensive
-        FScriptArrayHelper helper(p,(FScriptArray*)parms);
-        const FScriptArray* srcArray = UD->get();
-        helper.AddValues(srcArray->Num());
-        uint8* dest = helper.GetRawPtr();
-        uint8* src = (uint8*)srcArray->GetData();
-        for(int n=0;n<srcArray->Num();n++) {
-            p->Inner->CopySingleValue(dest,src);
-            dest+=p->Inner->ElementSize;
-            src+=p->Inner->ElementSize;
-        }
+        LuaArray::clone((FScriptArray*)parms,p->Inner,UD->get());
         return 0;
     }
 
@@ -688,13 +686,7 @@ namespace slua {
 		auto p = Cast<UMapProperty>(prop);
 		ensure(p);
 		CheckUD(LuaMap, L, i);
-		FScriptMapHelper dstHelper(p, (FScriptMap*)parms);
-		FScriptMapHelper srcHelper(p, UD->get());
-		for (auto n = 0; n < srcHelper.Num(); n++) {
-			auto keyPtr = srcHelper.GetKeyPtr(n);
-			auto valuePtr = srcHelper.GetValuePtr(n);
-			dstHelper.AddPair(keyPtr, valuePtr);
-		}
+        LuaMap::clone((FScriptMap*)parms,p->KeyProp,p->ValueProp,UD->get());
 		return 0;
 	}
 
@@ -857,15 +849,15 @@ namespace slua {
             lua_pushnil(L);
             return 1;
         }
-        return pushObject(L,cls,"UClass",setupClassMT);
+		return pushGCObject<UClass*>(L, cls, "UClass", setupClassMT, gcObject);
     }
 
     int LuaObject::pushStruct(lua_State* L,UScriptStruct* cls) {
         if(!cls) {
             lua_pushnil(L);
             return 1;
-        }          
-        return pushObject(L,cls,"UScriptStruct",setupStructMT);
+        }    
+        return pushGCObject<UScriptStruct*>(L,cls,"UScriptStruct",setupStructMT,gcObject);
     }
 
     int LuaObject::gcObject(lua_State* L) {

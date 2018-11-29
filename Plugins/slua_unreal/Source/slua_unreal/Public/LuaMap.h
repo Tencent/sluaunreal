@@ -15,6 +15,7 @@
 #include "CoreMinimal.h"
 #include "lua/lua.hpp"
 #include "UObject/UnrealType.h"
+#include "UObject/GCObject.h"
 
 namespace slua {
 

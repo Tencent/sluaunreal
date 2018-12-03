@@ -7,37 +7,24 @@
         {
             "type": "FTransform",
             "ctors": [ 3 ],
-            "properties": [ ],
             "methods": [ "Accumulate", "LerpTranslationScale3D", "AccumulateWithShortestRotation", "AccumulateWithAdditiveScale", "BlendFromIdentityAndAccumulate" ],
             "operators": [ "*:float" ]
         },
         {
             "type": "FFloatRange",
-            "ctors": [ ],
-            "properties": [ ],
-            "methods": [ "Split", "Difference", "Hull", "Intersection", "Union", "GreaterThan", "LessThan" ],
-            "operators": [ ]
+            "methods": [ "Split", "Difference", "Hull", "Intersection", "Union", "GreaterThan", "LessThan" ]
         },
         {
             "type": "FInt32Range",
-            "ctors": [ ],
-            "properties": [ ],
-            "methods": [ "Split", "Difference", "Hull", "Intersection", "Union", "GreaterThan", "LessThan" ],
-            "operators": [ ]
+            "methods": [ "Split", "Difference", "Hull", "Intersection", "Union", "GreaterThan", "LessThan" ]
         },
         {
             "type": "FSlateFontInfo",
-            "ctors": [ ],
-            "properties": [ "CompositeFont" ],
-            "methods": [ ],
-            "operators": [ ]
+            "properties": [ "CompositeFont" ]
         },
         {
             "type": "FVector",
-            "ctors": [ ],
-            "properties": [ ],
-            "methods": [ "GenerateClusterCenters" ],
-            "operators": [ ]
+            "methods": [ "GenerateClusterCenters" ]
         }
     ],
     "struct_files": {

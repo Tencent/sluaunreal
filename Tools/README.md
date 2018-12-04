@@ -23,7 +23,7 @@ config-win.json(Windows 平台), config-mac.json(Mac 平台)
 1. 编译参数相关信息：引擎和项目路径、预处理器
 2. 指定导出类型信息
 
-各个字段含义：
+字段含义：
 * solution_dir: slua 项目路径
 * ue4_dir: ue4 安装路径
 * ue_vcproj: slua c++ 工程路径

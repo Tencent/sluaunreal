@@ -474,7 +474,7 @@ namespace slua {
         for(TFieldIterator<UProperty> it(func);it;++it) {
             UProperty* p = *it;
             uint64 propflag = p->GetPropertyFlags();
-            // skit return param
+            // skip return param
             if(propflag&CPF_ReturnParm)
                 continue;
 
@@ -517,7 +517,8 @@ namespace slua {
         // call function with params
         obj->ProcessEvent(func,params);
         // return value to push lua stack
-        return returnValue(L,func,params);
+        int ret = returnValue(L,func,params);
+		return ret;
     }
 
     // find ufunction from cache
@@ -559,7 +560,7 @@ namespace slua {
                 // search extension method
                 return searchExtensionMethod(L,obj,name);
             }
-            return LuaObject::push(L,up,up->ContainerPtrToValuePtr<uint8>(obj));
+            return LuaObject::push(L,up,obj);
         }
         else {   
             LuaObject::cacheFunction(L,obj->GetClass()->GetName(),name,func);
@@ -663,8 +664,7 @@ namespace slua {
     int pushUArrayProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p = Cast<UArrayProperty>(prop);
         ensure(p);
-        FScriptArray* v = p->GetPropertyValuePtr(parms);
-        return LuaArray::push(L,p->Inner,v);
+		return LuaArray::push(L, p->Inner, v);
     }
 
     int pushUMapProperty(lua_State* L,UProperty* prop,uint8* parms) {
@@ -849,7 +849,7 @@ namespace slua {
             lua_pushnil(L);
             return 1;
         }
-		return pushGCObject<UClass*>(L, cls, "UClass", setupClassMT, gcObject);
+		return pushGCObject<UClass*>(L, cls, "UClass", setupClassMT, gcClass);
     }
 
     int LuaObject::pushStruct(lua_State* L,UScriptStruct* cls) {
@@ -857,7 +857,7 @@ namespace slua {
             lua_pushnil(L);
             return 1;
         }    
-        return pushGCObject<UScriptStruct*>(L,cls,"UScriptStruct",setupStructMT,gcObject);
+        return pushGCObject<UScriptStruct*>(L,cls,"UScriptStruct",setupStructMT,gcStructClass);
     }
 
     int LuaObject::gcObject(lua_State* L) {
@@ -965,6 +965,16 @@ namespace slua {
             return 0;
         }
     }
+
+	int LuaObject::push(lua_State* L, UProperty* up, UObject* obj) {
+		auto p = Cast<UArrayProperty>(up);
+		// if it's an UArrayProperty
+		if (p)
+			return LuaArray::push(L, p, obj);
+		else
+			return push(L, up, up->ContainerPtrToValuePtr<uint8>(obj));
+	}
+
 
 	int LuaObject::push(lua_State* L, FScriptDelegate* obj) {
 		return pushType<FScriptDelegate*>(L, obj, "FScriptDelegate");

@@ -29,7 +29,7 @@ namespace slua {
         // blueprint stack will destroy the TArray
         // so deep-copy construct FScriptArray
         // it's very expensive
-        if(srcArray->Num()==0)
+        if(!srcArray || srcArray->Num()==0)
             return;
             
         FScriptArrayHelper helper = FScriptArrayHelper::CreateHelperFormInnerProperty(p,destArray);
@@ -43,11 +43,22 @@ namespace slua {
         }
     }
 
-    LuaArray::LuaArray(UProperty* prop,FScriptArray* buf)
-        :inner(prop) 
+	LuaArray::LuaArray(UProperty* prop, FScriptArray* buf)
+		: inner(prop)
+		, prop(nullptr)
+		, propObj(nullptr)
     {
-        clone(&array,prop,buf);
+		array = new FScriptArray();
+		clone(array, prop, buf);
     }
+
+	LuaArray::LuaArray(UArrayProperty* prop, UObject* obj)
+		: inner(prop->Inner)
+		, prop(prop)
+		, propObj(obj)
+	{
+		array = prop->ContainerPtrToValuePtr<FScriptArray>(obj);
+	}
 
     LuaArray::~LuaArray() {
         // should destroy inner property value
@@ -57,12 +68,15 @@ namespace slua {
     void LuaArray::clear() {
         if(!inner) return;
 
-        uint8 *Dest = getRawPtr(0);
-        for (int32 i = 0 ; i < array.Num(); i++, Dest += inner->ElementSize)
-        {
-            inner->DestroyValue(Dest);
-        }
-        array.Empty(0, inner->ElementSize);
+		if (!prop) {
+			uint8 *Dest = getRawPtr(0);
+			for (int32 i = 0; i < array->Num(); i++, Dest += inner->ElementSize)
+			{
+				inner->DestroyValue(Dest);
+			}
+			array->Empty(0, inner->ElementSize);
+			SafeDelete(array);
+		}
         inner = nullptr;
     }
 
@@ -72,6 +86,8 @@ namespace slua {
         // should add a lock, but I don't find any lock code in unreal engine codebase
         // why?
         Collector.AddReferencedObject(inner);
+		if (prop) Collector.AddReferencedObject(prop);
+		if (propObj) Collector.AddReferencedObject(propObj);
         // if empty
         if(num()==0) return;
         // if inner element is uobject ,should reference it
@@ -86,7 +102,7 @@ namespace slua {
     }
 
     uint8* LuaArray::getRawPtr(int index) const {
-        return (uint8*)array.GetData() + index * inner->ElementSize;
+        return (uint8*)array->GetData() + index * inner->ElementSize;
     }
 
     bool LuaArray::isValidIndex(int index) const {
@@ -94,24 +110,24 @@ namespace slua {
     }
 
     int LuaArray::num() const {
-        return array.Num();
+        return array->Num();
     }
 
     uint8* LuaArray::add() {
-        const int index = array.Add(1, inner->ElementSize);
+        const int index = array->Add(1, inner->ElementSize);
         constructItems(index, 1);
         return getRawPtr(index);
     }
 
     uint8* LuaArray::insert(int index) {
-        array.Insert(index, 1, inner->ElementSize);
+        array->Insert(index, 1, inner->ElementSize);
 		constructItems(index, 1);
         return getRawPtr(index);
     }
 
     void LuaArray::remove(int index) {
         destructItems(index, 1);
-		array.Remove(index, 1, inner->ElementSize);
+		array->Remove(index, 1, inner->ElementSize);
     }
 
     void LuaArray::destructItems(int index,int count) {
@@ -145,10 +161,10 @@ namespace slua {
         return LuaObject::pushType(L,array,"LuaArray",setupMT,gc);
     }
 
-    template<typename T>
-    int createArray(lua_State* L) {
-        return LuaArray::push(L,Cast<UProperty>(T::StaticClass()->GetDefaultObject()),nullptr);
-    }
+	int LuaArray::push(lua_State* L, UArrayProperty* prop, UObject* obj) {
+		LuaArray* array = new LuaArray(prop, obj);
+		return LuaObject::pushType(L, array, "LuaArray", setupMT, gc);
+	}
 
     int LuaArray::__ctor(lua_State* L) {
 		auto type = (UE4CodeGen_Private::EPropertyClass) LuaObject::checkValue<int>(L,1);
@@ -158,7 +174,7 @@ namespace slua {
 
     int LuaArray::Num(lua_State* L) {
         CheckUD(LuaArray,L,1);
-        return LuaObject::push(L,UD->array.Num());
+        return LuaObject::push(L,UD->array->Num());
     }
 
     int LuaArray::Get(lua_State* L) {
@@ -166,7 +182,7 @@ namespace slua {
         int i = LuaObject::checkValue<int>(L,2);
         UProperty* element = UD->inner;
         int32 es = element->ElementSize;
-        return LuaObject::push(L,element,((uint8*)UD->array.GetData())+i*es);
+        return LuaObject::push(L,element,((uint8*)UD->array->GetData())+i*es);
     }
 
     int LuaArray::Add(lua_State* L) {
@@ -177,7 +193,7 @@ namespace slua {
         if(checker) {
             checker(L,element,UD->add(),2);
             // return num of array
-            return LuaObject::push(L,UD->array.Num());
+            return LuaObject::push(L,UD->array->Num());
         }
         else {
             FString tn = element->GetClass()->GetName();
@@ -200,7 +216,7 @@ namespace slua {
 
             checker(L,element,UD->insert(index),3);
             // return num of array
-            return LuaObject::push(L,UD->array.Num());
+            return LuaObject::push(L,UD->array->Num());
         }
         else {
             FString tn = element->GetClass()->GetName();
@@ -242,7 +258,7 @@ namespace slua {
 		if (arr->isValidIndex(UD->index)) {
 			auto element = arr->inner;
 			auto es = element->ElementSize;
-			auto parms = ((uint8*)arr->array.GetData()) + UD->index * es;
+			auto parms = ((uint8*)arr->array->GetData()) + UD->index * es;
 			LuaObject::push(L, UD->index);
 			LuaObject::push(L, element, parms);
 			UD->index += 1;

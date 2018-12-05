@@ -23,13 +23,15 @@ namespace slua {
     public:
         static void reg(lua_State* L);
         static void clone(FScriptArray* destArray, UProperty* p, const FScriptArray* srcArray);
-        static int push(lua_State* L,UProperty* prop,FScriptArray* array);
+		static int push(lua_State* L, UProperty* prop, FScriptArray* array);
+		static int push(lua_State* L,UArrayProperty* prop,UObject* obj);
 
-        LuaArray(UProperty* prop,FScriptArray* buf);
+		LuaArray(UProperty* prop, FScriptArray* buf);
+		LuaArray(UArrayProperty* prop, UObject* obj);
         ~LuaArray();
 
         const FScriptArray* get() {
-            return &array;
+            return array;
         }
 
         // Cast FScriptArray to TArray<T> if ElementSize matched
@@ -37,7 +39,7 @@ namespace slua {
         const TArray<T>& asTArray(lua_State* L) const {
             if(sizeof(T)!=inner->ElementSize)
                 luaL_error(L,"Cast to TArray error, element size isn't mathed(%d,%d)",sizeof(T),inner->ElementSize);
-            return *(reinterpret_cast<const TArray<T>*>( &array ));
+            return *(reinterpret_cast<const TArray<T>*>( array ));
         }
 
         virtual void AddReferencedObjects( FReferenceCollector& Collector ) override;
@@ -60,7 +62,9 @@ namespace slua {
 
     private:
         UProperty* inner;
-        FScriptArray array;
+        FScriptArray* array;
+		UArrayProperty* prop;
+		UObject* propObj;
 
         void clear();
         uint8* getRawPtr(int index) const;

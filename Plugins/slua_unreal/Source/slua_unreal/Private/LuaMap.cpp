@@ -40,7 +40,7 @@ namespace slua {
 	}
 
 	void LuaMap::clone(FScriptMap* dest,UProperty* keyProp, UProperty* valueProp,const FScriptMap* src) {
-		if(src->Num()==0)
+		if(!src || src->Num()==0)
 			return;
 
 		FScriptMapHelper dstHelper = FScriptMapHelper::CreateHelperFormInnerProperties(keyProp,valueProp, dest);

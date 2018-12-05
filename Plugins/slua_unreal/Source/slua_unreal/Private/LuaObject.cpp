@@ -664,6 +664,7 @@ namespace slua {
     int pushUArrayProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p = Cast<UArrayProperty>(prop);
         ensure(p);
+        FScriptArray* v = p->GetPropertyValuePtr(parms);
 		return LuaArray::push(L, p->Inner, v);
     }
 

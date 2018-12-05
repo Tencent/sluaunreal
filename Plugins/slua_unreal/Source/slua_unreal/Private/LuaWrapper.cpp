@@ -18,6 +18,7 @@ namespace slua {
 	static UScriptStruct* FSlateFontInfoStruct = nullptr;
 	static UScriptStruct* FSlateBrushStruct = nullptr;
 	static UScriptStruct* FMarginStruct = nullptr;
+	static UScriptStruct* FGeometryStruct = nullptr;
 	static UScriptStruct* FSlateColorStruct = nullptr;
 	static UScriptStruct* FRotatorStruct = nullptr;
 	static UScriptStruct* FTransformStruct = nullptr;
@@ -85,6 +86,21 @@ namespace slua {
 
 	static void __checkFMargin(lua_State* L, UStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FMargin*>(L, i);
+		p->CopyCompleteValue(parms, v);
+	}
+
+	static inline FGeometry* __newFGeometry() {
+		return new FGeometry();
+	}
+
+	static void __pushFGeometry(lua_State* L, UStructProperty* p, uint8* parms) {
+		auto ptr = __newFGeometry();
+		p->CopyCompleteValue(ptr, parms);
+		LuaObject::push<FGeometry>(L, "FGeometry", ptr, true);
+	}
+
+	static void __checkFGeometry(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+		auto v = LuaObject::checkValue<FGeometry*>(L, i);
 		p->CopyCompleteValue(parms, v);
 	}
 
@@ -789,6 +805,283 @@ namespace slua {
 			LuaObject::addField(L, "Bottom", get_Bottom, set_Bottom, true);
 			LuaObject::addMethod(L, "GetDesiredSize", GetDesiredSize, true);
 			LuaObject::finishType(L, "FMargin", __ctor, __gc);
+		}
+
+	};
+
+	struct FGeometryWrapper {
+
+		static int __ctor(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = new FGeometry();
+				LuaObject::push<FGeometry>(L, "FGeometry", self, true);
+				return 1;
+			}
+			if (argc == 5) {
+				auto OffsetFromParent = LuaObject::checkValue<FVector2D*>(L, 2);
+				auto OffsetFromParent_ = *OffsetFromParent;
+				auto ParentAbsolutePosition = LuaObject::checkValue<FVector2D*>(L, 3);
+				auto ParentAbsolutePosition_ = *ParentAbsolutePosition;
+				auto InLocalSize = LuaObject::checkValue<FVector2D*>(L, 4);
+				auto InLocalSize_ = *InLocalSize;
+				auto InScale = LuaObject::checkValue<float>(L, 5);
+				auto self = new FGeometry(OffsetFromParent_, ParentAbsolutePosition_, InLocalSize_, InScale);
+				LuaObject::push<FGeometry>(L, "FGeometry", self, true);
+				return 1;
+			}
+			luaL_error(L, "call FGeometry() error, argc=%d", argc);
+			return 0;
+		}
+
+		static int __gc(lua_State* L) {
+			auto ud = reinterpret_cast<UserData<FGeometry*>*>(lua_touserdata(L, 1));
+			if (ud->owned) delete ud->ud;
+			return 0;
+		}
+
+		static int __eq(lua_State* L) {
+			auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+			if (LuaObject::matchType(L, 2, "FGeometry")) {
+				auto Other = LuaObject::checkValue<FGeometry*>(L, 2);
+				auto Other_ = *Other;
+				auto ret = *self == Other_;
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "FGeometry operator__eq error, arg=%d", lua_typename(L, 2));
+			return 0;
+		}
+
+		static int get_Size(lua_State* L) {
+			auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+			LuaObject::push<FVector2D>(L, "FVector2D", &self->Size);
+			return 1;
+		}
+
+		static int get_Scale(lua_State* L) {
+			auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+			LuaObject::push(L, self->Scale);
+			return 1;
+		}
+
+		static int get_AbsolutePosition(lua_State* L) {
+			auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+			LuaObject::push<FVector2D>(L, "FVector2D", &self->AbsolutePosition);
+			return 1;
+		}
+
+		static int get_Position(lua_State* L) {
+			auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+			LuaObject::push<FVector2D>(L, "FVector2D", &self->Position);
+			return 1;
+		}
+
+		static int MakeChild(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 4) {
+				auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+				auto ChildOffset = LuaObject::checkValue<FVector2D*>(L, 2);
+				auto ChildOffset_ = *ChildOffset;
+				auto InLocalSize = LuaObject::checkValue<FVector2D*>(L, 3);
+				auto InLocalSize_ = *InLocalSize;
+				auto ChildScale = LuaObject::checkValue<float>(L, 4);
+				auto ret = __newFGeometry();
+				*ret = self->MakeChild(ChildOffset_, InLocalSize_, ChildScale);
+				LuaObject::push<FGeometry>(L, "FGeometry", ret, true);
+				return 1;
+			}
+			luaL_error(L, "call FGeometry::MakeChild error, argc=%d", argc);
+			return 0;
+		}
+
+		static int IsUnderLocation(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 2) {
+				auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+				auto AbsoluteCoordinate = LuaObject::checkValue<FVector2D*>(L, 2);
+				auto AbsoluteCoordinate_ = *AbsoluteCoordinate;
+				auto ret = self->IsUnderLocation(AbsoluteCoordinate_);
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "call FGeometry::IsUnderLocation error, argc=%d", argc);
+			return 0;
+		}
+
+		static int AbsoluteToLocal(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 2) {
+				auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+				auto AbsoluteCoordinate = LuaObject::checkValue<FVector2D*>(L, 2);
+				auto AbsoluteCoordinate_ = *AbsoluteCoordinate;
+				auto ret = __newFVector2D();
+				*ret = self->AbsoluteToLocal(AbsoluteCoordinate_);
+				LuaObject::push<FVector2D>(L, "FVector2D", ret, true);
+				return 1;
+			}
+			luaL_error(L, "call FGeometry::AbsoluteToLocal error, argc=%d", argc);
+			return 0;
+		}
+
+		static int LocalToAbsolute(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 2) {
+				auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+				auto LocalCoordinate = LuaObject::checkValue<FVector2D*>(L, 2);
+				auto LocalCoordinate_ = *LocalCoordinate;
+				auto ret = __newFVector2D();
+				*ret = self->LocalToAbsolute(LocalCoordinate_);
+				LuaObject::push<FVector2D>(L, "FVector2D", ret, true);
+				return 1;
+			}
+			luaL_error(L, "call FGeometry::LocalToAbsolute error, argc=%d", argc);
+			return 0;
+		}
+
+		static int LocalToRoundedLocal(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 2) {
+				auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+				auto LocalCoordinate = LuaObject::checkValue<FVector2D*>(L, 2);
+				auto LocalCoordinate_ = *LocalCoordinate;
+				auto ret = __newFVector2D();
+				*ret = self->LocalToRoundedLocal(LocalCoordinate_);
+				LuaObject::push<FVector2D>(L, "FVector2D", ret, true);
+				return 1;
+			}
+			luaL_error(L, "call FGeometry::LocalToRoundedLocal error, argc=%d", argc);
+			return 0;
+		}
+
+		static int ToString(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+				auto ret = self->ToString();
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "call FGeometry::ToString error, argc=%d", argc);
+			return 0;
+		}
+
+		static int GetDrawSize(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+				auto ret = __newFVector2D();
+				*ret = self->GetDrawSize();
+				LuaObject::push<FVector2D>(L, "FVector2D", ret, true);
+				return 1;
+			}
+			luaL_error(L, "call FGeometry::GetDrawSize error, argc=%d", argc);
+			return 0;
+		}
+
+		static int GetLocalSize(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+				auto ret = __newFVector2D();
+				*ret = self->GetLocalSize();
+				LuaObject::push<FVector2D>(L, "FVector2D", ret, true);
+				return 1;
+			}
+			luaL_error(L, "call FGeometry::GetLocalSize error, argc=%d", argc);
+			return 0;
+		}
+
+		static int GetAbsolutePosition(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+				auto ret = __newFVector2D();
+				*ret = self->GetAbsolutePosition();
+				LuaObject::push<FVector2D>(L, "FVector2D", ret, true);
+				return 1;
+			}
+			luaL_error(L, "call FGeometry::GetAbsolutePosition error, argc=%d", argc);
+			return 0;
+		}
+
+		static int GetAbsoluteSize(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+				auto ret = __newFVector2D();
+				*ret = self->GetAbsoluteSize();
+				LuaObject::push<FVector2D>(L, "FVector2D", ret, true);
+				return 1;
+			}
+			luaL_error(L, "call FGeometry::GetAbsoluteSize error, argc=%d", argc);
+			return 0;
+		}
+
+		static int GetAbsolutePositionAtCoordinates(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 2) {
+				auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+				auto NormalCoordinates = LuaObject::checkValue<FVector2D*>(L, 2);
+				auto NormalCoordinates_ = *NormalCoordinates;
+				auto ret = __newFVector2D();
+				*ret = self->GetAbsolutePositionAtCoordinates(NormalCoordinates_);
+				LuaObject::push<FVector2D>(L, "FVector2D", ret, true);
+				return 1;
+			}
+			luaL_error(L, "call FGeometry::GetAbsolutePositionAtCoordinates error, argc=%d", argc);
+			return 0;
+		}
+
+		static int GetLocalPositionAtCoordinates(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 2) {
+				auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+				auto NormalCoordinates = LuaObject::checkValue<FVector2D*>(L, 2);
+				auto NormalCoordinates_ = *NormalCoordinates;
+				auto ret = __newFVector2D();
+				*ret = self->GetLocalPositionAtCoordinates(NormalCoordinates_);
+				LuaObject::push<FVector2D>(L, "FVector2D", ret, true);
+				return 1;
+			}
+			luaL_error(L, "call FGeometry::GetLocalPositionAtCoordinates error, argc=%d", argc);
+			return 0;
+		}
+
+		static int HasRenderTransform(lua_State* L) {
+			auto argc = lua_gettop(L);
+			if (argc == 1) {
+				auto self = LuaObject::checkValue<FGeometry*>(L, 1);
+				auto ret = self->HasRenderTransform();
+				LuaObject::push(L, ret);
+				return 1;
+			}
+			luaL_error(L, "call FGeometry::HasRenderTransform error, argc=%d", argc);
+			return 0;
+		}
+
+		static void bind(lua_State* L) {
+			AutoStack autoStack(L);
+			LuaObject::newType(L, "FGeometry");
+			LuaObject::addOperator(L, "__eq", __eq);
+			LuaObject::addField(L, "Size", get_Size, nullptr, true);
+			LuaObject::addField(L, "Scale", get_Scale, nullptr, true);
+			LuaObject::addField(L, "AbsolutePosition", get_AbsolutePosition, nullptr, true);
+			LuaObject::addField(L, "Position", get_Position, nullptr, true);
+			LuaObject::addMethod(L, "MakeChild", MakeChild, true);
+			LuaObject::addMethod(L, "IsUnderLocation", IsUnderLocation, true);
+			LuaObject::addMethod(L, "AbsoluteToLocal", AbsoluteToLocal, true);
+			LuaObject::addMethod(L, "LocalToAbsolute", LocalToAbsolute, true);
+			LuaObject::addMethod(L, "LocalToRoundedLocal", LocalToRoundedLocal, true);
+			LuaObject::addMethod(L, "ToString", ToString, true);
+			LuaObject::addMethod(L, "GetDrawSize", GetDrawSize, true);
+			LuaObject::addMethod(L, "GetLocalSize", GetLocalSize, true);
+			LuaObject::addMethod(L, "GetAbsolutePosition", GetAbsolutePosition, true);
+			LuaObject::addMethod(L, "GetAbsoluteSize", GetAbsoluteSize, true);
+			LuaObject::addMethod(L, "GetAbsolutePositionAtCoordinates", GetAbsolutePositionAtCoordinates, true);
+			LuaObject::addMethod(L, "GetLocalPositionAtCoordinates", GetLocalPositionAtCoordinates, true);
+			LuaObject::addMethod(L, "HasRenderTransform", HasRenderTransform, true);
+			LuaObject::finishType(L, "FGeometry", __ctor, __gc);
 		}
 
 	};
@@ -6922,6 +7215,11 @@ namespace slua {
 		_pushStructMap.Add(FMarginStruct, __pushFMargin);
 		_checkStructMap.Add(FMarginStruct, __checkFMargin);
 		FMarginWrapper::bind(L);
+
+		FGeometryStruct = FGeometry::StaticStruct();
+		_pushStructMap.Add(FGeometryStruct, __pushFGeometry);
+		_checkStructMap.Add(FGeometryStruct, __checkFGeometry);
+		FGeometryWrapper::bind(L);
 
 		FSlateColorStruct = FSlateColor::StaticStruct();
 		_pushStructMap.Add(FSlateColorStruct, __pushFSlateColor);

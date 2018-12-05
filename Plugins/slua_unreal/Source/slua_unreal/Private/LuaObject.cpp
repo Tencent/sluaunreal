@@ -485,6 +485,18 @@ namespace slua {
         
         return ret;
     }
+
+	void destructParams(lua_State* L, UFunction* func, uint8* params) {
+		// push out parms
+		for (TFieldIterator<UProperty> it(func); it; ++it) {
+			UProperty* p = *it;
+			uint64 propflag = p->GetPropertyFlags();
+			// skip return param
+			if (propflag&CPF_ReturnParm
+				&& !(propflag & (CPF_IsPlainOldData | CPF_NoDestructor)))
+				p->DestroyValue(params + p->GetOffset_ForInternal());
+		}
+	}
     
     int ufuncClosure(lua_State* L) {
         lua_pushvalue(L,lua_upvalueindex(1));
@@ -518,6 +530,8 @@ namespace slua {
         obj->ProcessEvent(func,params);
         // return value to push lua stack
         int ret = returnValue(L,func,params);
+		// destruct obj in params
+		destructParams(L, func, params);
 		return ret;
     }
 

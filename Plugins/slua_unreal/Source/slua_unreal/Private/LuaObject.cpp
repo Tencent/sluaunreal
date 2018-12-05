@@ -492,7 +492,7 @@ namespace slua {
 			UProperty* p = *it;
 			uint64 propflag = p->GetPropertyFlags();
 			// skip return param
-			if ((propflag&CPF_OutParm | propflag&CPF_ReturnParm) 
+			if (propflag&CPF_ReturnParm
 				&& !(propflag & (CPF_IsPlainOldData | CPF_NoDestructor)))
 				p->DestroyValue(params + p->GetOffset_ForInternal());
 		}

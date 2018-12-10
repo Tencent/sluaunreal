@@ -32,6 +32,9 @@ public:
     UPROPERTY(BlueprintReadWrite)
     TMap<FString,FString> maps;
 
+    UPROPERTY(BlueprintReadWrite)
+    TArray<FString> strs;
+
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     void setupfoo(UObject* obj);
 

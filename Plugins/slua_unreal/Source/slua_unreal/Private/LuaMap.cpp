@@ -40,8 +40,11 @@ namespace slua {
 	}
 
 	int LuaMap::push(lua_State* L, UMapProperty* prop, UObject* obj) {
+		if(LuaObject::getFromCache(L,prop)) return 1;
 		const auto map = new LuaMap(prop,obj);
-		return LuaObject::pushType(L, map, "LuaMap", setupMT, gc);
+		int r = LuaObject::pushType(L, map, "LuaMap", setupMT, gc);
+		if(r) LuaObject::cacheObj(L,prop);
+		return 1;
 	}
 
 	void LuaMap::clone(FScriptMap* dest,UProperty* keyProp, UProperty* valueProp,const FScriptMap* src) {
@@ -163,20 +166,22 @@ namespace slua {
 	void LuaMap::emptyValues(int32 Slack) {
 		checkSlow(Slack >= 0);
 
+		int32 OldNum = num();
 		if(!prop) {
-			int32 OldNum = num();
 			if (OldNum) {
 				destructItems(0, OldNum);
 			}
-			if (OldNum || Slack) {
-				map->Empty(Slack, helper.MapLayout);
-			}
-			SafeDelete(map);
 		}
+		if (OldNum || Slack) {
+			map->Empty(Slack, helper.MapLayout);
+		}
+		if(!prop) SafeDelete(map);
 	}
 
 	// modified FScriptMapHelper::DestructItems function to add value property offset on value ptr 
 	void LuaMap::destructItems(uint8* PairPtr, uint32 Stride, int32 Index, int32 Count, bool bDestroyKeys, bool bDestroyValues) {
+		// if map is owned by uobject, don't destructItems
+		if(prop) return;
 		auto valueOffset = createdByBp ? 0 : helper.MapLayout.ValueOffset;
 		for (; Count; ++Index) {
 			if (helper.IsValidIndex(Index)) {

@@ -52,5 +52,7 @@ mm:Add("age","12")
 assert(t.maps:Num()==2)
 assert(t.maps:Get("name")=="bill")
 assert(t.maps:Get("age")=="12")
+mm:Clear()
+assert(t.maps:Num()==0)
 
 print("Test map ok")

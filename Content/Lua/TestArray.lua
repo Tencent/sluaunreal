@@ -59,13 +59,20 @@ print('size of arr',arr:Num())
 t:SetArrayStr(arr)
 t:SetArrayStrEx(arr)
 
+local strs = t.strs
+strs:Add("1")
+strs:Add("2")
+assert(t.strs:Num()==2)
+assert(t.strs:Get(0)=="1")
+strs:Clear()
+assert(t.strs:Num()==0)
+
 TestArray={}
 
 function TestArray.update()
     -- test memory valid?
-    for i=0,arr:Num()-1 do
-        print("arr item",i,arr:Get(i))
-    end
+    assert(arr:Num()==3)
+    assert(arr:Get(0)=="jamy")
 end
 
 

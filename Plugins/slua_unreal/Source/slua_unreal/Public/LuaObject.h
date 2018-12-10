@@ -290,7 +290,10 @@ namespace slua {
 
         template<class T>
         static int pushType(lua_State* L,T cls,const char* tn,lua_CFunction setupmt=nullptr,lua_CFunction gc=nullptr) {
-            if(!cls) lua_pushnil(L);
+            if(!cls) {
+                lua_pushnil(L);
+                return 1;
+            }
             UserData<T>* ud = reinterpret_cast< UserData<T>* >(lua_newuserdata(L, sizeof(UserData<T>)));
             ud->ud = cls;
             ud->owned = gc!=nullptr;
@@ -384,6 +387,9 @@ namespace slua {
 
         static UFunction* findCacheFunction(lua_State* L,const FString& cname,const char* fname);
         static void cacheFunction(lua_State* L,const FString& cname,const char* fame,UFunction* func);
+
+        static bool getFromCache(lua_State* L, void* obj);
+		static void cacheObj(lua_State* L, void* obj);
     private:
         static int setupClassMT(lua_State* L);
         static int setupInstanceMT(lua_State* L);
@@ -395,11 +401,7 @@ namespace slua {
         static int gcStructClass(lua_State* L);
 		static int gcStruct(lua_State* L);
         static int objectToString(lua_State* L);
-
 		static int removeFromCacheGC(lua_State* L);
-		static bool getFromCache(lua_State* L, void* obj);
-		static void cacheObj(lua_State* L, void* obj);
-
         static void setupMetaTable(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc) {
             if(luaL_newmetatable(L, tn)) {
                 if(setupmt)
@@ -426,8 +428,10 @@ namespace slua {
 
         template<class T>
         static int pushType(lua_State* L,T cls,const char* tn,lua_CFunction setupmt,int gc) {
-            if(!cls)
+            if(!cls) {
                 lua_pushnil(L);
+                return 1;
+            }
                 
             UserData<T>* ud = reinterpret_cast< UserData<T>* >(lua_newuserdata(L, sizeof(UserData<T>)));
             ud->ud = cls;

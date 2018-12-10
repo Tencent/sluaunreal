@@ -39,6 +39,11 @@ namespace slua {
 		return LuaObject::pushType(L, map, "LuaMap", setupMT, gc);
 	}
 
+	int LuaMap::push(lua_State* L, UMapProperty* prop, UObject* obj) {
+		const auto map = new LuaMap(prop,obj);
+		return LuaObject::pushType(L, map, "LuaMap", setupMT, gc);
+	}
+
 	void LuaMap::clone(FScriptMap* dest,UProperty* keyProp, UProperty* valueProp,const FScriptMap* src) {
 		if(!src || src->Num()==0)
 			return;
@@ -54,18 +59,33 @@ namespace slua {
 
 
 	LuaMap::LuaMap(UProperty* kp, UProperty* vp, FScriptMap* buf) : 
+		map( new FScriptMap ),
 		keyProp(kp), 
 		valueProp(vp) ,
-		helper(FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, &map)) 
+		prop(nullptr),
+		propObj(nullptr),
+		helper(FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, map)) 
 	{
 		keyProp->PropertyFlags |= CPF_HasGetValueTypeHash;
 		if (buf) {
-			clone(&map,kp,vp,buf);
+			clone(map,kp,vp,buf);
 			createdByBp = true;
 		} else {
 			createdByBp = false;
 		}
 		
+	} 
+
+	LuaMap::LuaMap(UMapProperty* prop, UObject* obj) : 
+		map( nullptr ),
+		keyProp(prop->KeyProp), 
+		valueProp(prop->ValueProp) ,
+		prop(prop),
+		propObj(obj),
+		helper(FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, map)) ,
+		createdByBp(false)
+	{
+		map = prop->ContainerPtrToValuePtr<FScriptMap>(obj);
 	} 
 
 	LuaMap::~LuaMap() {
@@ -80,6 +100,9 @@ namespace slua {
 		
         Collector.AddReferencedObject(keyProp);
         Collector.AddReferencedObject(valueProp);
+		if(prop) Collector.AddReferencedObject(prop);
+		if(propObj) Collector.AddReferencedObject(propObj);
+
 		// if is empty 
 		int num = this->num();
 		if(num<=0) return;
@@ -132,7 +155,10 @@ namespace slua {
 		if(!keyProp || !valueProp)
 			return;
 		emptyValues();
+		if(!prop) SafeDelete(map);
 		keyProp = valueProp = nullptr;
+		prop = nullptr;
+		propObj = nullptr;
 	}
 
 	// modified FScriptMapHelper::EmptyValues function to add value property offset on value ptr 
@@ -144,7 +170,7 @@ namespace slua {
 			destructItems(0, OldNum);
 		}
 		if (OldNum || Slack) {
-			map.Empty(Slack, helper.MapLayout);
+			map->Empty(Slack, helper.MapLayout);
 		}
 	}
 
@@ -179,7 +205,7 @@ namespace slua {
 
 		if (bDestroyKeys || bDestroyValues) {
 			uint32 Stride = helper.MapLayout.SetLayout.Size;
-			uint8* PairPtr = (uint8*)map.GetData(Index, helper.MapLayout);
+			uint8* PairPtr = (uint8*)map->GetData(Index, helper.MapLayout);
 			destructItems(PairPtr, Stride, Index, Count, bDestroyKeys, bDestroyValues);
 		}
 	}
@@ -187,11 +213,11 @@ namespace slua {
 	// modified FScriptMapHelper::RemovePair function to call LuaMap::RemoveAt
 	bool LuaMap::removePair(const void* KeyPtr) {
 		UProperty* LocalKeyPropForCapture = keyProp;
-		if (uint8* Entry = map.FindValue(KeyPtr, helper.MapLayout,
+		if (uint8* Entry = map->FindValue(KeyPtr, helper.MapLayout,
 			[LocalKeyPropForCapture](const void* ElementKey) { return LocalKeyPropForCapture->GetValueTypeHash(ElementKey); },
 			[LocalKeyPropForCapture](const void* A, const void* B) { return LocalKeyPropForCapture->Identical(A, B); }
 		)) {
-			int32 Idx = (Entry - (uint8*)map.GetData(0, helper.MapLayout)) / helper.MapLayout.SetLayout.Size;
+			int32 Idx = (Entry - (uint8*)map->GetData(0, helper.MapLayout)) / helper.MapLayout.SetLayout.Size;
 			removeAt(Idx);
 			return true;
 		} else {
@@ -205,7 +231,7 @@ namespace slua {
 		destructItems(Index, Count);
 		for (; Count; ++Index) {
 			if (helper.IsValidIndex(Index)) {
-				map.RemoveAt(Index, helper.MapLayout);
+				map->RemoveAt(Index, helper.MapLayout);
 				--Count;
 			}
 		}

@@ -982,10 +982,13 @@ namespace slua {
     }
 
 	int LuaObject::push(lua_State* L, UProperty* up, UObject* obj) {
-		auto p = Cast<UArrayProperty>(up);
+		auto cls = up->GetClass();
 		// if it's an UArrayProperty
-		if (p)
-			return LuaArray::push(L, p, obj);
+		if (cls==UArrayProperty::StaticClass())
+			return LuaArray::push(L, Cast<UArrayProperty>(up), obj);
+        // if it's an UMapProperty
+        else if(cls==UMapProperty::StaticClass())
+            return LuaMap::push(L,Cast<UMapProperty>(up),obj);
 		else
 			return push(L, up, up->ContainerPtrToValuePtr<uint8>(obj));
 	}

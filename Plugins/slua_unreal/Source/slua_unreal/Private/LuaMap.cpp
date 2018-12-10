@@ -77,15 +77,14 @@ namespace slua {
 	} 
 
 	LuaMap::LuaMap(UMapProperty* prop, UObject* obj) : 
-		map( nullptr ),
+		map( prop->ContainerPtrToValuePtr<FScriptMap>(obj) ),
 		keyProp(prop->KeyProp), 
 		valueProp(prop->ValueProp) ,
 		prop(prop),
 		propObj(obj),
-		helper(FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, map)) ,
+		helper(prop, map) ,
 		createdByBp(false)
 	{
-		map = prop->ContainerPtrToValuePtr<FScriptMap>(obj);
 	} 
 
 	LuaMap::~LuaMap() {
@@ -155,7 +154,6 @@ namespace slua {
 		if(!keyProp || !valueProp)
 			return;
 		emptyValues();
-		if(!prop) SafeDelete(map);
 		keyProp = valueProp = nullptr;
 		prop = nullptr;
 		propObj = nullptr;
@@ -165,12 +163,15 @@ namespace slua {
 	void LuaMap::emptyValues(int32 Slack) {
 		checkSlow(Slack >= 0);
 
-		int32 OldNum = num();
-		if (OldNum) {
-			destructItems(0, OldNum);
-		}
-		if (OldNum || Slack) {
-			map->Empty(Slack, helper.MapLayout);
+		if(!prop) {
+			int32 OldNum = num();
+			if (OldNum) {
+				destructItems(0, OldNum);
+			}
+			if (OldNum || Slack) {
+				map->Empty(Slack, helper.MapLayout);
+			}
+			SafeDelete(map);
 		}
 	}
 

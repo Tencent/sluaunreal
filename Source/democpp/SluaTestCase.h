@@ -29,6 +29,9 @@ public:
     UPROPERTY(BlueprintReadOnly)
     TArray<UObject*> foos;
 
+    UPROPERTY(BlueprintReadWrite)
+    TMap<FString,FString> maps;
+
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     void setupfoo(UObject* obj);
 

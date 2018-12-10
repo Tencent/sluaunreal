@@ -131,6 +131,8 @@ namespace slua {
     }
 
     void LuaArray::destructItems(int index,int count) {
+        // if array is owned by uobject, don't destructItems
+        if(prop) return;
         if (!(inner->PropertyFlags & (CPF_IsPlainOldData | CPF_NoDestructor)))
 		{
 			uint8 *Dest = getRawPtr(index);

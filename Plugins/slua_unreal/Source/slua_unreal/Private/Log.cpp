@@ -44,6 +44,8 @@ namespace {
         case LogLevel::LL_Error:
             UE_LOG(Slua, Error, TEXT("%s"), buf);
             break;
+        default:
+            UE_LOG(Slua, Log, TEXT("%s"), buf);
         }
     }
 }

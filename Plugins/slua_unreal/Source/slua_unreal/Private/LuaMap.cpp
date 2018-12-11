@@ -39,6 +39,14 @@ namespace slua {
 		return LuaObject::pushType(L, map, "LuaMap", setupMT, gc);
 	}
 
+	int LuaMap::push(lua_State* L, UMapProperty* prop, UObject* obj) {
+		if(LuaObject::getFromCache(L,prop)) return 1;
+		const auto map = new LuaMap(prop,obj);
+		int r = LuaObject::pushType(L, map, "LuaMap", setupMT, gc);
+		if(r) LuaObject::cacheObj(L,prop);
+		return 1;
+	}
+
 	void LuaMap::clone(FScriptMap* dest,UProperty* keyProp, UProperty* valueProp,const FScriptMap* src) {
 		if(!src || src->Num()==0)
 			return;
@@ -54,18 +62,32 @@ namespace slua {
 
 
 	LuaMap::LuaMap(UProperty* kp, UProperty* vp, FScriptMap* buf) : 
+		map( new FScriptMap ),
 		keyProp(kp), 
 		valueProp(vp) ,
-		helper(FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, &map)) 
+		prop(nullptr),
+		propObj(nullptr),
+		helper(FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, map)) 
 	{
 		keyProp->PropertyFlags |= CPF_HasGetValueTypeHash;
 		if (buf) {
-			clone(&map,kp,vp,buf);
+			clone(map,kp,vp,buf);
 			createdByBp = true;
 		} else {
 			createdByBp = false;
 		}
 		
+	} 
+
+	LuaMap::LuaMap(UMapProperty* prop, UObject* obj) : 
+		map( prop->ContainerPtrToValuePtr<FScriptMap>(obj) ),
+		keyProp(prop->KeyProp), 
+		valueProp(prop->ValueProp) ,
+		prop(prop),
+		propObj(obj),
+		helper(prop, map) ,
+		createdByBp(false)
+	{
 	} 
 
 	LuaMap::~LuaMap() {
@@ -80,6 +102,9 @@ namespace slua {
 		
         Collector.AddReferencedObject(keyProp);
         Collector.AddReferencedObject(valueProp);
+		if(prop) Collector.AddReferencedObject(prop);
+		if(propObj) Collector.AddReferencedObject(propObj);
+
 		// if is empty 
 		int num = this->num();
 		if(num<=0) return;
@@ -133,6 +158,8 @@ namespace slua {
 			return;
 		emptyValues();
 		keyProp = valueProp = nullptr;
+		prop = nullptr;
+		propObj = nullptr;
 	}
 
 	// modified FScriptMapHelper::EmptyValues function to add value property offset on value ptr 
@@ -140,16 +167,21 @@ namespace slua {
 		checkSlow(Slack >= 0);
 
 		int32 OldNum = num();
-		if (OldNum) {
-			destructItems(0, OldNum);
+		if(!prop) {
+			if (OldNum) {
+				destructItems(0, OldNum);
+			}
 		}
 		if (OldNum || Slack) {
-			map.Empty(Slack, helper.MapLayout);
+			map->Empty(Slack, helper.MapLayout);
 		}
+		if(!prop) SafeDelete(map);
 	}
 
 	// modified FScriptMapHelper::DestructItems function to add value property offset on value ptr 
 	void LuaMap::destructItems(uint8* PairPtr, uint32 Stride, int32 Index, int32 Count, bool bDestroyKeys, bool bDestroyValues) {
+		// if map is owned by uobject, don't destructItems
+		if(prop) return;
 		auto valueOffset = createdByBp ? 0 : helper.MapLayout.ValueOffset;
 		for (; Count; ++Index) {
 			if (helper.IsValidIndex(Index)) {
@@ -179,7 +211,7 @@ namespace slua {
 
 		if (bDestroyKeys || bDestroyValues) {
 			uint32 Stride = helper.MapLayout.SetLayout.Size;
-			uint8* PairPtr = (uint8*)map.GetData(Index, helper.MapLayout);
+			uint8* PairPtr = (uint8*)map->GetData(Index, helper.MapLayout);
 			destructItems(PairPtr, Stride, Index, Count, bDestroyKeys, bDestroyValues);
 		}
 	}
@@ -187,11 +219,11 @@ namespace slua {
 	// modified FScriptMapHelper::RemovePair function to call LuaMap::RemoveAt
 	bool LuaMap::removePair(const void* KeyPtr) {
 		UProperty* LocalKeyPropForCapture = keyProp;
-		if (uint8* Entry = map.FindValue(KeyPtr, helper.MapLayout,
+		if (uint8* Entry = map->FindValue(KeyPtr, helper.MapLayout,
 			[LocalKeyPropForCapture](const void* ElementKey) { return LocalKeyPropForCapture->GetValueTypeHash(ElementKey); },
 			[LocalKeyPropForCapture](const void* A, const void* B) { return LocalKeyPropForCapture->Identical(A, B); }
 		)) {
-			int32 Idx = (Entry - (uint8*)map.GetData(0, helper.MapLayout)) / helper.MapLayout.SetLayout.Size;
+			int32 Idx = (Entry - (uint8*)map->GetData(0, helper.MapLayout)) / helper.MapLayout.SetLayout.Size;
 			removeAt(Idx);
 			return true;
 		} else {
@@ -205,7 +237,7 @@ namespace slua {
 		destructItems(Index, Count);
 		for (; Count; ++Index) {
 			if (helper.IsValidIndex(Index)) {
-				map.RemoveAt(Index, helper.MapLayout);
+				map->RemoveAt(Index, helper.MapLayout);
 				--Count;
 			}
 		}

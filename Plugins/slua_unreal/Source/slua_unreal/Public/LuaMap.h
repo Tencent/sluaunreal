@@ -45,18 +45,20 @@ namespace slua {
 	public:
 		static void reg(lua_State* L);
 		static int push(lua_State* L, UProperty* keyProp, UProperty* valueProp, FScriptMap* buf);
+		static int push(lua_State* L, UMapProperty* prop, UObject* obj);
 		static void clone(FScriptMap* dest,UProperty* keyProp, UProperty* valueProp,const FScriptMap* src);
 
 		LuaMap(UProperty* keyProp, UProperty* valueProp, FScriptMap* buf);
+		LuaMap(UMapProperty* prop, UObject* obj);
 		~LuaMap();
 
 		const FScriptMap* get() {
-			return &map;
+			return map;
 		}
 
 		virtual void AddReferencedObjects( FReferenceCollector& Collector ) override;
 
-		virtual FString GetReferencerName() const
+		virtual FString GetReferencerName() const override
         {
             return "LuaMap";
         }
@@ -82,7 +84,8 @@ namespace slua {
 			typedef TSet<typename RealType::ElementType> RealPairsType;
 			static_assert(sizeof(FScriptSet) == sizeof(RealPairsType), "FScriptMap's Pairs member size does not match TMap's");
 
-			return *(reinterpret_cast<const TMap<TKey, TValue>*>(&map));
+			return *(reinterpret_cast<const TMap<TKey, TValue>*>(
+				map));
 		}
 
 	protected:
@@ -96,9 +99,11 @@ namespace slua {
 		static int Enumerable(lua_State* L);
 
 	private:
-		FScriptMap map;
+		FScriptMap* map;
 		UProperty* keyProp;
 		UProperty* valueProp;
+		UMapProperty* prop;
+		UObject* propObj;
 		FScriptMapHelper helper;
 		bool createdByBp;
 

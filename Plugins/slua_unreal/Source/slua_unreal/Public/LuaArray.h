@@ -44,7 +44,7 @@ namespace slua {
 
         virtual void AddReferencedObjects( FReferenceCollector& Collector ) override;
 
-        virtual FString GetReferencerName() const
+        virtual FString GetReferencerName() const override
         {
             return "LuaArray";
         }

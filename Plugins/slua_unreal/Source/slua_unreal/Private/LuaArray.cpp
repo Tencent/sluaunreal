@@ -74,9 +74,9 @@ namespace slua {
 			{
 				inner->DestroyValue(Dest);
 			}
-			array->Empty(0, inner->ElementSize);
-			SafeDelete(array);
 		}
+        array->Empty(0, inner->ElementSize);
+        if(!prop) SafeDelete(array);
         inner = nullptr;
     }
 
@@ -131,6 +131,8 @@ namespace slua {
     }
 
     void LuaArray::destructItems(int index,int count) {
+        // if array is owned by uobject, don't destructItems
+        if(prop) return;
         if (!(inner->PropertyFlags & (CPF_IsPlainOldData | CPF_NoDestructor)))
 		{
 			uint8 *Dest = getRawPtr(index);
@@ -162,8 +164,11 @@ namespace slua {
     }
 
 	int LuaArray::push(lua_State* L, UArrayProperty* prop, UObject* obj) {
+        if(LuaObject::getFromCache(L,prop)) return 1;
 		LuaArray* array = new LuaArray(prop, obj);
-		return LuaObject::pushType(L, array, "LuaArray", setupMT, gc);
+		int r = LuaObject::pushType(L, array, "LuaArray", setupMT, gc);
+        if(r) LuaObject::cacheObj(L,prop);
+        return 1;
 	}
 
     int LuaArray::__ctor(lua_State* L) {

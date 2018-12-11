@@ -1,8 +1,8 @@
 local Test=import('SluaTestCase');
 local t=Test();
 
-local t = {t:GetMap(), slua.Map(UEnums.EPropertyClass.Int, UEnums.EPropertyClass.Str)}
-for i,v in ipairs(t) do
+local mm = {t:GetMap(), slua.Map(UEnums.EPropertyClass.Int, UEnums.EPropertyClass.Str)}
+for i,v in ipairs(mm) do
     local map = v
     map:Add(5,"500")
     print("map:Get(5)", map:Get(5))
@@ -44,3 +44,15 @@ for i,v in ipairs(t) do
     map:Clear()
     print("map num", map:Num())
 end
+
+local mm = t.maps
+mm:Add("name","bill")
+mm:Add("age","12")
+
+assert(t.maps:Num()==2)
+assert(t.maps:Get("name")=="bill")
+assert(t.maps:Get("age")=="12")
+mm:Clear()
+assert(t.maps:Num()==0)
+
+print("Test map ok")

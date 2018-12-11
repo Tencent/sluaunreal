@@ -19,6 +19,7 @@
 #include "LuaObject.h"
 #include "LuaDelegate.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/StrongObjectPtr.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/Stack.h"
@@ -84,71 +85,64 @@ namespace slua {
         }
     }
 
-	UProperty* LuaObject::getDefaultProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type) {
-        UProperty* p;
+	TStrongObjectPtr<UStruct> propOuter;
+	UProperty* LuaObject::createProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type) {
+		UProperty* p = nullptr;
+		if(!propOuter) propOuter.Reset(NewObject<UStruct>((UObject*)GetTransientPackage()));
+
+		UObject* outer = propOuter.Get();
 		switch (type) {
 			case UE4CodeGen_Private::EPropertyClass::Byte:
-				p = Cast<UProperty>(UByteProperty::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UByteProperty::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::Int8:
-				p = Cast<UProperty>(UInt8Property::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UInt8Property::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::Int16:
-				p = Cast<UProperty>(UInt16Property::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UInt16Property::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::Int:
-				p = Cast<UProperty>(UIntProperty::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UIntProperty::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::Int64:
-				p = Cast<UProperty>(UInt64Property::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UInt64Property::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::UInt16:
-				p = Cast<UProperty>(UUInt16Property::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UUInt16Property::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::UInt32:
-				p = Cast<UProperty>(UUInt32Property::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UUInt32Property::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::UInt64:
-				p = Cast<UProperty>(UUInt64Property::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UUInt64Property::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::UnsizedInt:
-				p = Cast<UProperty>(UUInt64Property::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UUInt64Property::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::UnsizedUInt:
-				p = Cast<UProperty>(UUInt64Property::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UUInt64Property::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::Float:
-				p = Cast<UProperty>(UFloatProperty::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UFloatProperty::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::Double:
-				p = Cast<UProperty>(UDoubleProperty::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UDoubleProperty::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::Bool:
-				p = Cast<UProperty>(UBoolProperty::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UBoolProperty::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::Object:
-				p = Cast<UProperty>(UObjectProperty::StaticClass()->GetDefaultObject());
+				p = NewObject<UProperty>(outer, UObjectProperty::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::Str:
-				p = Cast<UProperty>(UStrProperty::StaticClass()->GetDefaultObject());
+				p = NewObject<UProperty>(outer, UStrProperty::StaticClass());
                 break;
-			default:
-				luaL_error(L, "unsupport property type");
-				return nullptr;
 		}
+		if (p) {
+			FArchive ar;
+			p->LinkWithoutChangingOffset(ar);
+		}
+			
         return p;
 	}
 

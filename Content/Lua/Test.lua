@@ -2,7 +2,7 @@
 require 'TestCase'
 require 'TestStruct'
 require 'TestCppBinding'
-require 'TestMap'
+local TestMap = require 'TestMap'
 local TestArray = require 'TestArray'
 local Test=import('SluaTestCase');
 local GameplayStatics=import'GameplayStatics';
@@ -34,7 +34,6 @@ btn2.OnClicked:Add(function()
 end);
 local edit=ui:FindWidget('TextBox_0');
 local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
-edit.OnTextChanged:Remove(evt);
 txt:SetText('helloworld button');
 local style=ButtonStyle();
 btn:SetStyle(style);
@@ -101,6 +100,7 @@ function update(dt,actor)
     edit.OnTextChanged:Remove(evt);
 
     TestArray.update()
+	TestMap.update()
 
     for k,v in pairs(ret) do
         print("ret table",k,v)

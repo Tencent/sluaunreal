@@ -19,6 +19,6 @@
 namespace slua {
 
 	namespace LuaReference{
-		bool addRefByProperty(FReferenceCollector& collector, UProperty* prop, void* ptr);
+		bool addRefByProperty(FReferenceCollector& collector, const UProperty* prop, void* ptr);
 	}
 }

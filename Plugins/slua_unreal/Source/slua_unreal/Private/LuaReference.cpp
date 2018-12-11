@@ -18,7 +18,8 @@ namespace slua {
 	namespace LuaReference {
 
 		void addRefByStruct(FReferenceCollector& collector, UStruct* us, void* base) {
-			// TODO
+			for (TFieldIterator<const UProperty> it(us); it; ++it)
+				addRefByProperty(collector, *it, base);
 		}
 
 		void addRefByDelegate(FReferenceCollector& collector, const FScriptDelegate&) {
@@ -30,7 +31,7 @@ namespace slua {
 		}
 
 
-		bool addRefByProperty(FReferenceCollector& collector, UProperty* prop, void* base) {
+		bool addRefByProperty(FReferenceCollector& collector, const UProperty* prop, void* base) {
 			bool ret = false;
 			if (auto p = Cast<UObjectProperty>(prop)) {
 				for (int n = 0; n < p->ArrayDim; ++n)

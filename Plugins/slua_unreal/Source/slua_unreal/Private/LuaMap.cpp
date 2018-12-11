@@ -115,7 +115,6 @@ namespace slua {
 		if(num<=0) return;
 
 		int index = 0;
-		TArray<const UStructProperty*> EncounteredStructProps;
 		// for each valid entry of map
         do {
 			if(num <=0 ) return;

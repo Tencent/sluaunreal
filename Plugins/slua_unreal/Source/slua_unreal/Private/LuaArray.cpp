@@ -16,6 +16,7 @@
 #include <string>
 #include "SluaLib.h"
 #include "LuaState.h"
+#include "LuaReference.h"
 
 namespace slua {
 
@@ -90,14 +91,9 @@ namespace slua {
 		if (propObj) Collector.AddReferencedObject(propObj);
         // if empty
         if(num()==0) return;
-        // if inner element is uobject ,should reference it
-        TArray<const UStructProperty*> EncounteredStructProps;
-        auto op=Cast<UObjectProperty>(inner);
-        if(op && op->ContainsObjectReference(EncounteredStructProps)) {
-            for(int n=0;n<num();n++) {
-                UObject* obj = *(reinterpret_cast<UObject**>(getRawPtr(n)));
-                Collector.AddReferencedObject(obj);
-            }
+        for(int n=0;n<num();n++) {
+            void* ptr = getRawPtr(n);
+			LuaReference::addRefByProperty(Collector, inner, ptr);
         }
     }
 

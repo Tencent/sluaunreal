@@ -17,6 +17,7 @@
 #include "Log.h"
 #include <algorithm>
 #include "LuaState.h"
+#include "LuaReference.h"
 
 #define GET_CHECKER(tag) \
 	auto tag##Checker = LuaObject::getChecker(UD->tag##Prop);\
@@ -113,40 +114,30 @@ namespace slua {
 		int num = this->num();
 		if(num<=0) return;
 
-        // if inner element is uobject ,should reference it
-		auto kp=Cast<UObjectProperty>(keyProp);
-		auto vp=Cast<UObjectProperty>(valueProp);
-		
-		// if key or value is uobject
-        if(kp || vp) {
-			
-			int index = 0;
-			TArray<const UStructProperty*> EncounteredStructProps;
-			// for each valid entry of map
-            do {
-				if(num <=0 ) return;
+		int index = 0;
+		TArray<const UStructProperty*> EncounteredStructProps;
+		// for each valid entry of map
+        do {
+			if(num <=0 ) return;
 
-				if (helper.IsValidIndex(index)) {
-					auto pairPtr = helper.GetPairPtr(index);
-					auto keyPtr = getKeyPtr(pairPtr);
-					auto valuePtr = getValuePtr(pairPtr);
-					// if is uobject key
-					if(kp->ContainsObjectReference(EncounteredStructProps)) {
-						UObject* obj = *(reinterpret_cast<UObject**>(keyPtr));
-						Collector.AddReferencedObject(obj);
-					}
-					// if is uobject value
-					if(vp->ContainsObjectReference(EncounteredStructProps)) {
-						UObject* obj = *(reinterpret_cast<UObject**>(valuePtr));
-						Collector.AddReferencedObject(obj);
-					}
-					index += 1;
-					num -= 1;
-				} else {
-					index += 1;
-				}
-			} while (true);
-        }
+			if (helper.IsValidIndex(index)) {
+				auto pairPtr = helper.GetPairPtr(index);
+				auto keyPtr = getKeyPtr(pairPtr);
+				auto valuePtr = getValuePtr(pairPtr);
+
+				bool keyChanged = false;
+				bool valuesChanged = false;
+
+				keyChanged = LuaReference::addRefByProperty(Collector, keyProp, keyPtr);
+				valuesChanged = LuaReference::addRefByProperty(Collector, valueProp, valuePtr);
+				if(keyChanged) helper.Rehash();
+				
+				index += 1;
+				num -= 1;
+			} else {
+				index += 1;
+			}
+		} while (true);
     }
 
 	uint8* LuaMap::getKeyPtr(uint8* pairPtr) {

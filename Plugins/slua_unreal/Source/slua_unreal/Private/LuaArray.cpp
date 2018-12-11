@@ -63,6 +63,8 @@ namespace slua {
     LuaArray::~LuaArray() {
         // should destroy inner property value
         clear();
+		if (!prop) SafeDelete(array);
+		inner = nullptr;
     }
 
     void LuaArray::clear() {
@@ -76,8 +78,6 @@ namespace slua {
 			}
 		}
         array->Empty(0, inner->ElementSize);
-        if(!prop) SafeDelete(array);
-        inner = nullptr;
     }
 
     void LuaArray::AddReferencedObjects( FReferenceCollector& Collector )

@@ -92,6 +92,10 @@ namespace slua {
 
 	LuaMap::~LuaMap() {
 		clear();
+		if (!prop) SafeDelete(map);
+		keyProp = valueProp = nullptr;
+		prop = nullptr;
+		propObj = nullptr;
 	}
 
 	void LuaMap::AddReferencedObjects( FReferenceCollector& Collector )
@@ -157,9 +161,6 @@ namespace slua {
 		if(!keyProp || !valueProp)
 			return;
 		emptyValues();
-		keyProp = valueProp = nullptr;
-		prop = nullptr;
-		propObj = nullptr;
 	}
 
 	// modified FScriptMapHelper::EmptyValues function to add value property offset on value ptr 
@@ -175,7 +176,6 @@ namespace slua {
 		if (OldNum || Slack) {
 			map->Empty(Slack, helper.MapLayout);
 		}
-		if(!prop) SafeDelete(map);
 	}
 
 	// modified FScriptMapHelper::DestructItems function to add value property offset on value ptr 

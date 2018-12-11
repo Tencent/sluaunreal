@@ -31,24 +31,23 @@ print('array<int> test successful')
 
 -- test array<fstring>
 local arr=t:GetArrayStr()
-for i=0,arr:Num()-1 do
-    print("arr item",i,arr:Get(i))
-end
+assert(arr:Num()==3)
+assert(arr:Get(0)=="hello")
+assert(arr:Get(1)=="world")
+assert(arr:Get(2)=="nihao")
 arr:Add("shijie")
-for i=0,arr:Num()-1 do
-    print("arr item",i,arr:Get(i))
-end
 assert(arr:Num()==4)
+assert(arr:Get(3)=="shijie")
 print('array<fstring> test successful')
-
 arr:Clear()
+assert(arr:Num()==0)
 
 -- create TArray<int>
 local arr = slua.Array(UEnums.EPropertyClass.Int)
 arr:Add(1)
 arr:Add(2)
 arr:Add(3)
-print('size of arr',arr:Num())
+assert(arr:Num()==3)
 
 -- create TArray<FString>
 local arr = slua.Array(UEnums.EPropertyClass.Str)

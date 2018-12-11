@@ -42,7 +42,7 @@ for i,v in ipairs(mm) do
     print("foreach end...")
 
     map:Clear()
-    print("map num", map:Num())
+    assert(map:Num()==0)
 end
 
 local mm = t.maps

@@ -487,11 +487,10 @@ namespace slua {
     }
 
 	void destructParams(lua_State* L, UFunction* func, uint8* params) {
-		// push out parms
 		for (TFieldIterator<UProperty> it(func); it; ++it) {
 			UProperty* p = *it;
 			uint64 propflag = p->GetPropertyFlags();
-			// skip return param
+			// if is return value and should be destructed
 			if (propflag&CPF_ReturnParm
 				&& !(propflag & (CPF_IsPlainOldData | CPF_NoDestructor)))
 				p->DestroyValue(params + p->GetOffset_ForInternal());

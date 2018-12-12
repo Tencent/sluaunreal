@@ -109,6 +109,12 @@ function update(dt,actor)
     foos:Add(ui)
     foos:Remove(0)
 
+	local info = t:GetUserInfo()
+	print("info.name",info.name)
+	assert(info.name=="女战士")
+	assert(info.id==1001001)
+	assert(info.level==12)
+
     collectgarbage("collect")
     return 1024,2,"s",ret,function() end
 end

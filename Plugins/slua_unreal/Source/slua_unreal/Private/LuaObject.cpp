@@ -32,6 +32,7 @@
 #include "LuaWrapper.h"
 #include "LuaEnums.h"
 #include "SluaUtil.h"
+#include "LuaReference.h"
 
 ULuaObject::ULuaObject(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
@@ -70,9 +71,17 @@ namespace slua {
     }
 
     LuaStruct::~LuaStruct() {
-        FMemory::Free(buf);
-        buf = nullptr;
+		if (buf) {
+			uss->DestroyStruct(buf);
+			FMemory::Free(buf);
+			buf = nullptr;
+		}
     }
+
+	void LuaStruct::AddReferencedObjects(FReferenceCollector& Collector) {
+		Collector.AddReferencedObject(uss);
+		LuaReference::addRefByStruct(Collector, uss, buf);
+	}
 
     void LuaObject::addExtensionMethod(UClass* cls,const char* n,lua_CFunction func,bool isStatic) {
         if(isStatic) {
@@ -86,7 +95,7 @@ namespace slua {
     }
 
 	TStrongObjectPtr<UStruct> propOuter;
-	UProperty* LuaObject::createProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type) {
+	UProperty* LuaObject::createProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type, UClass* cls) {
 		UProperty* p = nullptr;
 		if(!propOuter) propOuter.Reset(NewObject<UStruct>((UObject*)GetTransientPackage()));
 
@@ -131,9 +140,12 @@ namespace slua {
 			case UE4CodeGen_Private::EPropertyClass::Bool:
 				p = NewObject<UProperty>(outer, UBoolProperty::StaticClass());
                 break;
-			case UE4CodeGen_Private::EPropertyClass::Object:
-				p = NewObject<UProperty>(outer, UObjectProperty::StaticClass());
-                break;
+			case UE4CodeGen_Private::EPropertyClass::Object: {
+				auto op = NewObject<UObjectProperty>(outer, UObjectProperty::StaticClass());
+				op->SetPropertyClass(cls);
+				p = op;
+				break;
+			}
 			case UE4CodeGen_Private::EPropertyClass::Str:
 				p = NewObject<UProperty>(outer, UStrProperty::StaticClass());
                 break;
@@ -697,7 +709,8 @@ namespace slua {
 
 		uint32 size = uss->GetStructureSize() ? uss->GetStructureSize() : 1;
 		uint8* buf = (uint8*)FMemory::Malloc(size);
-		FMemory::Memcpy(buf, parms, size);
+		uss->InitializeStruct(buf);
+		uss->CopyScriptStruct(buf, parms);
 		return LuaObject::push(L, new LuaStruct{buf,size,uss});
     }  
 

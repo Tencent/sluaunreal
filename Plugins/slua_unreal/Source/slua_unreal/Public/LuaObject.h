@@ -66,13 +66,20 @@ namespace slua {
         int top;
     };
 
-    struct LuaStruct {
+    struct LuaStruct : public FGCObject {
         uint8* buf;
         uint32 size;
         UScriptStruct* uss;
 
         LuaStruct(uint8* buf,uint32 size,UScriptStruct* uss);
         ~LuaStruct();
+
+		virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
+
+		virtual FString GetReferencerName() const override
+		{
+			return "LuaStruct";
+		}
     };
 
     template<class T>
@@ -383,7 +390,7 @@ namespace slua {
 
         static void addExtensionMethod(UClass* cls,const char* n,lua_CFunction func,bool isStatic=false);
 
-		static UProperty* createProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type);
+		static UProperty* createProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type, UClass* cls=nullptr);
 
         static UFunction* findCacheFunction(lua_State* L,const FString& cname,const char* fname);
         static void cacheFunction(lua_State* L,const FString& cname,const char* fame,UFunction* func);

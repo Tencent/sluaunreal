@@ -19,6 +19,7 @@
 namespace slua {
 
 	namespace LuaReference{
+		void addRefByStruct(FReferenceCollector& collector, UStruct* us, void* base);
 		bool addRefByProperty(FReferenceCollector& collector, const UProperty* prop, void* ptr);
 	}
 }

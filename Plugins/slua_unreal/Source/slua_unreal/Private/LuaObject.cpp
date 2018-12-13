@@ -20,6 +20,7 @@
 #include "LuaDelegate.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/StrongObjectPtr.h"
+#include "UObject/StructOnScope.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/Stack.h"
@@ -94,12 +95,15 @@ namespace slua {
         }
     }
 
-	TStrongObjectPtr<UStruct> propOuter;
+	UObject* getPropertyOutter() {
+		static TStrongObjectPtr<UStruct> propOuter;
+		if (!propOuter.IsValid()) propOuter.Reset(NewObject<UStruct>((UObject*)GetTransientPackage()));
+		return propOuter.Get();
+	}
+	
 	UProperty* LuaObject::createProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type, UClass* cls) {
 		UProperty* p = nullptr;
-		if(!propOuter) propOuter.Reset(NewObject<UStruct>((UObject*)GetTransientPackage()));
-
-		UObject* outer = propOuter.Get();
+		UObject* outer = getPropertyOutter();
 		switch (type) {
 			case UE4CodeGen_Private::EPropertyClass::Byte:
 				p = NewObject<UProperty>(outer, UByteProperty::StaticClass());

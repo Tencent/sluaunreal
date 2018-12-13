@@ -520,17 +520,15 @@ namespace slua {
         
         UFunction* func = reinterpret_cast<UFunction*>(ud);
         
-        uint8* params = (uint8*)FMemory_Alloca(func->ParmsSize);
-        FMemory::Memzero( params, func->ParmsSize );
-        fillParam(L,offset,func,params);
-
-        // call function with params
-        obj->ProcessEvent(func,params);
-        // return value to push lua stack
-        int ret = returnValue(L,func,params);
-		// destruct obj in params
-		func->DestroyStruct(params);
-		return ret;
+		FStructOnScope params(func);
+		fillParam(L, offset, func, params.GetStructMemory());
+		{
+			FEditorScriptExecutionGuard scriptGuard;
+			// call function with params
+			obj->ProcessEvent(func, params.GetStructMemory());
+		}
+		// return value to push lua stack
+		return returnValue(L, func, params.GetStructMemory());
     }
 
     // find ufunction from cache

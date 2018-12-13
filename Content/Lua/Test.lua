@@ -1,153 +1,32 @@
---require 'TestPerf'
-require 'TestCase'
-require 'TestStruct'
-require 'TestCppBinding'
-local TestMap = require 'TestMap'
-local TestArray = require 'TestArray'
-local Test=import('SluaTestCase');
-local GameplayStatics=import'GameplayStatics';
 
-local t=Test();
+function begin(uworld,uactor)
+    world=uworld
+    actor=uactor
 
-
-
-local Button = import('Button');
-local ButtonStyle = import('ButtonStyle');
-local TextBlock = import('TextBlock');
-local btn=Button();
-local txt=TextBlock();
-local ui=slua.loadUI('/Game/Panel.Panel');
-t:TwoArgs("helloworld",100,1717,"1024",ui)
-ui:AddToViewport(0);
-local seq=ui.ActiveSequencePlayers;
-print('seq',seq:Num());
-local btn2=ui:FindWidget('Button1');
-local index = 1
-
-t:setupfoo(ui)
-foos=t.foos;
-t:delfoo()
-
-btn2.OnClicked:Add(function() 
-    index=index+1
-    print('say helloworld',index) 
-end);
-local edit=ui:FindWidget('TextBox_0');
-local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
-txt:SetText('helloworld button');
-local style=ButtonStyle();
-btn:SetStyle(style);
-btn:AddChild(txt);
-print(btn:IsPressed(),btn.OnClicked);
-local event=btn.OnClicked;
-local index=1
-event:Add(function() 
-    index=index+1
-    print('helloworld',index) 
-end);
-
-xx={}
-
-function xx.text(uworld)
-    local class = import("SluaActor")
-    local actor = uworld:SpawnActor(class,nil,nil,nil)
+    testcase()
 end
 
-function bpcall(a,b,c,d)
-    --print("call from bp",a,b,c,d)
-    return 1024,"return from lua 虚幻引擎"
+function testcase()
+    -- require 'TestPerf'
+    require 'TestUI'
+    require 'TestCase'
+    require 'TestStruct'
+    require 'TestCppBinding'
+    local test=require 'TestBlueprint'
+    test.test(world,actor)
+
+    TestMap = require 'TestMap'
+    TestArray = require 'TestArray'
+    TestActor = require 'TestActor'
 end
 
-function bpcall2()
-    print "bpcall2 with empty args"
-end
-
-local HitResult = import('HitResult');
-local count=0
 local tt=0
-local ret={1,2,3,4,5}
--- test coroutine
-local co = coroutine.create( function()
-    ccb = slua.createDelegate(function(p)
-        print("LoadAssetClass callback in coroutine",p) 
-    end)
-    Test.LoadAssetClass(ccb)
-
-    
-end )
-coroutine.resume( co )
-co = nil
-
-function update(dt,actor)
+function update(dt)
     tt=tt+dt
-    local p = actor:K2_GetActorLocation()
-    local h = HitResult()
-    local v = FVector(math.sin(tt)*100,2,3)
-    local offset = FVector(0,math.cos(tt)*50,0)
-    local ok,h=actor:K2_SetActorLocation(v+offset,true,h,true)
     
-    local bpClass = import("Blueprint'/Game/BallActor.BallActor_C'")
-    -- get out TArray for actors
-    local arr=GameplayStatics.GetAllActorsOfClass(actor,bpClass,nil)
-
-    for k,v in pairs(arr) do
-        print("GetAllActorsOfClass",k,v)
-    end
-
-    local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
-    edit.OnTextChanged:Remove(evt);
-    -- test free event twice
-    edit.OnTextChanged:Remove(evt);
-
-    TestArray.update()
-	TestMap.update()
-
-    for k,v in pairs(ret) do
-        print("ret table",k,v)
-    end
-
-    foos:Add(ui)
-    foos:Remove(0)
-
-	local info = t:GetUserInfo()
-	print("info.name",info.name)
-	assert(info.name=="女战士")
-	assert(info.id==1001001)
-	assert(info.level==12)
+    TestActor.update(tt)
+    TestArray.update(tt)
+	TestMap.update(tt)
 
     collectgarbage("collect")
-    return 1024,2,"s",ret,function() end
 end
-
-function print_table(t)
-    print("begin print table...")
-    for k,v in pairs(t) do
-        print(type(k),k,type(v),v)
-    end
-    print("end print table...")
-end
-
-print("=======================")
-print(FVector)
-local a = FVector()
-print_table(getmetatable(a))
-a:Set(100,200,300)
-print(a:GetMax())
-local b = FVector()
-b:Set(1,2,3)
-print(b:GetMax())
-
-print("=======================")
-
-local OneVector = FVector.OneVector
-print(OneVector)
-print(OneVector.X,OneVector.Y,OneVector.Z)
-print(OneVector:ToString())
-
-print(FVector)
-for k,v in pairs(FVector) do
-    print(type(k),k,type(v),v)
-    print_table(getmetatable(v))
-end
-
-return 1024,2,"s",ret,function() end

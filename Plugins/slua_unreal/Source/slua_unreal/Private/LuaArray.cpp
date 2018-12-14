@@ -44,18 +44,18 @@ namespace slua {
         }
     }
 
-	LuaArray::LuaArray(UProperty* prop, FScriptArray* buf)
-		: inner(prop)
+	LuaArray::LuaArray(UProperty* p, FScriptArray* buf)
+		: inner(p)
 		, prop(nullptr)
 		, propObj(nullptr)
     {
 		array = new FScriptArray();
-		clone(array, prop, buf);
+		clone(array, p, buf);
     }
 
-	LuaArray::LuaArray(UArrayProperty* prop, UObject* obj)
-		: inner(prop->Inner)
-		, prop(prop)
+	LuaArray::LuaArray(UArrayProperty* p, UObject* obj)
+		: inner(p->Inner)
+		, prop(p)
 		, propObj(obj)
 	{
 		array = prop->ContainerPtrToValuePtr<FScriptArray>(obj);

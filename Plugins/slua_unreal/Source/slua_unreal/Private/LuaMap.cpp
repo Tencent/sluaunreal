@@ -80,11 +80,11 @@ namespace slua {
 		
 	} 
 
-	LuaMap::LuaMap(UMapProperty* prop, UObject* obj) : 
-		map( prop->ContainerPtrToValuePtr<FScriptMap>(obj) ),
-		keyProp(prop->KeyProp), 
-		valueProp(prop->ValueProp) ,
-		prop(prop),
+	LuaMap::LuaMap(UMapProperty* p, UObject* obj) : 
+		map( p->ContainerPtrToValuePtr<FScriptMap>(obj) ),
+		keyProp(p->KeyProp), 
+		valueProp(p->ValueProp) ,
+		prop(p),
 		propObj(obj),
 		helper(prop, map) ,
 		createdByBp(false)

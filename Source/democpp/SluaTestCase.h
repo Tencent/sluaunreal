@@ -19,6 +19,19 @@
 #include "Blueprint/UserWidget.h"
 #include "SluaTestCase.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct FUserInfo {
+	GENERATED_USTRUCT_BODY()
+public:
+	UPROPERTY()
+	FString name;
+	UPROPERTY()
+	int id;
+	UPROPERTY()
+	int level;
+};
+
 UCLASS()
 class USluaTestCase : public UObject {
     GENERATED_UCLASS_BODY()
@@ -76,6 +89,9 @@ public:
 	FString TestIntStr_Str(int i, FString s);
 
 	UFUNCTION(BlueprintCallable, Category = "Lua|TestCase")
+	const FUserInfo& GetUserInfo();
+
+	UFUNCTION(BlueprintCallable, Category = "Lua|TestCase")
 	ESlateVisibility TestIntStrEnum_Enum(int i, FString s, ESlateVisibility e);
 
 	UFUNCTION(BlueprintCallable, Category = "Lua|TestCase")
@@ -117,4 +133,6 @@ public:
     const USluaTestCase* constRetFunc() { return nullptr; }
 
 	FORCEINLINE int inlineFunc() { return 1; }
+
+	FUserInfo info;
 };

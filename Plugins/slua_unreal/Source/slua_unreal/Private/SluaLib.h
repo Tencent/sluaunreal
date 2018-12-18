@@ -25,7 +25,7 @@ namespace slua {
     private:
         static int loadUI(lua_State* L);
         static int loadClass(lua_State* L);
-        static int createDelegate(lua_State* L);
+		static int createDelegate(lua_State* L);
     };
 
 }

@@ -37,7 +37,7 @@ namespace slua {
         lua_newtable(L);
         RegMetaMethod(L,loadUI);
         RegMetaMethod(L,createDelegate);
-        RegMetaMethod(L,loadClass);
+		RegMetaMethod(L,loadClass);
         lua_setglobal(L,"slua");
     }
 
@@ -49,21 +49,21 @@ namespace slua {
     }
 
     template<typename T>
-    TSubclassOf<T> loadClassT(const char* cls) {
+    UClass* loadClassT(const char* cls) {
         TArray<FStringFormatArg> Args;
         Args.Add(UTF8_TO_TCHAR(cls));
 
         // load blueprint widget from cpp, need add '_C' tail
         auto cui = FString::Format(TEXT("Blueprint'{0}_C'"),Args);
-        TSubclassOf<T> uclass = LoadClass<T>(NULL, *cui);
+		UClass* uclass = LoadClass<T>(NULL, *cui);
         return uclass;
     }
 
     int SluaUtil::loadClass(lua_State* L) {
         const char* cls = luaL_checkstring(L,1);
-        auto uclass = loadClassT<UObject>(cls);
+		UClass* uclass = loadClassT<UObject>(cls);
         if(uclass==nullptr) luaL_error(L,"Can't find class named %s",cls);
-        return LuaObject::push(L,uclass);
+        return LuaObject::pushClass(L,uclass);
     }
     
     int SluaUtil::loadUI(lua_State* L) {

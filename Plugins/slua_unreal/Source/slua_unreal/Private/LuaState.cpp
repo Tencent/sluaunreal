@@ -57,8 +57,7 @@ namespace slua {
             size_t len;
             const char* s = luaL_tolstring(L, n, &len);
             str+="\t";
-            if(s)
-                str+=s;
+            if(s) str+=UTF8_TO_TCHAR(s);
         }
         Log::Log("%s",TCHAR_TO_UTF8(*str));
         return 0;

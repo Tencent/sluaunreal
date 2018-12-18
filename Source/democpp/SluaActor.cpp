@@ -65,28 +65,8 @@ void ASluaActor::BeginPlay()
 
 		return nullptr;
 	});
-	slua::LuaVar v = state->doFile("Test");
-	if(!v.isNil()) {
-		ensure(v.isTuple());
-		ensure(v.count()==5);
-		ensure(v.getAt(1).asInt()==1024);
-		slua::Log::Log("first return value is %d",v.getAt(1).asInt());
-
-		slua::LuaVar t = v.getAt(4);
-		ensure(t.isTable());
-		ensure(t.getAt<int>(1)==1);
-		t.setToTable(5,1024);
-		ensure(t.getFromTable<int>(5)==1024);
-		t.setToTable("this",this);
-
-		// test iterator function
-		slua::LuaVar key,value;
-		while(t.next(key,value)) {
-			slua::Log::Log("for each table %s,%s",key.toString(),value.toString());
-		}
-	}
-
-	state->call("xx.text",this->GetWorld());
+	state->doFile("Test");
+	state->call("begin",this->GetWorld(),this);
 }
 
 // Called every frame
@@ -98,16 +78,7 @@ void ASluaActor::Tick(float DeltaTime)
 	if(!slua) return;
 	
 	auto state = slua->State();
-	slua::LuaVar v = state->call("update",DeltaTime,this);
-	if(!v.isNil()) {
-		// test copy constructor
-		slua::LuaVar v2 = v;
-		slua::LuaVar v3 = v2;
-		ensure(v.isTuple());
-		ensure(v.count()==5);
-		ensure(v.getAt(1).asInt()==1024);
-	}
-
+	state->call("update",DeltaTime);
 	GEngine->ForceGarbageCollection(true);
 	USluaTestCase::callback();
 }

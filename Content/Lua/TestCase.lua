@@ -62,3 +62,9 @@ local e = 1
 i, s, e = t:TestOIntOStrOEnum(i, i, s, s, e, e)
 print(string.format("lua TestOIntOStrOEnum i=%d, s=%s, e=%d", i, s, e))
 print("end TestOIntOStrOEnum")
+
+local info = t:GetUserInfo()
+print("info.name",info.name)
+assert(info.name=="女战士")
+assert(info.id==1001001)
+assert(info.level==12)

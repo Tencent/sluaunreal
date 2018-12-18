@@ -19,6 +19,8 @@
 #include "LuaObject.h"
 #include "LuaDelegate.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/StrongObjectPtr.h"
+#include "UObject/StructOnScope.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/Stack.h"
@@ -31,6 +33,7 @@
 #include "LuaWrapper.h"
 #include "LuaEnums.h"
 #include "SluaUtil.h"
+#include "LuaReference.h"
 
 ULuaObject::ULuaObject(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
@@ -69,9 +72,17 @@ namespace slua {
     }
 
     LuaStruct::~LuaStruct() {
-        FMemory::Free(buf);
-        buf = nullptr;
+		if (buf) {
+			uss->DestroyStruct(buf);
+			FMemory::Free(buf);
+			buf = nullptr;
+		}
     }
+
+	void LuaStruct::AddReferencedObjects(FReferenceCollector& Collector) {
+		Collector.AddReferencedObject(uss);
+		LuaReference::addRefByStruct(Collector, uss, buf);
+	}
 
     void LuaObject::addExtensionMethod(UClass* cls,const char* n,lua_CFunction func,bool isStatic) {
         if(isStatic) {
@@ -84,71 +95,70 @@ namespace slua {
         }
     }
 
-	UProperty* LuaObject::getDefaultProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type) {
-        UProperty* p;
+	UObject* getPropertyOutter() {
+		static TStrongObjectPtr<UStruct> propOuter;
+		if (!propOuter.IsValid()) propOuter.Reset(NewObject<UStruct>((UObject*)GetTransientPackage()));
+		return propOuter.Get();
+	}
+	
+	UProperty* LuaObject::createProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type, UClass* cls) {
+		UProperty* p = nullptr;
+		UObject* outer = getPropertyOutter();
 		switch (type) {
 			case UE4CodeGen_Private::EPropertyClass::Byte:
-				p = Cast<UProperty>(UByteProperty::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UByteProperty::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::Int8:
-				p = Cast<UProperty>(UInt8Property::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UInt8Property::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::Int16:
-				p = Cast<UProperty>(UInt16Property::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UInt16Property::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::Int:
-				p = Cast<UProperty>(UIntProperty::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UIntProperty::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::Int64:
-				p = Cast<UProperty>(UInt64Property::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UInt64Property::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::UInt16:
-				p = Cast<UProperty>(UUInt16Property::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UUInt16Property::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::UInt32:
-				p = Cast<UProperty>(UUInt32Property::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UUInt32Property::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::UInt64:
-				p = Cast<UProperty>(UUInt64Property::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UUInt64Property::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::UnsizedInt:
-				p = Cast<UProperty>(UUInt64Property::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UUInt64Property::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::UnsizedUInt:
-				p = Cast<UProperty>(UUInt64Property::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UUInt64Property::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::Float:
-				p = Cast<UProperty>(UFloatProperty::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UFloatProperty::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::Double:
-				p = Cast<UProperty>(UDoubleProperty::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UDoubleProperty::StaticClass());
                 break;
 			case UE4CodeGen_Private::EPropertyClass::Bool:
-				p = Cast<UProperty>(UBoolProperty::StaticClass()->GetDefaultObject());
-                p->PropertyFlags |= CPF_IsPlainOldData;
+				p = NewObject<UProperty>(outer, UBoolProperty::StaticClass());
                 break;
-			case UE4CodeGen_Private::EPropertyClass::Object:
-				p = Cast<UProperty>(UObjectProperty::StaticClass()->GetDefaultObject());
-                break;
+			case UE4CodeGen_Private::EPropertyClass::Object: {
+				auto op = NewObject<UObjectProperty>(outer, UObjectProperty::StaticClass());
+				op->SetPropertyClass(cls);
+				p = op;
+				break;
+			}
 			case UE4CodeGen_Private::EPropertyClass::Str:
-				p = Cast<UProperty>(UStrProperty::StaticClass()->GetDefaultObject());
+				p = NewObject<UProperty>(outer, UStrProperty::StaticClass());
                 break;
-			default:
-				luaL_error(L, "unsupport property type");
-				return nullptr;
 		}
+		if (p) {
+			FArchive ar;
+			p->LinkWithoutChangingOffset(ar);
+		}
+			
         return p;
 	}
 
@@ -510,17 +520,15 @@ namespace slua {
         
         UFunction* func = reinterpret_cast<UFunction*>(ud);
         
-        uint8* params = (uint8*)FMemory_Alloca(func->ParmsSize);
-        FMemory::Memzero( params, func->ParmsSize );
-        fillParam(L,offset,func,params);
-
-        // call function with params
-        obj->ProcessEvent(func,params);
-        // return value to push lua stack
-        int ret = returnValue(L,func,params);
-		// destruct obj in params
-		func->DestroyStruct(params);
-		return ret;
+		FStructOnScope params(func);
+		fillParam(L, offset, func, params.GetStructMemory());
+		{
+			FEditorScriptExecutionGuard scriptGuard;
+			// call function with params
+			obj->ProcessEvent(func, params.GetStructMemory());
+		}
+		// return value to push lua stack
+		return returnValue(L, func, params.GetStructMemory());
     }
 
     // find ufunction from cache
@@ -703,7 +711,8 @@ namespace slua {
 
 		uint32 size = uss->GetStructureSize() ? uss->GetStructureSize() : 1;
 		uint8* buf = (uint8*)FMemory::Malloc(size);
-		FMemory::Memcpy(buf, parms, size);
+		uss->InitializeStruct(buf);
+		uss->CopyScriptStruct(buf, parms);
 		return LuaObject::push(L, new LuaStruct{buf,size,uss});
     }  
 

@@ -1,4 +1,4 @@
-// Tencent is pleased to support the open source community by making sluaunreal available.
+﻿// Tencent is pleased to support the open source community by making sluaunreal available.
 
 // Copyright (C) 2018 THL A29 Limited, a Tencent company. All rights reserved.
 // Licensed under the BSD 3-Clause License (the "License"); 
@@ -233,6 +233,10 @@ USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
     });  
     REG_EXTENSION_METHOD(USluaTestCase, "constRetFunc", &USluaTestCase::constRetFunc);
 	REG_EXTENSION_METHOD(USluaTestCase, "inlineFunc", &USluaTestCase::inlineFunc);
+
+	info.name = UTF8_TO_TCHAR("女战士");
+	info.id = 1001001;
+	info.level = 12;
 }
 
 void USluaTestCase::setupfoo(UObject* obj) {
@@ -242,6 +246,10 @@ void USluaTestCase::setupfoo(UObject* obj) {
 void USluaTestCase::delfoo() {
     if(foos.Num()>0)
         foos.RemoveAt(0);
+}
+
+const FUserInfo& USluaTestCase::GetUserInfo() {
+	return info;
 }
 
 TArray<int> USluaTestCase::GetArray() {

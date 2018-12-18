@@ -57,10 +57,10 @@ namespace slua {
 			{
 				for (int n = 0; n < p->ArrayDim; ++n)
 				{
-					FScriptArrayHelper_InContainer ScriptArrayHelper(p, base, n);
-					for (int32 index = 0; index < ScriptArrayHelper.Num(); ++index)
+					FScriptArrayHelper_InContainer helper(p, base, n);
+					for (int32 index = 0; index < helper.Num(); ++index)
 					{
-						ret |= addRefByProperty(collector, p->Inner, ScriptArrayHelper.GetRawPtr(n));
+						ret |= addRefByProperty(collector, p->Inner, helper.GetRawPtr(n));
 					}
 				}
 				return ret;
@@ -87,14 +87,14 @@ namespace slua {
 				{
 					bool keyChanged = false;
 					bool valuesChanged = false;
-					FScriptMapHelper_InContainer ScriptMapHelper(p, base, n);
+					FScriptMapHelper_InContainer helper(p, base, n);
 
-					for (int index = 0; index < ScriptMapHelper.GetMaxIndex(); ++index)
+					for (int index = 0; index < helper.GetMaxIndex(); ++index)
 					{
-						if (ScriptMapHelper.IsValidIndex(index))
+						if (helper.IsValidIndex(index))
 						{
-							keyChanged = addRefByProperty(collector, ScriptMapHelper.GetKeyProperty(), ScriptMapHelper.GetKeyPtr(index));
-							valuesChanged = addRefByProperty(collector, ScriptMapHelper.GetValueProperty(), ScriptMapHelper.GetValuePtr(index));
+							keyChanged = addRefByProperty(collector, helper.GetKeyProperty(), helper.GetKeyPtr(index));
+							valuesChanged = addRefByProperty(collector, helper.GetValueProperty(), helper.GetValuePtr(index));
 						}
 					}
 
@@ -103,7 +103,7 @@ namespace slua {
 						ret = true;
 						if (keyChanged)
 						{
-							ScriptMapHelper.Rehash();
+							helper.Rehash();
 						}
 					}
 				}

@@ -16,6 +16,7 @@
 #include "lua/lua.hpp"
 #include "UObject/UnrealType.h"
 #include "UObject/GCObject.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 namespace slua {
 
@@ -44,10 +45,12 @@ namespace slua {
 
         virtual void AddReferencedObjects( FReferenceCollector& Collector ) override;
 
+#if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
         virtual FString GetReferencerName() const override
         {
             return "LuaArray";
         }
+#endif
         
     protected:
         static int __ctor(lua_State* L);

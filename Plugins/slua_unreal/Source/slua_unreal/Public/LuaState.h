@@ -104,6 +104,10 @@ namespace slua {
             ensure(root);
             root->Remove(obj);
         }
+
+		const TMap<UObject*, UObject*>& cacheMap() {
+			return root->Cache;
+		}
         
         static int pushErrorHandler(lua_State* L);
     protected:

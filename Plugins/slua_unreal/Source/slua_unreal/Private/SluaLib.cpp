@@ -35,9 +35,10 @@ namespace slua {
 
     void SluaUtil::openLib(lua_State* L) {
         lua_newtable(L);
-        RegMetaMethod(L,loadUI);
-        RegMetaMethod(L,createDelegate);
-		RegMetaMethod(L,loadClass);
+        RegMetaMethod(L, loadUI);
+        RegMetaMethod(L, createDelegate);
+		RegMetaMethod(L, loadClass);
+		RegMetaMethod(L, dumpLeak);
         lua_setglobal(L,"slua");
     }
 
@@ -93,4 +94,16 @@ namespace slua {
         obj->bindFunction(L,1);
         return LuaObject::push(L,obj);
     }
+	int SluaUtil::dumpLeak(lua_State * L)
+	{
+		auto state = LuaState::get(L);
+		auto& map = state->cacheMap();
+		lua_newtable(L);
+		int index = 1;
+		for (auto& it : map) {
+			LuaObject::push(L, it.Key->GetFName());
+			lua_seti(L, -2, index++);
+		}
+		return 1;
+	}
 }

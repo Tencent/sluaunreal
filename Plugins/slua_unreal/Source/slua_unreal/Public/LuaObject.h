@@ -21,6 +21,7 @@
 #include "SluaUtil.h"
 #include "LuaArray.h"
 #include "LuaMap.h"
+#include "Runtime/Launch/Resources/Version.h"
 #include "LuaObject.generated.h"
 
 
@@ -30,7 +31,7 @@ class SLUA_UNREAL_API ULuaObject : public UObject {
 public:
     void AddRef(UObject* obj);
     void Remove(UObject* obj);
-private:
+
     UPROPERTY()
     TMap<UObject*,UObject*> Cache;
 };
@@ -76,10 +77,12 @@ namespace slua {
 
 		virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
 
+#if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
 		virtual FString GetReferencerName() const override
 		{
 			return "LuaStruct";
 		}
+#endif
     };
 
     template<class T>

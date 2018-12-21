@@ -1,29 +1,30 @@
 
-local Button = import('Button');
-local ButtonStyle = import('ButtonStyle');
-local TextBlock = import('TextBlock');
-local btn=Button();
-local txt=TextBlock();
 local ui=slua.loadUI('/Game/Panel.Panel');
 ui:AddToViewport(0);
-local seq=ui.ActiveSequencePlayers;
-print('seq',seq:Num());
 local btn2=ui:FindWidget('Button1');
 local index = 1
-btn2.OnClicked:Add(function() 
+local handler = btn2.OnClicked:Add(function() 
     index=index+1
     print('say helloworld',index) 
+	remove()
+	ui:RemoveFromViewport()
+	ui=nil
 end);
-local edit=ui:FindWidget('TextBox_0');
-local evt=edit.OnTextChanged:Add(function(txt) print('text changed',txt) end);
-txt:SetText('helloworld button');
-local style=ButtonStyle();
-btn:SetStyle(style);
-btn:AddChild(txt);
-print(btn:IsPressed(),btn.OnClicked);
-local event=btn.OnClicked;
-local index=1
-event:Add(function() 
-    index=index+1
-    print('helloworld',index) 
-end);
+
+function remove()
+	print("before remove")
+	local leaks = slua.dumpLeak()
+	for k,v in pairs(leaks) do
+		print(k,v)
+	end
+	collectgarbage("collect")
+
+	btn2.OnClicked:Remove(handler)
+	btn2=nil
+
+	print("after remove")
+	local leaks = slua.dumpLeak()
+	for k,v in pairs(leaks) do
+		print(k,v)
+	end
+end

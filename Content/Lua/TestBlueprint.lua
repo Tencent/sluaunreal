@@ -5,7 +5,7 @@ local testcase={}
 
 function testcase.test(uworld,actor)
     print("=====Begin test blueprint")
-    local bpClass = slua.loadClass("/Game/BallActor.BallActor")
+    local bpClass = slua.loadClass("/Game/TestActor.TestActor")
     -- get out TArray for actors
     local arr=GameplayStatics.GetAllActorsOfClass(actor,bpClass,nil)
 
@@ -22,7 +22,8 @@ function testcase.test(uworld,actor)
 end
 
 function bpcall(a,b,c,d)
-    return 1024,"return from lua 虚幻引擎"
+    print("bpcall",a,b,c,d)
+	return 1024,"return from lua 虚幻引擎"
 end
 
 function bpcall2()

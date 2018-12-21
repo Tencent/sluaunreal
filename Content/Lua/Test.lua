@@ -24,7 +24,7 @@ local tt=0
 function update(dt)
     tt=tt+dt
     
-    TestActor.update(tt)
+    TestActor.update(tt,actor)
     TestArray.update(tt)
 	TestMap.update(tt)
 

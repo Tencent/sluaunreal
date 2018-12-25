@@ -143,8 +143,12 @@ namespace slua {
         static typename std::enable_if<std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p) {
             UserData<UObject*>* ptr = (UserData<UObject*>*)luaL_testudata(L,p,"UObject");
             T* t = ptr?Cast<T>(ptr->ud):nullptr;
-            if(!t) {
+            if(!t && lua_isuserdata(L,p)) {
 				luaL_getmetafield(L, p, "__name");
+				if (lua_isnil(L, -1)) {
+					lua_pop(L, 1);
+					return t;
+				}
 				FString clsname(lua_tostring(L, -1));
 				lua_pop(L, 1);
 				// skip firat char may be 'U' or 'A'

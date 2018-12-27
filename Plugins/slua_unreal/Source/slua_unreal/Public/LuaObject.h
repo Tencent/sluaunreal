@@ -134,6 +134,8 @@ namespace slua {
         LuaOwnedPtr(T* p):ptr(p) {}
     };
 
+	FString getUObjName(UObject* obj);
+
     class SLUA_UNREAL_API LuaObject
     {
     private:

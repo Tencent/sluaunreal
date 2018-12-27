@@ -62,7 +62,14 @@ namespace slua {
     namespace ExtensionMethod{
         void init();
     }
-    
+
+	FString getUObjName(UObject* obj) {
+		if (obj->GetClass() == ULuaDelegate::StaticClass()) {
+			return ((ULuaDelegate*)obj)->getPropName();
+		} else {
+			return obj->GetFName().ToString();
+		}
+	}
 
     DefTypeName(LuaStruct)
 
@@ -720,7 +727,7 @@ namespace slua {
         auto p = Cast<UMulticastDelegateProperty>(prop);
         ensure(p);   
         FMulticastScriptDelegate* delegate = p->GetPropertyValuePtr(parms);
-        return LuaDelegate::push(L,delegate,p->SignatureFunction);
+        return LuaDelegate::push(L,delegate,p->SignatureFunction,prop->GetNameCPP());
     }
 
     int checkUDelegateProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {

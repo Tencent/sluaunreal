@@ -58,6 +58,7 @@ namespace slua {
     struct LuaDelegateWrap {
         FMulticastScriptDelegate* delegate;
         UFunction* ufunc;
+		FString pName;
     };
 
     DefTypeName(LuaDelegateWrap);
@@ -67,6 +68,7 @@ namespace slua {
 
         // bind luafucntion and signature function
         auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(),ULuaDelegate::StaticClass());
+		obj->setPropName(UD->pName);
         obj->bindFunction(L,2,UD->ufunc);
 
         // add event listener
@@ -126,8 +128,8 @@ namespace slua {
         return 0;
     }
 
-    int LuaDelegate::push(lua_State* L,FMulticastScriptDelegate* delegate,UFunction* ufunc) {
-        LuaDelegateWrap* wrapobj = new LuaDelegateWrap{delegate,ufunc};
+    int LuaDelegate::push(lua_State* L,FMulticastScriptDelegate* delegate,UFunction* ufunc,FString pName) {
+        LuaDelegateWrap* wrapobj = new LuaDelegateWrap{delegate,ufunc,pName};
         return LuaObject::pushType<LuaDelegateWrap*>(L,wrapobj,"LuaDelegateWrap",setupMT,gc);
     }
 

@@ -101,7 +101,7 @@ namespace slua {
 		lua_newtable(L);
 		int index = 1;
 		for (auto& it : map) {
-			LuaObject::push(L, it.Key->GetFName());
+			LuaObject::push(L, getUObjName(it.Key));
 			lua_seti(L, -2, index++);
 		}
 		return 1;

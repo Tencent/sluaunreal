@@ -24,7 +24,7 @@ namespace slua {
     class SLUA_UNREAL_API LuaState
     {
     public:
-        LuaState();
+        LuaState(const char* name=nullptr);
         virtual ~LuaState();
 
         /*
@@ -42,6 +42,9 @@ namespace slua {
         }
         // get LuaState from state index
         static LuaState* get(int index);
+
+        // get LuaState from name
+        static LuaState* get(const FString& name);
 
         // return specified index is valid state index
         inline static bool isValid(int index)  {
@@ -125,6 +128,7 @@ namespace slua {
         ULuaObject* root;
         int stackCount;
         int si;
+        FString stateName;
 
         TMap<FString,TMap<FString,UFunction*>*> classMap;
 

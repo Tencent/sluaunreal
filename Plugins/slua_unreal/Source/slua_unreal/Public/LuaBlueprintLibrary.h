@@ -40,10 +40,10 @@ public:
 
 	/** Call a lua function with args */
 	UFUNCTION(BlueprintCallable, meta=( DisplayName="Call To Lua With Arguments" ), Category="slua")
-	static FLuaBPVar CallToLuaWithArgs(FString FunctionName,const TArray<FLuaBPVar>& Args);
+	static FLuaBPVar CallToLuaWithArgs(FString FunctionName,const TArray<FLuaBPVar>& Args,FString StateName);
 
 	UFUNCTION(BlueprintCallable, meta=( DisplayName="Call To Lua" ), Category="slua")
-	static FLuaBPVar CallToLua(FString FunctionName);
+	static FLuaBPVar CallToLua(FString FunctionName,FString StateName);
 
 	UFUNCTION(BlueprintCallable, Category="slua")
 	static FLuaBPVar CreateVarFromInt(int Value);

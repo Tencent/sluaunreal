@@ -122,7 +122,7 @@ namespace slua {
     TMap<int,LuaState*> stateMapFromIndex;
     static int StateIndex = 0;
 
-    LuaState::LuaState()
+    LuaState::LuaState(const char* name)
         :loadFileDelegate(nullptr)
         ,L(nullptr)
         ,cacheObjRef(LUA_NOREF)
@@ -130,7 +130,7 @@ namespace slua {
         ,stackCount(0)
         ,si(0)
     {
-        
+        if(name) stateName=UTF8_TO_TCHAR(name);
     }
 
     LuaState::~LuaState()
@@ -141,6 +141,15 @@ namespace slua {
     LuaState* LuaState::get(int index) {
         auto it = stateMapFromIndex.Find(index);
         if(it) return *it;
+        return nullptr;
+    }
+
+    LuaState* LuaState::get(const FString& name) {
+        for(auto& pair:stateMapFromIndex) {
+            auto state = pair.Value;
+            if(state->stateName==name)
+                return state;
+        }
         return nullptr;
     }
 

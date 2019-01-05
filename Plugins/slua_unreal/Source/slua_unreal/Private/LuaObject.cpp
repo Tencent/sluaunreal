@@ -590,11 +590,11 @@ namespace slua {
         const char* name = LuaObject::checkValue<const char*>(L, 2);
         UClass* cls = obj->GetClass();
         UProperty* up = cls->FindPropertyByName(UTF8_TO_TCHAR(name));
+        if(!up) luaL_error(L,"Can't find property named %s",name);
         if(up->GetPropertyFlags() & CPF_BlueprintReadOnly)
             luaL_error(L,"Property %s is readonly",name);
 
         auto checker = LuaObject::getChecker(up);
-        if(!up) luaL_error(L,"Can't find property named %s",name);
         
         // set property value
         checker(L,up,up->ContainerPtrToValuePtr<uint8>(obj),3);
@@ -617,11 +617,11 @@ namespace slua {
 
         auto* cls = ls->uss;
         UProperty* up = cls->FindPropertyByName(UTF8_TO_TCHAR(name));
+        if (!up) luaL_error(L, "Can't find property named %s", name);
         if (up->GetPropertyFlags() & CPF_BlueprintReadOnly)
             luaL_error(L, "Property %s is readonly", name);
 
         auto checker = LuaObject::getChecker(up);
-        if (!up) luaL_error(L, "Can't find property named %s", name);
 
         checker(L, up, ls->buf + up->GetOffset_ForInternal(), 3);
         return 0;

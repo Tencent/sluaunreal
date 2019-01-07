@@ -154,14 +154,12 @@ namespace slua {
         case LV_FUNCTION: 
         case LV_TABLE:
         case LV_USERDATA:
-            //stateIndex = LuaState::get(l)->stateIndex();
             alloc(1);
             lua_pushvalue(l,p);
             vars[0].ref = new RefRef(l);
             vars[0].luatype=type;
             break;
         case LV_TUPLE:
-            //stateIndex = LuaState::get(l)->stateIndex();
             ensure(p>0 && lua_gettop(l)>=p);
             initTuple(l,p);
             break;

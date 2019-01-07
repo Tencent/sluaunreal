@@ -30,21 +30,32 @@ public:
 
     ~ULuaDelegate();
 
-
     virtual void ProcessEvent( UFunction* Function, void* Parms );
     void bindFunction(slua::lua_State *L, int p, UFunction *func);
     void bindFunction(slua::lua_State *L, int p);
     void bindFunction(UFunction *func);
+
+#if WITH_EDITOR
+	void setPropName(FString name) {
+		pName = name;
+	}
+
+	FString getPropName() {
+		return pName;
+	}
+#endif
+
 private:
     slua::LuaVar* luafunction;
     UFunction* ufunction;
+	FString pName;
 };
 
 namespace slua {
 
     class LuaDelegate {
     public:
-        static int push(lua_State* L,FMulticastScriptDelegate* delegate,UFunction* ufunc);
+        static int push(lua_State* L,FMulticastScriptDelegate* delegate,UFunction* ufunc,FString pName);
     private:
         static int setupMT(lua_State* L);
         static int instanceIndex(lua_State* L);

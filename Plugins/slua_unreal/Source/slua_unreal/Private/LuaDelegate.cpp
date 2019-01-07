@@ -133,7 +133,11 @@ namespace slua {
     }
 
     int LuaDelegate::push(lua_State* L,FMulticastScriptDelegate* delegate,UFunction* ufunc,FString pName) {
+#if WITH_EDITOR
         LuaDelegateWrap* wrapobj = new LuaDelegateWrap{delegate,ufunc,pName};
+#else
+		LuaDelegateWrap* wrapobj = new LuaDelegateWrap{ delegate,ufunc };
+#endif
         return LuaObject::pushType<LuaDelegateWrap*>(L,wrapobj,"LuaDelegateWrap",setupMT,gc);
     }
 

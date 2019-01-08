@@ -8,6 +8,7 @@
 #include "GenericPlatformFile.h"
 #include "SluaTestCase.h"
 #include "Engine/Engine.h"
+#include "HAL/FileManager.h"
 
 
 ASluaActor* ASluaActor::instance=nullptr;
@@ -58,6 +59,7 @@ void ASluaActor::BeginPlay()
 			auto fullPath = path + *it;
 			auto buf = ReadFile(PlatformFile, fullPath, len);
 			if (buf) {
+				fullPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*fullPath);
 				filepath = fullPath;
 				return buf;
 			}

@@ -543,9 +543,9 @@ namespace slua {
     }
 
     // find ufunction from cache
-    UFunction* LuaObject::findCacheFunction(lua_State* L,const FString& cname,const char* fname) {
+    UFunction* LuaObject::findCacheFunction(lua_State* L, UClass* cls,const char* fname) {
         auto state = LuaState::get(L);
-        auto clsmap = state->classMap.Find(cname);
+        auto clsmap = state->classMap.Find(cls);
         if(!clsmap) return nullptr;
         auto it = (*clsmap)->Find(UTF8_TO_TCHAR(fname));
         if(it!=nullptr && (*it)->IsValidLowLevelFast())
@@ -554,11 +554,11 @@ namespace slua {
     }
 
     // cache ufunction for reuse
-    void LuaObject::cacheFunction(lua_State* L,const FString& cname,const char* fname,UFunction* func) {
+    void LuaObject::cacheFunction(lua_State* L,UClass* cls,const char* fname,UFunction* func) {
         auto state = LuaState::get(L);
-        auto clsmap = state->classMap.Find(cname);
+        auto clsmap = state->classMap.Find(cls);
         TMap<FString,UFunction*>* clsmapPtr = nullptr;
-        if(!clsmap) clsmapPtr = state->classMap.Add(cname,new TMap<FString,UFunction*>());
+        if(!clsmap) clsmapPtr = state->classMap.Add(cls,new TMap<FString,UFunction*>());
         else clsmapPtr = *clsmap;
         clsmapPtr->Add(UTF8_TO_TCHAR(fname),func);
     }
@@ -568,7 +568,7 @@ namespace slua {
         UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
         const char* name = LuaObject::checkValue<const char*>(L, 2);
 
-        UFunction* func = LuaObject::findCacheFunction(L,obj->GetClass()->GetName(),name);
+        UFunction* func = LuaObject::findCacheFunction(L,obj->GetClass(),name);
         if(func) return LuaObject::push(L,func);
 
         // get blueprint member
@@ -584,7 +584,7 @@ namespace slua {
             return LuaObject::push(L,up,obj);
         }
         else {   
-            LuaObject::cacheFunction(L,obj->GetClass()->GetName(),name,func);
+			LuaObject::cacheFunction(L, cls, name, func);
             return LuaObject::push(L,func);
         }
     }

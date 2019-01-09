@@ -62,10 +62,15 @@ namespace slua {
 	}
 
     LuaArray::~LuaArray() {
-        // should destroy inner property value
-        clear();
-		if (!prop) SafeDelete(array);
+		if (!propObj)
+		{
+			// should destroy inner property value
+			clear();
+			if (!prop) SafeDelete(array);
+		}
+		
 		inner = nullptr;
+		propObj = nullptr;
     }
 
     void LuaArray::clear() {
@@ -155,15 +160,16 @@ namespace slua {
     }
 
     int LuaArray::push(lua_State* L,UProperty* inner,FScriptArray* data) {
-        LuaArray* array = new LuaArray(inner,data);
-        return LuaObject::pushType(L,array,"LuaArray",setupMT,gc);
+        LuaArray* luaArrray = new LuaArray(inner,data);
+		return LuaObject::pushType(L,luaArrray,"LuaArray",setupMT,gc);
     }
 
 	int LuaArray::push(lua_State* L, UArrayProperty* prop, UObject* obj) {
-        if(LuaObject::getFromCache(L,prop)) return 1;
-		LuaArray* array = new LuaArray(prop, obj);
-		int r = LuaObject::pushType(L, array, "LuaArray", setupMT, gc);
-        if(r) LuaObject::cacheObj(L,prop);
+		auto scriptArray = prop->ContainerPtrToValuePtr<FScriptArray>(obj);
+		if (LuaObject::getFromCache(L, scriptArray)) return 1;
+		LuaArray* luaArray = new LuaArray(prop, obj);
+		int r = LuaObject::pushType(L, luaArray, "LuaArray", setupMT, gc);
+        if(r) LuaObject::cacheObj(L, luaArray->array);
         return 1;
 	}
 
@@ -176,18 +182,41 @@ namespace slua {
 
     int LuaArray::Num(lua_State* L) {
         CheckUD(LuaArray,L,1);
-        return LuaObject::push(L,UD->array->Num());
+        return LuaObject::push(L,UD->num());
     }
 
     int LuaArray::Get(lua_State* L) {
         CheckUD(LuaArray,L,1);
         int i = LuaObject::checkValue<int>(L,2);
         UProperty* element = UD->inner;
-        int32 es = element->ElementSize;
-        return LuaObject::push(L,element,((uint8*)UD->array->GetData())+i*es);
+		if (!UD->isValidIndex(i)) {
+			luaL_error(L, "Array get index %d out of range", i);
+			return 0;
+		}
+        return LuaObject::push(L,element,UD->getRawPtr(i));
     }
 
-    int LuaArray::Add(lua_State* L) {
+
+	int LuaArray::Set(lua_State* L)
+	{
+		CheckUD(LuaArray, L, 1);
+		int index = LuaObject::checkValue<int>(L, 2);
+		UProperty* element = UD->inner;
+		auto checker = LuaObject::getChecker(element);
+		if (checker) {
+			if (!UD->isValidIndex(index))
+				luaL_error(L, "Array set index %d out of range", index);
+			checker(L, element, UD->getRawPtr(index), 3);
+		}
+		else {
+			FString tn = element->GetClass()->GetName();
+			luaL_error(L, "unsupport param type %s to set", TCHAR_TO_UTF8(*tn));
+			return 0;
+		}
+		return 0;
+	}
+
+	int LuaArray::Add(lua_State* L) {
         CheckUD(LuaArray,L,1);
         // get element property
         UProperty* element = UD->inner;
@@ -275,6 +304,7 @@ namespace slua {
 		RegMetaMethod(L,Pairs);
         RegMetaMethod(L,Num);
         RegMetaMethod(L,Get);
+		RegMetaMethod(L,Set);
         RegMetaMethod(L,Add);
         RegMetaMethod(L,Insert);
         RegMetaMethod(L,Remove);

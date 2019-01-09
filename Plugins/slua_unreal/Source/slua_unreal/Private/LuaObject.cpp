@@ -605,12 +605,44 @@ namespace slua {
         return 0;
     }
 
+	UProperty* FindStructPropertyByName(UScriptStruct* scriptStruct, const char* name)
+	{
+		if (scriptStruct->IsNative())
+		{
+			return scriptStruct->FindPropertyByName(UTF8_TO_TCHAR(name));
+		}
+
+		FString propName = UTF8_TO_TCHAR(name);
+		for (UProperty* Property = scriptStruct->PropertyLink; Property != nullptr; Property = Property->PropertyLinkNext)
+		{
+			FString fieldName = Property->GetName();
+			if (fieldName.StartsWith(propName, ESearchCase::CaseSensitive))
+			{
+				int index = fieldName.Len();
+				for (int i = 0; i < 2; ++i)
+				{
+					int findIndex = fieldName.Find(TEXT("_"), ESearchCase::CaseSensitive, ESearchDir::FromEnd, index);
+					if (findIndex != INDEX_NONE)
+					{
+						index = findIndex;
+					}
+				}
+				if (propName.Len() == index)
+				{
+					return Property;
+				}
+			}
+		}
+
+		return nullptr;
+	}
+
     int instanceStructIndex(lua_State* L) {
         LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L, 1);
         const char* name = LuaObject::checkValue<const char*>(L, 2);
         
         auto* cls = ls->uss;
-        UProperty* up = cls->FindPropertyByName(UTF8_TO_TCHAR(name));
+		UProperty* up = FindStructPropertyByName(cls, name);
         if(!up) return 0;
         return LuaObject::push(L,up,ls->buf+up->GetOffset_ForInternal());
     }
@@ -620,8 +652,8 @@ namespace slua {
         const char* name = LuaObject::checkValue<const char*>(L, 2);
 
         auto* cls = ls->uss;
-        UProperty* up = cls->FindPropertyByName(UTF8_TO_TCHAR(name));
-        if(!up) luaL_error(L,"Can't find property named %s",name);
+        UProperty* up = FindStructPropertyByName(cls, name);
+		if (!up) luaL_error(L, "Can't find property named %s", name);
         if (up->GetPropertyFlags() & CPF_BlueprintReadOnly)
             luaL_error(L, "Property %s is readonly", name);
 

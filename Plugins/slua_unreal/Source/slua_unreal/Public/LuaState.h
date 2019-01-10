@@ -115,6 +115,7 @@ namespace slua {
 		void removeRef(UObject* obj) {
 			UClass* objClass = obj->GetClass();
 			int32* instanceNumPtr = classInstanceNums.Find(objClass);
+            ensure(instanceNumPtr);
 			(*instanceNumPtr)--;
 			if (*instanceNumPtr == 0)
 			{

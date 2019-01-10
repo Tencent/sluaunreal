@@ -406,8 +406,8 @@ namespace slua {
 
 		static UProperty* createProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type, UClass* cls=nullptr);
 
-        static UFunction* findCacheFunction(lua_State* L,const FString& cname,const char* fname);
-        static void cacheFunction(lua_State* L,const FString& cname,const char* fame,UFunction* func);
+        static UFunction* findCacheFunction(lua_State* L,UClass* cls,const char* fname);
+        static void cacheFunction(lua_State* L, UClass* cls,const char* fame,UFunction* func);
 
         static bool getFromCache(lua_State* L, void* obj);
 		static void cacheObj(lua_State* L, void* obj);

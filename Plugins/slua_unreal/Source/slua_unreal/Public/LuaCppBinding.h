@@ -352,7 +352,7 @@ namespace slua {
             return 1; \
         } \
         static int Lua##CLS##_setup(lua_State* L); \
-        LuaClass Lua##CLS##__(Lua##CLS##_setup); \
+        static LuaClass Lua##CLS##__(Lua##CLS##_setup); \
         int Lua##CLS##_setup(lua_State* L) { \
 			static_assert(!std::is_base_of<UObject, CLS>::value, "UObject class shouldn't use LuaCppBinding. Use REG_EXTENSION instead."); \
             AutoStack autoStack(L); \

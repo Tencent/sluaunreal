@@ -543,9 +543,9 @@ namespace slua {
     }
 
     // find ufunction from cache
-    UFunction* LuaObject::findCacheFunction(lua_State* L,const FString& cname,const char* fname) {
+    UFunction* LuaObject::findCacheFunction(lua_State* L, UClass* cls,const char* fname) {
         auto state = LuaState::get(L);
-        auto clsmap = state->classMap.Find(cname);
+        auto clsmap = state->classMap.Find(cls);
         if(!clsmap) return nullptr;
         auto it = (*clsmap)->Find(UTF8_TO_TCHAR(fname));
         if(it!=nullptr && (*it)->IsValidLowLevelFast())
@@ -554,11 +554,11 @@ namespace slua {
     }
 
     // cache ufunction for reuse
-    void LuaObject::cacheFunction(lua_State* L,const FString& cname,const char* fname,UFunction* func) {
+    void LuaObject::cacheFunction(lua_State* L,UClass* cls,const char* fname,UFunction* func) {
         auto state = LuaState::get(L);
-        auto clsmap = state->classMap.Find(cname);
+        auto clsmap = state->classMap.Find(cls);
         TMap<FString,UFunction*>* clsmapPtr = nullptr;
-        if(!clsmap) clsmapPtr = state->classMap.Add(cname,new TMap<FString,UFunction*>());
+        if(!clsmap) clsmapPtr = state->classMap.Add(cls,new TMap<FString,UFunction*>());
         else clsmapPtr = *clsmap;
         clsmapPtr->Add(UTF8_TO_TCHAR(fname),func);
     }
@@ -568,7 +568,7 @@ namespace slua {
         UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
         const char* name = LuaObject::checkValue<const char*>(L, 2);
 
-        UFunction* func = LuaObject::findCacheFunction(L,obj->GetClass()->GetName(),name);
+        UFunction* func = LuaObject::findCacheFunction(L,obj->GetClass(),name);
         if(func) return LuaObject::push(L,func);
 
         // get blueprint member
@@ -584,7 +584,7 @@ namespace slua {
             return LuaObject::push(L,up,obj);
         }
         else {   
-            LuaObject::cacheFunction(L,obj->GetClass()->GetName(),name,func);
+			LuaObject::cacheFunction(L, cls, name, func);
             return LuaObject::push(L,func);
         }
     }
@@ -605,12 +605,44 @@ namespace slua {
         return 0;
     }
 
+	UProperty* FindStructPropertyByName(UScriptStruct* scriptStruct, const char* name)
+	{
+		if (scriptStruct->IsNative())
+		{
+			return scriptStruct->FindPropertyByName(UTF8_TO_TCHAR(name));
+		}
+
+		FString propName = UTF8_TO_TCHAR(name);
+		for (UProperty* Property = scriptStruct->PropertyLink; Property != nullptr; Property = Property->PropertyLinkNext)
+		{
+			FString fieldName = Property->GetName();
+			if (fieldName.StartsWith(propName, ESearchCase::CaseSensitive))
+			{
+				int index = fieldName.Len();
+				for (int i = 0; i < 2; ++i)
+				{
+					int findIndex = fieldName.Find(TEXT("_"), ESearchCase::CaseSensitive, ESearchDir::FromEnd, index);
+					if (findIndex != INDEX_NONE)
+					{
+						index = findIndex;
+					}
+				}
+				if (propName.Len() == index)
+				{
+					return Property;
+				}
+			}
+		}
+
+		return nullptr;
+	}
+
     int instanceStructIndex(lua_State* L) {
         LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L, 1);
         const char* name = LuaObject::checkValue<const char*>(L, 2);
         
         auto* cls = ls->uss;
-        UProperty* up = cls->FindPropertyByName(UTF8_TO_TCHAR(name));
+		UProperty* up = FindStructPropertyByName(cls, name);
         if(!up) return 0;
         return LuaObject::push(L,up,ls->buf+up->GetOffset_ForInternal());
     }
@@ -620,8 +652,8 @@ namespace slua {
         const char* name = LuaObject::checkValue<const char*>(L, 2);
 
         auto* cls = ls->uss;
-        UProperty* up = cls->FindPropertyByName(UTF8_TO_TCHAR(name));
-        if(!up) luaL_error(L,"Can't find property named %s",name);
+        UProperty* up = FindStructPropertyByName(cls, name);
+		if (!up) luaL_error(L, "Can't find property named %s", name);
         if (up->GetPropertyFlags() & CPF_BlueprintReadOnly)
             luaL_error(L, "Property %s is readonly", name);
 

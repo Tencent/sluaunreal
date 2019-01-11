@@ -98,15 +98,40 @@ namespace slua {
         LuaVar createTable();
 
 
-        void addRef(UObject* obj) {
-            ensure(root);
-            root->AddRef(obj);
-        }
+		void addRef(UObject* obj) {
+			ensure(root);
+			root->AddRef(obj);
 
-        void removeRef(UObject* obj) {
-            ensure(root);
-            root->Remove(obj);
-        }
+			UClass* objClass = obj->GetClass();
+			int32* instanceNumPtr = classInstanceNums.Find(objClass);
+			if (!instanceNumPtr)
+			{
+				instanceNumPtr = &classInstanceNums.Add(objClass, 0);
+			}
+
+			(*instanceNumPtr)++;
+		}
+
+		void removeRef(UObject* obj) {
+			UClass* objClass = obj->GetClass();
+			int32* instanceNumPtr = classInstanceNums.Find(objClass);
+            ensure(instanceNumPtr);
+			(*instanceNumPtr)--;
+			if (*instanceNumPtr == 0)
+			{
+				classInstanceNums.Remove(objClass);
+
+				auto classFunctionsPtr = classMap.Find(objClass);
+				if (classFunctionsPtr)
+				{
+					delete *classFunctionsPtr;
+					classMap.Remove(objClass);
+				}
+			}
+
+			ensure(root);
+			root->Remove(obj);
+		}
 
 		const TMap<UObject*, UObject*>& cacheMap() {
 			return root->Cache;
@@ -130,7 +155,9 @@ namespace slua {
         int si;
         FString stateName;
 
-        TMap<FString,TMap<FString,UFunction*>*> classMap;
+        TMap<UClass*,TMap<FString,UFunction*>*> classMap;
+
+		TMap<UClass*, int32> classInstanceNums;
 
         static LuaState* mainState;
 

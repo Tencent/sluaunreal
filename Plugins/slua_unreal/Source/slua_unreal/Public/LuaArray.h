@@ -56,6 +56,7 @@ namespace slua {
         static int __ctor(lua_State* L);
         static int Num(lua_State* L);
         static int Get(lua_State* L);
+		static int Set(lua_State* L);
         static int Add(lua_State* L);
         static int Remove(lua_State* L);
         static int Insert(lua_State* L);

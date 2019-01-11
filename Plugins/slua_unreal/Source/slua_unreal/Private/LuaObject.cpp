@@ -174,15 +174,16 @@ namespace slua {
 	}
 
     static int findMember(lua_State* L,const char* name) {
-        if (lua_getfield(L, -1, name) != 0) {
-			return 1;
-		} else if (lua_getfield(L, lua_upvalueindex(1)/*.get*/, name) != 0) {
-			lua_pushvalue(L, 1);
-			lua_call(L, 1, 1);
-			return 1;
-		} else {
+       int popn = 0;
+        if ((++popn, lua_getfield(L, -1, name) != 0)) {
+            return 1;
+        } else if ((++popn, lua_getfield(L, -2, ".get")) && (++popn, lua_getfield(L, -1, name))) {
+            lua_pushvalue(L, 1);
+            lua_call(L, 1, 1);
+            return 1;
+        } else {
             // find base
-            lua_pop(L,2);
+            lua_pop(L, popn);
             int t = lua_getfield(L,-1, "__base");
             if(t==LUA_TTABLE) {
                 size_t cnt = lua_rawlen(L,-1);
@@ -199,12 +200,12 @@ namespace slua {
                 lua_remove(L,-2); // remove __base
                 return r;
             }
-			else {
+            else {
                 // pop __base
                 lua_pop(L,1);
                 return 0;
             }
-		}
+        }
     }
 
 	int LuaObject::classIndex(lua_State* L) {

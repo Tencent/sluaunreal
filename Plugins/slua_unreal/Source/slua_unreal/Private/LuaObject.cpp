@@ -839,8 +839,21 @@ namespace slua {
 		return 0;
 	}
 
+	bool checkType(lua_State* L, int p, const char* tn) {
+		if (!lua_isuserdata(L, p))
+			return false;
+		luaL_getmetafield(L, p, "__name");
+		if (lua_isstring(L, -1) && strcmp(tn, lua_tostring(L, -1)) == 0)
+		{
+			lua_pop(L, 1);
+			return true;
+		}
+		lua_pop(L, 1);
+		return false;
+	}
+
     // search obj from registry, push cached obj and return true if find it
-    bool LuaObject::getFromCache(lua_State* L,void* obj) {
+    bool LuaObject::getFromCache(lua_State* L,void* obj,const char* tn) {
         LuaState* ls = LuaState::get(L);
         ensure(ls->cacheObjRef!=LUA_NOREF);
         lua_geti(L,LUA_REGISTRYINDEX,ls->cacheObjRef);
@@ -850,14 +863,14 @@ namespace slua {
         lua_pushlightuserdata(L,obj);
         // get key from table
         lua_rawget(L,-2);
-        bool ret = true;
         lua_remove(L,-2); // remove cache table
         
         if(lua_isnil(L,-1)) {
-            ret = false;
             lua_pop(L,1);
+			return false;
         }
-        return ret;
+		// check type of ud matched
+		return checkType(L, -1, tn);
     }
 
     void LuaObject::addRef(lua_State* L,UObject* obj) {

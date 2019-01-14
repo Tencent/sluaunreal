@@ -41,7 +41,7 @@ namespace slua {
 	}
 
 	int LuaMap::push(lua_State* L, UMapProperty* prop, UObject* obj) {
-		if(LuaObject::getFromCache(L,prop)) return 1;
+		if(LuaObject::getFromCache(L,prop, "LuaMap")) return 1;
 		const auto map = new LuaMap(prop,obj);
 		int r = LuaObject::pushType(L, map, "LuaMap", setupMT, gc);
 		if(r) LuaObject::cacheObj(L,prop);

@@ -299,7 +299,7 @@ namespace slua {
 
 		template<class T>
 		static int push(lua_State* L, const char* fn, const T* v, bool owned=false) {
-            if(getFromCache(L,void_cast(v))) return 1;
+            if(getFromCache(L,void_cast(v),fn)) return 1;
 			NewUD(T, v, owned);
             luaL_getmetatable(L,fn);
 			lua_setmetatable(L, -2);
@@ -327,7 +327,7 @@ namespace slua {
 
         template<typename T>
         static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt,lua_CFunction gc) {
-            if(getFromCache(L,obj)) return 1;
+            if(getFromCache(L,obj,tn)) return 1;
             addRef(L,obj);
             lua_pushcclosure(L,gc,0);
             lua_pushcclosure(L,removeFromCacheGC,1);
@@ -409,7 +409,7 @@ namespace slua {
         static UFunction* findCacheFunction(lua_State* L,UClass* cls,const char* fname);
         static void cacheFunction(lua_State* L, UClass* cls,const char* fame,UFunction* func);
 
-        static bool getFromCache(lua_State* L, void* obj);
+        static bool getFromCache(lua_State* L, void* obj, const char* tn);
 		static void cacheObj(lua_State* L, void* obj);
     private:
         static int setupClassMT(lua_State* L);

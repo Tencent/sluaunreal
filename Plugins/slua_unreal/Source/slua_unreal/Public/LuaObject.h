@@ -340,7 +340,7 @@ namespace slua {
 
         template<typename T>
         static int pushObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt=nullptr) {
-            if(getFromCache(L,obj)) return 1;
+            if(getFromCache(L,obj,tn)) return 1;
             int r = pushType<T>(L,obj,tn,setupmt,nullptr);
             if(r) cacheObj(L,obj);
             return r;

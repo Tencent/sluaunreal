@@ -36,15 +36,16 @@ namespace slua {
 	}
 
 	int LuaMap::push(lua_State* L, UProperty* keyProp, UProperty* valueProp, FScriptMap* buf) {
-		const auto map = new LuaMap(keyProp, valueProp, buf);
-		return LuaObject::pushType(L, map, "LuaMap", setupMT, gc);
+		auto luaMap = new LuaMap(keyProp, valueProp, buf);
+		return LuaObject::pushType(L, luaMap, "LuaMap", setupMT, gc);
 	}
 
 	int LuaMap::push(lua_State* L, UMapProperty* prop, UObject* obj) {
-		if(LuaObject::getFromCache(L,prop)) return 1;
-		const auto map = new LuaMap(prop,obj);
-		int r = LuaObject::pushType(L, map, "LuaMap", setupMT, gc);
-		if(r) LuaObject::cacheObj(L,prop);
+		auto scriptMap = prop->ContainerPtrToValuePtr<FScriptMap>(obj);
+		if(LuaObject::getFromCache(L,scriptMap)) return 1;
+		auto luaMap = new LuaMap(prop,obj);
+		int r = LuaObject::pushType(L, luaMap, "LuaMap", setupMT, gc);
+		if(r) LuaObject::cacheObj(L,luaMap->map);
 		return 1;
 	}
 

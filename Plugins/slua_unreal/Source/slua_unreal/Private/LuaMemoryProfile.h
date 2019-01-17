@@ -33,14 +33,10 @@ namespace slua {
     public:
         static void* alloc (void *ud, void *ptr, size_t osize, size_t nsize);
 		static size_t total();
+#if WITH_EDITOR
 		static void start();
 		static void stop();
-#if WITH_EDITOR
-		static const MemoryDetail& memDetail();
-    private:
-
-        static void addRecord(class LuaState* LS,void* ptr,size_t size);
-        static void removeRecord(class LuaState* LS,void* ptr,size_t size);
+		static const MemoryDetail& memDetail();       
 #endif
     };
 

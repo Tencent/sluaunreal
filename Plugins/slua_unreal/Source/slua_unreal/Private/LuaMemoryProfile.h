@@ -17,12 +17,31 @@
 
 namespace slua {
 
+#if WITH_EDITOR
+	struct LuaMemInfo {
+		FString hint;
+		size_t size;
+		void* ptr;
+
+		int push(lua_State* L) const;
+	};
+
+	typedef TMap<void*, LuaMemInfo> MemoryDetail;
+#endif
+
     class LuaMemoryProfile {
     public:
         static void* alloc (void *ud, void *ptr, size_t osize, size_t nsize);
+		static size_t total();
+		static void start();
+		static void stop();
+#if WITH_EDITOR
+		static const MemoryDetail& memDetail();
     private:
+
         static void addRecord(class LuaState* LS,void* ptr,size_t size);
         static void removeRecord(class LuaState* LS,void* ptr,size_t size);
+#endif
     };
 
 }

@@ -19,6 +19,8 @@
 #include <string>
 #include <memory>
 
+#define SLUA_LUACODE "[sluacode]"
+
 namespace slua {
 
     class SLUA_UNREAL_API LuaState

@@ -133,7 +133,7 @@ namespace slua {
 
 	void dumpMemoryDetail()
 	{
-		Log::Log("Total memory alloc %d", totalMemory);
+		Log::Log("Total memory alloc %d bytes", totalMemory);
 		for (auto& it : memoryRecord) {
 			auto& memInfo = it.Value;
 			Log::Log("Memory alloc %d from %s", memInfo.size, TCHAR_TO_UTF8(*memInfo.hint));

@@ -21,7 +21,8 @@
     },
     {
       "Name": "slua_profile",
-      "Type": "Editor"
+      "Type": "Developer",
+      "LoadingPhase": "PreDefault"
     }
 	]
 }

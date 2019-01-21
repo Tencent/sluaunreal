@@ -25,15 +25,15 @@ static const FName slua_profileTabName("slua_profile");
 
 void Fslua_profileModule::StartupModule()
 {
-	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(slua_profileTabName, FOnSpawnTab::CreateRaw(this, &Fslua_profileModule::OnSpawnPluginTab))
-		.SetDisplayName(LOCTEXT("Flua_wrapperTabTitle", "slua Profiler"));
+	if (GIsEditor && !IsRunningCommandlet()) {
+		FGlobalTabmanager::Get()->RegisterNomadTabSpawner(slua_profileTabName, FOnSpawnTab::CreateRaw(this, &Fslua_profileModule::OnSpawnPluginTab))
+			.SetDisplayName(LOCTEXT("Flua_wrapperTabTitle", "slua Profiler"));
+	}
 }
 
 void Fslua_profileModule::ShutdownModule()
 {
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
-	
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(slua_profileTabName);
 }
 
 TSharedRef<class SDockTab> Fslua_profileModule::OnSpawnPluginTab(const FSpawnTabArgs & SpawnTabArgs)
@@ -46,14 +46,14 @@ TSharedRef<class SDockTab> Fslua_profileModule::OnSpawnPluginTab(const FSpawnTab
 			// Put your tab content here!
 			SNew(SBox)
 			.HAlign(HAlign_Left)
-		.VAlign(VAlign_Top)
-		[
-			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()[
-				SNew(STextBlock)
-					.Text(WidgetText)
+			.VAlign(VAlign_Top)
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()[
+					SNew(STextBlock)
+						.Text(WidgetText)
+				]
 			]
-		]
 		];
 }
 

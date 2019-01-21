@@ -469,11 +469,16 @@ namespace slua {
     }
 
     void fillParam(lua_State* L,int i,UFunction* func,uint8* params) {
+		auto funcFlag = func->FunctionFlags;
         for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
             UProperty* prop = *it;
             uint64 propflag = prop->GetPropertyFlags();
-            if((propflag&CPF_ReturnParm))
-                continue;
+			if (funcFlag & EFunctionFlags::FUNC_Native) {
+				if ((propflag&CPF_ReturnParm))
+					continue;
+			}
+			else if (propflag&CPF_OutParm)
+				continue;
 
             fillParamFromState(L,prop,params+prop->GetOffset_ForInternal(),i);
             i++;
@@ -486,6 +491,7 @@ namespace slua {
         // check is function has return value
 		const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
 
+		// put return value as head
         int ret = 0;
         if(bHasReturnParam) {
             UProperty* p = func->GetReturnProperty();
@@ -500,9 +506,8 @@ namespace slua {
             if(propflag&CPF_ReturnParm)
                 continue;
 
-            if((propflag&CPF_OutParm)) {
+            if((propflag&CPF_OutParm) && !(propflag&CPF_ConstParm))
                 ret += LuaObject::push(L,p,params+p->GetOffset_ForInternal());
-            }
         }
         
         return ret;

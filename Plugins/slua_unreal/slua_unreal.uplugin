@@ -14,10 +14,15 @@
 	"IsBetaVersion": false,
 	"Installed": false,
 	"Modules": [
-		{
-			"Name": "slua_unreal",
-			"Type": "Runtime",
-			"LoadingPhase": "PreLoadingScreen"
-		}
+    {
+      "Name": "slua_unreal",
+      "Type": "Runtime",
+      "LoadingPhase": "PreLoadingScreen"
+    },
+    {
+      "Name": "slua_profile",
+      "Type": "Developer",
+      "LoadingPhase": "PreDefault"
+    }
 	]
 }

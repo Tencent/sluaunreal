@@ -3,10 +3,7 @@ function begin(uworld,uactor)
     world=uworld
     actor=uactor
 
-    anchor = import('Anchors')()
-    min = anchor.Minimum
-    max = anchor.Minimum
-    print('xxxx',min,max,anchor)
+    print("Unreal enum",UEnums.LogLevel.LL_Warning)
 
     testcase()
 end

@@ -6,9 +6,9 @@ lua-wrapper is a static code export tool in slua-unreal. The main job is to stat
 
 ## 如何导出自定义接口？
 
-lua-wrapper 可运行于 windows 和 mac 平台，slua-unreal 自带了一份已经生成好的文件，但是可能还不够，如果需要导出更多的类型，不管是 unreal 的类型，还是自定义的类型，请修改 Tools 目录下的 config*.json 文件，找到 "Customs" 字段，指定类型和该类型所在的文件，然后导出即可。
+lua-wrapper 可运行于 windows 和 mac 平台，slua-unreal 自带了一份已经生成好的文件，但是可能还不够，如果需要导出更多的类型，不管是 unreal 的类型，还是自定义的类型，请修改 Tools 目录下的 config*.json 文件，找到 "Customs" 字段，指定类型和该类型所在的文件，然后导出。注意，编译结果依赖于配置是否正确，如果发现没有正确生成预期的结果，请检查配置。
 
-lua-wrapper runs on windows and mac platforms. slua-unreal already has a generated file, but it may not be enough, if you need to export more types, whether it is unreal4 or a custom type, please modify the config*.json file in the "Tools" directory, find the "Customs" field, specify the type and file of the type, then export.
+lua-wrapper runs on windows and mac platforms. slua-unreal already has a generated file, but it may not be enough, if you need to export more types, whether it is unreal4 or a custom type, please modify the config*.json file in the "Tools" directory, find the "Customs" field, specify the type and file of the type, then export. Note, that the results depend on whether the configuration is correct, if you find the results are not generated correctly, check the configuration (see the config.json) .
 
 ## 依赖
 
@@ -17,13 +17,14 @@ libclang 5.0.0 (32 bit)
 
 ## 配置文件
 
-config-win.json(Windows 平台), config-mac.json(Mac 平台)
+config.json
 
-配置文件夹主要配置两部分信息：
+配置文件主要配置两部分信息：
 1. 编译参数相关信息：引擎和项目路径、预处理器
 2. 指定导出类型信息
 
 字段含义：
+* is_debug: 是否生成调试信息
 * solution_dir: slua 项目路径
 * ue4_dir: ue4 安装路径
 * ue_vcproj: slua c++ 工程路径
@@ -32,3 +33,18 @@ config-win.json(Windows 平台), config-mac.json(Mac 平台)
 * struct_files: "TBaseStructure" 默认导出，"Custom" 可以自主添加
 * include_path: 搜索路径
 * preprocess: 预处理器
+
+The config file contains two parts of information:
+1. compile parameter related information: engine and project path, preprocessor
+2. specify export type information
+
+Field meaning:
+* is_debug: whether to generate debugging information
+* solution_dir: slua project path
+* ue4_dir: ue4 installation path
+* ue_vcproj: slua c++ project path
+* output_dir: LuaWrapper.cpp output dir
+* filter: specify which methd is not exported in a type
+* struct_files: "TBaseStructure" default export, "Custom" can be added by yourself
+* include_path: include path
+* preprocess: preprocessor

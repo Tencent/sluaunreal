@@ -1,4 +1,15 @@
 {
+    "is_debug": false,
+    "export_files": {
+        "TBaseStructure": "{ue4_dir}/Engine/Source/Runtime/CoreUObject/Public/UObject/Class.h",
+        "Customs": {
+            "FSlateFontInfo": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Fonts/SlateFontInfo.h",
+            "FSlateBrush": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Styling/SlateBrush.h",
+            "FMargin": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Layout/Margin.h",
+            "FGeometry": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Layout/Geometry.h",
+            "FSlateColor": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Styling/SlateColor.h"
+        }
+    },
     "filter": [
         {
             "type": "FTransform",
@@ -23,16 +34,6 @@
             "methods": [ "GenerateClusterCenters" ]
         }
     ],
-    "struct_files": {
-        "TBaseStructure": "{ue4_dir}/Engine/Source/Runtime/CoreUObject/Public/UObject/Class.h",
-        "Customs": {
-            "FSlateFontInfo": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Fonts/SlateFontInfo.h",
-            "FSlateBrush": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Styling/SlateBrush.h",
-            "FMargin": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Layout/Margin.h",
-            "FGeometry": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Layout/Geometry.h",
-            "FSlateColor": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Styling/SlateColor.h"
-        }
-    },
     "output_dir": "{solution_dir}/Plugins/slua_unreal/Source/slua_unreal/Private/",
     "win": {
         "solution_dir": "F:/Documents/github/slua-unreal",

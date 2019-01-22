@@ -13,7 +13,7 @@ end);
 
 function remove()
 	print("before remove")
-	local leaks = slua.dumpLeak()
+	local leaks = slua.dumpUObjects()
 	for k,v in pairs(leaks) do
 		print(k,v)
 	end
@@ -23,7 +23,7 @@ function remove()
 	btn2=nil
 
 	print("after remove")
-	local leaks = slua.dumpLeak()
+	local leaks = slua.dumpUObjects()
 	for k,v in pairs(leaks) do
 		print(k,v)
 	end

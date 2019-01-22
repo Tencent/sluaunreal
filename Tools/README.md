@@ -24,7 +24,6 @@ config.json
 2. 指定导出类型信息
 
 字段含义：
-* is_debug: 是否生成调试信息
 * solution_dir: slua 项目路径
 * ue4_dir: ue4 安装路径
 * ue_vcproj: slua c++ 工程路径
@@ -39,7 +38,6 @@ The config file contains two parts of information:
 2. specify export type information
 
 Field meaning:
-* is_debug: whether to generate debugging information
 * solution_dir: slua project path
 * ue4_dir: ue4 installation path
 * ue_vcproj: slua c++ project path

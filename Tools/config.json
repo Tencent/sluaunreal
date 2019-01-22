@@ -1,5 +1,4 @@
 {
-    "is_debug": false,
     "export_files": {
         "TBaseStructure": "{ue4_dir}/Engine/Source/Runtime/CoreUObject/Public/UObject/Class.h",
         "Customs": {

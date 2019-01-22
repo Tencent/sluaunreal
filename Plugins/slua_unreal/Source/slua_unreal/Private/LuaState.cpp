@@ -320,7 +320,13 @@ namespace slua {
         return ls->_pushErrorHandler(L);
     }
 
-    int LuaState::_pushErrorHandler(lua_State* state) {
+	LuaVar LuaState::initInnerCode(const char * str)
+	{
+		uint32 len = strlen(str);
+		return doBuffer((const uint8*)str, len, SLUA_LUACODE);
+	}
+
+	int LuaState::_pushErrorHandler(lua_State* state) {
         lua_pushcfunction(state,error);
         return lua_gettop(state);
     }

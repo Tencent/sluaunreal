@@ -148,8 +148,11 @@ namespace slua {
     private:
         friend class LuaObject;
         friend class SluaUtil;
+		friend struct LuaEnums;
         lua_State* L;
         int cacheObjRef;
+		// init enums lua code
+		LuaVar initInnerCode(const char* s);
         int _pushErrorHandler(lua_State* L);
         static int _atPanic(lua_State* L);
         ULuaObject* root;

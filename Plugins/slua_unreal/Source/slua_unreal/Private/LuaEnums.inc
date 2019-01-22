@@ -16,8 +16,7 @@ char s[] =
 
 "UEnums = {}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -26,8 +25,7 @@ char s[] =
 	"ForceInitToZero = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -35,8 +33,7 @@ char s[] =
 	"NoInit = 0,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -46,8 +43,7 @@ char s[] =
 	"Tablet = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -61,8 +57,7 @@ char s[] =
 	"FaceDown = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -76,8 +71,7 @@ char s[] =
 	"Platform = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -86,8 +80,7 @@ char s[] =
 	"Write = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -99,8 +92,7 @@ char s[] =
 	"ERROR_GETWINDOWSGT62VERSIONS_FAILED = 8,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -112,8 +104,7 @@ char s[] =
 	"COMPRESS_BiasSpeed = 32,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -125,8 +116,7 @@ char s[] =
 	"Branch = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -136,8 +126,7 @@ char s[] =
 	"Second = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -302,8 +291,7 @@ char s[] =
 	"NAME_MaxHardcodedNameIndex = 602,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -312,8 +300,7 @@ char s[] =
 	"IgnoreCase = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -321,8 +308,7 @@ char s[] =
 	"ENAME_LinkerConstructor = 0,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -332,8 +318,7 @@ char s[] =
 	"FNAME_Replace_Not_Safe_For_Threading = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -343,8 +328,7 @@ char s[] =
 	"sRGB = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -354,8 +338,7 @@ char s[] =
 	"ThreadSafe = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -363,8 +346,7 @@ char s[] =
 	"GenerateNewHandle = 0,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -374,8 +356,7 @@ char s[] =
 	"FindOrFullyLoad = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -384,8 +365,7 @@ char s[] =
 	"Ordinal = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -399,8 +379,7 @@ char s[] =
 	"Count = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -410,8 +389,7 @@ char s[] =
 	"Neuter = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -425,8 +403,7 @@ char s[] =
 	"ToPositiveInfinity = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -436,8 +413,7 @@ char s[] =
 	"Complex = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -445,8 +421,7 @@ char s[] =
 	"Value = 0,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -456,8 +431,7 @@ char s[] =
 	"Mixed = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -767,8 +741,7 @@ char s[] =
 	"VER_UE4_AUTOMATIC_VERSION = 514,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -778,8 +751,7 @@ char s[] =
 	"VER_LIC_AUTOMATIC_VERSION = 0,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -793,8 +765,7 @@ char s[] =
 	"Sunday = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -813,8 +784,7 @@ char s[] =
 	"December = 12,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -824,8 +794,7 @@ char s[] =
 	"Error = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -839,8 +808,7 @@ char s[] =
 	"CIM_Unknown = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -853,8 +821,7 @@ char s[] =
 	"State_ErrorPipeClosedUnexpectedly = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -864,8 +831,7 @@ char s[] =
 	"Child = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -881,8 +847,7 @@ char s[] =
 	"AIOP_NUM = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -891,8 +856,7 @@ char s[] =
 	"AllowWrite = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -901,8 +865,7 @@ char s[] =
 	"AllowRead = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -916,8 +879,7 @@ char s[] =
 	"TPri_TimeCritical = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -930,8 +892,7 @@ char s[] =
 	"FILEWRITE_AllowRead = 16,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -942,8 +903,7 @@ char s[] =
 	"FILEREAD_AllowWrite = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -953,8 +913,7 @@ char s[] =
 	"COPY_Canceled = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -964,8 +923,7 @@ char s[] =
 	"IO_APPEND = 64,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -975,8 +933,7 @@ char s[] =
 	"ErrorMissingHash = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -988,8 +945,7 @@ char s[] =
 	"ForceUTF8WithoutBOM = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -999,8 +955,7 @@ char s[] =
 	"VREyeBuffer = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1009,8 +964,7 @@ char s[] =
 	"INDEXBUFFER_ALIGNMENT = 0,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1023,8 +977,7 @@ char s[] =
 	"UniqueObjectGuid = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1033,8 +986,7 @@ char s[] =
 	"Unspecified = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1043,8 +995,7 @@ char s[] =
 	"ScopeLog_Seconds = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1058,8 +1009,7 @@ char s[] =
 	"STATTYPE_Error = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1073,8 +1023,7 @@ char s[] =
 	"NumBits = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1082,8 +1031,7 @@ char s[] =
 	"FOR_POOL = 0,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1091,8 +1039,7 @@ char s[] =
 	"MEM_Zeroed = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1100,8 +1047,7 @@ char s[] =
 	"MEM_Oned = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1111,8 +1057,7 @@ char s[] =
 	"Persistent = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1121,8 +1066,7 @@ char s[] =
 	"Spsc = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1136,8 +1080,7 @@ char s[] =
 	"LEVEL_Preloading = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1163,8 +1106,7 @@ char s[] =
 	"NumHierarchyFiles = 18,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1173,8 +1115,7 @@ char s[] =
 	"Temporary = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1200,8 +1141,7 @@ char s[] =
 	"ECVF_SetByConsole = 150994944,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1211,8 +1151,7 @@ char s[] =
 	"Invisible = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1226,8 +1165,7 @@ char s[] =
 	"LS_Deconstucted = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1237,8 +1175,7 @@ char s[] =
 	"ThreadPool = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1247,8 +1184,7 @@ char s[] =
 	"Contains = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1258,8 +1194,7 @@ char s[] =
 	"Error = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1271,8 +1206,7 @@ char s[] =
 	"FailedToInitialize = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1282,8 +1216,7 @@ char s[] =
 	"PluginDirectoryChanged = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1292,8 +1225,7 @@ char s[] =
 	"DisplayUpToDateModules = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1331,8 +1263,7 @@ char s[] =
 	"FUNC_AllFlags = -1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1428,8 +1359,7 @@ char s[] =
 	"EX_Max = 256,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1440,8 +1370,7 @@ char s[] =
 	"CST_Max = 255,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1453,8 +1382,7 @@ char s[] =
 	"StringTableEntry = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1480,8 +1408,7 @@ char s[] =
 	"LOAD_DisableCompileOnLoad = 4194304,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1497,8 +1424,7 @@ char s[] =
 	"SAVE_KeepEditorOnlyCookedPackages = 128,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1523,8 +1449,7 @@ char s[] =
 	"PKG_FilterEditorOnly = -2147483648,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1532,8 +1457,7 @@ char s[] =
 	"EC_StaticConstructor = 0,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1541,8 +1465,7 @@ char s[] =
 	"EC_InternalUseOnlyConstructor = 0,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1550,8 +1473,7 @@ char s[] =
 	"EC_CppProperty = 0,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1588,8 +1510,7 @@ char s[] =
 	"CLASS_NewerVersionExists = -2147483648,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1625,8 +1546,7 @@ char s[] =
 	"RF_WillBeLoaded = 134217728,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1644,8 +1564,7 @@ char s[] =
 	"AllFlags = 2139095040,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1658,8 +1577,7 @@ char s[] =
 	"LCPF_PersistentFlags = 8,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1667,8 +1585,7 @@ char s[] =
 	"InvalidPtrValue = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1677,8 +1594,7 @@ char s[] =
 	"CallZConstructor = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1715,8 +1631,7 @@ char s[] =
 	"Enum = 29,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1725,8 +1640,7 @@ char s[] =
 	"Native = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1734,8 +1648,7 @@ char s[] =
 	"START_SERIAL_NUMBER = 1000,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1751,8 +1664,7 @@ char s[] =
 	"OBJECTMARK_ALLMARKS = -1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1764,8 +1676,7 @@ char s[] =
 	"TT_Chronological = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1777,8 +1688,7 @@ char s[] =
 	"TD_Memory = 8,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1797,8 +1707,7 @@ char s[] =
 	"GCRT_EndOfStream = 11,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1806,8 +1715,7 @@ char s[] =
 	"E_GCSkipIndexPlaceholder = -559039810,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1836,8 +1744,7 @@ char s[] =
 	"STRUCT_ComputedFlags = 2096194,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1847,8 +1754,7 @@ char s[] =
 	"CaseSensitive = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1858,8 +1764,7 @@ char s[] =
 	"EnumClass = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1871,8 +1776,7 @@ char s[] =
 	"FromCastFlags = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1894,8 +1798,7 @@ char s[] =
 	"COND_Max = 14,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1904,8 +1807,7 @@ char s[] =
 	"REPNOTIFY_Always = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1915,8 +1817,7 @@ char s[] =
 	"AlwaysCollect = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1932,8 +1833,7 @@ char s[] =
 	"CPPF_BlueprintCppBackend = 128,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1942,8 +1842,7 @@ char s[] =
 	"IncludeSuper = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1952,8 +1851,7 @@ char s[] =
 	"IncludeDeprecated = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1962,8 +1860,7 @@ char s[] =
 	"IncludeInterfaces = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -1972,8 +1869,7 @@ char s[] =
 	"FullRecursion = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2013,8 +1909,7 @@ char s[] =
 	"CPT_MAX = 32,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2026,8 +1921,7 @@ char s[] =
 	"Object = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2040,8 +1934,7 @@ char s[] =
 	"SkipSubObjects = 8,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2051,8 +1944,7 @@ char s[] =
 	"HasScript = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2066,8 +1958,7 @@ char s[] =
 	"GenerateStub = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2077,8 +1968,7 @@ char s[] =
 	"DSF_EnableCookerWarnings = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2112,8 +2002,7 @@ char s[] =
 	"PPF_DuplicateVerbatim = 1073741824,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2132,8 +2021,7 @@ char s[] =
 	"BULKDATA_Force_NOT_InlinePayload = 1024,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2143,8 +2031,7 @@ char s[] =
 	"LOCKSTATUS_ReadWriteLock = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2153,8 +2040,7 @@ char s[] =
 	"LOCK_READ_WRITE = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2164,8 +2050,7 @@ char s[] =
 	"LINKER_TimedOut = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2175,8 +2060,7 @@ char s[] =
 	"VERIFY_Redirected = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2188,8 +2072,7 @@ char s[] =
 	"NRT_Package = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2199,8 +2082,7 @@ char s[] =
 	"NRP_Finished = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2218,8 +2100,7 @@ char s[] =
 	"PackageComplete = 10,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2237,8 +2118,7 @@ char s[] =
 	"Invalid_Value = -1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2262,8 +2142,7 @@ char s[] =
 	"Special_11 = 16,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2278,8 +2157,7 @@ char s[] =
 	"NoFlags = 0,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2289,8 +2167,7 @@ char s[] =
 	"Vector = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2299,8 +2176,7 @@ char s[] =
 	"PostUserConstructionScript = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2312,8 +2188,7 @@ char s[] =
 	"LightType_NumBits = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2323,8 +2198,7 @@ char s[] =
 	"LMIT_NumBits = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2334,8 +2208,7 @@ char s[] =
 	"SMIT_NumBits = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2372,8 +2245,7 @@ char s[] =
 	"MP_MAX = 29,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2396,8 +2268,7 @@ char s[] =
 	"SE_BLEND_MAX = 45,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2467,8 +2338,7 @@ char s[] =
 	"PF_MAX = 62,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2483,8 +2353,7 @@ char s[] =
 	"SF_NumBits = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2521,8 +2390,7 @@ char s[] =
 	"SP_NumBits = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2532,8 +2400,7 @@ char s[] =
 	"RQT_AbsoluteTime = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2543,8 +2410,7 @@ char s[] =
 	"IsInverted = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2558,8 +2424,7 @@ char s[] =
 	"ESamplerFilter_NumBits = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2572,8 +2437,7 @@ char s[] =
 	"ESamplerAddressMode_NumBits = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2582,8 +2446,7 @@ char s[] =
 	"SCF_Less = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2595,8 +2458,7 @@ char s[] =
 	"ERasterizerFillMode_NumBits = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2608,8 +2470,7 @@ char s[] =
 	"ERasterizerCullMode_NumBits = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2626,8 +2487,7 @@ char s[] =
 	"EColorWriteMask_NumBits = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2648,8 +2508,7 @@ char s[] =
 	"CF_DepthFarther = 0,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2667,8 +2526,7 @@ char s[] =
 	"SM_Count = 10,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2685,8 +2543,7 @@ char s[] =
 	"EStencilOp_NumBits = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2700,8 +2557,7 @@ char s[] =
 	"EBlendOperation_NumBits = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2722,8 +2578,7 @@ char s[] =
 	"EBlendFactor_NumBits = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2752,8 +2607,7 @@ char s[] =
 	"VET_NumBits = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2767,8 +2621,7 @@ char s[] =
 	"CubeFace_MAX = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2778,8 +2631,7 @@ char s[] =
 	"UniformBuffer_MultiFrame = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2798,8 +2650,7 @@ char s[] =
 	"EUniformBufferBaseType_NumBits = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2815,8 +2666,7 @@ char s[] =
 	"RTD_Shift_UniformBufferIndex = 24,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2826,8 +2676,7 @@ char s[] =
 	"RLM_Num = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2838,8 +2687,7 @@ char s[] =
 	"RCM_MinMax = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2852,8 +2700,7 @@ char s[] =
 	"NumBits = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2899,8 +2746,7 @@ char s[] =
 	"PT_NumBits = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2923,8 +2769,7 @@ char s[] =
 	"BUF_AnyDynamic = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2959,8 +2804,7 @@ char s[] =
 	"RRT_Num = 27,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -2996,8 +2840,7 @@ char s[] =
 	"TexCreate_Transient = -2147483648,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3006,8 +2849,7 @@ char s[] =
 	"AsyncComputePriority_High = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3017,8 +2859,7 @@ char s[] =
 	"TexRealloc_InProgress = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3030,8 +2871,7 @@ char s[] =
 	"NumBits = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3043,8 +2883,7 @@ char s[] =
 	"NumBits = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3060,8 +2899,7 @@ char s[] =
 	"EExistingColorAndDepthAndClearStencil = 8,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3071,8 +2909,7 @@ char s[] =
 	"DepthStencil = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3084,8 +2921,7 @@ char s[] =
 	"EAll_4 = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3095,8 +2931,7 @@ char s[] =
 	"EDepthStencilBound = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3110,8 +2945,7 @@ char s[] =
 	"EMaxAccess = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3120,8 +2954,7 @@ char s[] =
 	"EUnaliasable = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3132,8 +2965,7 @@ char s[] =
 	"EComputeToCompute = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3141,8 +2973,7 @@ char s[] =
 	"Zero = 0,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3158,8 +2989,7 @@ char s[] =
 	"Load_Resolve = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3179,8 +3009,7 @@ char s[] =
 	"ClearDepthStencil_ResolveStencilNotDepth = -118,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3190,8 +3019,7 @@ char s[] =
 	"Max = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3202,8 +3030,7 @@ char s[] =
 	"Max = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3258,8 +3085,7 @@ char s[] =
 	"PlatformTagEnd = -1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3268,8 +3094,7 @@ char s[] =
 	"ECompute = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3278,8 +3103,7 @@ char s[] =
 	"Num = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3289,8 +3113,7 @@ char s[] =
 	"Regular = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3300,8 +3123,7 @@ char s[] =
 	"MipFade_NumSettings = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3314,8 +3136,7 @@ char s[] =
 	"IE_MAX = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3327,8 +3148,7 @@ char s[] =
 	"CaptureDuringRightMouseDown = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3338,8 +3158,7 @@ char s[] =
 	"LockAlways = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3350,8 +3169,7 @@ char s[] =
 	"LEVELTICK_PauseTick = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3367,8 +3185,7 @@ char s[] =
 	"TG_MAX = 8,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3378,8 +3195,7 @@ char s[] =
 	"CoolingDown = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3390,8 +3206,7 @@ char s[] =
 	"TRAVEL_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3403,8 +3218,7 @@ char s[] =
 	"NM_MAX = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3437,8 +3251,7 @@ char s[] =
 	"VMI_Unknown = 255,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3456,8 +3269,7 @@ char s[] =
 	"SFG_Max = 10,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3467,8 +3279,7 @@ char s[] =
 	"ESFIM_All0 = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3630,8 +3441,7 @@ char s[] =
 	"SF_MediaPlanes = 154,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3642,8 +3452,7 @@ char s[] =
 	"HPP_UI = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3652,8 +3461,7 @@ char s[] =
 	"UseCurrentWindow = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3662,8 +3470,7 @@ char s[] =
 	"Yes = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3681,8 +3488,7 @@ char s[] =
 	"VIS_All = 31,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3697,8 +3503,7 @@ char s[] =
 	"Invalid = 7,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3707,8 +3512,7 @@ char s[] =
 	"WidgetUnderCursor = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3718,8 +3522,7 @@ char s[] =
 	"User = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3730,8 +3533,7 @@ char s[] =
 	"HAlign_Right = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3742,8 +3544,7 @@ char s[] =
 	"VAlign_Bottom = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3763,8 +3564,7 @@ char s[] =
 	"MenuPlacement_MatchBottomLeft = 12,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3773,8 +3573,7 @@ char s[] =
 	"Orient_Vertical = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3783,8 +3582,7 @@ char s[] =
 	"Scroll_Up = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3793,8 +3591,7 @@ char s[] =
 	"Continue = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3804,8 +3601,7 @@ char s[] =
 	"Deactivate = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3819,8 +3615,7 @@ char s[] =
 	"Count = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3833,8 +3628,7 @@ char s[] =
 	"GameWindow = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3844,8 +3638,7 @@ char s[] =
 	"PerPixel = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3855,8 +3648,7 @@ char s[] =
 	"FirstShown = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3869,8 +3661,7 @@ char s[] =
 	"WindowActivate = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3880,8 +3671,7 @@ char s[] =
 	"EA_Deactivate = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3890,8 +3680,7 @@ char s[] =
 	"DragFiles = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3904,8 +3693,7 @@ char s[] =
 	"Invalid = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3921,8 +3709,7 @@ char s[] =
 	"ReverseGamma = -128,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3938,8 +3725,7 @@ char s[] =
 	"ReverseGamma = -128,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3948,8 +3734,7 @@ char s[] =
 	"Simple = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3958,8 +3743,7 @@ char s[] =
 	"Enabled = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3971,8 +3755,7 @@ char s[] =
 	"OnDemand = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3981,8 +3764,7 @@ char s[] =
 	"Stencil = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -3991,8 +3773,7 @@ char s[] =
 	"LayoutAndVolatility = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4003,8 +3784,7 @@ char s[] =
 	"AspectRatio_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4015,8 +3795,7 @@ char s[] =
 	"METRICS_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4026,8 +3805,7 @@ char s[] =
 	"SnapToTarget = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4036,8 +3814,7 @@ char s[] =
 	"KeepWorld = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4047,8 +3824,7 @@ char s[] =
 	"SDPG_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4058,8 +3834,7 @@ char s[] =
 	"ILCQ_Volume = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4069,8 +3844,7 @@ char s[] =
 	"OCM_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4084,8 +3858,7 @@ char s[] =
 	"BLEND_MAX = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4095,8 +3868,7 @@ char s[] =
 	"SSM_Clamp_WorldGroupSettings = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4110,8 +3882,7 @@ char s[] =
 	"TLM_MAX = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4120,8 +3891,7 @@ char s[] =
 	"RM_PixelNormalOffset = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4136,8 +3906,7 @@ char s[] =
 	"SCS_BaseColor = 7,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4147,8 +3916,7 @@ char s[] =
 	"SCCM_Composite = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4158,8 +3926,7 @@ char s[] =
 	"ETrailWidthMode_FromSecond = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4177,8 +3944,7 @@ char s[] =
 	"MSM_MAX = 10,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4189,8 +3955,7 @@ char s[] =
 	"MTM_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4207,8 +3972,7 @@ char s[] =
 	"SAMPLERTYPE_MAX = 9,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4220,8 +3984,7 @@ char s[] =
 	"Quality_MAX = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4235,8 +3998,7 @@ char s[] =
 	"TRISORT_MAX = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4247,8 +4009,7 @@ char s[] =
 	"TSA_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4263,8 +4024,7 @@ char s[] =
 	"MOVE_MAX = 7,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4275,8 +4035,7 @@ char s[] =
 	"Replay = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4317,8 +4076,7 @@ char s[] =
 	"ECC_MAX = 33,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4328,8 +4086,7 @@ char s[] =
 	"OverlapFilter_StaticOnly = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4369,8 +4126,7 @@ char s[] =
 	"ObjectTypeQuery_MAX = 32,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4410,8 +4166,7 @@ char s[] =
 	"TraceTypeQuery_MAX = 32,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4422,8 +4177,7 @@ char s[] =
 	"PST_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4434,8 +4188,7 @@ char s[] =
 	"ECR_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4446,8 +4199,7 @@ char s[] =
 	"BSIT_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4458,8 +4210,7 @@ char s[] =
 	"ICO_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4469,8 +4220,7 @@ char s[] =
 	"Visibility = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4480,8 +4230,7 @@ char s[] =
 	"RIF_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4491,8 +4240,7 @@ char s[] =
 	"Custom = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4505,8 +4253,7 @@ char s[] =
 	"ETS_MAX = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4516,8 +4263,7 @@ char s[] =
 	"LMPT_NoPadding = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4526,8 +4272,7 @@ char s[] =
 	"SMF_Streamed = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4536,8 +4281,7 @@ char s[] =
 	"TeleportPhysics = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4551,8 +4295,7 @@ char s[] =
 	"ShiftBucketMax = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4561,8 +4304,7 @@ char s[] =
 	"LookAheadMode = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4574,8 +4316,7 @@ char s[] =
 	"ROLE_MAX = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4588,8 +4329,7 @@ char s[] =
 	"DORN_MAX = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4600,8 +4340,7 @@ char s[] =
 	"PlacedInWorldOrSpawned = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4611,8 +4350,7 @@ char s[] =
 	"RoundTwoDecimals = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4621,8 +4359,7 @@ char s[] =
 	"ShortComponents = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4634,8 +4371,7 @@ char s[] =
 	"WalkableSlope_Max = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4706,8 +4442,7 @@ char s[] =
 	"SurfaceType_Max = 63,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4718,8 +4453,7 @@ char s[] =
 	"ACM_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4731,8 +4465,7 @@ char s[] =
 	"DontSpawnIfColliding = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4742,8 +4475,7 @@ char s[] =
 	"Other = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4752,8 +4484,7 @@ char s[] =
 	"ForceCPUAndGPU = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4763,8 +4494,7 @@ char s[] =
 	"StaticLevels = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4774,8 +4504,7 @@ char s[] =
 	"Dynamic = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4785,8 +4514,7 @@ char s[] =
 	"AllDynamicObjects = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4796,8 +4524,7 @@ char s[] =
 	"Multi = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4809,8 +4536,7 @@ char s[] =
 	"BL_MAX = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4821,8 +4547,7 @@ char s[] =
 	"DOFM_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4834,8 +4559,7 @@ char s[] =
 	"AAM_MAX = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4845,8 +4569,7 @@ char s[] =
 	"AEM_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4856,8 +4579,7 @@ char s[] =
 	"BM_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4867,8 +4589,7 @@ char s[] =
 	"EBasePass_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4878,8 +4599,7 @@ char s[] =
 	"Num = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4897,8 +4617,7 @@ char s[] =
 	"DVSM_MAX = 10,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4908,8 +4627,7 @@ char s[] =
 	"EGPD_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4920,8 +4638,7 @@ char s[] =
 	"Map = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4931,8 +4648,7 @@ char s[] =
 	"DevelopmentOnly = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4942,8 +4658,7 @@ char s[] =
 	"SaveAllButExec = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4952,8 +4667,7 @@ char s[] =
 	"BPST_VariantA = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4964,8 +4678,7 @@ char s[] =
 	"Instance = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4975,8 +4688,7 @@ char s[] =
 	"PropagateFromParent = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4987,8 +4699,7 @@ char s[] =
 	"DM_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -4999,8 +4710,7 @@ char s[] =
 	"RTS_ParentBoneSpace = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5012,8 +4722,7 @@ char s[] =
 	"MOVECOMP_DisableBlockingOverlapDispatch = 8,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5023,8 +4732,7 @@ char s[] =
 	"Propagate = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5033,8 +4741,7 @@ char s[] =
 	"eIgnoreTransform = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5045,8 +4752,7 @@ char s[] =
 	"eForceUpdate = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5058,8 +4764,7 @@ char s[] =
 	"TextureSizingType_MAX = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5068,8 +4773,7 @@ char s[] =
 	"MaterialMergeType_Simplygon = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5079,8 +4783,7 @@ char s[] =
 	"HasBegunPlay = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5090,8 +4793,7 @@ char s[] =
 	"Create = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5101,8 +4803,7 @@ char s[] =
 	"Lazy = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5112,8 +4813,7 @@ char s[] =
 	"Lazy = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5127,8 +4827,7 @@ char s[] =
 	"BS_MAX = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5142,8 +4841,7 @@ char s[] =
 	"BPTYPE_MAX = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5153,8 +4851,7 @@ char s[] =
 	"FinalRelease = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5164,8 +4861,7 @@ char s[] =
 	"ExplicitlyEnabled = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5175,8 +4871,7 @@ char s[] =
 	"No = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5189,8 +4884,7 @@ char s[] =
 	"InvalidParams = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5200,8 +4894,7 @@ char s[] =
 	"EOO_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5214,8 +4907,7 @@ char s[] =
 	"VTBlend_MAX = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5226,8 +4918,7 @@ char s[] =
 	"Masks = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5238,8 +4929,7 @@ char s[] =
 	"RCIM_None = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5250,8 +4940,7 @@ char s[] =
 	"RCTM_None = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5262,8 +4951,7 @@ char s[] =
 	"RCTWM_WeightedBoth = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5276,8 +4964,7 @@ char s[] =
 	"RCCE_None = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5290,8 +4977,7 @@ char s[] =
 	"PostBatchPostGC = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5302,8 +4988,7 @@ char s[] =
 	"RIGHT_SMALL = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5313,8 +4998,7 @@ char s[] =
 	"CalculateLOD = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5323,8 +5007,7 @@ char s[] =
 	"MeshMergeType_MergeActor = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5338,8 +5021,7 @@ char s[] =
 	"CSG_MAX = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5350,8 +5032,7 @@ char s[] =
 	"Brush_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5364,8 +5045,7 @@ char s[] =
 	"Custom = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5382,8 +5062,7 @@ char s[] =
 	"Unknown = 9,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5393,8 +5072,7 @@ char s[] =
 	"OCCLUSION = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5406,8 +5084,7 @@ char s[] =
 	"SOUNDDISTANCE_MAX = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5416,8 +5093,7 @@ char s[] =
 	"SPATIALIZATION_HRTF = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5426,8 +5102,7 @@ char s[] =
 	"CustomCurve = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5437,8 +5112,7 @@ char s[] =
 	"Manual = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5454,8 +5128,7 @@ char s[] =
 	"SPEAKER_Count = 8,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5465,8 +5138,7 @@ char s[] =
 	"LOOP_Forever = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5497,8 +5169,7 @@ char s[] =
 	"REVERB_MAX = 23,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5509,8 +5180,7 @@ char s[] =
 	"VIS_Max = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5519,8 +5189,7 @@ char s[] =
 	"VLM_SparseVolumeLightingSamples = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5529,8 +5198,7 @@ char s[] =
 	"Server = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5543,8 +5211,7 @@ char s[] =
 	"CHTYPE_MAX = 8,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5554,8 +5221,7 @@ char s[] =
 	"SaveButIgnore = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5565,8 +5231,7 @@ char s[] =
 	"ForceEnable = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5580,8 +5245,7 @@ char s[] =
 	"Object = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5601,8 +5265,7 @@ char s[] =
 	"Identifier = 12,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5618,8 +5281,7 @@ char s[] =
 	"Error = 8,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5630,8 +5292,7 @@ char s[] =
 	"USOCK_Open = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5641,8 +5302,7 @@ char s[] =
 	"Ack = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5657,8 +5317,7 @@ char s[] =
 	"HISTORY_DELETED_STARTUP_ACTORS = 8,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5670,8 +5329,7 @@ char s[] =
 	"eSZ_MAX = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5682,8 +5340,7 @@ char s[] =
 	"eSSP_MONOSCOPIC_EYE = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5692,8 +5349,7 @@ char s[] =
 	"SPF_Mandatory = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5708,8 +5364,7 @@ char s[] =
 	"CTF_Default = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5721,8 +5376,7 @@ char s[] =
 	"MonoOnly = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5732,8 +5386,7 @@ char s[] =
 	"TVC_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5753,8 +5406,7 @@ char s[] =
 	"MATUSAGE_MAX = 12,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5764,8 +5416,7 @@ char s[] =
 	"BA_Z = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5777,8 +5428,7 @@ char s[] =
 	"BCS_MAX = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5788,8 +5438,7 @@ char s[] =
 	"BRS_CopyFromTarget = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5800,8 +5449,7 @@ char s[] =
 	"AAT_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5810,8 +5458,7 @@ char s[] =
 	"Step = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5825,8 +5472,7 @@ char s[] =
 	"AACF_Disabled = 64,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5837,8 +5483,7 @@ char s[] =
 	"Max = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5849,8 +5494,7 @@ char s[] =
 	"RCT_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5861,8 +5505,7 @@ char s[] =
 	"GRAPHACTION_RemoveNode = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5884,8 +5527,7 @@ char s[] =
 	"CFLAG_Archive = 14,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5896,8 +5538,7 @@ char s[] =
 	"Niagara = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5907,8 +5548,7 @@ char s[] =
 	"EOnlyUnique = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5919,8 +5559,7 @@ char s[] =
 	"PVFT_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5958,8 +5597,7 @@ char s[] =
 	"TEXTUREGROUP_MAX = 30,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -5987,8 +5625,7 @@ char s[] =
 	"TMGS_MAX = 20,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6000,8 +5637,7 @@ char s[] =
 	"AnisotropicLinear = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6020,8 +5656,7 @@ char s[] =
 	"MCT_TextureExternal = 512,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6036,8 +5671,7 @@ char s[] =
 	"MCB_MAX = 7,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6046,8 +5680,7 @@ char s[] =
 	"EStrict = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6061,8 +5694,7 @@ char s[] =
 	"MD_MAX = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6072,8 +5704,7 @@ char s[] =
 	"CompiledMP_MAX = 31,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6086,8 +5717,7 @@ char s[] =
 	"EnabledRGBA8 = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6097,8 +5727,7 @@ char s[] =
 	"EDRF_UseTesselatedIndexBuffer = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6118,8 +5747,7 @@ char s[] =
 	"TC_MAX = 12,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6131,8 +5759,7 @@ char s[] =
 	"TF_MAX = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6143,8 +5770,7 @@ char s[] =
 	"TA_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6157,8 +5783,7 @@ char s[] =
 	"CTM_MAX = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6169,8 +5794,7 @@ char s[] =
 	"TMC_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6181,8 +5805,7 @@ char s[] =
 	"TSAT_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6198,8 +5821,7 @@ char s[] =
 	"TSF_MAX = 8,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6213,8 +5835,7 @@ char s[] =
 	"TCQ_MAX = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6226,8 +5847,7 @@ char s[] =
 	"LIT_MAX = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6243,8 +5863,7 @@ char s[] =
 	"STATE_CounterMask = 67108863,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6258,8 +5877,7 @@ char s[] =
 	"DET_Custom = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6271,8 +5889,7 @@ char s[] =
 	"Num = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6284,8 +5901,7 @@ char s[] =
 	"Num = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6296,8 +5912,7 @@ char s[] =
 	"RDO_Extreme = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6308,8 +5923,7 @@ char s[] =
 	"DPM_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6322,8 +5936,7 @@ char s[] =
 	"EDVLF_MAX = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6334,8 +5947,7 @@ char s[] =
 	"EDVMF_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6352,8 +5964,7 @@ char s[] =
 	"EPMT_MAX = 9,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6363,8 +5974,7 @@ char s[] =
 	"EPSSM_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6382,8 +5992,7 @@ char s[] =
 	"EPAL_MAX = 10,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6392,8 +6001,7 @@ char s[] =
 	"GET_Next = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6405,8 +6013,7 @@ char s[] =
 	"GET_End = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6415,8 +6022,7 @@ char s[] =
 	"ERelativeToMax = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6427,8 +6033,7 @@ char s[] =
 	"Executing = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6442,8 +6047,7 @@ char s[] =
 	"SMOI_MAX = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6453,8 +6057,7 @@ char s[] =
 	"SMOT_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6466,8 +6069,7 @@ char s[] =
 	"ABPT_MAX = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6482,8 +6084,7 @@ char s[] =
 	"ACF_MAX = 7,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6492,8 +6093,7 @@ char s[] =
 	"Additive = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6503,8 +6103,7 @@ char s[] =
 	"MarkedForRemoval = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6513,8 +6112,7 @@ char s[] =
 	"DisablePartialEndTick = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6522,8 +6120,7 @@ char s[] =
 	"Invalid = 0,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6533,8 +6130,7 @@ char s[] =
 	"ClampVelocity = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6546,8 +6142,7 @@ char s[] =
 	"Removed = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6557,8 +6152,7 @@ char s[] =
 	"UseAsyncScene = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6568,8 +6162,7 @@ char s[] =
 	"TSB_ViewMode = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6580,8 +6173,7 @@ char s[] =
 	"ECB_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6598,8 +6190,7 @@ char s[] =
 	"ERSM_128 = 9,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6610,8 +6201,7 @@ char s[] =
 	"BVS_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6621,8 +6211,7 @@ char s[] =
 	"PBO_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6632,8 +6221,7 @@ char s[] =
 	"TeleportAndReset = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6642,8 +6230,7 @@ char s[] =
 	"DisallowDeferral = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6652,8 +6239,7 @@ char s[] =
 	"UpdateBodySetup = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6664,8 +6250,7 @@ char s[] =
 	"LegacyGeneration = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6677,8 +6262,7 @@ char s[] =
 	"PIEMode = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6690,8 +6274,7 @@ char s[] =
 	"RegistrationSuccessful = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6703,8 +6286,7 @@ char s[] =
 	"OctreeUpdate_ParentChain = 8,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6713,8 +6295,7 @@ char s[] =
 	"CleanupUnsafe = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6736,8 +6317,7 @@ char s[] =
 	"Custom = 14,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6747,8 +6327,7 @@ char s[] =
 	"ETAA_Looped = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6759,8 +6338,7 @@ char s[] =
 	"MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6771,8 +6349,7 @@ char s[] =
 	"InvalidMontage = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6784,8 +6361,7 @@ char s[] =
 	"UseGlobalPhysicsSetting = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6796,8 +6372,7 @@ char s[] =
 	"SHRINK_AllCustom = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6805,8 +6380,7 @@ char s[] =
 	"MapSize = 16,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6815,8 +6389,7 @@ char s[] =
 	"PostUpdate_Replay = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6831,8 +6404,7 @@ char s[] =
 	"FLAG_Custom_3 = 128,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6842,8 +6414,7 @@ char s[] =
 	"EPBM_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6856,8 +6427,7 @@ char s[] =
 	"PSUVIM_MAX = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6870,8 +6440,7 @@ char s[] =
 	"ERM_MAX = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6880,8 +6449,7 @@ char s[] =
 	"EPSUM_FixedTime = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6891,8 +6459,7 @@ char s[] =
 	"PARTICLESYSTEMLODMETHOD_ActivateAutomatic = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6902,8 +6469,7 @@ char s[] =
 	"EPSOBM_CustomBounds = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6919,8 +6485,7 @@ char s[] =
 	"PSPT_MAX = 8,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6931,8 +6496,7 @@ char s[] =
 	"PRS_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6946,8 +6510,7 @@ char s[] =
 	"EPET_MAX = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6957,8 +6520,7 @@ char s[] =
 	"SILENT = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6970,8 +6532,7 @@ char s[] =
 	"CTF_MAX = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6981,8 +6542,7 @@ char s[] =
 	"PhysType_Simulated = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -6991,8 +6551,7 @@ char s[] =
 	"HighPrecision = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7001,8 +6560,7 @@ char s[] =
 	"HighPrecision = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7015,8 +6573,7 @@ char s[] =
 	"ENormalMode_MAX = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7031,8 +6588,7 @@ char s[] =
 	"EImportanceLevel_MAX = 7,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7042,8 +6598,7 @@ char s[] =
 	"OT_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7054,8 +6609,7 @@ char s[] =
 	"LastVersion = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7075,8 +6629,7 @@ char s[] =
 	"DBM_MAX = 12,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7092,8 +6645,7 @@ char s[] =
 	"MDR_MAX = 8,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7125,8 +6677,7 @@ char s[] =
 	"SOUNDGROUP_GameSoundGroup20 = 24,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7142,8 +6693,7 @@ char s[] =
 	"DTYPE_MAX = 8,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7153,8 +6703,7 @@ char s[] =
 	"Freed = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7167,8 +6716,7 @@ char s[] =
 	"NF_IsBack = 128,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7193,8 +6741,7 @@ char s[] =
 	"PF_DefaultFlags = 0,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7207,8 +6754,7 @@ char s[] =
 	"SVB_MAX = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7220,8 +6766,7 @@ char s[] =
 	"None = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7231,8 +6776,7 @@ char s[] =
 	"Inline = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7241,8 +6785,7 @@ char s[] =
 	"BoundingBox = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7253,8 +6796,7 @@ char s[] =
 	"FF_Max = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7265,8 +6807,7 @@ char s[] =
 	"FontICS_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7275,8 +6816,7 @@ char s[] =
 	"Runtime = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7285,8 +6825,7 @@ char s[] =
 	"Allow_DeleteOnRender = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7295,8 +6834,7 @@ char s[] =
 	"CDM_ImmediateDrawing = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7306,8 +6844,7 @@ char s[] =
 	"Abort = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7316,8 +6853,7 @@ char s[] =
 	"EValid = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7327,8 +6863,7 @@ char s[] =
 	"SLS_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7338,8 +6873,7 @@ char s[] =
 	"EHTA_Right = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7350,8 +6884,7 @@ char s[] =
 	"EVRTA_QuadTop = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7360,8 +6893,7 @@ char s[] =
 	"SpecifiedCubemap = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7371,8 +6903,7 @@ char s[] =
 	"PRM_UseShowOnlyList = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7381,8 +6912,7 @@ char s[] =
 	"TL_LastKeyFrame = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7393,8 +6923,7 @@ char s[] =
 	"UseJsonObjectsForStructs = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7404,8 +6933,7 @@ char s[] =
 	"Assert = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7418,8 +6946,7 @@ char s[] =
 	"FULLYLOAD_MAX = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7434,8 +6961,7 @@ char s[] =
 	"TT_MAX = 7,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7445,8 +6971,7 @@ char s[] =
 	"CONSOLE_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7455,8 +6980,7 @@ char s[] =
 	"RelativeToWorld = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7466,8 +6990,7 @@ char s[] =
 	"Never = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7477,8 +7000,7 @@ char s[] =
 	"Undetermined = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7490,8 +7012,7 @@ char s[] =
 	"Info = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7501,8 +7022,7 @@ char s[] =
 	"PreferredWorkArea = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7512,8 +7032,7 @@ char s[] =
 	"UserSized = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7523,8 +7042,7 @@ char s[] =
 	"NeverBlock = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7538,8 +7056,7 @@ char s[] =
 	"PIDT_MAX = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7554,8 +7071,7 @@ char s[] =
 	"CSD_MAX = 7,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7565,8 +7081,7 @@ char s[] =
 	"AMD_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7576,8 +7091,7 @@ char s[] =
 	"MTD_MAX = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7589,8 +7103,7 @@ char s[] =
 	"MTR_MAX = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7601,8 +7114,7 @@ char s[] =
 	"TRM_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7613,8 +7125,7 @@ char s[] =
 	"TID_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7625,8 +7136,7 @@ char s[] =
 	"SP_Split = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7635,8 +7145,7 @@ char s[] =
 	"LMF_Streamed = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7652,8 +7161,7 @@ char s[] =
 	"RTF_RGBA32f = 8,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7665,8 +7173,7 @@ char s[] =
 	"UDSS_MAX = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7677,8 +7184,7 @@ char s[] =
 	"AKF_MAX = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7689,8 +7195,7 @@ char s[] =
 	"MaxAnimCurveType = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7699,8 +7204,7 @@ char s[] =
 	"Duration = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7708,8 +7212,7 @@ char s[] =
 	"End = 0,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7720,8 +7223,7 @@ char s[] =
 	"OnlyActiveLevels = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7730,8 +7232,7 @@ char s[] =
 	"ATL_Class = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7742,8 +7243,7 @@ char s[] =
 	"All = 255,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7753,8 +7253,7 @@ char s[] =
 	"PadWithZero = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7764,8 +7263,7 @@ char s[] =
 	"Render = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7775,8 +7273,7 @@ char s[] =
 	"Num = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7786,8 +7283,7 @@ char s[] =
 	"FullShaping = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7797,8 +7293,7 @@ char s[] =
 	"EnumerationComplete = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7807,8 +7302,7 @@ char s[] =
 	"Truncated = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7821,8 +7315,7 @@ char s[] =
 	"memory_order_seq_cst = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7907,8 +7400,7 @@ char s[] =
 	"wrong_protocol_type = 136,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7916,8 +7408,7 @@ char s[] =
 	"stream = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7927,8 +7418,7 @@ char s[] =
 	"copyfmt_event = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7943,8 +7433,7 @@ char s[] =
 	"objectValue = 7,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7955,8 +7444,7 @@ char s[] =
 	"numberOfCommentPlacement = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7966,8 +7454,7 @@ char s[] =
 	"duplicateOnCopy = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7977,8 +7464,7 @@ char s[] =
 	"kindKey = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -7999,8 +7485,7 @@ char s[] =
 	"tokenError = 13,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8013,8 +7498,7 @@ char s[] =
 	"ContextMenu = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8023,8 +7507,7 @@ char s[] =
 	"All = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8034,8 +7517,7 @@ char s[] =
 	"Right = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8044,8 +7526,7 @@ char s[] =
 	"RepeatEnabled = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8055,8 +7536,7 @@ char s[] =
 	"NumChords = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8066,8 +7546,7 @@ char s[] =
 	"RightGutter = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8076,8 +7555,7 @@ char s[] =
 	"SupportsText = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8086,8 +7564,7 @@ char s[] =
 	"AllowPerCharacterWrapping = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8097,8 +7574,7 @@ char s[] =
 	"RightToLeft = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8108,8 +7584,7 @@ char s[] =
 	"First = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8122,8 +7597,7 @@ char s[] =
 	"Keyboard_AlphaNumeric = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8133,8 +7607,7 @@ char s[] =
 	"TextEntryUpdated = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8143,8 +7616,7 @@ char s[] =
 	"ScreenPosition = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8153,8 +7625,7 @@ char s[] =
 	"Word = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8163,8 +7634,7 @@ char s[] =
 	"SelectText = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8177,8 +7647,7 @@ char s[] =
 	"NextPage = 5,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8187,8 +7656,7 @@ char s[] =
 	"OnAllFocusEvents = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8198,8 +7666,7 @@ char s[] =
 	"TextCommitOnDismiss = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8208,8 +7675,7 @@ char s[] =
 	"No = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8223,8 +7689,7 @@ char s[] =
 	"Fill = 6,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8233,8 +7698,7 @@ char s[] =
 	"Deferred = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8244,8 +7708,7 @@ char s[] =
 	"OnHover = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8255,8 +7718,7 @@ char s[] =
 	"Center = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8267,8 +7729,7 @@ char s[] =
 	"Cancel = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8277,8 +7738,7 @@ char s[] =
 	"LeftToRight = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8288,8 +7748,7 @@ char s[] =
 	"CommittedViaArrowKey = 0,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8299,8 +7758,7 @@ char s[] =
 	"Placement_Specified = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8310,8 +7768,7 @@ char s[] =
 	"strict = 2,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8323,8 +7780,7 @@ char s[] =
 	"SelfHitTestInvisible = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8333,8 +7789,7 @@ char s[] =
 	"Property = 1,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8346,8 +7801,7 @@ char s[] =
 	"DesiredOnScreen = 4,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 } {
 char s[] = 
 
@@ -8358,6 +7812,5 @@ char s[] =
 	"LL_Error = 3,"
 "}";
 
-auto l=strlen(s);
-state->doBuffer((const uint8*)s,l,SLUA_LUACODE);
+state->initInnerCode(s);
 }

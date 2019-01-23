@@ -236,8 +236,14 @@ namespace slua {
         }
 
 		template<class T>
-		static T checkValueOpt(lua_State* L, int p, const T& defaultValue) {
-			if (lua_isnone(L, p)) {
+		static bool typeMatched(int luatype) {
+			// TODO
+			return luatype != LUA_TNIL;
+		}
+
+		template<class T>
+		static T checkValueOpt(lua_State* L, int p, const T& defaultValue=T()) {
+			if (lua_isnone(L, p) || !typeMatched<T>(lua_type(L,p))) {
 				return defaultValue;
 			} else {
 				return checkValue<T>(L, p);

@@ -114,7 +114,7 @@ namespace slua {
         inline R castTo() {
             auto L = getState();
             push(L);
-            R r = ArgOperator::readArg<typename remove_cr<R>::type>(L,-1);
+            R r = ArgOperatorOpt::readArg<typename remove_cr<R>::type>(L,-1);
             lua_pop(L,1);
             return std::move(r);
         }
@@ -157,11 +157,12 @@ namespace slua {
         R getFromTable(T key) const {
             ensure(isTable());
             auto L = getState();
+			if (!L) return R();
             AutoStack as(L);
             push(L);
             LuaObject::push(L,key);
             lua_gettable(L,-2);
-            return ArgOperator::readArg<typename remove_cr<R>::type>(L,-1);
+            return ArgOperatorOpt::readArg<typename remove_cr<R>::type>(L,-1);
         }
 
 		template<typename R, typename T>
@@ -207,6 +208,24 @@ namespace slua {
             return ret.castTo<RET>();
         }
 
+		template<class ...ARGS>
+		LuaVar callWithEnv(LuaVar* pEnv, ARGS&& ...args) {
+			if (!isFunction()) {
+				Log::Error("LuaVar is not a function, can't be called");
+				return LuaVar();
+			}
+			if (!isValid()) {
+				Log::Error("State of lua function is invalid");
+				return LuaVar();
+			}
+			auto L = getState();
+			int n = pushArg(std::forward<ARGS>(args)...);
+			int nret = docall(n,pEnv);
+			auto ret = LuaVar::wrapReturn(L, nret);
+			lua_pop(L, nret);
+			return ret;
+		}
+
         // call function with pre-pushed n args
         inline LuaVar callWithNArg(int n) {
             int nret = docall(n);
@@ -217,7 +236,7 @@ namespace slua {
         }
 
         bool toProperty(UProperty* p,uint8* ptr);
-        void callByUFunction(UFunction* ufunc,uint8* parms);
+        bool callByUFunction(UFunction* ufunc,uint8* parms,LuaVar* pEnv=nullptr);
     private:
         friend class LuaState;
 
@@ -308,7 +327,7 @@ namespace slua {
                 return LuaVar(L,(size_t) n);
         }
 
-        int docall(int argn);
+        int docall(int argn, LuaVar* pEnv=nullptr);
         int pushArgByParms(UProperty* prop,uint8* parms);
 
         void clone(const LuaVar& other);

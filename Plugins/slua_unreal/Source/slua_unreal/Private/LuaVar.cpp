@@ -125,7 +125,8 @@ namespace slua {
 
     lua_State* LuaVar::getState() const
     {
-        return *LuaState::get(stateIndex);
+		auto ls = LuaState::get(stateIndex);
+		return ls ? ls->getLuaState() : nullptr;
     }
 
     void LuaVar::init(lua_State* l,int p,LuaVar::Type type) {
@@ -518,7 +519,7 @@ namespace slua {
             return LV_TUPLE;
     }
 
-    int LuaVar::docall(int argn) {
+    int LuaVar::docall(int argn,LuaVar* pEnv) {
         if(!isValid()) {
             Log::Error("State of lua function is invalid");
             return 0;
@@ -529,6 +530,13 @@ namespace slua {
         LuaState::pushErrorHandler(L);
         lua_insert(L,top);
         vars[0].ref->push(L);
+
+		if (pEnv != nullptr && pEnv->isTable())
+		{
+			pEnv->push(L);
+			lua_setupvalue(L, -2, 1);
+		}
+
         lua_insert(L,top+1);
         // top is err handler
         if(lua_pcallk(L,argn,LUA_MULTRET,top,NULL,NULL))
@@ -544,32 +552,35 @@ namespace slua {
         return 0;
     }
 
-    void LuaVar::callByUFunction(UFunction* func,uint8* parms) {
+    bool LuaVar::callByUFunction(UFunction* func,uint8* parms, LuaVar* pEnv) {
         
-        if(!func) return;
+        if(!func) return false;
 
         if(!isValid()) {
             Log::Error("State of lua function is invalid");
-            return;
+            return false;
         }
 
         const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
         if(func->ParmsSize==0 && !bHasReturnParam) {
-            call();
-            return;
+			int n = docall(0, pEnv);
+			auto L = getState();
+			lua_pop(L, n);
+            return true;
         }
 
         int n=0;
         for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
             UProperty* prop = *it;
             uint64 propflag = prop->GetPropertyFlags();
-            if((propflag&CPF_ReturnParm))
+            if((propflag&CPF_ReturnParm) || (propflag&CPF_OutParm))
                 continue;
 
             pushArgByParms(prop,parms+prop->GetOffset_ForInternal());
             n++;
         }
-        docall(n);
+        docall(n, pEnv);
+		return true;
     }
 
     void LuaVar::varClone(lua_var& tv,const lua_var& ov) const {

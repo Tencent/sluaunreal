@@ -341,7 +341,7 @@ namespace slua {
     #define __DefLuaClassTail(CLS) \
         static int Lua##CLS##_gc(lua_State* L) { \
             UserData<CLS*>* UD = reinterpret_cast<UserData<CLS*>*>(lua_touserdata(L,1)); \
-            if(UD->owned) delete UD->ud; \
+            if(UD->flag & UD_AUTOGC) delete UD->ud; \
             return 0;\
         } \
         static int Lua##CLS##_tostring(lua_State* L) { \

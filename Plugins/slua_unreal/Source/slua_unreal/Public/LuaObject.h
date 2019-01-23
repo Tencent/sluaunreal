@@ -44,11 +44,11 @@ public:
 
 #define RegMetaMethod(L,METHOD) RegMetaMethodByName(L,#METHOD,METHOD)
 
-#define NewUD(T, v, o) auto ud = lua_newuserdata(L, sizeof(UserData<T*>)); \
+#define NewUD(T, v, f) auto ud = lua_newuserdata(L, sizeof(UserData<T*>)); \
 	if (!ud) luaL_error(L, "out of memory to new ud"); \
 	auto udptr = reinterpret_cast< UserData<T*>* >(ud); \
 	udptr->ud = const_cast<T*>(v); \
-    udptr->owned = o;
+    udptr->flag = f;
 
 
 namespace slua {
@@ -85,10 +85,16 @@ namespace slua {
 #endif
     };
 
+	enum UDFlag {
+		UD_NOFLAG = 0,
+		UD_AUTOGC = 1,
+		UD_HADFREE = 2,
+	};
+
     template<class T>
     struct UserData {
         T ud;
-        bool owned;
+		UDFlag flag;
     };
 
     template<typename T, bool isUObject = std::is_base_of<UObject,T>::value>
@@ -298,9 +304,9 @@ namespace slua {
         }
 
 		template<class T>
-		static int push(lua_State* L, const char* fn, const T* v, bool owned=false) {
+		static int push(lua_State* L, const char* fn, const T* v, UDFlag flag = UD_NOFLAG) {
             if(getFromCache(L,void_cast(v),fn)) return 1;
-			NewUD(T, v, owned);
+			NewUD(T, v, flag);
             luaL_getmetatable(L,fn);
 			lua_setmetatable(L, -2);
             cacheObj(L,void_cast(v));
@@ -317,7 +323,7 @@ namespace slua {
             }
             UserData<T>* ud = reinterpret_cast< UserData<T>* >(lua_newuserdata(L, sizeof(UserData<T>)));
             ud->ud = cls;
-            ud->owned = gc!=nullptr;
+            ud->flag = gc!=nullptr?UD_AUTOGC:UD_NOFLAG;
             setupMetaTable(L,tn,setupmt,gc);
             return 1;
         }
@@ -387,7 +393,7 @@ namespace slua {
 
         template<typename T>
         static int push(lua_State* L,LuaOwnedPtr<T> ptr) {
-            return push(L,TypeName<T>::value(),ptr.ptr,true);
+            return push(L,TypeName<T>::value(),ptr.ptr,UD_AUTOGC);
         }
 
         template<typename T>
@@ -456,7 +462,7 @@ namespace slua {
                 
             UserData<T>* ud = reinterpret_cast< UserData<T>* >(lua_newuserdata(L, sizeof(UserData<T>)));
             ud->ud = cls;
-            ud->owned = true;
+            ud->flag = UD_AUTOGC;
             
             setupMetaTable(L,tn,setupmt,gc);
             return 1;

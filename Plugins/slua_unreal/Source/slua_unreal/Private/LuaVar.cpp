@@ -519,7 +519,7 @@ namespace slua {
             return LV_TUPLE;
     }
 
-    int LuaVar::docall(int argn,LuaVar* pEnv) {
+    int LuaVar::docall(int argn) {
         if(!isValid()) {
             Log::Error("State of lua function is invalid");
             return 0;
@@ -530,12 +530,6 @@ namespace slua {
         LuaState::pushErrorHandler(L);
         lua_insert(L,top);
         vars[0].ref->push(L);
-
-		if (pEnv != nullptr && pEnv->isTable())
-		{
-			pEnv->push(L);
-			lua_setupvalue(L, -2, 1);
-		}
 
         lua_insert(L,top+1);
         // top is err handler
@@ -552,7 +546,7 @@ namespace slua {
         return 0;
     }
 
-    bool LuaVar::callByUFunction(UFunction* func,uint8* parms, LuaVar* pEnv) {
+    bool LuaVar::callByUFunction(UFunction* func,uint8* parms, LuaVar* pSelf) {
         
         if(!func) return false;
 
@@ -563,13 +557,23 @@ namespace slua {
 
         const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
         if(func->ParmsSize==0 && !bHasReturnParam) {
-			int n = docall(0, pEnv);
+			int nArg = 0;
+			if (pSelf) {
+				pSelf->push();
+				nArg++;
+			}
+
 			auto L = getState();
+			int n = docall(nArg);
 			lua_pop(L, n);
             return true;
         }
 
         int n=0;
+		if (pSelf) {
+			pSelf->push();
+			n++;
+		}
         for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
             UProperty* prop = *it;
             uint64 propflag = prop->GetPropertyFlags();
@@ -579,7 +583,7 @@ namespace slua {
             pushArgByParms(prop,parms+prop->GetOffset_ForInternal());
             n++;
         }
-        docall(n, pEnv);
+        docall(n);
 		return true;
     }
 

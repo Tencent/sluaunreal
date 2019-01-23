@@ -208,24 +208,6 @@ namespace slua {
             return ret.castTo<RET>();
         }
 
-		template<class ...ARGS>
-		LuaVar callWithEnv(LuaVar* pEnv, ARGS&& ...args) {
-			if (!isFunction()) {
-				Log::Error("LuaVar is not a function, can't be called");
-				return LuaVar();
-			}
-			if (!isValid()) {
-				Log::Error("State of lua function is invalid");
-				return LuaVar();
-			}
-			auto L = getState();
-			int n = pushArg(std::forward<ARGS>(args)...);
-			int nret = docall(n,pEnv);
-			auto ret = LuaVar::wrapReturn(L, nret);
-			lua_pop(L, nret);
-			return ret;
-		}
-
         // call function with pre-pushed n args
         inline LuaVar callWithNArg(int n) {
             int nret = docall(n);
@@ -236,7 +218,7 @@ namespace slua {
         }
 
         bool toProperty(UProperty* p,uint8* ptr);
-        bool callByUFunction(UFunction* ufunc,uint8* parms,LuaVar* pEnv=nullptr);
+        bool callByUFunction(UFunction* ufunc,uint8* parms,LuaVar* pSelf = nullptr);
     private:
         friend class LuaState;
 
@@ -327,7 +309,7 @@ namespace slua {
                 return LuaVar(L,(size_t) n);
         }
 
-        int docall(int argn, LuaVar* pEnv=nullptr);
+        int docall(int argn);
         int pushArgByParms(UProperty* prop,uint8* parms);
 
         void clone(const LuaVar& other);

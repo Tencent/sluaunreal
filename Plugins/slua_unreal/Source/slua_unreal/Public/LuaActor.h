@@ -11,33 +11,43 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 
-#pragma once
 
+#pragma once
 #include "CoreMinimal.h"
 #include "LuaState.h"
-#include "SluaComponent.generated.h"
+#include "GameFramework/Actor.h"
+#include "LuaActor.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class DEMOCPP_API USluaComponent : public USceneComponent
-{
-	GENERATED_BODY()
-
+UCLASS()
+class SLUA_UNREAL_API ALuaActor : public AActor {
+    GENERATED_BODY()
+	
 public:	
-	// Sets default values for this component's properties
-	USluaComponent();
+	// Sets default values for this actor's properties
+	ALuaActor();
 
 protected:
-	// Called when the game starts
+	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type reason);
+	virtual void ProcessEvent(UFunction* func, void* params) override final;
 
+	virtual bool luaImplemented(UFunction* func, void* params);
 public:	
 	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	slua::LuaState* State() { return &state; }
+	virtual void Tick(float DeltaTime) override;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua|LuaActor")
+	FString LuaFilePath;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua|LuaActor")
+	FString LuaStateName;
 
 private:
-    slua::LuaState state;
-	
+	slua::LuaVar luaActorTable;
+	slua::LuaVar tickFunction;
+	static slua::LuaVar metaTable;
+
+	static int __index(slua::lua_State* L);
+	void init();
 };

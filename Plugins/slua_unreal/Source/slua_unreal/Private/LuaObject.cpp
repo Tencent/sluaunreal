@@ -174,15 +174,16 @@ namespace slua {
 	}
 
     static int findMember(lua_State* L,const char* name) {
-        if (lua_getfield(L, -1, name) != 0) {
-			return 1;
-		} else if (lua_getfield(L, lua_upvalueindex(1)/*.get*/, name) != 0) {
-			lua_pushvalue(L, 1);
-			lua_call(L, 1, 1);
-			return 1;
-		} else {
+       int popn = 0;
+        if ((++popn, lua_getfield(L, -1, name) != 0)) {
+            return 1;
+        } else if ((++popn, lua_getfield(L, -2, ".get")) && (++popn, lua_getfield(L, -1, name))) {
+            lua_pushvalue(L, 1);
+            lua_call(L, 1, 1);
+            return 1;
+        } else {
             // find base
-            lua_pop(L,2);
+            lua_pop(L, popn);
             int t = lua_getfield(L,-1, "__base");
             if(t==LUA_TTABLE) {
                 size_t cnt = lua_rawlen(L,-1);
@@ -199,12 +200,12 @@ namespace slua {
                 lua_remove(L,-2); // remove __base
                 return r;
             }
-			else {
+            else {
                 // pop __base
                 lua_pop(L,1);
                 return 0;
             }
-		}
+        }
     }
 
 	int LuaObject::classIndex(lua_State* L) {
@@ -468,11 +469,16 @@ namespace slua {
     }
 
     void fillParam(lua_State* L,int i,UFunction* func,uint8* params) {
+		auto funcFlag = func->FunctionFlags;
         for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
             UProperty* prop = *it;
             uint64 propflag = prop->GetPropertyFlags();
-            if((propflag&CPF_ReturnParm))
-                continue;
+			if (funcFlag & EFunctionFlags::FUNC_Native) {
+				if ((propflag&CPF_ReturnParm))
+					continue;
+			}
+			else if (propflag&CPF_OutParm)
+				continue;
 
             fillParamFromState(L,prop,params+prop->GetOffset_ForInternal(),i);
             i++;
@@ -485,6 +491,7 @@ namespace slua {
         // check is function has return value
 		const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
 
+		// put return value as head
         int ret = 0;
         if(bHasReturnParam) {
             UProperty* p = func->GetReturnProperty();
@@ -499,9 +506,8 @@ namespace slua {
             if(propflag&CPF_ReturnParm)
                 continue;
 
-            if((propflag&CPF_OutParm)) {
+            if((propflag&CPF_OutParm) && !(propflag&CPF_ConstParm))
                 ret += LuaObject::push(L,p,params+p->GetOffset_ForInternal());
-            }
         }
         
         return ret;
@@ -838,8 +844,21 @@ namespace slua {
 		return 0;
 	}
 
+	bool checkType(lua_State* L, int p, const char* tn) {
+		if (!lua_isuserdata(L, p))
+			return false;
+		luaL_getmetafield(L, p, "__name");
+		if (lua_isstring(L, -1) && strcmp(tn, lua_tostring(L, -1)) == 0)
+		{
+			lua_pop(L, 1);
+			return true;
+		}
+		lua_pop(L, 1);
+		return false;
+	}
+
     // search obj from registry, push cached obj and return true if find it
-    bool LuaObject::getFromCache(lua_State* L,void* obj) {
+    bool LuaObject::getFromCache(lua_State* L,void* obj,const char* tn) {
         LuaState* ls = LuaState::get(L);
         ensure(ls->cacheObjRef!=LUA_NOREF);
         lua_geti(L,LUA_REGISTRYINDEX,ls->cacheObjRef);
@@ -849,14 +868,14 @@ namespace slua {
         lua_pushlightuserdata(L,obj);
         // get key from table
         lua_rawget(L,-2);
-        bool ret = true;
         lua_remove(L,-2); // remove cache table
         
         if(lua_isnil(L,-1)) {
-            ret = false;
             lua_pop(L,1);
+			return false;
         }
-        return ret;
+		// check type of ud matched
+		return checkType(L, -1, tn);
     }
 
     void LuaObject::addRef(lua_State* L,UObject* obj) {

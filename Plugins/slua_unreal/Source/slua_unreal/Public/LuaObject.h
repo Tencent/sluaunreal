@@ -44,11 +44,11 @@ public:
 
 #define RegMetaMethod(L,METHOD) RegMetaMethodByName(L,#METHOD,METHOD)
 
-#define NewUD(T, v, o) auto ud = lua_newuserdata(L, sizeof(UserData<T*>)); \
+#define NewUD(T, v, f) auto ud = lua_newuserdata(L, sizeof(UserData<T*>)); \
 	if (!ud) luaL_error(L, "out of memory to new ud"); \
 	auto udptr = reinterpret_cast< UserData<T*>* >(ud); \
 	udptr->ud = const_cast<T*>(v); \
-    udptr->owned = o;
+    udptr->flag = f;
 
 
 namespace slua {
@@ -85,10 +85,16 @@ namespace slua {
 #endif
     };
 
+	enum UDFlag {
+		UD_NOFLAG = 0,
+		UD_AUTOGC = 1,
+		UD_HADFREE = 2,
+	};
+
     template<class T>
     struct UserData {
         T ud;
-        bool owned;
+		UDFlag flag;
     };
 
     template<typename T, bool isUObject = std::is_base_of<UObject,T>::value>
@@ -230,8 +236,14 @@ namespace slua {
         }
 
 		template<class T>
-		static T checkValueOpt(lua_State* L, int p, const T& defaultValue) {
-			if (lua_isnone(L, p)) {
+		static bool typeMatched(int luatype) {
+			// TODO
+			return luatype != LUA_TNIL;
+		}
+
+		template<class T>
+		static T checkValueOpt(lua_State* L, int p, const T& defaultValue=T()) {
+			if (lua_isnone(L, p) || !typeMatched<T>(lua_type(L,p))) {
 				return defaultValue;
 			} else {
 				return checkValue<T>(L, p);
@@ -298,9 +310,9 @@ namespace slua {
         }
 
 		template<class T>
-		static int push(lua_State* L, const char* fn, const T* v, bool owned=false) {
-            if(getFromCache(L,void_cast(v))) return 1;
-			NewUD(T, v, owned);
+		static int push(lua_State* L, const char* fn, const T* v, UDFlag flag = UD_NOFLAG) {
+            if(getFromCache(L,void_cast(v),fn)) return 1;
+			NewUD(T, v, flag);
             luaL_getmetatable(L,fn);
 			lua_setmetatable(L, -2);
             cacheObj(L,void_cast(v));
@@ -317,7 +329,7 @@ namespace slua {
             }
             UserData<T>* ud = reinterpret_cast< UserData<T>* >(lua_newuserdata(L, sizeof(UserData<T>)));
             ud->ud = cls;
-            ud->owned = gc!=nullptr;
+            ud->flag = gc!=nullptr?UD_AUTOGC:UD_NOFLAG;
             setupMetaTable(L,tn,setupmt,gc);
             return 1;
         }
@@ -327,7 +339,7 @@ namespace slua {
 
         template<typename T>
         static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt,lua_CFunction gc) {
-            if(getFromCache(L,obj)) return 1;
+            if(getFromCache(L,obj,tn)) return 1;
             addRef(L,obj);
             lua_pushcclosure(L,gc,0);
             lua_pushcclosure(L,removeFromCacheGC,1);
@@ -340,7 +352,7 @@ namespace slua {
 
         template<typename T>
         static int pushObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt=nullptr) {
-            if(getFromCache(L,obj)) return 1;
+            if(getFromCache(L,obj,tn)) return 1;
             int r = pushType<T>(L,obj,tn,setupmt,nullptr);
             if(r) cacheObj(L,obj);
             return r;
@@ -387,7 +399,7 @@ namespace slua {
 
         template<typename T>
         static int push(lua_State* L,LuaOwnedPtr<T> ptr) {
-            return push(L,TypeName<T>::value(),ptr.ptr,true);
+            return push(L,TypeName<T>::value(),ptr.ptr,UD_AUTOGC);
         }
 
         template<typename T>
@@ -409,7 +421,7 @@ namespace slua {
         static UFunction* findCacheFunction(lua_State* L,UClass* cls,const char* fname);
         static void cacheFunction(lua_State* L, UClass* cls,const char* fame,UFunction* func);
 
-        static bool getFromCache(lua_State* L, void* obj);
+        static bool getFromCache(lua_State* L, void* obj, const char* tn);
 		static void cacheObj(lua_State* L, void* obj);
     private:
         static int setupClassMT(lua_State* L);
@@ -456,7 +468,7 @@ namespace slua {
                 
             UserData<T>* ud = reinterpret_cast< UserData<T>* >(lua_newuserdata(L, sizeof(UserData<T>)));
             ud->ud = cls;
-            ud->owned = true;
+            ud->flag = UD_AUTOGC;
             
             setupMetaTable(L,tn,setupmt,gc);
             return 1;

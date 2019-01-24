@@ -18,65 +18,145 @@
 #include "lua/lstate.h"
 namespace slua {
 
-     TMap<void*,FString> memoryRecord;
+	// only calc memory alloc from lua script
+	// not include alloc from lua vm
+	size_t totalMemory;
+	
+#if WITH_EDITOR
+	bool memTrack = false;
+	MemoryDetail memoryRecord;
+
+	int LuaMemInfo::push(lua_State * L) const
+	{
+		lua_newtable(L);
+		lua_pushinteger(L, size);
+		lua_setfield(L, -2, "size");
+		lua_pushstring(L, TCHAR_TO_UTF8(*hint));
+		lua_setfield(L, -2, "hint");
+		lua_pushlightuserdata(L, ptr);
+		lua_setfield(L, -2, "address");
+		return 1;
+	}
+
+	bool getMemInfo(lua_State* L, void* ptr, size_t size, LuaMemInfo& info);
+
+	inline void addRecord(LuaState* LS, void* ptr, size_t size) {
+		if (!memTrack) return;
+		// skip if lua_State is null, lua_State hadn't binded to LS
+		lua_State* L = *LS;
+		if (!L) return;
+
+		LuaMemInfo memInfo;
+		if (getMemInfo(L, ptr, size, memInfo)) {
+			// Log::Log("alloc memory %d from %s",size,TCHAR_TO_UTF8(*memInfo.hint));
+			memoryRecord.Add(ptr, memInfo);
+			totalMemory += size;
+		}
+	}
+
+	inline void removeRecord(LuaState* LS, void* ptr, size_t osize) {
+		if (!memTrack) return;
+		// if ptr record 
+		if (memoryRecord.Remove(ptr)) {
+			// Log::Log("free memory %p size %d", ptr, osize);
+			totalMemory -= osize;
+		}
+	}
+#endif
 
     void* LuaMemoryProfile::alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
-        (void)osize;  /* not used */
-
         LuaState* ls = (LuaState*)ud;
-        (void)ls;
-
         if (nsize == 0) {
-            // Not completed
-            //removeRecord(ls,ptr,nsize);
+#if WITH_EDITOR
+            removeRecord(ls, ptr, osize);
+#endif
             FMemory::Free(ptr);
             return NULL;
         }
         else {
+#if WITH_EDITOR
+			if(ptr) removeRecord(ls, ptr, osize);
+#endif
             ptr = FMemory::Realloc(ptr,nsize);
-            // Not completed
-            //addRecord(ls,ptr,nsize);
+#if WITH_EDITOR
+            addRecord(ls,ptr,nsize);
+#endif
             return ptr;
         }
     }
 
-    bool getTrackInfo(lua_State* L,FString& info) {
+	size_t LuaMemoryProfile::total()
+	{
+		return totalMemory;
+	}
+
+#if WITH_EDITOR
+
+	void LuaMemoryProfile::start()
+	{
+		memTrack = true;
+	}
+
+	void LuaMemoryProfile::stop()
+	{
+		memTrack = false;
+	}
+
+	const MemoryDetail& LuaMemoryProfile::memDetail()
+	{
+		return memoryRecord;
+	}
+
+    bool getMemInfo(lua_State* L, void* ptr, size_t size, LuaMemInfo& info) {
         lua_Debug ar;
-        bool isvalid = false;
-        for(int i=0;;i++) {
-            if(lua_getstack(L,i,&ar) && lua_getinfo(L,"nS",&ar)) {
-                CallInfo* ci = (CallInfo*) ar.i_ci;
-                if(!isLua(ci))
-                    break;
-                info += ">";
-                if(strcmp(ar.what,"Lua")==0) {
-                    isvalid = true;
-                    info += (ar.name?ar.name:"[Unknown Function]]");
-                }
-                else if(strcmp(ar.what,"main")==0) {
-                    isvalid = true;
-                    info += "[main]";
-                }
-            }
-            else
-                break;
-        }
-        return isvalid;
+		for (int i = 0;;i++) {
+			if (lua_getstack(L, i, &ar) && lua_getinfo(L, "nSl", &ar)) {
+				CallInfo* ci = (CallInfo*)ar.i_ci;
+				if (!isLua(ci))
+					continue;
+				if (strcmp(ar.source, SLUA_LUACODE) == 0)
+					continue;
+
+				if (strcmp(ar.what, "Lua") == 0 || strcmp(ar.what, "main") == 0) {
+					info.ptr = ptr;
+					info.size = size;
+					info.hint = FString::Printf(TEXT("%s:%d"), UTF8_TO_TCHAR(ar.source), ar.currentline);
+					return true;
+				}
+			}
+			else break;
+		}
+		return false;
     }
 
-    void LuaMemoryProfile::addRecord(LuaState* LS,void* ptr,size_t size) {
-        // skip if lua_State is null, lua_State hadn't binded to LS
-        lua_State* L = *LS;
-        if(!L) return;
 
-        FString trackInfo;
-        if(getTrackInfo(L,trackInfo)) {
-            Log::Log("alloc memory %d from %s",size,TCHAR_TO_UTF8(*trackInfo));
-        }
-    }
 
-    void LuaMemoryProfile::removeRecord(LuaState* LS,void* ptr,size_t size) {
+	void dumpMemoryDetail()
+	{
+		Log::Log("Total memory alloc %d bytes", totalMemory);
+		for (auto& it : memoryRecord) {
+			auto& memInfo = it.Value;
+			Log::Log("Memory alloc %d from %s", memInfo.size, TCHAR_TO_UTF8(*memInfo.hint));
+		}
+	}
 
-    }
+	static FAutoConsoleCommand CVarDumpMemoryDetail(
+		TEXT("slua.DumpMemoryDetail"),
+		TEXT("Dump memory datail information"),
+		FConsoleCommandDelegate::CreateStatic(dumpMemoryDetail),
+		ECVF_Cheat);
+
+	static FAutoConsoleCommand CVarStopMemTrack(
+		TEXT("slua.StopMemoryTrack"),
+		TEXT("Stop track memory info"),
+		FConsoleCommandDelegate::CreateStatic(LuaMemoryProfile::stop),
+		ECVF_Cheat);
+
+	static FAutoConsoleCommand CVarStartMemTrack(
+		TEXT("slua.StartMemoryTrack"),
+		TEXT("Start track memory info"),
+		FConsoleCommandDelegate::CreateStatic(LuaMemoryProfile::start),
+		ECVF_Cheat);
+#endif
 
 }

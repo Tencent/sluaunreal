@@ -115,6 +115,46 @@ namespace slua {
 
 	};
 
+	struct ArgOperatorOpt {
+
+		template <typename T>
+		static typename std::enable_if<TIsTArray<T>::Value, T>::type readArg(lua_State * L, int p) {
+			if (!lua_isuserdata(L, p))
+				return T();
+			return LuaObject::checkTArray<T>(L, p);
+		}
+
+		template <typename T>
+		static typename std::enable_if<TIsTMap<T>::Value, T>::type readArg(lua_State * L, int p) {
+			if (!lua_isuserdata(L, p))
+				return T();
+			return LuaObject::checkTMap<T>(L, p);
+		}
+
+		template <typename T>
+		static typename std::enable_if<std::is_enum<T>::value, T>::type readArg(lua_State * L, int p) {
+			if (!lua_isinteger(L, p))
+				return T();
+			return LuaObject::checkEnumValue<T>(L, p);
+		}
+
+		template <typename T> struct TIsTFunction { enum { Value = false }; };
+		template <typename FuncType> struct TIsTFunction<TFunction<FuncType>> { enum { Value = true }; };
+
+		template <typename T>
+		static typename std::enable_if<TIsTFunction<T>::Value, T>::type readArg(lua_State * L, int p) {
+			if (!lua_isfunction(L, p))
+				return T();
+			return LuaCallableBinding<T>::Prototype::makeTFunctionProxy(L, p);
+		}
+
+		template <typename T>
+		static typename std::enable_if<!TIsTArray<T>::Value && !TIsTMap<T>::Value && !TIsTFunction<T>::Value && !std::is_enum<T>::value, T>::type readArg(lua_State * L, int p) {
+			return LuaObject::checkValueOpt<T>(L, p);
+		}
+
+	};
+
     template <typename T, T,int Offset>
     struct FunctionBind;
 
@@ -341,7 +381,7 @@ namespace slua {
     #define __DefLuaClassTail(CLS) \
         static int Lua##CLS##_gc(lua_State* L) { \
             UserData<CLS*>* UD = reinterpret_cast<UserData<CLS*>*>(lua_touserdata(L,1)); \
-            if(UD->owned) delete UD->ud; \
+            if(UD->flag & UD_AUTOGC) delete UD->ud; \
             return 0;\
         } \
         static int Lua##CLS##_tostring(lua_State* L) { \

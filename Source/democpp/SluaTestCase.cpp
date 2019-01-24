@@ -16,7 +16,7 @@
 #include "LuaObject.h"
 #include "LuaCppBinding.h"
 #include "Log.h"
-#include "SluaActor.h"
+#include "SluaTestActor.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/Package.h"
 #include "Blueprint/UserWidget.h"
@@ -334,9 +334,9 @@ UUserWidget* USluaTestCase::GetWidget(FString ui) {
     TSubclassOf<UUserWidget> uclass = LoadClass<UUserWidget>(NULL, *cui);
     if(uclass==nullptr)
         return nullptr;
-    if(!ASluaActor::instance)
+    if(!ASluaTestActor::instance)
         return nullptr;
-    UWorld* wld = ASluaActor::instance->GetWorld();
+    UWorld* wld = ASluaTestActor::instance->GetWorld();
     if(!wld)
         return nullptr;
     UUserWidget* widget = CreateWidget<UUserWidget>(wld,uclass);

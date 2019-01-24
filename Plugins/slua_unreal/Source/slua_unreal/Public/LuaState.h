@@ -19,6 +19,8 @@
 #include <string>
 #include <memory>
 
+#define SLUA_LUACODE "[sluacode]"
+
 namespace slua {
 
     class SLUA_UNREAL_API LuaState
@@ -115,6 +117,7 @@ namespace slua {
 		void removeRef(UObject* obj) {
 			UClass* objClass = obj->GetClass();
 			int32* instanceNumPtr = classInstanceNums.Find(objClass);
+            ensure(instanceNumPtr);
 			(*instanceNumPtr)--;
 			if (*instanceNumPtr == 0)
 			{
@@ -145,8 +148,11 @@ namespace slua {
     private:
         friend class LuaObject;
         friend class SluaUtil;
+		friend struct LuaEnums;
         lua_State* L;
         int cacheObjRef;
+		// init enums lua code
+		LuaVar initInnerCode(const char* s);
         int _pushErrorHandler(lua_State* L);
         static int _atPanic(lua_State* L);
         ULuaObject* root;

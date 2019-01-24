@@ -114,7 +114,7 @@ namespace slua {
         inline R castTo() {
             auto L = getState();
             push(L);
-            R r = ArgOperator::readArg<typename remove_cr<R>::type>(L,-1);
+            R r = ArgOperatorOpt::readArg<typename remove_cr<R>::type>(L,-1);
             lua_pop(L,1);
             return std::move(r);
         }
@@ -157,11 +157,12 @@ namespace slua {
         R getFromTable(T key) const {
             ensure(isTable());
             auto L = getState();
+			if (!L) return R();
             AutoStack as(L);
             push(L);
             LuaObject::push(L,key);
             lua_gettable(L,-2);
-            return ArgOperator::readArg<typename remove_cr<R>::type>(L,-1);
+            return ArgOperatorOpt::readArg<typename remove_cr<R>::type>(L,-1);
         }
 
 		template<typename R, typename T>
@@ -217,7 +218,7 @@ namespace slua {
         }
 
         bool toProperty(UProperty* p,uint8* ptr);
-        void callByUFunction(UFunction* ufunc,uint8* parms);
+        bool callByUFunction(UFunction* ufunc,uint8* parms,LuaVar* pSelf = nullptr);
     private:
         friend class LuaState;
 

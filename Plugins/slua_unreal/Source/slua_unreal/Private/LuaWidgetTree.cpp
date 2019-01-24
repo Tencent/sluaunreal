@@ -38,11 +38,24 @@ namespace slua {
         return LuaObject::push(L,ret);
     }
 
+    int LuaWidgetTree::GetAllWidgets(lua_State* L) {
+        CheckUD(UWidgetTree,L,1);
+        TArray<UWidget*> Widgets;
+        UD->GetAllWidgets(Widgets);
+        lua_newtable(L);
+        for (int i=0; i<Widgets.Num(); i++) {
+            LuaObject::push(L,Widgets[i]);
+            lua_seti(L,-2,i+1);
+        }
+        return 1;
+    }
+
     int LuaWidgetTree::setupMT(lua_State* L) {
         LuaObject::setupMTSelfSearch(L);
 
         RegMetaMethod(L,FindWidget);
         RegMetaMethod(L,RemoveWidget);
+        RegMetaMethod(L,GetAllWidgets);
         return 0;
     }
 

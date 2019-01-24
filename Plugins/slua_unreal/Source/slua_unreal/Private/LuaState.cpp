@@ -271,17 +271,8 @@ namespace slua {
             return LuaVar();
         }
         
-        if(pEnv != nullptr && pEnv->isTable())
-        {
-            pEnv->push(L);
-            lua_setupvalue(L, -2, 1);
-        }
-        
-        if(!lua_pcall(L, 0, LUA_MULTRET, errfunc)) {
-            int n = lua_gettop(L) - errfunc;
-            return LuaVar::wrapReturn(L,n);
-        }
-        return LuaVar();
+		LuaVar f(L, -1);
+		return f.call();
     }
 
     LuaVar LuaState::doString(const char* str, LuaVar* pEnv) {
@@ -320,7 +311,13 @@ namespace slua {
         return ls->_pushErrorHandler(L);
     }
 
-    int LuaState::_pushErrorHandler(lua_State* state) {
+	LuaVar LuaState::initInnerCode(const char * str)
+	{
+		uint32 len = strlen(str);
+		return doBuffer((const uint8*)str, len, SLUA_LUACODE);
+	}
+
+	int LuaState::_pushErrorHandler(lua_State* state) {
         lua_pushcfunction(state,error);
         return lua_gettop(state);
     }

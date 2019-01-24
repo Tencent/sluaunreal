@@ -3,6 +3,8 @@ function begin(uworld,uactor)
     world=uworld
     actor=uactor
 
+    print("Unreal enum",UEnums.LogLevel.LL_Warning)
+
     testcase()
 end
 

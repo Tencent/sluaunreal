@@ -125,7 +125,8 @@ namespace slua {
 
     lua_State* LuaVar::getState() const
     {
-        return *LuaState::get(stateIndex);
+		auto ls = LuaState::get(stateIndex);
+		return ls ? ls->getLuaState() : nullptr;
     }
 
     void LuaVar::init(lua_State* l,int p,LuaVar::Type type) {
@@ -529,6 +530,7 @@ namespace slua {
         LuaState::pushErrorHandler(L);
         lua_insert(L,top);
         vars[0].ref->push(L);
+
         lua_insert(L,top+1);
         // top is err handler
         if(lua_pcallk(L,argn,LUA_MULTRET,top,NULL,NULL))
@@ -544,32 +546,45 @@ namespace slua {
         return 0;
     }
 
-    void LuaVar::callByUFunction(UFunction* func,uint8* parms) {
+    bool LuaVar::callByUFunction(UFunction* func,uint8* parms, LuaVar* pSelf) {
         
-        if(!func) return;
+        if(!func) return false;
 
         if(!isValid()) {
             Log::Error("State of lua function is invalid");
-            return;
+            return false;
         }
 
         const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
         if(func->ParmsSize==0 && !bHasReturnParam) {
-            call();
-            return;
+			int nArg = 0;
+			if (pSelf) {
+				pSelf->push();
+				nArg++;
+			}
+
+			auto L = getState();
+			int n = docall(nArg);
+			lua_pop(L, n);
+            return true;
         }
 
         int n=0;
+		if (pSelf) {
+			pSelf->push();
+			n++;
+		}
         for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
             UProperty* prop = *it;
             uint64 propflag = prop->GetPropertyFlags();
-            if((propflag&CPF_ReturnParm))
+            if((propflag&CPF_ReturnParm) || (propflag&CPF_OutParm))
                 continue;
 
             pushArgByParms(prop,parms+prop->GetOffset_ForInternal());
             n++;
         }
         docall(n);
+		return true;
     }
 
     void LuaVar::varClone(lua_var& tv,const lua_var& ov) const {

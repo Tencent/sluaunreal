@@ -53,9 +53,14 @@ void ULuaDelegate::bindFunction(UFunction *ufunc) {
     ufunction = ufunc;
 }
 
+void ULuaDelegate::dispose()
+{
+	SafeDelete(luafunction);
+	ufunction = nullptr;
+}
 namespace slua {
 
-    struct LuaDelegateWrap {
+    struct LuaMultiDelegateWrap {
         FMulticastScriptDelegate* delegate;
         UFunction* ufunc;
 #if WITH_EDITOR
@@ -63,10 +68,20 @@ namespace slua {
 #endif
     };
 
-    DefTypeName(LuaDelegateWrap);
+    DefTypeName(LuaMultiDelegateWrap);
 
-    int LuaDelegate::Add(lua_State* L) {
-        CheckUD(LuaDelegateWrap,L,1);
+	struct LuaDelegateWrap {
+		FScriptDelegate* delegate;
+		UFunction* ufunc;
+#if WITH_EDITOR
+		FString pName;
+#endif
+	};
+
+	DefTypeName(LuaDelegateWrap);
+
+    int LuaMultiDelegate::Add(lua_State* L) {
+        CheckUD(LuaMultiDelegateWrap,L,1);
 
         // bind luafucntion and signature function
         auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(),ULuaDelegate::StaticClass());
@@ -87,8 +102,8 @@ namespace slua {
         return 1;
     }
 
-    int LuaDelegate::Remove(lua_State* L) {
-        CheckUD(LuaDelegateWrap,L,1);
+    int LuaMultiDelegate::Remove(lua_State* L) {
+        CheckUD(LuaMultiDelegateWrap,L,1);
         if(!lua_islightuserdata(L,2))
             luaL_error(L,"arg 2 expect ULuaDelegate");
         auto obj =  reinterpret_cast<ULuaDelegate*>(lua_touserdata(L,2));
@@ -102,28 +117,33 @@ namespace slua {
 
         // remove reference
         LuaObject::removeRef(L,obj);
+		obj->dispose();
 
         return 0;
     }
 
-    int LuaDelegate::Clear(lua_State* L) {
-        CheckUD(LuaDelegateWrap,L,1);
+    int LuaMultiDelegate::Clear(lua_State* L) {
+        CheckUD(LuaMultiDelegateWrap,L,1);
         auto array = UD->delegate->GetAllObjects();
         for(auto it:array) {
-            LuaObject::removeRef(L,it);
+			ULuaDelegate* delegateObj = Cast<ULuaDelegate>(it);
+			if (delegateObj)
+			{
+				delegateObj->dispose();
+				LuaObject::removeRef(L, it);
+			}
         }
         UD->delegate->Clear();
         return 0;
     }
 
-    int LuaDelegate::gc(lua_State* L) { 
-        CheckUD(LuaDelegateWrap,L,1);
+    int LuaMultiDelegate::gc(lua_State* L) { 
+        CheckUD(LuaMultiDelegateWrap,L,1);
         delete UD;
         return 0;    
     }
    
-
-    int LuaDelegate::setupMT(lua_State* L) {
+    int LuaMultiDelegate::setupMT(lua_State* L) {
         LuaObject::setupMTSelfSearch(L);
 
         RegMetaMethod(L,Add);
@@ -132,15 +152,76 @@ namespace slua {
         return 0;
     }
 
-    int LuaDelegate::push(lua_State* L,FMulticastScriptDelegate* delegate,UFunction* ufunc,FString pName) {
+    int LuaMultiDelegate::push(lua_State* L,FMulticastScriptDelegate* delegate,UFunction* ufunc,FString pName) {
 #if WITH_EDITOR
-        LuaDelegateWrap* wrapobj = new LuaDelegateWrap{delegate,ufunc,pName};
+		LuaMultiDelegateWrap* wrapobj = new LuaMultiDelegateWrap{ delegate,ufunc,pName };
+#else
+		LuaMultiDelegateWrap* wrapobj = new LuaMultiDelegateWrap{ delegate,ufunc };
+#endif
+        return LuaObject::pushType<LuaMultiDelegateWrap*>(L,wrapobj,"LuaMultiDelegateWrap",setupMT,gc);
+    }
+
+	int LuaDelegate::Bind(lua_State* L)
+	{
+		CheckUD(LuaDelegateWrap, L, 1);
+
+		// bind luafucntion and signature function
+		auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(), ULuaDelegate::StaticClass());
+#if WITH_EDITOR
+		obj->setPropName(UD->pName);
+#endif
+		obj->bindFunction(L, 2, UD->ufunc);
+
+		UD->delegate->BindUFunction(obj, TEXT("EventTrigger"));
+
+		// add reference
+		LuaObject::addRef(L, obj);
+
+		lua_pushlightuserdata(L, obj);
+		return 1;
+	}
+
+	int LuaDelegate::Clear(lua_State* L)
+	{
+		CheckUD(LuaDelegateWrap, L, 1);
+		auto object = UD->delegate->GetUObject();
+		if (object)
+		{
+			ULuaDelegate* delegateObj = Cast<ULuaDelegate>(object);
+			if (delegateObj)
+			{
+				delegateObj->dispose();
+				LuaObject::removeRef(L, object);
+			}
+		}
+		UD->delegate->Clear();
+		return 0;
+	}
+
+	int LuaDelegate::gc(lua_State* L)
+	{
+		CheckUD(LuaDelegateWrap, L, 1);
+		delete UD;
+		return 0;
+	}
+
+	int LuaDelegate::setupMT(lua_State* L)
+	{
+		LuaObject::setupMTSelfSearch(L);
+
+		RegMetaMethod(L, Bind);
+		RegMetaMethod(L, Clear);
+		return 0;
+	}
+
+	int LuaDelegate::push(lua_State* L, FScriptDelegate* delegate, UFunction* ufunc, FString pName)
+	{
+#if WITH_EDITOR
+		LuaDelegateWrap* wrapobj = new LuaDelegateWrap{ delegate,ufunc,pName };
 #else
 		LuaDelegateWrap* wrapobj = new LuaDelegateWrap{ delegate,ufunc };
 #endif
-        return LuaObject::pushType<LuaDelegateWrap*>(L,wrapobj,"LuaDelegateWrap",setupMT,gc);
-    }
-
-
+		return LuaObject::pushType<LuaDelegateWrap*>(L, wrapobj, "LuaDelegateWrap", setupMT, gc);
+	}
 
 }

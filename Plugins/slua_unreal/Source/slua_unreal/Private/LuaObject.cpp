@@ -648,7 +648,7 @@ namespace slua {
         const char* name = LuaObject::checkValue<const char*>(L, 2);
         
         auto* cls = ls->uss;
-		UProperty* up = FindStructPropertyByName(cls, name);
+        UProperty* up = FindStructPropertyByName(cls, name);
         if(!up) return 0;
         return LuaObject::push(L,up,ls->buf+up->GetOffset_ForInternal());
     }
@@ -659,7 +659,7 @@ namespace slua {
 
         auto* cls = ls->uss;
         UProperty* up = FindStructPropertyByName(cls, name);
-		if (!up) luaL_error(L, "Can't find property named %s", name);
+        if (!up) luaL_error(L, "Can't find property named %s", name);
         if (up->GetPropertyFlags() & CPF_BlueprintReadOnly)
             luaL_error(L, "Property %s is readonly", name);
 
@@ -766,11 +766,17 @@ namespace slua {
 		return LuaObject::push(L, new LuaStruct{buf,size,uss});
     }  
 
+	int pushUDelegateProperty(lua_State* L, UProperty* prop, uint8* parms) {
+		auto p = Cast<UDelegateProperty>(prop);
+		ensure(p);
+		FScriptDelegate* delegate = p->GetPropertyValuePtr(parms);
+		return LuaDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
+	}
     int pushUMulticastDelegateProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p = Cast<UMulticastDelegateProperty>(prop);
         ensure(p);   
         FMulticastScriptDelegate* delegate = p->GetPropertyValuePtr(parms);
-        return LuaDelegate::push(L,delegate,p->SignatureFunction,prop->GetNameCPP());
+		return LuaMultiDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
     }
 
     int checkUDelegateProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
@@ -987,7 +993,8 @@ namespace slua {
         regPusher<UTextProperty>();
         regPusher<UStrProperty>();
         regPusher<UNameProperty>();
-
+		
+		regPusher(UDelegateProperty::StaticClass(), pushUDelegateProperty);
         regPusher(UMulticastDelegateProperty::StaticClass(),pushUMulticastDelegateProperty);
         regPusher(UObjectProperty::StaticClass(),pushUObjectProperty);
         regPusher(UArrayProperty::StaticClass(),pushUArrayProperty);
@@ -1051,11 +1058,6 @@ namespace slua {
             return LuaMap::push(L,Cast<UMapProperty>(up),obj);
 		else
 			return push(L, up, up->ContainerPtrToValuePtr<uint8>(obj));
-	}
-
-
-	int LuaObject::push(lua_State* L, FScriptDelegate* obj) {
-		return pushType<FScriptDelegate*>(L, obj, "FScriptDelegate");
 	}
 
 	int LuaObject::push(lua_State* L, LuaStruct* ls) {

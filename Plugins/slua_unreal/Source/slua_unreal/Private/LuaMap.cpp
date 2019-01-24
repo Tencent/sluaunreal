@@ -93,8 +93,11 @@ namespace slua {
 	} 
 
 	LuaMap::~LuaMap() {
-		clear();
-		if (!prop) SafeDelete(map);
+		if (!propObj)
+		{
+			clear();
+			if (!prop) SafeDelete(map);
+		}
 		keyProp = valueProp = nullptr;
 		prop = nullptr;
 		propObj = nullptr;

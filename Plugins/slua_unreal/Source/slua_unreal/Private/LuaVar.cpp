@@ -209,6 +209,15 @@ namespace slua {
                 lua_pushvalue(l,p);
                 vars[i].ref = new RefRef(l);
                 break;
+			case LUA_TUSERDATA:
+				vars[i].luatype = LV_USERDATA;
+				lua_pushvalue(l, p);
+				vars[i].ref = new RefRef(l);
+				break;
+			case LUA_TLIGHTUSERDATA:
+				vars[i].luatype = LV_LIGHTUD;
+				vars[i].ptr = lua_touserdata(l, p);
+				break;
             case LUA_TNIL:
             default:
                 vars[i].luatype = LV_NIL;

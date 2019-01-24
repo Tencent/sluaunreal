@@ -164,6 +164,7 @@ namespace slua {
 
     void LuaState::close() {
         if(mainState==this) mainState = nullptr;
+		releaseAllLink();
         
         if(L) {
             lua_close(L);
@@ -259,6 +260,46 @@ namespace slua {
 
 	void LuaState::setLoadFileDelegate(LoadFileDelegate func) {
 		loadFileDelegate = func;
+	}
+
+	static void* findParent(GenericUserData* parent) {
+		auto pp = parent;
+		while(true) {
+			if (!pp->parent)
+				break;
+			pp = reinterpret_cast<GenericUserData*>(pp->parent);
+		}
+		return pp;
+	}
+
+	void LuaState::linkProp(void* parent, void* prop) {
+		auto parentud = findParent(reinterpret_cast<GenericUserData*>(parent));
+		auto propud = reinterpret_cast<GenericUserData*>(prop);
+		propud->parent = parentud;
+		auto& propList = propLinks.FindOrAdd(parentud);
+		propList.Add(propud);
+	}
+
+	void LuaState::releaseLink(void* prop) {
+		auto propud = reinterpret_cast<GenericUserData*>(prop);
+		if (propud->flag & UD_AUTOGC) {
+			auto propListPtr = propLinks.Find(propud);
+			if (propListPtr) 
+				for (auto& cprop : *propListPtr) 
+					reinterpret_cast<GenericUserData*>(cprop)->flag |= UD_HADFREE;
+		} else {
+			propud->flag |= UD_HADFREE;
+			auto propListPtr = propLinks.Find(propud->parent);
+			if (propListPtr) 
+				propListPtr->Remove(propud);
+		}
+	}
+
+	void LuaState::releaseAllLink() {
+		for (auto& pair : propLinks) 
+			for (auto& prop : pair.Value) 
+				reinterpret_cast<GenericUserData*>(prop)->flag |= UD_HADFREE;
+		propLinks.Empty();
 	}
 
     LuaVar LuaState::doBuffer(const uint8* buf,uint32 len, const char* chunk, LuaVar* pEnv) {

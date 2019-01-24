@@ -47,6 +47,7 @@ public:
 #define NewUD(T, v, f) auto ud = lua_newuserdata(L, sizeof(UserData<T*>)); \
 	if (!ud) luaL_error(L, "out of memory to new ud"); \
 	auto udptr = reinterpret_cast< UserData<T*>* >(ud); \
+	udptr->parent = nullptr; \
 	udptr->ud = const_cast<T*>(v); \
     udptr->flag = f;
 
@@ -85,17 +86,21 @@ namespace slua {
 #endif
     };
 
-	enum UDFlag {
-		UD_NOFLAG = 0,
-		UD_AUTOGC = 1,
-		UD_HADFREE = 2,
-	};
+		
+	#define UD_NOFLAG 0
+	#define UD_AUTOGC 1
+	#define UD_HADFREE 2
+
+#define DEF_USERDATA(T, NAME) \
+	struct NAME { \
+		T ud; \
+		uint32 flag; \
+		void* parent; \
+	}
 
     template<class T>
-    struct UserData {
-        T ud;
-		UDFlag flag;
-    };
+	DEF_USERDATA(T, UserData);
+	DEF_USERDATA(void*, GenericUserData);
 
     template<typename T, bool isUObject = std::is_base_of<UObject,T>::value>
     struct TypeName {
@@ -267,6 +272,8 @@ namespace slua {
 
 			void* ud = lua_touserdata(L, p);
 			UserData<T> *udptr = reinterpret_cast<UserData<T>*>(ud);
+			if (udptr->flag & UD_HADFREE)
+				luaL_error(L, "checkValue error, obj parent has been freed");
 			return udptr->ud;
 		}
 
@@ -310,13 +317,27 @@ namespace slua {
         }
 
 		template<class T>
-		static int push(lua_State* L, const char* fn, const T* v, UDFlag flag = UD_NOFLAG) {
+		static int push(lua_State* L, const char* fn, const T* v, uint32 flag = UD_NOFLAG) {
             if(getFromCache(L,void_cast(v),fn)) return 1;
 			NewUD(T, v, flag);
             luaL_getmetatable(L,fn);
 			lua_setmetatable(L, -2);
             cacheObj(L,void_cast(v));
             return 1;
+		}
+
+		static void releaseLink(lua_State* L, void* prop);
+		static void linkProp(lua_State* L, void* parent, void* prop);
+
+		template<class T>
+		static int pushAndLink(lua_State* L, const void* parent, const char* tn, const T* v) {
+			if (getFromCache(L, void_cast(v), tn)) return 1;
+			NewUD(T, v, UD_NOFLAG);
+			luaL_getmetatable(L, tn);
+			lua_setmetatable(L, -2);
+			cacheObj(L, void_cast(v));
+			linkProp(L, void_cast(parent), void_cast(udptr));
+			return 1;
 		}
 
         typedef void SetupMetaTableFunc(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc);
@@ -328,6 +349,7 @@ namespace slua {
                 return 1;
             }
             UserData<T>* ud = reinterpret_cast< UserData<T>* >(lua_newuserdata(L, sizeof(UserData<T>)));
+			ud->parent = nullptr;
             ud->ud = cls;
             ud->flag = gc!=nullptr?UD_AUTOGC:UD_NOFLAG;
             setupMetaTable(L,tn,setupmt,gc);
@@ -467,6 +489,7 @@ namespace slua {
             }
                 
             UserData<T>* ud = reinterpret_cast< UserData<T>* >(lua_newuserdata(L, sizeof(UserData<T>)));
+			ud->parent = nullptr;
             ud->ud = cls;
             ud->flag = UD_AUTOGC;
             

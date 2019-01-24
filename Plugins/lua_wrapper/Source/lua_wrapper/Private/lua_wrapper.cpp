@@ -128,7 +128,7 @@ void Flua_wrapperModule::PluginButtonClicked()
 {
 	//FGlobalTabmanager::Get()->InvokeTab(lua_wrapperTabName);
 #ifdef _MSC_VER
-	auto contentDir = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FPaths::GameContentDir());
+	auto contentDir = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FPaths::ProjectContentDir());
 	auto cmd = contentDir + TEXT("/../Tools/lua-wrapper.exe");
 	system(TCHAR_TO_UTF8(*cmd));
 #else

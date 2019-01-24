@@ -43,17 +43,28 @@ static uint8* ReadFile(IPlatformFile& PlatformFile, FString path, uint32& len) {
 void ASluaTestActor::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	state.init();
+	state.doFile("Test");
+	state.call("begin",this->GetWorld(),this);
+}
 
-	state.setLoadFileDelegate([](const char* fn,uint32& len,FString& filepath)->uint8* {
+void ASluaTestActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	state.close();
+}
+
+void ASluaTestActor::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	state.init();
+	state.setLoadFileDelegate([](const char* fn, uint32& len, FString& filepath)->uint8* {
 
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 		FString path = FPaths::ProjectContentDir();
-		path+="/Lua/";
-		path+=UTF8_TO_TCHAR(fn);
+		path += "/Lua/";
+		path += UTF8_TO_TCHAR(fn);
 		TArray<FString> luaExts = { UTF8_TO_TCHAR(".lua"), UTF8_TO_TCHAR(".luac") };
-		for (auto& it:luaExts) {
+		for (auto& it : luaExts) {
 			auto fullPath = path + *it;
 			auto buf = ReadFile(PlatformFile, fullPath, len);
 			if (buf) {
@@ -65,14 +76,6 @@ void ASluaTestActor::BeginPlay()
 
 		return nullptr;
 	});
-	state.doFile("Test");
-	state.call("begin",this->GetWorld(),this);
-}
-
-void ASluaTestActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	Super::EndPlay(EndPlayReason);
-	state.close();
 }
 
 // Called every frame

@@ -27,7 +27,7 @@
 
 UCLASS()
 class SLUA_UNREAL_API ULuaObject : public UObject {
-    GENERATED_UCLASS_BODY()
+	GENERATED_BODY()
 public:
     void AddRef(UObject* obj);
     void Remove(UObject* obj);

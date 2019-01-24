@@ -35,11 +35,6 @@
 #include "SluaUtil.h"
 #include "LuaReference.h"
 
-ULuaObject::ULuaObject(const FObjectInitializer& ObjectInitializer)
-: Super(ObjectInitializer)
-{
-}
-
 void ULuaObject::AddRef(UObject* obj)
 {
     Cache.Add(obj,obj);

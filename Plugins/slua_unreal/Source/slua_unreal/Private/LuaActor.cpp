@@ -27,6 +27,11 @@ void ALuaActor::BeginPlay()
 	init();
 	Super::BeginPlay();
 
+	PrimaryActorTick.SetTickFunctionEnable(false);
+
+	if (!luaActorTable.isTable())
+		return;
+
 	bool tickEnabled = luaActorTable.getFromTable<bool>("bCanEverTick");
 	PrimaryActorTick.SetTickFunctionEnable(tickEnabled);
 

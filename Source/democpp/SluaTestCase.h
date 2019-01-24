@@ -22,7 +22,7 @@
 
 USTRUCT(BlueprintType)
 struct FUserInfo {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 public:
 	UPROPERTY()
 	FString name;

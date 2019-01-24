@@ -21,7 +21,6 @@
 
 namespace slua {
 
-	static UScriptStruct* FLinkStructStruct = nullptr;
 	static UScriptStruct* FSlateFontInfoStruct = nullptr;
 	static UScriptStruct* FSlateBrushStruct = nullptr;
 	static UScriptStruct* FMarginStruct = nullptr;
@@ -50,21 +49,6 @@ namespace slua {
 
 	TMap<UScriptStruct*, pushStructFunction> _pushStructMap;
 	TMap<UScriptStruct*, checkStructFunction> _checkStructMap;
-
-	static inline FLinkStruct* __newFLinkStruct() {
-		return new FLinkStruct();
-	}
-
-	static void __pushFLinkStruct(lua_State* L, UStructProperty* p, uint8* parms) {
-		auto ptr = __newFLinkStruct();
-		p->CopyCompleteValue(ptr, parms);
-		LuaObject::push<FLinkStruct>(L, "FLinkStruct", ptr, UD_AUTOGC);
-	}
-
-	static void __checkFLinkStruct(lua_State* L, UStructProperty* p, uint8* parms, int i) {
-		auto v = LuaObject::checkValue<FLinkStruct*>(L, i);
-		p->CopyCompleteValue(parms, v);
-	}
 
 	static inline FSlateFontInfo* __newFSlateFontInfo() {
 		return new FSlateFontInfo();
@@ -395,46 +379,6 @@ namespace slua {
 		auto v = LuaObject::checkValue<FPrimaryAssetId*>(L, i);
 		p->CopyCompleteValue(parms, v);
 	}
-
-	struct FLinkStructWrapper {
-
-		static int __ctor(lua_State* L) {
-			auto self = new FLinkStruct();
-			LuaObject::push<FLinkStruct>(L, "FLinkStruct", self, UD_AUTOGC);
-			return 1;
-		}
-
-		static int __gc(lua_State* L) {
-			CheckSelf(FLinkStruct);
-			LuaObject::releaseLink(L, udptr);
-			if (udptr->flag & UD_AUTOGC) delete self;
-			return 0;
-		}
-
-		static int get_b2d(lua_State* L) {
-			CheckSelf(FLinkStruct);
-			auto& b2d = self->b2d;
-			LuaObject::pushAndLink<FBox2D>(L, udptr, "FBox2D", &b2d);
-			return 1;
-		}
-
-		static int set_b2d(lua_State* L) {
-			CheckSelf(FLinkStruct);
-			auto& b2d = self->b2d;
-			auto b2dIn = LuaObject::checkValue<FBox2D*>(L, 2);
-			b2d = *b2dIn;
-			LuaObject::push<FBox2D>(L, "FBox2D", b2dIn);
-			return 1;
-		}
-
-		static void bind(lua_State* L) {
-			AutoStack autoStack(L);
-			LuaObject::newType(L, "FLinkStruct");
-			LuaObject::addField(L, "b2d", get_b2d, set_b2d, true);
-			LuaObject::finishType(L, "FLinkStruct", __ctor, __gc);
-		}
-
-	};
 
 	struct FSlateFontInfoWrapper {
 
@@ -7378,11 +7322,6 @@ namespace slua {
 
 	void LuaWrapper::init(lua_State* L) {
 		AutoStack autoStack(L);
-		FLinkStructStruct = FLinkStruct::StaticStruct();
-		_pushStructMap.Add(FLinkStructStruct, __pushFLinkStruct);
-		_checkStructMap.Add(FLinkStructStruct, __checkFLinkStruct);
-		FLinkStructWrapper::bind(L);
-
 		FSlateFontInfoStruct = FSlateFontInfo::StaticStruct();
 		_pushStructMap.Add(FSlateFontInfoStruct, __pushFSlateFontInfo);
 		_checkStructMap.Add(FSlateFontInfoStruct, __checkFSlateFontInfo);

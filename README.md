@@ -91,6 +91,34 @@ Output is:
 
 Slua:     call from bp    1024    Hello World 3.1400001049042 UObject: 0x136486168
 
+## 使用lua扩展Actor
+
+## Using lua extend Actor
+
+```lua
+-- LuaActor.lua
+local actor={}
+
+-- override event from blueprint
+function actor:BeginPlay()
+    self.bCanEverTick = true
+    print("actor:BeginPlay")
+end
+
+function actor:Tick(dt)
+    print("actor:Tick",self,dt)
+    -- call actor function
+    local pos = self:K2_GetActorLocation()
+    -- can pass self as Actor*
+    local dist = self:GetHorizontalDistanceTo(self)
+    print("actor pos",pos,dist)
+end
+
+return actor
+```
+
+![](luaactor.png)
+
 ## 性能
 
 slua-unreal提供3中技术绑定lua接口，包括：

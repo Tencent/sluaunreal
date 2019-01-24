@@ -179,6 +179,10 @@ namespace slua {
             int t = lua_type(l,p);
 
             switch(t) {
+            case LUA_TBOOLEAN:
+                vars[i].luatype = LV_BOOL;
+                vars[i].b = !!lua_toboolean(l, p);
+                break;
             case LUA_TNUMBER:
                 {
                     if(lua_isinteger(l,p)) {

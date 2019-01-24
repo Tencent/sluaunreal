@@ -135,6 +135,8 @@ namespace slua {
 			root->Remove(obj);
 		}
 
+
+
 		const TMap<UObject*, UObject*>& cacheMap() {
 			return root->Cache;
 		}
@@ -155,6 +157,11 @@ namespace slua {
 		LuaVar initInnerCode(const char* s);
         int _pushErrorHandler(lua_State* L);
         static int _atPanic(lua_State* L);
+		void linkProp(void* parent, void* prop);
+		void releaseLink(void* prop);
+		void releaseAllLink();
+
+		TMap<void*, TArray<void*>> propLinks;
         ULuaObject* root;
         int stackCount;
         int si;

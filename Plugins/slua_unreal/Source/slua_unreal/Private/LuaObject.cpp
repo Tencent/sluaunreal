@@ -895,6 +895,16 @@ namespace slua {
         sl->removeRef(obj);
     }
 
+	void LuaObject::releaseLink(lua_State* L, void* prop) {
+		LuaState* ls = LuaState::get(L);
+		ls->releaseLink(prop);
+	}
+
+	void LuaObject::linkProp(lua_State* L, void* parent, void* prop) {
+		LuaState* ls = LuaState::get(L);
+		ls->linkProp(parent,prop);
+	}
+
     void LuaObject::cacheObj(lua_State* L,void* obj) {
         LuaState* ls = LuaState::get(L);
         lua_geti(L,LUA_REGISTRYINDEX,ls->cacheObjRef);

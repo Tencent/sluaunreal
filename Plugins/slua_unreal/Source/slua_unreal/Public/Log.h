@@ -13,6 +13,16 @@
 
 #pragma once
 #include "CoreMinimal.h"
+#include "Log.generated.h"
+
+
+USTRUCT(BlueprintType)
+struct SLUA_UNREAL_API FLinkStruct {
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite)
+	FBox2D b2d;
+};
 
 namespace slua {
     namespace Log {

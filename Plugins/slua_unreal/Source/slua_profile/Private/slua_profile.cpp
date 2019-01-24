@@ -27,7 +27,8 @@ void Fslua_profileModule::StartupModule()
 {
 	if (GIsEditor && !IsRunningCommandlet()) {
 		FGlobalTabmanager::Get()->RegisterNomadTabSpawner(slua_profileTabName, FOnSpawnTab::CreateRaw(this, &Fslua_profileModule::OnSpawnPluginTab))
-			.SetDisplayName(LOCTEXT("Flua_wrapperTabTitle", "slua Profiler"));
+			.SetDisplayName(LOCTEXT("Flua_wrapperTabTitle", "slua Profiler"))
+			.SetMenuType(ETabSpawnerMenuType::Hidden);
 	}
 }
 

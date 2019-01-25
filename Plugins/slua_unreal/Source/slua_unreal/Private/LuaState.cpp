@@ -29,8 +29,12 @@
 #include "LuaMap.h"
 #include "LuaSocketWrap.h"
 #include "LuaMemoryProfile.h"
+#include "HAL/RunnableThread.h"
 
 namespace slua {
+
+	const int MaxLuaExecTime = 5; // in second
+
     int import(lua_State *L) {
         const char* name = LuaObject::checkValue<const char*>(L,1);
         if(name) {
@@ -122,13 +126,14 @@ namespace slua {
     TMap<int,LuaState*> stateMapFromIndex;
     static int StateIndex = 0;
 
-    LuaState::LuaState(const char* name)
-        :loadFileDelegate(nullptr)
-        ,L(nullptr)
-        ,cacheObjRef(LUA_NOREF)
-        ,root(nullptr)
-        ,stackCount(0)
-        ,si(0)
+	LuaState::LuaState(const char* name)
+		:loadFileDelegate(nullptr)
+		, L(nullptr)
+		, cacheObjRef(LUA_NOREF)
+		, root(nullptr)
+		, stackCount(0)
+		, si(0)
+		, deadLoopCheck(nullptr)
     {
         if(name) stateName=UTF8_TO_TCHAR(name);
     }
@@ -176,6 +181,8 @@ namespace slua {
             root->RemoveFromRoot();
             root = nullptr;
         }
+
+		SafeDelete(deadLoopCheck);
     }
 
 
@@ -191,6 +198,8 @@ namespace slua {
         si = ++StateIndex;
         root = NewObject<ULuaObject>();
 		root->AddToRoot();
+
+		deadLoopCheck = new FDeadLoopCheck();
 
         // use custom memory alloc func to profile memory footprint
         L = lua_newstate(LuaMemoryProfile::alloc,this);
@@ -410,5 +419,87 @@ namespace slua {
         lua_pop(L,1);
         return ret;
     }
+
+	FDeadLoopCheck::FDeadLoopCheck()
+		:timeStart(0)
+		, stopCounter(0)
+		, frameCounter(0)
+		, timeoutEvent(nullptr)
+	{
+		thread = FRunnableThread::Create(this, TEXT("FLuaDeadLoopCheck"), 0, TPri_BelowNormal);
+	}
+
+	FDeadLoopCheck::~FDeadLoopCheck()
+	{
+		Stop();
+		thread->WaitForCompletion();
+		SafeDelete(thread);
+	}
+
+	uint32 FDeadLoopCheck::Run()
+	{
+		while (stopCounter.GetValue() == 0) {
+			FPlatformProcess::Sleep(1.0f);
+			if (frameCounter.GetValue() != 0) {
+				timeoutCounter.Increment();
+				if(timeoutCounter.GetValue() >= MaxLuaExecTime)
+					onScriptTimeout();
+			}
+		}
+		return 0;
+	}
+
+	void FDeadLoopCheck::Stop()
+	{
+		stopCounter.Increment();
+	}
+
+	void FDeadLoopCheck::scriptEnter(ScriptTimeoutEvent* pEvent)
+	{
+		if (frameCounter.Increment() == 1) {
+			timeoutCounter.Set(0);
+			timeoutEvent = pEvent;
+		}
+	}
+
+	void FDeadLoopCheck::scriptLeave()
+	{
+		frameCounter.Decrement();
+	}
+
+	void FDeadLoopCheck::onScriptTimeout()
+	{
+		if (timeoutEvent) timeoutEvent->onTimeout();
+	}
+
+	LuaScriptCallGuard::LuaScriptCallGuard(lua_State * L_)
+		:L(L_)
+	{
+		auto ls = LuaState::get(L);
+		ls->deadLoopCheck->scriptEnter(this);
+	}
+
+	LuaScriptCallGuard::~LuaScriptCallGuard()
+	{
+		auto ls = LuaState::get(L);
+		ls->deadLoopCheck->scriptLeave();
+	}
+
+	void LuaScriptCallGuard::onTimeout()
+	{
+		auto hook = lua_gethook(L);
+		// if debugger isn't exists
+		if (hook == nullptr) {
+			// this function thread safe
+			lua_sethook(L, scriptTimeout, LUA_MASKLINE, 0);
+		}
+	}
+
+	void LuaScriptCallGuard::scriptTimeout(lua_State *L, lua_Debug *ar)
+	{
+		// only report once
+		lua_sethook(L, nullptr, 0, 0);
+		luaL_error(L, "script exec timeout");
+	}
 
 }

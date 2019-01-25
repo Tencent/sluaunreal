@@ -544,11 +544,14 @@ namespace slua {
         lua_insert(L,top);
         vars[0].ref->push(L);
 
-        lua_insert(L,top+1);
-        // top is err handler
-        if(lua_pcallk(L,argn,LUA_MULTRET,top,NULL,NULL))
-            lua_pop(L,1);
-        lua_remove(L,top); // remove err handler;
+		{
+			LuaScriptCallGuard g(L);
+			lua_insert(L, top + 1);
+			// top is err handler
+			if (lua_pcallk(L, argn, LUA_MULTRET, top, NULL, NULL))
+				lua_pop(L, 1);
+			lua_remove(L, top); // remove err handler;
+		}
         return lua_gettop(L)-top+1;
     }
 

@@ -18,10 +18,48 @@
 #include "LuaVar.h"
 #include <string>
 #include <memory>
+#include "HAL/Runnable.h"
 
 #define SLUA_LUACODE "[sluacode]"
 
 namespace slua {
+
+	struct ScriptTimeoutEvent {
+		virtual void onTimeout() = 0;
+	};
+
+	class FDeadLoopCheck : public FRunnable
+	{
+	public:
+		FDeadLoopCheck();
+		~FDeadLoopCheck();
+
+		void scriptEnter(ScriptTimeoutEvent* pEvent);
+		void scriptLeave();
+
+	protected:
+		uint32 Run() override;
+		void Stop() override;
+		void onScriptTimeout();
+	private:
+		ScriptTimeoutEvent* timeoutEvent;
+		FRunnableThread* thread;
+		FThreadSafeCounter timeoutCounter;
+		FThreadSafeCounter timeStart;
+		FThreadSafeCounter stopCounter;
+		FThreadSafeCounter frameCounter;
+	};
+
+	// check lua script dead loop
+	class LuaScriptCallGuard : public ScriptTimeoutEvent {
+	public:
+		LuaScriptCallGuard(lua_State* L);
+		~LuaScriptCallGuard();
+		void onTimeout() override;
+	private:
+		lua_State* L;
+		static void scriptTimeout(lua_State *L, lua_Debug *ar);
+	};
 
     class SLUA_UNREAL_API LuaState
     {
@@ -151,6 +189,7 @@ namespace slua {
         friend class LuaObject;
         friend class SluaUtil;
 		friend struct LuaEnums;
+		friend class LuaScriptCallGuard;
         lua_State* L;
         int cacheObjRef;
 		// init enums lua code
@@ -170,6 +209,8 @@ namespace slua {
         TMap<UClass*,TMap<FString,UFunction*>*> classMap;
 
 		TMap<UClass*, int32> classInstanceNums;
+
+		FDeadLoopCheck* deadLoopCheck;
 
         static LuaState* mainState;
 

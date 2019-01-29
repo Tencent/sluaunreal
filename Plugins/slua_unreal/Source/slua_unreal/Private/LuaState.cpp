@@ -421,10 +421,10 @@ namespace slua {
     }
 
 	FDeadLoopCheck::FDeadLoopCheck()
-		:timeStart(0)
+		: timeoutEvent(nullptr)
+		, timeoutCounter(0)
 		, stopCounter(0)
 		, frameCounter(0)
-		, timeoutEvent(nullptr)
 	{
 		thread = FRunnableThread::Create(this, TEXT("FLuaDeadLoopCheck"), 0, TPri_BelowNormal);
 	}

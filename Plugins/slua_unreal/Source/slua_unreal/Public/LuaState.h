@@ -43,11 +43,10 @@ namespace slua {
 		void onScriptTimeout();
 	private:
 		ScriptTimeoutEvent* timeoutEvent;
-		FRunnableThread* thread;
 		FThreadSafeCounter timeoutCounter;
-		FThreadSafeCounter timeStart;
 		FThreadSafeCounter stopCounter;
 		FThreadSafeCounter frameCounter;
+		FRunnableThread* thread;
 	};
 
 	// check lua script dead loop

@@ -15,12 +15,13 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "LuaState.h"
+#include "LuaBase.h"
 #include "GameFramework/Actor.h"
 #include "LuaActor.generated.h"
 
 
 UCLASS()
-class SLUA_UNREAL_API ALuaActor : public AActor {
+class SLUA_UNREAL_API ALuaActor : public AActor, public LuaBase {
     GENERATED_BODY()
 	
 public:	
@@ -30,9 +31,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	virtual void ProcessEvent(UFunction* func, void* params) override final;
-
-	virtual bool luaImplemented(UFunction* func, void* params);
+	virtual void ProcessEvent(UFunction* func, void* params) override;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -42,12 +41,4 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua|LuaActor")
 	FString LuaStateName;
-
-private:
-	slua::LuaVar luaActorTable;
-	slua::LuaVar tickFunction;
-	static slua::LuaVar metaTable;
-
-	static int __index(slua::lua_State* L);
-	void init();
 };

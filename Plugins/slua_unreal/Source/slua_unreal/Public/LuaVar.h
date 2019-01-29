@@ -154,14 +154,15 @@ namespace slua {
 
         // get table by key, if luavar is table
         template<typename R,typename T>
-        R getFromTable(T key) const {
+        R getFromTable(T key,bool rawget=false) const {
             ensure(isTable());
             auto L = getState();
 			if (!L) return R();
             AutoStack as(L);
             push(L);
             LuaObject::push(L,key);
-            lua_gettable(L,-2);
+			if (rawget) lua_rawget(L, -2);
+			else lua_gettable(L,-2);
             return ArgOperatorOpt::readArg<typename remove_cr<R>::type>(L,-1);
         }
 

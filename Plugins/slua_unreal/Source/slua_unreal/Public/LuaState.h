@@ -53,7 +53,7 @@ namespace slua {
 	class LuaScriptCallGuard : public ScriptTimeoutEvent {
 	public:
 		LuaScriptCallGuard(lua_State* L);
-		~LuaScriptCallGuard();
+		virtual ~LuaScriptCallGuard();
 		void onTimeout() override;
 	private:
 		lua_State* L;

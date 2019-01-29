@@ -11,32 +11,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 
+#pragma once
+#include "CoreMinimal.h"
+#include "LuaState.h"
+#include "LuaBase.h"
+#include "GameFramework/Actor.h"
+#include "LuaUserWidget.generated.h"
 
-#include "LuaActor.h"
+UCLASS()
+class SLUA_UNREAL_API ULuaUserWidget : public UUserWidget, public LuaBase {
+    GENERATED_BODY()
 
-ALuaActor::ALuaActor()
-{
-	PrimaryActorTick.bCanEverTick = true;
-}
+protected:
+	virtual void NativeConstruct();
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime);
+	virtual void ProcessEvent(UFunction* func, void* params) override;
+public:	
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua|ULuaUserWidget")
+	FString LuaFilePath;
 
-// Called when the game starts or when spawned
-void ALuaActor::BeginPlay()
-{	
-	if (!init(this,"LuaActor",LuaStateName, LuaFilePath)) return;
-	Super::BeginPlay();
-	PrimaryActorTick.SetTickFunctionEnable(postInit("bCanEverTick"));
-}
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua|ULuaUserWidget")
+	FString LuaStateName;
+};
 
-void ALuaActor::ProcessEvent(UFunction * func, void * params)
-{
-	if (luaImplemented(func, params))
-		return;
-	Super::ProcessEvent(func, params);
-}
-
-// Called every frame
-void ALuaActor::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-	tick(DeltaTime);
-}

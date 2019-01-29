@@ -12,31 +12,24 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 
-#include "LuaActor.h"
+#include "LuaUserWidget.h"
 
-ALuaActor::ALuaActor()
+void ULuaUserWidget::NativeConstruct()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	if (!init(this, "LuaUserWidget", LuaStateName, LuaFilePath)) return;
+	Super::NativeConstruct();
+	bHasScriptImplementedTick = postInit("bHasScriptImplementedTick");
 }
 
-// Called when the game starts or when spawned
-void ALuaActor::BeginPlay()
-{	
-	if (!init(this,"LuaActor",LuaStateName, LuaFilePath)) return;
-	Super::BeginPlay();
-	PrimaryActorTick.SetTickFunctionEnable(postInit("bCanEverTick"));
+void ULuaUserWidget::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+	tick(InDeltaTime);
 }
 
-void ALuaActor::ProcessEvent(UFunction * func, void * params)
+void ULuaUserWidget::ProcessEvent(UFunction * func, void * params)
 {
 	if (luaImplemented(func, params))
 		return;
 	Super::ProcessEvent(func, params);
-}
-
-// Called every frame
-void ALuaActor::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-	tick(DeltaTime);
 }

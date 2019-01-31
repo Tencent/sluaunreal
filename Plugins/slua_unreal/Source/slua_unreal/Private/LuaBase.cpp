@@ -24,10 +24,7 @@ bool LuaBase::luaImplemented(UFunction * func, void * params)
 	if (!func->HasAnyFunctionFlags(EFunctionFlags::FUNC_BlueprintEvent))
 		return false;
 
-	FString funcName = func->GetDisplayNameText().ToString();
-	// should remove space in display name
-	funcName.RemoveSpacesInline();
-	slua::LuaVar lfunc = luaSelfTable.getFromTable<slua::LuaVar>((const char*)TCHAR_TO_UTF8(*funcName),true);
+	slua::LuaVar lfunc = luaSelfTable.getFromTable<slua::LuaVar>((const char*)TCHAR_TO_UTF8(*func->GetName()),true);
 	if (!lfunc.isValid()) return false;
 	
 	return lfunc.callByUFunction(func, (uint8*)params,&luaSelfTable);

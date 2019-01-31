@@ -2,7 +2,7 @@
 local panel ={}
 
 function panel:Construct()
-    -- self.bHasScriptImplementedTick = true
+    self.bHasScriptImplementedTick = true
 end
 
 function panel:Tick()

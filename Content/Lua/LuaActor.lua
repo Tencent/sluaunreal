@@ -3,7 +3,7 @@
 local actor={}
 
 -- override event from blueprint
-function actor:BeginPlay()
+function actor:ReceiveBeginPlay()
     self.bCanEverTick = true
     print("actor:BeginPlay")
 end

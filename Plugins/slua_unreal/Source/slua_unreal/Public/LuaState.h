@@ -156,6 +156,8 @@ namespace slua {
 		}
 
 		void removeRef(UObject* obj) {
+			// if obj had been free by UE, return directly
+			if (!obj->IsValidLowLevelFast()) return;
 			UClass* objClass = obj->GetClass();
 			int32* instanceNumPtr = classInstanceNums.Find(objClass);
             ensure(instanceNumPtr);

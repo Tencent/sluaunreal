@@ -30,6 +30,7 @@
 #include "LuaSocketWrap.h"
 #include "LuaMemoryProfile.h"
 #include "HAL/RunnableThread.h"
+#include "GameDelegates.h"
 
 namespace slua {
 
@@ -169,6 +170,11 @@ namespace slua {
 
     void LuaState::close() {
         if(mainState==this) mainState = nullptr;
+
+		// remove delegate handler
+		if(handlerForEndPlay.IsValid()) FGameDelegates::Get().GetEndPlayMapDelegate().Remove(handlerForEndPlay);
+		handlerForEndPlay.Reset();
+
 		releaseAllLink();
         
         if(L) {
@@ -193,6 +199,9 @@ namespace slua {
 
         if(!mainState) 
             mainState = this;
+
+		// add listener on engine end play
+		handlerForEndPlay = FGameDelegates::Get().GetEndPlayMapDelegate().AddRaw(this, &LuaState::onGameEndPlay);
 
         stackCount = 0;
         si = ++StateIndex;
@@ -309,6 +318,11 @@ namespace slua {
 			for (auto& prop : pair.Value) 
 				reinterpret_cast<GenericUserData*>(prop)->flag |= UD_HADFREE;
 		propLinks.Empty();
+	}
+
+	void LuaState::onGameEndPlay()
+	{
+		close();
 	}
 
     LuaVar LuaState::doBuffer(const uint8* buf,uint32 len, const char* chunk, LuaVar* pEnv) {

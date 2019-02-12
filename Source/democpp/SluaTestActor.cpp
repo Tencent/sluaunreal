@@ -11,10 +11,10 @@
 
 
 ASluaTestActor* ASluaTestActor::instance=nullptr;
-
+// create global state, freed on app exit
+static slua::LuaState gState("main");
 // Sets default values
 ASluaTestActor::ASluaTestActor()
-	:state("main")
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -43,24 +43,25 @@ static uint8* ReadFile(IPlatformFile& PlatformFile, FString path, uint32& len) {
 void ASluaTestActor::BeginPlay()
 {
 	Super::BeginPlay();
-	state.set("some.field.x", 101);
-	state.set("somefield", 102);
-	state.doFile("Test");
-	state.set("some.field.z", 104);
-	state.call("begin",this->GetWorld(),this);
+	gState.set("some.field.x", 101);
+	gState.set("somefield", 102);
+	gState.doFile("Test");
+	gState.set("some.field.z", 104);
+	gState.call("begin",this->GetWorld(),this);
 }
 
 void ASluaTestActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	state.close();
+	// don't close on Actor EndPlay
+	// state.close();
 }
 
 void ASluaTestActor::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	state.init();
-	state.setLoadFileDelegate([](const char* fn, uint32& len, FString& filepath)->uint8* {
+	gState.init();
+	gState.setLoadFileDelegate([](const char* fn, uint32& len, FString& filepath)->uint8* {
 
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 		FString path = FPaths::ProjectContentDir();
@@ -86,12 +87,17 @@ void ASluaTestActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	state.call("update",DeltaTime);
+	gState.call("update",DeltaTime);
 	GEngine->ForceGarbageCollection(true);
 	USluaTestCase::callback();
 }
 
 void ASluaTestActor::SetFName(FName name) {
 	slua::Log::Log("set fname %s", TCHAR_TO_UTF8(*(name.ToString())));	
+}
+
+const slua::LuaState & ASluaTestActor::state()
+{
+	return gState;
 }
 

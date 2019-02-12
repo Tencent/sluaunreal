@@ -204,6 +204,7 @@ namespace slua {
 		void linkProp(void* parent, void* prop);
 		void releaseLink(void* prop);
 		void releaseAllLink();
+		void onGameEndPlay();
 
 		TMap<void*, TArray<void*>> propLinks;
         ULuaObject* root;
@@ -216,6 +217,8 @@ namespace slua {
 		TMap<UClass*, int32> classInstanceNums;
 
 		FDeadLoopCheck* deadLoopCheck;
+
+		FDelegateHandle handlerForEndPlay;
 
         static LuaState* mainState;
 

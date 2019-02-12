@@ -43,6 +43,8 @@ protected:
 			luaL_newmetatable(L, typeName);
 			lua_pushcfunction(L, __index);
 			lua_setfield(L, -2, "__index");
+			lua_pushcfunction(L, __newindex);
+			lua_setfield(L, -2, "__newindex");
 			metaTable.set(L, -1);
 			lua_pop(L, 1);
 		}
@@ -56,7 +58,8 @@ protected:
 
 	bool postInit(const char* tickFlag);
 	void tick(float DeltaTime);
-    static int __index(slua::lua_State* L);
+	static int __index(slua::lua_State* L);
+	static int __newindex(slua::lua_State* L);
     slua::LuaVar luaSelfTable;
 	slua::LuaVar tickFunction;
 	static slua::LuaVar metaTable;

@@ -5,7 +5,14 @@ local actor={}
 -- override event from blueprint
 function actor:ReceiveBeginPlay()
     self.bCanEverTick = true
-    print("actor:BeginPlay")
+    -- set bCanBeDamaged property in parent
+    self.bCanBeDamaged = false
+    print("actor:ReceiveBeginPlay")
+end
+
+-- override event from blueprint
+function actor:ReceiveEndPlay(reason)
+    print("actor:ReceiveEndPlay")
 end
 
 function actor:Tick(dt)

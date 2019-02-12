@@ -24,6 +24,7 @@ void ALuaActor::BeginPlay()
 {	
 	if (!init(this,"LuaActor",LuaStateName, LuaFilePath)) return;
 	Super::BeginPlay();
+	// read bCanEverTick to enable tick function if it's true
 	PrimaryActorTick.SetTickFunctionEnable(postInit("bCanEverTick"));
 }
 

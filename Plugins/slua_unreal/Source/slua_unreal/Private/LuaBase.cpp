@@ -18,10 +18,10 @@ slua::LuaVar LuaBase::metaTable;
 
 bool LuaBase::luaImplemented(UFunction * func, void * params)
 {
-	if (!luaSelfTable.isTable())
+	if (!func->HasAnyFunctionFlags(EFunctionFlags::FUNC_BlueprintEvent))
 		return false;
 
-	if (!func->HasAnyFunctionFlags(EFunctionFlags::FUNC_BlueprintEvent))
+	if (!luaSelfTable.isTable())
 		return false;
 
 	slua::LuaVar lfunc = luaSelfTable.getFromTable<slua::LuaVar>((const char*)TCHAR_TO_UTF8(*func->GetName()),true);
@@ -43,11 +43,26 @@ int LuaBase::__index(slua::lua_State * L)
 	lua_pushstring(L, "__cppinst");
 	lua_rawget(L, 1);
 	if (!lua_isuserdata(L, -1))
-		luaL_error(L, "expect LuaActor table at arg 1");
+		luaL_error(L, "expect LuaBase table at arg 1");
 	// push key
 	lua_pushvalue(L, 2);
 	// get field from real actor
 	lua_gettable(L, -2);
+	return 1;
+}
+
+int LuaBase::__newindex(slua::lua_State * L)
+{
+	lua_pushstring(L, "__cppinst");
+	lua_rawget(L, 1);
+	if (!lua_isuserdata(L, -1))
+		luaL_error(L, "expect LuaBase table at arg 1");
+	// push key
+	lua_pushvalue(L, 2);
+	// push value
+	lua_pushvalue(L, 3);
+	// get field from real actor
+	lua_settable(L, -3);
 	return 1;
 }
 

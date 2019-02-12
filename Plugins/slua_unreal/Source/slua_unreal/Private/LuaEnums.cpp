@@ -19,6 +19,7 @@ namespace slua {
 	void LuaEnums::init(lua_State* L) {
 		auto state = LuaState::get(L);
 		#include "LuaEnums.inc"
+		state->doBuffer(enums, sizeof(enums), "UEnums");
 	}
 
 }

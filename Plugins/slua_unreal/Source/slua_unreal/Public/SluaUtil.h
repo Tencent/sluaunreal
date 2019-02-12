@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #pragma once
+#include "CoreMinimal.h"
+#include "lua/lua.hpp"
 #include <functional>
 
 #ifndef SafeDelete
@@ -69,4 +71,53 @@ namespace slua {
 		typedef T* type;
 	};
 
+	template<class T>
+	bool typeMatched(int luatype) {
+		if (std::is_same<T, int32>::value
+			|| std::is_same<T, uint32>::value
+			|| std::is_same<T, int64>::value
+			|| std::is_same<T, uint64>::value
+			|| std::is_same<T, int16>::value
+			|| std::is_same<T, uint16>::value
+			|| std::is_same<T, int8>::value
+			|| std::is_same<T, uint8>::value
+			|| std::is_same<T, double>::value
+			|| std::is_same<T, float>::value
+			|| std::is_enum<T>::value)
+			return luatype == LUA_TNUMBER;
+		else if (std::is_same<T, bool>::value)
+			return luatype == LUA_TBOOLEAN;
+		else if (std::is_same<T, const char*>::value
+			|| std::is_same<T, FString>::value
+			|| std::is_same<T, FText>::value)
+			return luatype == LUA_TSTRING;
+		else if (std::is_base_of<T, UObject>::value
+			|| std::is_same<T, UObject>::value)
+			return luatype == LUA_TUSERDATA;
+		else if (std::is_same<T, void*>::value)
+			return luatype == LUA_TLIGHTUSERDATA || luatype == LUA_TUSERDATA; 
+		else
+			return luatype != LUA_TNIL && luatype != LUA_TNONE;
+	}
+
+	// modified FString::Split function to return left if no InS to search
+	static bool strSplit(const FString& S, const FString& InS, FString* LeftS, FString* RightS, ESearchCase::Type SearchCase = ESearchCase::IgnoreCase,
+		ESearchDir::Type SearchDir = ESearchDir::FromStart)
+	{
+		if (S.IsEmpty()) return false;
+
+
+		int32 InPos = S.Find(InS, SearchCase, SearchDir);
+
+		if (InPos < 0) {
+			*LeftS = S;
+			*RightS = "";
+			return true;
+		}
+
+		if (LeftS) { *LeftS = S.Left(InPos); }
+		if (RightS) { *RightS = S.Mid(InPos + InS.Len()); }
+
+		return true;
+	}
 }

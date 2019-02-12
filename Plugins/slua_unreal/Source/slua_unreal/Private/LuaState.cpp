@@ -372,27 +372,6 @@ namespace slua {
         return lua_gettop(state);
     }
 
-    // modified FString::Split function to return left if no InS to search
-    static bool strSplit(const FString& S,const FString& InS, FString* LeftS, FString* RightS, ESearchCase::Type SearchCase = ESearchCase::IgnoreCase,
-		ESearchDir::Type SearchDir = ESearchDir::FromStart)
-	{
-        if(S.IsEmpty()) return false;
-
-        
-		int32 InPos = S.Find(InS, SearchCase, SearchDir);
-
-		if (InPos < 0)	{ 
-            *LeftS = S;
-            *RightS = "";
-            return true; 
-        }
-
-		if (LeftS)		{ *LeftS = S.Left(InPos); }
-		if (RightS)	{ *RightS = S.Mid(InPos + InS.Len()); }
-
-		return true;
-	}
-
     LuaVar LuaState::get(const char* key) {
         // push global table
         lua_pushglobaltable(L);
@@ -413,12 +392,71 @@ namespace slua {
         return rt;
     }
 
+	bool LuaState::set(const char * key, LuaVar v)
+	{
+		// push global table
+		AutoStack as(L);
+		lua_pushglobaltable(L);
+
+		FString path(key);
+		FString left, right;
+		LuaVar rt;
+		while (strSplit(path, ".", &left, &right)) {
+			if (lua_type(L, -1) != LUA_TTABLE) return false;
+			lua_pushstring(L, TCHAR_TO_UTF8(*left));
+			lua_gettable(L, -2);
+			if (lua_isnil(L, -1))
+			{
+				// pop nil
+				lua_pop(L, 1);
+				if (right.IsEmpty()) {
+					lua_pushstring(L, TCHAR_TO_UTF8(*left));
+					v.push(L);
+					lua_rawset(L, -3);
+					return true;
+				}
+				else {
+					lua_newtable(L);
+					lua_pushstring(L, TCHAR_TO_UTF8(*left));
+					// push table again
+					lua_pushvalue(L, -2);
+					lua_rawset(L, -4);
+					// stack leave table for next get
+				}
+			}
+			else
+			{
+				// if sub field isn't table, set failed
+				if (!right.IsEmpty() && !lua_istable(L, -1))
+					return false;
+
+				if (lua_istable(L, -1) && right.IsEmpty()) {
+					lua_pushstring(L, TCHAR_TO_UTF8(*left));
+					v.push(L);
+					lua_rawset(L, -3);
+					return true;
+				}
+			}
+			path = right;
+		}
+		return false;
+	}
+
     LuaVar LuaState::createTable() {
         lua_newtable(L);
         LuaVar ret(L,-1);
         lua_pop(L,1);
         return ret;
     }
+
+	LuaVar LuaState::createTable(const char * key)
+	{
+		lua_newtable(L);
+		LuaVar ret(L, -1);
+		set(key, ret);
+		lua_pop(L, 1);
+		return ret;
+	}
 
 	FDeadLoopCheck::FDeadLoopCheck()
 		: timeoutEvent(nullptr)

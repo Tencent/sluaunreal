@@ -442,6 +442,20 @@ namespace slua {
         LuaObject::addGlobalMethod(L, #NAME, x); \
     } \
 
+	#define DefEnum(NAME,...) \
+		static int LuaEnum##NAME##_setup(lua_State* L) { \
+			LuaObject::newEnum(L, #NAME, #__VA_ARGS__, std::initializer_list<int>{(int)__VA_ARGS__}); \
+			return 0;\
+		} \
+		static LuaClass LuaEnum##NAME##__(LuaEnum##NAME##_setup); \
+
+	#define DefEnumClass(NAME,...) \
+		static int LuaEnum##NAME##_setup(lua_State* L) { \
+			LuaObject::newEnum(L, #NAME, #__VA_ARGS__, std::initializer_list<NAME>{__VA_ARGS__}); \
+			return 0;\
+		} \
+		static LuaClass LuaEnum##NAME##__(LuaEnum##NAME##_setup); \
+
     #define REG_EXTENSION_METHOD(U,N,M) { \
 		using BindType = LuaCppBinding<decltype(M),M>; \
         LuaObject::addExtensionMethod(U::StaticClass(),N,BindType::LuaCFunction, BindType::IsStatic); }

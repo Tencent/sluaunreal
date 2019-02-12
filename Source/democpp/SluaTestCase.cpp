@@ -217,6 +217,20 @@ namespace slua {
         DefLuaMethod(ReturnIntWithInt,&PerfTest::ReturnIntWithInt)
         DefLuaMethod(FuncWithStr,&PerfTest::FuncWithStr)
     EndDef(PerfTest,&PerfTest::create)
+
+	enum TestEnum {
+		TE_OK,
+		TE_BAD,
+		TE_COUNT,
+	};
+	DefEnum(TestEnum, TE_OK, TE_BAD, TE_COUNT);
+
+	enum class TestEnum2 {
+		OK,
+		BAD,
+		COUNT,
+	};
+	DefEnumClass(TestEnum2, TestEnum2::OK, TestEnum2::BAD, TestEnum2::COUNT);
 }
 
 USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)

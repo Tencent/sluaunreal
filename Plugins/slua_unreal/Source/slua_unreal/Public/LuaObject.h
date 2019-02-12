@@ -209,7 +209,29 @@ namespace slua {
 		static void addField(lua_State* L, const char* name, lua_CFunction getter, lua_CFunction setter, bool isInstance = true);
 		static void addOperator(lua_State* L, const char* name, lua_CFunction func);
 		static void finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc, lua_CFunction strHint=nullptr);
+		// create new enum type to lua, see DefEnum macro
+		template<class T>
+		static void newEnum(lua_State* L, const char* tn, const char* keys, std::initializer_list<T> values) {
+			auto ls = LuaState::get(L);
+			ensure(ls);
 
+			FString fkey(keys);
+			// remove namespace prefix
+			fkey.ReplaceInline(*FString::Format(TEXT("{0}::"), { UTF8_TO_TCHAR(tn) }), TEXT(""));
+			// remove space
+			fkey.RemoveSpacesInline();
+			// create enum table
+			LuaVar t = ls->createTable(tn);
+			t.push(L);
+			FString key, right;
+			for (size_t i = 0; i < values.size() && strSplit(fkey, ",", &key, &right); ++i) {
+				lua_pushinteger(L, (int)(*(values.begin() + i)));
+				lua_setfield(L, -2, TCHAR_TO_UTF8(*key));
+				fkey = right;
+			}
+			// pop t
+			lua_pop(L, 1);
+		}
         static void init(lua_State* L);
 
 
@@ -241,14 +263,8 @@ namespace slua {
         }
 
 		template<class T>
-		static bool typeMatched(int luatype) {
-			// TODO
-			return luatype != LUA_TNIL;
-		}
-
-		template<class T>
 		static T checkValueOpt(lua_State* L, int p, const T& defaultValue=T()) {
-			if (lua_isnone(L, p) || !typeMatched<T>(lua_type(L,p))) {
+			if (!typeMatched<T>(lua_type(L,p))) {
 				return defaultValue;
 			} else {
 				return checkValue<T>(L, p);
@@ -275,6 +291,14 @@ namespace slua {
 			if (udptr->flag & UD_HADFREE)
 				luaL_error(L, "checkValue error, obj parent has been freed");
 			return udptr->ud;
+		}
+
+		template<class T>
+		bool checkValue(lua_State* L, int p, T& out) {
+			if (!typeMatched<T>(lua_type(L, p)))
+				return false;
+			out = checkValue<T>(L, p);
+			return true;
 		}
 
 		// check value if it's enum

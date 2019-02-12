@@ -120,6 +120,8 @@ namespace slua {
 
         // get field from _G, support "x.x.x.x" to search children field
         LuaVar get(const char* key);
+		// set field to _G, support "x.x.x.x" to create sub table recursive
+		bool set(const char* key, LuaVar v);
 
         // set load delegation function to load lua code
 		void setLoadFileDelegate(LoadFileDelegate func);
@@ -134,7 +136,9 @@ namespace slua {
 		}
 
         // create a empty table
-        LuaVar createTable();
+		LuaVar createTable();
+		// create named table, support "x.x.x.x", put table to _G
+		LuaVar createTable(const char* key);
 
 
 		void addRef(UObject* obj) {

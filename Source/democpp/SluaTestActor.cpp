@@ -43,7 +43,10 @@ static uint8* ReadFile(IPlatformFile& PlatformFile, FString path, uint32& len) {
 void ASluaTestActor::BeginPlay()
 {
 	Super::BeginPlay();
+	state.set("some.field.x", 101);
+	state.set("somefield", 102);
 	state.doFile("Test");
+	state.set("some.field.z", 104);
 	state.call("begin",this->GetWorld(),this);
 }
 

@@ -15,7 +15,7 @@
 #include "CoreMinimal.h"
 #include "LuaState.h"
 
-class LuaBase {
+class SLUA_UNREAL_API LuaBase {
 public:
 	virtual bool luaImplemented(UFunction* func, void* params);
 	virtual ~LuaBase() {}

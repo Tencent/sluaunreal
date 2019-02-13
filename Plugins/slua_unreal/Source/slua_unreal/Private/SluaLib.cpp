@@ -118,10 +118,34 @@ namespace slua {
 		}
 	}
 
+	void garbageCollect() {
+		auto state = LuaState::get();
+		lua_gc(state->getLuaState(), LUA_GCCOLLECT, 0);
+		Log::Log("Performed full lua gc");
+	}
+
+	void memUsed() {
+		auto state = LuaState::get();
+		int kb = lua_gc(state->getLuaState(), LUA_GCCOUNT, 0);
+		Log::Log("Lua use memory %d kb",kb);
+	}
+
 	static FAutoConsoleCommand CVarDumpUObjects(
 		TEXT("slua.DumpUObjects"),
 		TEXT("Dump all uobject that referenced by lua in main state"),
 		FConsoleCommandDelegate::CreateStatic(dumpUObjects),
+		ECVF_Cheat);
+
+	static FAutoConsoleCommand CVarGC(
+		TEXT("slua.GC"),
+		TEXT("Collect lua garbage"),
+		FConsoleCommandDelegate::CreateStatic(garbageCollect),
+		ECVF_Cheat);
+
+	static FAutoConsoleCommand CVarMem(
+		TEXT("slua.Mem"),
+		TEXT("Print memory used"),
+		FConsoleCommandDelegate::CreateStatic(memUsed),
 		ECVF_Cheat);
 #endif
 }

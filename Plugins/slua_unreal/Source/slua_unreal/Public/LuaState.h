@@ -21,6 +21,7 @@
 #include "HAL/Runnable.h"
 
 #define SLUA_LUACODE "[sluacode]"
+#define SLUA_CPPINST "__cppinst"
 
 namespace slua {
 
@@ -198,7 +199,6 @@ namespace slua {
         lua_State* L;
         int cacheObjRef;
 		// init enums lua code
-		LuaVar initInnerCode(const char* s);
         int _pushErrorHandler(lua_State* L);
         static int _atPanic(lua_State* L);
 		void linkProp(void* parent, void* prop);

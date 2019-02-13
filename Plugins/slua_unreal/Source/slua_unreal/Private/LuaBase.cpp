@@ -40,7 +40,7 @@ void LuaBase::tick(float DeltaTime)
 
 int LuaBase::__index(slua::lua_State * L)
 {
-	lua_pushstring(L, "__cppinst");
+	lua_pushstring(L, SLUA_CPPINST);
 	lua_rawget(L, 1);
 	if (!lua_isuserdata(L, -1))
 		luaL_error(L, "expect LuaBase table at arg 1");
@@ -53,7 +53,7 @@ int LuaBase::__index(slua::lua_State * L)
 
 int LuaBase::__newindex(slua::lua_State * L)
 {
-	lua_pushstring(L, "__cppinst");
+	lua_pushstring(L, SLUA_CPPINST);
 	lua_rawget(L, 1);
 	if (!lua_isuserdata(L, -1))
 		luaL_error(L, "expect LuaBase table at arg 1");

@@ -36,7 +36,7 @@ protected:
 		luaSelfTable.push(L);
 
 		slua::LuaObject::push(L, ptrT);
-		lua_setfield(L, -2, "__cppinst");
+		lua_setfield(L, -2, SLUA_CPPINST);
 
 		// setup metatable
 		if (!metaTable.isValid()) {

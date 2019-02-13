@@ -470,8 +470,8 @@ namespace slua {
     #define REG_EXTENSION_METHOD_IMP_STATIC(U,N,BODY) { \
         LuaObject::addExtensionMethod(U::StaticClass(),N,[](lua_State* L)->int BODY,true); }
 
-	#define REG_EXTENSION_METHOD_LAMBDA(U,N, Static, ...) { \
-		static auto lambda = __VA_ARGS__; \
+	#define REG_EXTENSION_METHOD_LAMBDA(U,N, Static, LAMBDA) { \
+		static auto lambda = LAMBDA; \
 		using BindType = LuaCallableBinding<decltype(lambda)>::Prototype; \
 		BindType::Func = &lambda; \
 		LuaObject::addExtensionMethod(U::StaticClass(), N, BindType::LuaCFunction, Static); \

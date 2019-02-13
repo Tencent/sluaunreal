@@ -24,6 +24,9 @@
 #include "Runtime/Launch/Resources/Version.h"
 #include "LuaObject.generated.h"
 
+#ifndef SLUA_CPPINST
+#define SLUA_CPPINST "__cppinst"
+#endif 
 
 UCLASS()
 class SLUA_UNREAL_API ULuaObject : public UObject {
@@ -538,7 +541,7 @@ namespace slua {
         }
         else if(lt == LUA_TTABLE) {
             AutoStack g(L);
-            lua_getfield(L,p,"__cppinst");
+            lua_getfield(L,p, SLUA_CPPINST);
             if(lua_type(L,-1)==LUA_TUSERDATA) {
                 UObject* ud = checkUD<UObject>(L,-1);
                 if(!ud) goto errorpath;

@@ -208,6 +208,16 @@ namespace slua {
         root = NewObject<ULuaObject>();
 		root->AddToRoot();
 
+		propLinks.Empty();
+		classInstanceNums.Empty();
+		classMap.Empty();
+		handlerForEndPlay.Reset();
+
+#if WITH_EDITOR
+		// used for debug
+		debugStringMap.Empty();
+#endif
+
 		deadLoopCheck = new FDeadLoopCheck();
 
         // use custom memory alloc func to profile memory footprint

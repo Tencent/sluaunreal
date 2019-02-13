@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #include "LuaWrapper.h"
-
-#define CheckSelf(T) \
-	auto udptr = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, 1)); \
-	if (udptr->flag & UD_HADFREE) \
-		luaL_error(L, "checkValue error, obj parent has been freed"); \
-	auto self = udptr->ud
+#include "LuaObject.h"
 
 namespace slua {
 

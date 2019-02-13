@@ -54,6 +54,13 @@ public:
 	udptr->ud = const_cast<T*>(v); \
     udptr->flag = f;
 
+#define CheckSelf(T) \
+	auto udptr = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, 1)); \
+	if(!udptr) luaL_error(L, "self ptr missing"); \
+	if (udptr->flag & UD_HADFREE) \
+		luaL_error(L, "checkValue error, obj parent has been freed"); \
+	auto self = udptr->ud
+
 
 namespace slua {
 

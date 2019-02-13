@@ -27,8 +27,8 @@ function testcase()
     require 'TestCase'
     require 'TestStruct'
     require 'TestCppBinding'
-    local test=require 'TestBlueprint'
-    test.test(world,actor)
+    TestBp=require 'TestBlueprint'
+    TestBp:test(world,actor)
 
     TestMap = require 'TestMap'
     TestArray = require 'TestArray'
@@ -48,7 +48,8 @@ function update(dt)
     
     TestActor.update(tt,actor)
     TestArray.update(tt)
-	TestMap.update(tt)
+    TestMap.update(tt)
+    TestBp:update(tt)
 
     collectgarbage("collect")
 end

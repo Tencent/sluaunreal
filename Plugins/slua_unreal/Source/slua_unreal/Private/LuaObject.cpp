@@ -584,7 +584,7 @@ namespace slua {
         const char* name = LuaObject::checkValue<const char*>(L, 2);
         UClass* cls = obj->GetClass();
         UProperty* up = cls->FindPropertyByName(UTF8_TO_TCHAR(name));
-		if (!up) return 0;
+		if (!up) luaL_error(L, "Property %s not found", name);
         if(up->GetPropertyFlags() & CPF_BlueprintReadOnly)
             luaL_error(L,"Property %s is readonly",name);
 
@@ -900,24 +900,29 @@ namespace slua {
         lua_pop(L,1); // pop cache table        
     }
 
+	void LuaObject::removeFromCache(lua_State * L, GenericUserData* ud)
+	{
+		// get cache table
+		LuaState* ls = LuaState::get(L);
+		lua_geti(L, LUA_REGISTRYINDEX, ls->cacheObjRef);
+		ensure(lua_type(L, -1) == LUA_TTABLE);
+		lua_pushlightuserdata(L, ud->ud);
+		lua_pushnil(L);
+		// cache[obj] = nil
+		lua_rawset(L, -3);
+		// pop cache table;
+		lua_pop(L, 1);
+	}
+
     int LuaObject::removeFromCacheGC(lua_State* L) {
         int p = lua_upvalueindex(1);
         // get real gc function
         lua_CFunction gc = lua_tocfunction(L,p);
         gc(L);
-        // get cache table
-        LuaState* ls = LuaState::get(L);
-        lua_geti(L,LUA_REGISTRYINDEX,ls->cacheObjRef);
-        ensure(lua_type(L,-1)==LUA_TTABLE);
         // check UD as light userdata
         GenericUserData* ud = (GenericUserData*)lua_touserdata(L,1);
 		ud->flag |= UD_HADFREE;
-        lua_pushlightuserdata(L,ud->ud);
-        lua_pushnil(L);
-        // cache[obj] = nil
-        lua_rawset(L,-3);
-        // pop cache table;
-        lua_pop(L,1);
+		removeFromCache(L,ud);
         return 0;
     }
 

@@ -392,6 +392,8 @@ namespace slua {
 		lua_pop(L, 1);
 		// remove ref, Object must be an UObject in slua
 		removeRef((UObject*)Object);
+		// remove cache
+		LuaObject::removeFromCache(L, ud);
 	}
 
 	void LuaState::AddReferencedObjects(FReferenceCollector & Collector)

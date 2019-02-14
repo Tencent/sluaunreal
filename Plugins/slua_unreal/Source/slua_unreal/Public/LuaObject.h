@@ -160,13 +160,23 @@ namespace slua {
 			return nullptr; \
 		}
 
+		template<typename T>
+		static T* maybeAnUDTable(lua_State* L, int p,bool checkfree) {
+			if(lua_istable(L, p)) {
+				lua_getfield(L, p, SLUA_CPPINST);
+				if (lua_type(L, -1) == LUA_TUSERDATA)
+					return checkUD<T>(L, lua_absindex(L, -1), checkfree);
+			}
+			return nullptr;
+		}
+
         // testudata, if T is base of uobject but isn't uobject, try to  cast it to T
         template<typename T>
         static typename std::enable_if<std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p, bool checkfree=true) {
             UserData<UObject*>* ptr = (UserData<UObject*>*)luaL_testudata(L,p,"UObject");
 			CHECK_UD_VALID
             T* t = ptr?Cast<T>(ptr->ud):nullptr;
-            if(!t && lua_isuserdata(L,p)) {
+			if (!t && lua_isuserdata(L, p)) {
 				luaL_getmetafield(L, p, "__name");
 				if (lua_isnil(L, -1)) {
 					lua_pop(L, 1);
@@ -175,11 +185,13 @@ namespace slua {
 				FString clsname(lua_tostring(L, -1));
 				lua_pop(L, 1);
 				// skip firat char may be 'U' or 'A'
-				if (clsname.Find(T::StaticClass()->GetName())==1) {
+				if (clsname.Find(T::StaticClass()->GetName()) == 1) {
 					UserData<T*>* tptr = (UserData<T*>*) lua_touserdata(L, p);
 					t = tptr ? tptr->ud : nullptr;
 				}
-            }
+			}
+			else if (!t)
+				return maybeAnUDTable<T>(L, p,checkfree);
             return t;
         }
 
@@ -188,6 +200,7 @@ namespace slua {
         static typename std::enable_if<std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p, bool checkfree=true) {
             auto ptr = (UserData<T*>*)luaL_testudata(L,p,"UObject");
 			CHECK_UD_VALID
+			if (!ptr) return maybeAnUDTable<T>(L, p, checkfree);
             return ptr?ptr->ud:nullptr;
         }
 
@@ -196,6 +209,7 @@ namespace slua {
         static typename std::enable_if<!std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p,bool checkfree=true) {
             auto ptr = (UserData<T*>*)luaL_testudata(L,p,TypeName<T>::value());
 			CHECK_UD_VALID
+			if (!ptr) return maybeAnUDTable<T>(L, p, checkfree);
             return ptr?ptr->ud:nullptr;
         }
 
@@ -255,7 +269,7 @@ namespace slua {
         // return the pointer of class, otherwise return nullptr
         template<typename T>
         static T* checkUD(lua_State* L,int p,bool checkfree=true) {
-        
+
             T* ret = testudata<T>(L,p, checkfree);
             if(ret) return ret;
 
@@ -270,7 +284,7 @@ namespace slua {
 
             if(LuaObject::isBaseTypeOf(L,typearg,TypeName<T>::value()))
                 return (T*) lua_touserdata(L,p);
-            if(checkfree)
+            if(checkfree) 
 				luaL_error(L,"expect userdata %s, but got %s",TypeName<T>::value(),typearg);
             return nullptr;
         }
@@ -482,6 +496,7 @@ namespace slua {
 
         static bool getFromCache(lua_State* L, void* obj, const char* tn, bool check = true);
 		static void cacheObj(lua_State* L, void* obj);
+		static void removeFromCache(lua_State* L, GenericUserData* obj);
     private:
         static int setupClassMT(lua_State* L);
         static int setupInstanceMT(lua_State* L);
@@ -543,26 +558,7 @@ namespace slua {
 
     template<>
     inline UObject* LuaObject::checkValue(lua_State* L, int p) {
-        int lt = lua_type(L,p);
-        if(lt == LUA_TUSERDATA) {
-            UObject* ud = checkUD<UObject>(L,p);
-            if(!ud) goto errorpath;
-            return ud;
-        }
-        else if(lt == LUA_TTABLE) {
-            AutoStack g(L);
-            lua_getfield(L,p, SLUA_CPPINST);
-            if(lua_type(L,-1)==LUA_TUSERDATA) {
-                UObject* ud = checkUD<UObject>(L,-1);
-                if(!ud) goto errorpath;
-                return ud;
-            }
-        }
-        else if(lt == LUA_TNIL)
-            return nullptr;
-    errorpath:
-        luaL_error(L, "checkValue error at %d",p);
-        return nullptr;
+        return checkUD<UObject>(L,p);
     }
 
     template<>

@@ -11,6 +11,20 @@ local handler = btn2.OnClicked:Add(function()
 	ui=nil
 end);
 
+-- can use key to index ui
+local bpClass = slua.loadClass("/Game/TestActor.TestActor")
+
+local btn1 = ui["Button_0"]
+local h_openmap = btn1.OnClicked:Add(function()
+	print("open new map")
+	local bp = bpClass(world.CurrentLevel)
+	-- set world to nil to unref world
+	world = nil
+	actor = nil
+	collectgarbage("collect")
+	bp:LoadNewMap("Map2")
+end);
+
 function remove()
 	print("before remove")
 	local leaks = slua.dumpUObjects()
@@ -21,6 +35,8 @@ function remove()
 
 	btn2.OnClicked:Remove(handler)
 	btn2=nil
+	btn1.OnClicked:Remove(h_openmap)
+	btn1=nil
 
 	print("after remove")
 	local leaks = slua.dumpUObjects()

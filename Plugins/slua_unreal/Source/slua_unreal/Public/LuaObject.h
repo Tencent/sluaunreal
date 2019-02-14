@@ -39,8 +39,12 @@ public:
     TMap<UObject*,UObject*> Cache;
 };
 
-
+// checkUD will report error if ud had been freed
 #define CheckUD(Type,L,P) auto UD = LuaObject::checkUD<Type>(L,P);
+// UD may be freed by Engine, so skip it in gc phase
+#define CheckUDGC(Type,L,P) auto UD = LuaObject::checkUD<Type>(L,P,false); \
+	if(!UD) return 0;
+
 #define RegMetaMethodByName(L,NAME,METHOD) \
     lua_pushcfunction(L,METHOD); \
     lua_setfield(L,-2,NAME);
@@ -161,10 +165,18 @@ namespace slua {
     {
     private:
 
+#define CHECK_UD_VALID if (ptr && ptr->flag&UD_HADFREE) { \
+		if (checkfree) \
+			luaL_error(L, "arg %d had been freed, can't be used", lua_absindex(L, p)); \
+		else \
+			return nullptr; \
+		}
+
         // testudata, if T is base of uobject but isn't uobject, try to  cast it to T
         template<typename T>
-        static typename std::enable_if<std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p) {
+        static typename std::enable_if<std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p, bool checkfree=true) {
             UserData<UObject*>* ptr = (UserData<UObject*>*)luaL_testudata(L,p,"UObject");
+			CHECK_UD_VALID
             T* t = ptr?Cast<T>(ptr->ud):nullptr;
             if(!t && lua_isuserdata(L,p)) {
 				luaL_getmetafield(L, p, "__name");
@@ -185,15 +197,17 @@ namespace slua {
 
         // testudata, if T is uobject
         template<typename T>
-        static typename std::enable_if<std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p) {
+        static typename std::enable_if<std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p, bool checkfree=true) {
             auto ptr = (UserData<T*>*)luaL_testudata(L,p,"UObject");
+			CHECK_UD_VALID
             return ptr?ptr->ud:nullptr;
         }
 
         // testudata, if T isn't uobject
         template<typename T>
-        static typename std::enable_if<!std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p) {
+        static typename std::enable_if<!std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p,bool checkfree=true) {
             auto ptr = (UserData<T*>*)luaL_testudata(L,p,TypeName<T>::value());
+			CHECK_UD_VALID
             return ptr?ptr->ud:nullptr;
         }
 
@@ -252,9 +266,9 @@ namespace slua {
         // of metable of the class, if T is base of class or class is T, 
         // return the pointer of class, otherwise return nullptr
         template<typename T>
-        static T* checkUD(lua_State* L,int p) {
+        static T* checkUD(lua_State* L,int p,bool checkfree=true) {
         
-            T* ret = testudata<T>(L,p);
+            T* ret = testudata<T>(L,p, checkfree);
             if(ret) return ret;
 
             const char *typearg = nullptr;
@@ -477,7 +491,7 @@ namespace slua {
         static UFunction* findCacheFunction(lua_State* L,UClass* cls,const char* fname);
         static void cacheFunction(lua_State* L, UClass* cls,const char* fame,UFunction* func);
 
-        static bool getFromCache(lua_State* L, void* obj, const char* tn);
+        static bool getFromCache(lua_State* L, void* obj, const char* tn, bool check = true);
 		static void cacheObj(lua_State* L, void* obj);
     private:
         static int setupClassMT(lua_State* L);

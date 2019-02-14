@@ -179,6 +179,7 @@ namespace slua {
         
         if(L) {
             lua_close(L);
+			GUObjectArray.RemoveUObjectDeleteListener(this);
             stateMapFromIndex.Remove(si);
             L=nullptr;
         }
@@ -202,7 +203,7 @@ namespace slua {
 
 		// add listener on engine end play
 		handlerForEndPlay = FGameDelegates::Get().GetEndPlayMapDelegate().AddRaw(this, &LuaState::onGameEndPlay);
-
+		GUObjectArray.AddUObjectDeleteListener(this);
         stackCount = 0;
         si = ++StateIndex;
         root = NewObject<ULuaObject>();
@@ -379,7 +380,20 @@ namespace slua {
         return LuaVar();
     }
 
-    int LuaState::pushErrorHandler(lua_State* L) {
+	void LuaState::NotifyUObjectDeleted(const UObjectBase * Object, int32 Index)
+	{
+		// pop ud to stack
+		if (!LuaObject::getFromCache(L, const_cast<UObjectBase *>(Object), nullptr, false))
+			return;
+
+		GenericUserData* ud = (GenericUserData*)lua_touserdata(L, -1);
+		// indicat ud had be free
+		ud->flag |= UD_HADFREE;
+		// pop ud
+		lua_pop(L, 1);
+	}
+
+	int LuaState::pushErrorHandler(lua_State* L) {
         auto ls = get(L);
         ensure(ls!=nullptr);
         return ls->_pushErrorHandler(L);

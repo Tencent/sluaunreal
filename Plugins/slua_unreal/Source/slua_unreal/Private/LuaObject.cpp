@@ -859,7 +859,7 @@ namespace slua {
 	}
 
     // search obj from registry, push cached obj and return true if find it
-    bool LuaObject::getFromCache(lua_State* L,void* obj,const char* tn) {
+    bool LuaObject::getFromCache(lua_State* L,void* obj,const char* tn,bool check) {
         LuaState* ls = LuaState::get(L);
         ensure(ls->cacheObjRef!=LUA_NOREF);
         lua_geti(L,LUA_REGISTRYINDEX,ls->cacheObjRef);
@@ -875,6 +875,8 @@ namespace slua {
             lua_pop(L,1);
 			return false;
         }
+		if (!check)
+			return true;
 		// check type of ud matched
 		return checkType(L, -1, tn);
     }
@@ -947,25 +949,25 @@ namespace slua {
     }
 
     int LuaObject::gcObject(lua_State* L) {
-        CheckUD(UObject,L,1);
+		CheckUDGC(UObject,L,1);
         removeRef(L,UD);
         return 0;
     }
 
     int LuaObject::gcClass(lua_State* L) {
-        CheckUD(UClass,L,1);
+		CheckUDGC(UClass,L,1);
         removeRef(L,UD);
         return 0;
     }
 
     int LuaObject::gcStructClass(lua_State* L) {
-        CheckUD(UScriptStruct,L,1);
+		CheckUDGC(UScriptStruct,L,1);
         removeRef(L,UD);
         return 0;
     }
 
 	int LuaObject::gcStruct(lua_State* L) {
-		CheckUD(LuaStruct, L, 1);
+		CheckUDGC(LuaStruct, L, 1);
 		delete UD;
 		return 0;
 	}

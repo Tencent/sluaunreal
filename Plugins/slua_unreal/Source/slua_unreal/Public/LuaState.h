@@ -61,7 +61,7 @@ namespace slua {
 		static void scriptTimeout(lua_State *L, lua_Debug *ar);
 	};
 
-    class SLUA_UNREAL_API LuaState
+    class SLUA_UNREAL_API LuaState : public FUObjectArray::FUObjectDeleteListener
     {
     public:
         LuaState(const char* name=nullptr);
@@ -157,12 +157,11 @@ namespace slua {
 		}
 
 		void removeRef(UObject* obj) {
-			// if obj had been free by UE, return directly
-			if (!obj->IsValidLowLevelFast()) return;
 			UClass* objClass = obj->GetClass();
 			int32* instanceNumPtr = classInstanceNums.Find(objClass);
             ensure(instanceNumPtr);
 			(*instanceNumPtr)--;
+			ensure((*instanceNumPtr) >= 0);
 			if (*instanceNumPtr == 0)
 			{
 				classInstanceNums.Remove(objClass);
@@ -179,7 +178,8 @@ namespace slua {
 			root->Remove(obj);
 		}
 
-
+		// if obj be deleted, call this function
+		virtual void NotifyUObjectDeleted(const class UObjectBase *Object, int32 Index) override;
 
 		const TMap<UObject*, UObject*>& cacheMap() {
 			return root->Cache;

@@ -15,10 +15,6 @@ function actor:ReceiveBeginPlay()
     self.basepos={}
     self.rot={}
 
-    for k,v in pairs(self) do
-        print(k,v)
-    end
-
     for n=1,10 do
         local p = FVector(math.random(-100,100),math.random(-100,100),0)
         local actor = world:SpawnActor(bpClass,p,nil,nil)
@@ -34,7 +30,10 @@ function actor:ReceiveEndPlay(reason)
     print("actor:ReceiveEndPlay")
 end
 
+local HitResult = import('HitResult');
+local tt=0
 function actor:Tick(dt)
+    tt=tt+dt
     for i,actor in pairs(self.balls) do
         local p = self.basepos[i]
         local h = HitResult()

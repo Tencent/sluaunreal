@@ -200,7 +200,7 @@ namespace slua {
         static typename std::enable_if<std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p, bool checkfree=true) {
             auto ptr = (UserData<T*>*)luaL_testudata(L,p,"UObject");
 			CHECK_UD_VALID
-			if (!ptr) maybeAnUDTable<T>(L, p, checkfree);
+			if (!ptr) return maybeAnUDTable<T>(L, p, checkfree);
             return ptr?ptr->ud:nullptr;
         }
 
@@ -209,6 +209,7 @@ namespace slua {
         static typename std::enable_if<!std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p,bool checkfree=true) {
             auto ptr = (UserData<T*>*)luaL_testudata(L,p,TypeName<T>::value());
 			CHECK_UD_VALID
+			if (!ptr) return maybeAnUDTable<T>(L, p, checkfree);
             return ptr?ptr->ud:nullptr;
         }
 
@@ -495,6 +496,7 @@ namespace slua {
 
         static bool getFromCache(lua_State* L, void* obj, const char* tn, bool check = true);
 		static void cacheObj(lua_State* L, void* obj);
+		static void removeFromCache(lua_State* L, GenericUserData* obj);
     private:
         static int setupClassMT(lua_State* L);
         static int setupInstanceMT(lua_State* L);

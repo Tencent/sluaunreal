@@ -131,7 +131,6 @@ namespace slua {
 		:loadFileDelegate(nullptr)
 		, L(nullptr)
 		, cacheObjRef(LUA_NOREF)
-		, root(nullptr)
 		, stackCount(0)
 		, si(0)
 		, deadLoopCheck(nullptr)
@@ -184,18 +183,14 @@ namespace slua {
             L=nullptr;
         }
 
-        if(root) {
-            root->RemoveFromRoot();
-            root = nullptr;
-        }
-
+		objRefs.Empty();
 		SafeDelete(deadLoopCheck);
     }
 
 
     bool LuaState::init() {
 
-        if(root)
+        if(deadLoopCheck)
             return false;
 
         if(!mainState) 
@@ -206,13 +201,12 @@ namespace slua {
 		GUObjectArray.AddUObjectDeleteListener(this);
         stackCount = 0;
         si = ++StateIndex;
-        root = NewObject<ULuaObject>();
-		root->AddToRoot();
 
 		propLinks.Empty();
 		classInstanceNums.Empty();
 		classMap.Empty();
 		handlerForEndPlay.Reset();
+		objRefs.Empty();
 
 #if WITH_EDITOR
 		// used for debug
@@ -400,6 +394,11 @@ namespace slua {
 		removeRef((UObject*)Object);
 	}
 
+	void LuaState::AddReferencedObjects(FReferenceCollector & Collector)
+	{
+		Collector.AddReferencedObjects(objRefs);
+	}
+
 	int LuaState::pushErrorHandler(lua_State* L) {
         auto ls = get(L);
         ensure(ls!=nullptr);
@@ -495,6 +494,43 @@ namespace slua {
 		set(key, ret);
 		lua_pop(L, 1);
 		return ret;
+	}
+
+	void LuaState::addRef(UObject* obj)
+	{
+		objRefs.Add(obj);
+
+		UClass* objClass = obj->GetClass();
+		int32* instanceNumPtr = classInstanceNums.Find(objClass);
+		if (!instanceNumPtr)
+		{
+			instanceNumPtr = &classInstanceNums.Add(objClass, 0);
+		}
+
+		(*instanceNumPtr)++;
+	}
+
+	void LuaState::removeRef(UObject* obj)
+	{
+		UClass* objClass = obj->GetClass();
+		int32* instanceNumPtr = classInstanceNums.Find(objClass);
+		// maybe lua had removeRef, so don't need removeRef twice
+		if (!instanceNumPtr) return;
+		(*instanceNumPtr)--;
+		ensure((*instanceNumPtr) >= 0);
+		if (*instanceNumPtr == 0)
+		{
+			classInstanceNums.Remove(objClass);
+
+			auto classFunctionsPtr = classMap.Find(objClass);
+			if (classFunctionsPtr)
+			{
+				delete *classFunctionsPtr;
+				classMap.Remove(objClass);
+			}
+		}
+
+		objRefs.Remove(obj);
 	}
 
 	FDeadLoopCheck::FDeadLoopCheck()

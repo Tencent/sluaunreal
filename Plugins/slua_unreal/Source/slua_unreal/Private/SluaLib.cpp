@@ -98,11 +98,11 @@ namespace slua {
 	int SluaUtil::dumpUObjects(lua_State * L)
 	{
 		auto state = LuaState::get(L);
-		auto& map = state->cacheMap();
+		auto& map = state->cacheSet();
 		lua_newtable(L);
 		int index = 1;
 		for (auto& it : map) {
-			LuaObject::push(L, getUObjName(it.Key));
+			LuaObject::push(L, getUObjName(it));
 			lua_seti(L, -2, index++);
 		}
 		return 1;
@@ -112,9 +112,9 @@ namespace slua {
 	void dumpUObjects() {
 		auto state = LuaState::get();
 		if (!state) return;
-		auto& map = state->cacheMap();
+		auto& map = state->cacheSet();
 		for (auto& it : map) {
-			Log::Log("Pushed UObject %s", TCHAR_TO_UTF8(*getUObjName(it.Key)));
+			Log::Log("Pushed UObject %s", TCHAR_TO_UTF8(*getUObjName(it)));
 		}
 	}
 

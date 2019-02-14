@@ -61,7 +61,7 @@ namespace slua {
 		static void scriptTimeout(lua_State *L, lua_Debug *ar);
 	};
 
-    class SLUA_UNREAL_API LuaState : public FUObjectArray::FUObjectDeleteListener
+    class SLUA_UNREAL_API LuaState : public FUObjectArray::FUObjectDeleteListener, public FGCObject
     {
     public:
         LuaState(const char* name=nullptr);
@@ -141,50 +141,21 @@ namespace slua {
 		// create named table, support "x.x.x.x", put table to _G
 		LuaVar createTable(const char* key);
 
-
-		void addRef(UObject* obj) {
-			ensure(root);
-			root->AddRef(obj);
-
-			UClass* objClass = obj->GetClass();
-			int32* instanceNumPtr = classInstanceNums.Find(objClass);
-			if (!instanceNumPtr)
-			{
-				instanceNumPtr = &classInstanceNums.Add(objClass, 0);
-			}
-
-			(*instanceNumPtr)++;
+		const TSet<UObject*>& cacheSet() const {
+			return objRefs;
 		}
 
-		void removeRef(UObject* obj) {
-			UClass* objClass = obj->GetClass();
-			int32* instanceNumPtr = classInstanceNums.Find(objClass);
-            ensure(instanceNumPtr);
-			(*instanceNumPtr)--;
-			ensure((*instanceNumPtr) >= 0);
-			if (*instanceNumPtr == 0)
-			{
-				classInstanceNums.Remove(objClass);
-
-				auto classFunctionsPtr = classMap.Find(objClass);
-				if (classFunctionsPtr)
-				{
-					delete *classFunctionsPtr;
-					classMap.Remove(objClass);
-				}
-			}
-
-			ensure(root);
-			root->Remove(obj);
-		}
+		// add obj to ref, tell Engine don't collect this obj
+		void addRef(UObject* obj);
+		// remove obj from ref
+		void removeRef(UObject* obj);
 
 		// if obj be deleted, call this function
 		virtual void NotifyUObjectDeleted(const class UObjectBase *Object, int32 Index) override;
 
-		const TMap<UObject*, UObject*>& cacheMap() {
-			return root->Cache;
-		}
-        
+		// tell Engine which objs should be referenced
+		virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
+       
         static int pushErrorHandler(lua_State* L);
     protected:
         LoadFileDelegate loadFileDelegate;
@@ -207,7 +178,6 @@ namespace slua {
 		void onGameEndPlay();
 
 		TMap<void*, TArray<void*>> propLinks;
-        ULuaObject* root;
         int stackCount;
         int si;
         FString stateName;
@@ -219,6 +189,8 @@ namespace slua {
 		FDeadLoopCheck* deadLoopCheck;
 
 		FDelegateHandle handlerForEndPlay;
+
+		TSet <UObject*> objRefs;
 
         static LuaState* mainState;
 

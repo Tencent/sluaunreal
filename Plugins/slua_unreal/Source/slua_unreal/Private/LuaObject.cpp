@@ -35,17 +35,6 @@
 #include "SluaUtil.h"
 #include "LuaReference.h"
 
-void ULuaObject::AddRef(UObject* obj)
-{
-    Cache.Add(obj,obj);
-}
-
-void ULuaObject::Remove(UObject* obj)
-{
-    Cache.Remove(obj);
-}
-
-
 namespace slua { 
 
 	TMap<UClass*,LuaObject::PushPropertyFunction> pusherMap;

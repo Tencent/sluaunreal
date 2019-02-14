@@ -71,10 +71,10 @@ bool LuaBase::postInit(const char* tickFlag)
 	if (!luaSelfTable.isTable())
 		return false;
 
-	bool tickEnabled = luaSelfTable.getFromTable<bool>(tickFlag);
+	bool tickEnabled = luaSelfTable.getFromTable<bool>(tickFlag,true);
 
 	if (tickEnabled && luaSelfTable.isTable()) {
-		tickFunction = luaSelfTable.getFromTable<slua::LuaVar>("Tick");
+		tickFunction = luaSelfTable.getFromTable<slua::LuaVar>("Tick",true);
 		if (!tickFunction.isValid()) {
 			return false;
 		}

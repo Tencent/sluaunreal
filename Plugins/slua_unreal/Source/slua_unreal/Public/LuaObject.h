@@ -22,22 +22,10 @@
 #include "LuaArray.h"
 #include "LuaMap.h"
 #include "Runtime/Launch/Resources/Version.h"
-#include "LuaObject.generated.h"
 
 #ifndef SLUA_CPPINST
 #define SLUA_CPPINST "__cppinst"
 #endif 
-
-UCLASS()
-class SLUA_UNREAL_API ULuaObject : public UObject {
-	GENERATED_BODY()
-public:
-    void AddRef(UObject* obj);
-    void Remove(UObject* obj);
-
-    UPROPERTY()
-    TMap<UObject*,UObject*> Cache;
-};
 
 // checkUD will report error if ud had been freed
 #define CheckUD(Type,L,P) auto UD = LuaObject::checkUD<Type>(L,P);

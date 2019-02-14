@@ -265,12 +265,13 @@ namespace slua {
                 
             lua_pop(L,1);
 
-            if(!typearg)
+            if(checkfree && !typearg)
                 luaL_error(L,"expect userdata at %d",p);
 
             if(LuaObject::isBaseTypeOf(L,typearg,TypeName<T>::value()))
                 return (T*) lua_touserdata(L,p);
-            luaL_error(L,"expect userdata %s, but got %s",TypeName<T>::value(),typearg);
+            if(checkfree)
+				luaL_error(L,"expect userdata %s, but got %s",TypeName<T>::value(),typearg);
             return nullptr;
         }
 

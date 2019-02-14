@@ -3,6 +3,8 @@ local GameplayStatics=import'GameplayStatics';
 
 local testcase={}
 local HitResult = import('HitResult');
+
+
 function testcase:test(uworld,actor)
     print("=====Begin test blueprint")
     local bpClass = slua.loadClass("/Game/TestActor.TestActor")
@@ -17,7 +19,8 @@ function testcase:test(uworld,actor)
     print("blueprint",self.bp)
     self.bp:TestFoo("hello")
     self.bp:TestFoo("world")
-
+    -- store old actor for map2 use, test a bug
+    oldactor = self
 
     self.balls={}
     self.basepos={}

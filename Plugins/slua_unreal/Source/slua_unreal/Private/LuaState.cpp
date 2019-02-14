@@ -391,6 +391,8 @@ namespace slua {
 		ud->flag |= UD_HADFREE;
 		// pop ud
 		lua_pop(L, 1);
+		// remove ref, Object must be an UObject in slua
+		removeRef((UObject*)Object);
 	}
 
 	int LuaState::pushErrorHandler(lua_State* L) {

@@ -203,8 +203,7 @@ namespace slua {
         si = ++StateIndex;
 
 		propLinks.Empty();
-		classInstanceNums.Empty();
-		classMap.Empty();
+		classMap.clear();
 		handlerForEndPlay.Reset();
 		objRefs.Empty();
 
@@ -503,35 +502,13 @@ namespace slua {
 		objRefs.Add(obj);
 
 		UClass* objClass = obj->GetClass();
-		int32* instanceNumPtr = classInstanceNums.Find(objClass);
-		if (!instanceNumPtr)
-		{
-			instanceNumPtr = &classInstanceNums.Add(objClass, 0);
-		}
-
-		(*instanceNumPtr)++;
+		classMap.incr(objClass);
 	}
 
 	void LuaState::removeRef(UObject* obj)
 	{
 		UClass* objClass = obj->GetClass();
-		int32* instanceNumPtr = classInstanceNums.Find(objClass);
-		// maybe lua had removeRef, so don't need removeRef twice
-		if (!instanceNumPtr) return;
-		(*instanceNumPtr)--;
-		ensure((*instanceNumPtr) >= 0);
-		if (*instanceNumPtr == 0)
-		{
-			classInstanceNums.Remove(objClass);
-
-			auto classFunctionsPtr = classMap.Find(objClass);
-			if (classFunctionsPtr)
-			{
-				delete *classFunctionsPtr;
-				classMap.Remove(objClass);
-			}
-		}
-
+		classMap.decr(objClass);
 		objRefs.Remove(obj);
 	}
 
@@ -615,6 +592,46 @@ namespace slua {
 		// only report once
 		lua_sethook(L, nullptr, 0, 0);
 		luaL_error(L, "script exec timeout");
+	}
+
+	void LuaState::ClassFunctionCache::incr(UClass* uclass)
+	{
+		ClassFunctionCacheItem** pItem = cacheMap.Find(uclass);
+		if (!pItem) cacheMap.Add(uclass, new ClassFunctionCacheItem());
+		else (*pItem)->incr();
+	}
+
+	void LuaState::ClassFunctionCache::decr(UClass* uclass)
+	{
+		ClassFunctionCacheItem** pItem = cacheMap.Find(uclass);
+		// maybe lua had removeRef, so don't need removeRef twice
+		if (!pItem) return;
+		if ((*pItem)->decr() == 0) {
+			delete (*pItem);
+			cacheMap.Remove(uclass);
+		}
+	}
+
+	UFunction* LuaState::ClassFunctionCache::find(UClass* uclass, const char* fname)
+	{
+		ClassFunctionCacheItem** pItem = cacheMap.Find(uclass);
+		if (!pItem) return nullptr;
+		return (*pItem)->get(UTF8_TO_TCHAR(fname));
+	}
+
+	void LuaState::ClassFunctionCache::cache(UClass* uclass, const char* fname, UFunction* func)
+	{
+		ClassFunctionCacheItem** pItem = cacheMap.Find(uclass);
+		ensure(pItem);
+		(*pItem)->add(UTF8_TO_TCHAR(fname), func);
+	}
+
+	UFunction* LuaState::ClassFunctionCacheItem::get(const FString& fname)
+	{
+		auto it = cacheMap.Find(fname);
+		if (it != nullptr && (*it)->IsValidLowLevelFast())
+			return *it;
+		return nullptr;
 	}
 
 }

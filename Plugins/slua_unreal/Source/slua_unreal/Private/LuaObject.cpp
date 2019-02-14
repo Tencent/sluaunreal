@@ -535,22 +535,13 @@ namespace slua {
     // find ufunction from cache
     UFunction* LuaObject::findCacheFunction(lua_State* L, UClass* cls,const char* fname) {
         auto state = LuaState::get(L);
-        auto clsmap = state->classMap.Find(cls);
-        if(!clsmap) return nullptr;
-        auto it = (*clsmap)->Find(UTF8_TO_TCHAR(fname));
-        if(it!=nullptr && (*it)->IsValidLowLevelFast())
-			return *it;
-        return nullptr;
+		return state->classMap.find(cls, fname);
     }
 
     // cache ufunction for reuse
     void LuaObject::cacheFunction(lua_State* L,UClass* cls,const char* fname,UFunction* func) {
         auto state = LuaState::get(L);
-        auto clsmap = state->classMap.Find(cls);
-        TMap<FString,UFunction*>* clsmapPtr = nullptr;
-        if(!clsmap) clsmapPtr = state->classMap.Add(cls,new TMap<FString,UFunction*>());
-        else clsmapPtr = *clsmap;
-        clsmapPtr->Add(UTF8_TO_TCHAR(fname),func);
+        state->classMap.cache(cls,fname,func);
     }
 
     

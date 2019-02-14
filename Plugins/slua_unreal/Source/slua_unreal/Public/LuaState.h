@@ -182,14 +182,47 @@ namespace slua {
         int si;
         FString stateName;
 
-        TMap<UClass*,TMap<FString,UFunction*>*> classMap;
+		struct ClassFunctionCacheItem {
+			typedef TMap<FString, UFunction*> CacheMap;
+			CacheMap cacheMap;
+			int32 refCount = 1;
 
-		TMap<UClass*, int32> classInstanceNums;
+			inline int incr() {
+				refCount++;
+				return refCount;
+			}
+
+			inline int decr() {
+				refCount--;
+				ensure(refCount >= 0);
+				return refCount;
+			}
+
+			inline void add(const FString& fname,UFunction* ufunc) {
+				cacheMap.Add(fname, ufunc);
+			}
+
+			UFunction* get(const FString& fname);
+		};
+
+		// cache ufunction ptr if index by lua
+		struct ClassFunctionCache {
+			typedef TMap<UClass*, ClassFunctionCacheItem*> CacheMap;
+			CacheMap cacheMap;
+			void incr(UClass* uclass);
+			void decr(UClass* uclass);
+			UFunction* find(UClass* uclass, const char* fname);
+			void cache(UClass* uclass, const char* fname, UFunction* func);
+			void clear() {
+				cacheMap.Empty();
+			}
+		} classMap;
 
 		FDeadLoopCheck* deadLoopCheck;
 
 		FDelegateHandle handlerForEndPlay;
 
+		// hold UObjects pushed to lua
 		TSet <UObject*> objRefs;
 
         static LuaState* mainState;

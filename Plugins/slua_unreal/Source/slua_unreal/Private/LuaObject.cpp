@@ -584,7 +584,7 @@ namespace slua {
         const char* name = LuaObject::checkValue<const char*>(L, 2);
         UClass* cls = obj->GetClass();
         UProperty* up = cls->FindPropertyByName(UTF8_TO_TCHAR(name));
-		if (!up) return 0;
+		if (!up) luaL_error(L, "Property %s not found", name);
         if(up->GetPropertyFlags() & CPF_BlueprintReadOnly)
             luaL_error(L,"Property %s is readonly",name);
 

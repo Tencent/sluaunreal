@@ -51,19 +51,37 @@ int LuaBase::__index(slua::lua_State * L)
 	return 1;
 }
 
+static int setParent(slua::lua_State* L) {
+	// set field to obj, may raise an error
+	lua_settable(L, 1);
+	return 0;
+}
+
 int LuaBase::__newindex(slua::lua_State * L)
 {
 	lua_pushstring(L, SLUA_CPPINST);
 	lua_rawget(L, 1);
 	if (!lua_isuserdata(L, -1))
 		luaL_error(L, "expect LuaBase table at arg 1");
+
+	lua_pushcfunction(L, setParent);
+	// push cpp inst
+	lua_pushvalue(L, -2);
 	// push key
 	lua_pushvalue(L, 2);
 	// push value
 	lua_pushvalue(L, 3);
-	// get field from real actor
-	lua_settable(L, -3);
-	return 1;
+	// set ok?
+	if (lua_pcall(L, 3, 0, 0)) {
+		lua_pop(L, 1);
+		// push key
+		lua_pushvalue(L, 2);
+		// push value
+		lua_pushvalue(L, 3);
+		// rawset to table
+		lua_rawset(L, 1);
+	}
+	return 0;
 }
 
 bool LuaBase::postInit(const char* tickFlag)

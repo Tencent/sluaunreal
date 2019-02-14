@@ -921,7 +921,8 @@ namespace slua {
         lua_geti(L,LUA_REGISTRYINDEX,ls->cacheObjRef);
         ensure(lua_type(L,-1)==LUA_TTABLE);
         // check UD as light userdata
-        UserData<void*>* ud = reinterpret_cast<UserData<void*>*>(lua_touserdata(L,1));
+        GenericUserData* ud = (GenericUserData*)lua_touserdata(L,1);
+		ud->flag |= UD_HADFREE;
         lua_pushlightuserdata(L,ud->ud);
         lua_pushnil(L);
         // cache[obj] = nil

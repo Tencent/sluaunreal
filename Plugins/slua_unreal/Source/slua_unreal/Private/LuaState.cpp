@@ -387,6 +387,11 @@ namespace slua {
 			return;
 
 		GenericUserData* ud = (GenericUserData*)lua_touserdata(L, -1);
+		// this cached ud is weak ref
+		// maybe gc by lua, so check flag
+		if (ud->flag & UD_HADFREE)
+			return;
+
 		// indicate ud had be free
 		ud->flag |= UD_HADFREE;
 		// pop ud

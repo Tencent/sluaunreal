@@ -387,7 +387,7 @@ namespace slua {
 			return;
 
 		GenericUserData* ud = (GenericUserData*)lua_touserdata(L, -1);
-		// indicat ud had be free
+		// indicate ud had be free
 		ud->flag |= UD_HADFREE;
 		// pop ud
 		lua_pop(L, 1);

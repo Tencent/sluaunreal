@@ -238,16 +238,13 @@ namespace slua {
 		// create new enum type to lua, see DefEnum macro
 		template<class T>
 		static void newEnum(lua_State* L, const char* tn, const char* keys, std::initializer_list<T> values) {
-			auto ls = LuaState::get(L);
-			ensure(ls);
-
 			FString fkey(keys);
 			// remove namespace prefix
 			fkey.ReplaceInline(*FString::Format(TEXT("{0}::"), { UTF8_TO_TCHAR(tn) }), TEXT(""));
 			// remove space
-			fkey.RemoveSpacesInline();
+			fkey.ReplaceInline(TEXT(" "),TEXT(""));
 			// create enum table
-			LuaVar t = ls->createTable(tn);
+			LuaVar t = createTable(L, tn);
 			t.push(L);
 			FString key, right;
 			for (size_t i = 0; i < values.size() && strSplit(fkey, ",", &key, &right); ++i) {
@@ -548,6 +545,7 @@ namespace slua {
             setupMetaTable(L,tn,setupmt,gc);
             return 1;
         }
+		static LuaVar createTable(lua_State* L, const char* tn);
     };
 
     template<>

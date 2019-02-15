@@ -926,6 +926,13 @@ namespace slua {
         return 0;
     }
 
+	LuaVar LuaObject::createTable(lua_State* L, const char * tn)
+	{
+		auto ls = LuaState::get(L);
+		ensure(ls);
+		return ls->createTable(tn);
+	}
+
 
     int LuaObject::pushClass(lua_State* L,UClass* cls) {
         if(!cls) {

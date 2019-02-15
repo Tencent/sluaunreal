@@ -18,7 +18,11 @@ void ULuaUserWidget::NativeConstruct()
 {
 	if (!init(this, "LuaUserWidget", LuaStateName, LuaFilePath)) return;
 	Super::NativeConstruct();
+#if (ENGINE_MINOR_VERSION==18)
+	bCanEverTick = postInit("bHasScriptImplementedTick");
+#else
 	bHasScriptImplementedTick = postInit("bHasScriptImplementedTick");
+#endif
 }
 
 void ULuaUserWidget::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)

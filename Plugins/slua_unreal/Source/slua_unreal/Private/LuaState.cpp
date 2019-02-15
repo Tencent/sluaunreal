@@ -205,7 +205,6 @@ namespace slua {
 		propLinks.Empty();
 		classInstanceNums.Empty();
 		classMap.Empty();
-		handlerForEndPlay.Reset();
 		objRefs.Empty();
 
 #if WITH_EDITOR

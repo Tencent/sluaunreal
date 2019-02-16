@@ -244,8 +244,8 @@ namespace slua {
 			// remove space
 			fkey.ReplaceInline(TEXT(" "),TEXT(""));
 			// create enum table
-			LuaVar t = createTable(L, tn);
-			t.push(L);
+			createTable(L, tn);
+
 			FString key, right;
 			for (size_t i = 0; i < values.size() && strSplit(fkey, ",", &key, &right); ++i) {
 				lua_pushinteger(L, (int)(*(values.begin() + i)));
@@ -549,7 +549,7 @@ namespace slua {
             setupMetaTable(L,tn,setupmt,gc);
             return 1;
         }
-		static LuaVar createTable(lua_State* L, const char* tn);
+		static void createTable(lua_State* L, const char* tn);
     };
 
     template<>

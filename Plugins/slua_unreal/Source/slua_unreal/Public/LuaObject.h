@@ -266,6 +266,10 @@ namespace slua {
         // return the pointer of class, otherwise return nullptr
         template<typename T>
         static T* checkUD(lua_State* L,int p,bool checkfree=true) {
+			if (lua_isnil(L, p))
+			{
+				return nullptr;
+			}
 
             T* ret = testudata<T>(L,p, checkfree);
             if(ret) return ret;
@@ -556,7 +560,8 @@ namespace slua {
 
     template<>
     inline UObject* LuaObject::checkValue(lua_State* L, int p) {
-        return checkUD<UObject>(L,p);
+		CheckUD(UObject, L, p);
+		return UD;
     }
 
     template<>

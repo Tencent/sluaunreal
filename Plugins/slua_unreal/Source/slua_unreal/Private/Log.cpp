@@ -22,7 +22,7 @@ DEFINE_LOG_CATEGORY(Slua);
 namespace {
     enum LogLevel {LL_Log,LL_Debug,LL_Warning,LL_Error};
 
-    void output(LogLevel level,const char* buf) {
+    void output(LogLevel level,const ANSICHAR* buf) {
         switch(level) {
         case LogLevel::LL_Log:
             UE_LOG(Slua, Log, TEXT("%s"), UTF8_TO_TCHAR(buf));
@@ -36,7 +36,7 @@ namespace {
         }
     }
 
-    void output(LogLevel level,const wchar_t* buf) {
+    void output(LogLevel level,const TCHAR* buf) {
         switch(level) {
         case LogLevel::LL_Log:
             UE_LOG(Slua, Log, TEXT("%s"), buf);
@@ -53,35 +53,33 @@ namespace {
 namespace slua {
     namespace Log {
         #define LogBufDeclareWithFmt(buf,fmt) \
-            char buf[10240];\
+            ANSICHAR buf[10240];\
             va_list args;\
             va_start(args, fmt);\
-            vsnprintf(buf,10240,fmt,args);\
-            va_end(args);\
+            FCStringAnsi::GetVarArgs(buf, 10240, 10240, fmt, args);\
 
         #define LogWBufDeclareWithFmt(buf,fmt) \
-            wchar_t buf[10240];\
+            TCHAR buf[10240];\
             va_list args;\
             va_start(args, fmt);\
-            vswprintf(buf,10240,fmt,args);\
-            va_end(args);\
+            FCString::GetVarArgs(buf, 10240, 10240, fmt, args);\
 
-        void Error(const char* fmt,...) {
+        void Error(const ANSICHAR* fmt,...) {
             LogBufDeclareWithFmt(buf,fmt);
             output(LogLevel::LL_Error,buf);
         }
 
-        void Log(const char* fmt,...) {
+        void Log(const ANSICHAR* fmt,...) {
             LogBufDeclareWithFmt(buf,fmt);
             output(LogLevel::LL_Log,buf);
         }
 
-        void Error(const wchar_t* fmt,...) {
+        void Error(const TCHAR* fmt,...) {
             LogWBufDeclareWithFmt(buf,fmt);
             output(LogLevel::LL_Error,buf);
         }
 
-        void Log(const wchar_t* fmt,...) {
+        void Log(const TCHAR* fmt,...) {
             LogWBufDeclareWithFmt(buf,fmt);
             output(LogLevel::LL_Log,buf);
         }

@@ -2,12 +2,8 @@
 
 
 #include "SluaTestActor.h"
-#include "HAL/PlatformFileManager.h"
-#include "Misc/Paths.h"
-#include "GenericPlatformFile.h"
 #include "SluaTestCase.h"
 #include "Engine/Engine.h"
-#include "HAL/FileManager.h"
 
 
 ASluaTestActor* ASluaTestActor::instance=nullptr;
@@ -19,24 +15,6 @@ ASluaTestActor::ASluaTestActor()
 	instance = this;
 }
 
-// read file content
-static uint8* ReadFile(IPlatformFile& PlatformFile, FString path, uint32& len) {
-	IFileHandle* FileHandle = PlatformFile.OpenRead(*path);
-	if (FileHandle) {
-		len = (uint32)FileHandle->Size();
-		uint8* buf = new uint8[len];
-
-		FileHandle->Read(buf, len);
-
-		// Close the file again
-		delete FileHandle;
-
-		return buf;
-	}
-
-	return nullptr;
-}
-
 // Called when the game starts or when spawned
 void ASluaTestActor::BeginPlay()
 {
@@ -46,39 +24,6 @@ void ASluaTestActor::BeginPlay()
 	state().doFile("Test");
 	state().set("some.field.z", 104);
 	state().call("begin",this->GetWorld(),this);
-}
-
-void ASluaTestActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	Super::EndPlay(EndPlayReason);
-	// will be auto close on Actor EndPlay
-	// if init with true flag
-	// state.close();
-}
-
-void ASluaTestActor::PostInitializeComponents()
-{
-	Super::PostInitializeComponents();
-	state().init();
-	state().setLoadFileDelegate([](const char* fn, uint32& len, FString& filepath)->uint8* {
-
-		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-		FString path = FPaths::ProjectContentDir();
-		path += "/Lua/";
-		path += UTF8_TO_TCHAR(fn);
-		TArray<FString> luaExts = { UTF8_TO_TCHAR(".lua"), UTF8_TO_TCHAR(".luac") };
-		for (auto& it : luaExts) {
-			auto fullPath = path + *it;
-			auto buf = ReadFile(PlatformFile, fullPath, len);
-			if (buf) {
-				fullPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*fullPath);
-				filepath = fullPath;
-				return buf;
-			}
-		}
-
-		return nullptr;
-	});
 }
 
 // Called every frame
@@ -97,8 +42,6 @@ void ASluaTestActor::SetFName(FName name) {
 
 slua::LuaState & ASluaTestActor::state()
 {
-	// create global state, freed on app exit
-	static slua::LuaState gState("main");
-	return gState;
+	return *slua::LuaState::get();
 }
 

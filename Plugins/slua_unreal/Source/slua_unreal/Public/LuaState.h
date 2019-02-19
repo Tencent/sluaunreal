@@ -97,8 +97,7 @@ namespace slua {
         int stateIndex() const { return si; }
         
         // init lua state
-		// autoClose indicate lua state auto close on EndPlay
-        virtual bool init(bool autoClose=true);
+        virtual bool init();
         // tick function
         virtual void tick(float dtime);
         // close lua state
@@ -177,7 +176,6 @@ namespace slua {
 		void linkProp(void* parent, void* prop);
 		void releaseLink(void* prop);
 		void releaseAllLink();
-		void onGameEndPlay();
 
 		TMap<void*, TArray<void*>> propLinks;
         int stackCount;
@@ -189,8 +187,6 @@ namespace slua {
 		TMap<UClass*, int32> classInstanceNums;
 
 		FDeadLoopCheck* deadLoopCheck;
-
-		FDelegateHandle handlerForEndPlay;
 
 		TSet <UObject*> objRefs;
 

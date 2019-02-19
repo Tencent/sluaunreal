@@ -171,10 +171,6 @@ namespace slua {
     void LuaState::close() {
         if(mainState==this) mainState = nullptr;
 
-		// remove delegate handler
-		if(handlerForEndPlay.IsValid()) FGameDelegates::Get().GetEndPlayMapDelegate().Remove(handlerForEndPlay);
-		handlerForEndPlay.Reset();
-
 		releaseAllLink();
         
         if(L) {
@@ -189,19 +185,13 @@ namespace slua {
     }
 
 
-    bool LuaState::init(bool autoClose) {
+    bool LuaState::init() {
 
         if(deadLoopCheck)
             return false;
 
         if(!mainState) 
             mainState = this;
-
-		// add listener on engine end play
-		if (autoClose)
-			handlerForEndPlay = FGameDelegates::Get().GetEndPlayMapDelegate().AddRaw(this, &LuaState::onGameEndPlay);
-		else
-			handlerForEndPlay.Reset();
 
 		GUObjectArray.AddUObjectDeleteListener(this);
         stackCount = 0;
@@ -327,11 +317,6 @@ namespace slua {
 			for (auto& prop : pair.Value) 
 				reinterpret_cast<GenericUserData*>(prop)->flag |= UD_HADFREE;
 		propLinks.Empty();
-	}
-
-	void LuaState::onGameEndPlay()
-	{
-		close();
 	}
 
     LuaVar LuaState::doBuffer(const uint8* buf,uint32 len, const char* chunk, LuaVar* pEnv) {

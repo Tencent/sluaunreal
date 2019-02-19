@@ -244,8 +244,8 @@ namespace slua {
 			// remove space
 			fkey.ReplaceInline(TEXT(" "),TEXT(""));
 			// create enum table
-			LuaVar t = createTable(L, tn);
-			t.push(L);
+			createTable(L, tn);
+
 			FString key, right;
 			for (size_t i = 0; i < values.size() && strSplit(fkey, ",", &key, &right); ++i) {
 				lua_pushinteger(L, (int)(*(values.begin() + i)));
@@ -266,6 +266,10 @@ namespace slua {
         // return the pointer of class, otherwise return nullptr
         template<typename T>
         static T* checkUD(lua_State* L,int p,bool checkfree=true) {
+			if (lua_isnil(L, p))
+			{
+				return nullptr;
+			}
 
             T* ret = testudata<T>(L,p, checkfree);
             if(ret) return ret;
@@ -545,7 +549,7 @@ namespace slua {
             setupMetaTable(L,tn,setupmt,gc);
             return 1;
         }
-		static LuaVar createTable(lua_State* L, const char* tn);
+		static void createTable(lua_State* L, const char* tn);
     };
 
     template<>
@@ -556,7 +560,8 @@ namespace slua {
 
     template<>
     inline UObject* LuaObject::checkValue(lua_State* L, int p) {
-        return checkUD<UObject>(L,p);
+		CheckUD(UObject, L, p);
+		return UD;
     }
 
     template<>

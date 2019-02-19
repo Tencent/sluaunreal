@@ -926,11 +926,12 @@ namespace slua {
         return 0;
     }
 
-	LuaVar LuaObject::createTable(lua_State* L, const char * tn)
+	void LuaObject::createTable(lua_State* L, const char * tn)
 	{
 		auto ls = LuaState::get(L);
 		ensure(ls);
-		return ls->createTable(tn);
+		LuaVar t = ls->createTable(tn);
+		t.push(L);
 	}
 
 

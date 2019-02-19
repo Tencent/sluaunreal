@@ -17,31 +17,103 @@
 #include "LuaState.h"
 #include "LuaBase.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/GameModeBase.h"
 #include "LuaActor.generated.h"
 
+#define LUABASE_BODY(NAME) \
+protected: \
+	virtual void BeginPlay() override { \
+	if (!init(this, #NAME, LuaStateName, LuaFilePath)) return; \
+		Super::BeginPlay(); \
+		PrimaryActorTick.SetTickFunctionEnable(postInit("bCanEverTick")); \
+	} \
+	virtual void Tick(float DeltaTime) override { \
+		Super::Tick(DeltaTime); \
+		tick(DeltaTime); \
+	} \
+public:	\
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua|"#NAME) \
+	FString LuaFilePath; \
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua|"#NAME) \
+	FString LuaStateName; \
+	virtual void ProcessEvent(UFunction* func, void* params) override { \
+	if (luaImplemented(func, params))  \
+		return; \
+		Super::ProcessEvent(func, params); \
+	} \
 
 using slua_Luabase = slua::LuaBase;
 
 UCLASS()
 class SLUA_UNREAL_API ALuaActor : public AActor, public slua_Luabase {
-    GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
-	ALuaActor();
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-public:	
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua|LuaActor")
-	FString LuaFilePath;
-
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua|LuaActor")
-	FString LuaStateName;
-
-	virtual void ProcessEvent(UFunction* func, void* params) override;
+	GENERATED_BODY()
+	LUABASE_BODY(LuaActor)
+public:
+	ALuaActor()
+		: AActor() 
+	{
+		PrimaryActorTick.bCanEverTick = true;
+	}
+	ALuaActor(const FObjectInitializer& ObjectInitializer) 
+		: AActor(ObjectInitializer) 
+	{
+		PrimaryActorTick.bCanEverTick = true;
+	}
 };
+
+UCLASS()
+class SLUA_UNREAL_API ALuaPawn : public APawn, public slua_Luabase {
+	GENERATED_BODY()
+	LUABASE_BODY(LuaPawn)
+public:
+	ALuaPawn(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()) 
+		: APawn(ObjectInitializer)
+	{
+		PrimaryActorTick.bCanEverTick = true;
+	}
+};
+
+UCLASS()
+class SLUA_UNREAL_API ALuaCharacter : public ACharacter, public slua_Luabase {
+	GENERATED_BODY()
+	LUABASE_BODY(LuaCharacter)
+public:
+	ALuaCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get())
+		: ACharacter(ObjectInitializer)
+	{
+		PrimaryActorTick.bCanEverTick = true;
+	}
+};
+
+UCLASS()
+class SLUA_UNREAL_API ALuaController : public AController, public slua_Luabase {
+	GENERATED_BODY()
+	LUABASE_BODY(LuaController)
+public:
+	ALuaController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get())
+		: AController(ObjectInitializer)
+	{
+		PrimaryActorTick.bCanEverTick = true;
+	}
+};
+
+UCLASS()
+class SLUA_UNREAL_API ALuaPlayerController : public APlayerController, public slua_Luabase {
+	GENERATED_BODY()
+	LUABASE_BODY(LuaPlayerController)
+public:
+	ALuaPlayerController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get())
+		: APlayerController(ObjectInitializer)
+	{
+		PrimaryActorTick.bCanEverTick = true;
+	}
+};
+
+UCLASS()
+class SLUA_UNREAL_API ALuaGameModeBase : public AGameModeBase, public slua_Luabase {
+	GENERATED_BODY()
+	LUABASE_BODY(LuaGameModeBase)
+};
+

@@ -34,10 +34,6 @@ protected: \
 		tick(DeltaTime); \
 	} \
 public:	\
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua|"#NAME) \
-	FString LuaFilePath; \
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua|"#NAME) \
-	FString LuaStateName; \
 	virtual void ProcessEvent(UFunction* func, void* params) override { \
 	if (luaImplemented(func, params))  \
 		return; \
@@ -61,6 +57,11 @@ public:
 	{
 		PrimaryActorTick.bCanEverTick = true;
 	}
+public:
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua") 
+	FString LuaFilePath;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+	FString LuaStateName;
 };
 
 UCLASS()
@@ -73,6 +74,11 @@ public:
 	{
 		PrimaryActorTick.bCanEverTick = true;
 	}
+public:
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+	FString LuaFilePath;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+	FString LuaStateName;
 };
 
 UCLASS()
@@ -85,6 +91,11 @@ public:
 	{
 		PrimaryActorTick.bCanEverTick = true;
 	}
+public:
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+	FString LuaFilePath;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+	FString LuaStateName;
 };
 
 UCLASS()
@@ -97,6 +108,11 @@ public:
 	{
 		PrimaryActorTick.bCanEverTick = true;
 	}
+public:
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+	FString LuaFilePath;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+	FString LuaStateName;
 };
 
 UCLASS()
@@ -109,11 +125,21 @@ public:
 	{
 		PrimaryActorTick.bCanEverTick = true;
 	}
+public:
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+	FString LuaFilePath;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+	FString LuaStateName;
 };
 
 UCLASS()
 class SLUA_UNREAL_API ALuaGameModeBase : public AGameModeBase, public slua_Luabase {
 	GENERATED_BODY()
 	LUABASE_BODY(LuaGameModeBase)
+public:
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+	FString LuaFilePath;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+	FString LuaStateName;
 };
 

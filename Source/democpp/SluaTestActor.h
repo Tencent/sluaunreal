@@ -31,5 +31,5 @@ public:
 	
 	static ASluaTestActor* instance;
 
-	const slua::LuaState& state();
+	slua::LuaState& state();
 };

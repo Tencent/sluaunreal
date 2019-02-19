@@ -179,6 +179,7 @@ namespace slua {
         if(L) {
             lua_close(L);
 			GUObjectArray.RemoveUObjectDeleteListener(this);
+			GUObjectArray.RemoveUObjectCreateListener(this);
             stateMapFromIndex.Remove(si);
             L=nullptr;
         }
@@ -188,7 +189,7 @@ namespace slua {
     }
 
 
-    bool LuaState::init() {
+    bool LuaState::init(bool autoClose) {
 
         if(deadLoopCheck)
             return false;
@@ -197,8 +198,13 @@ namespace slua {
             mainState = this;
 
 		// add listener on engine end play
-		handlerForEndPlay = FGameDelegates::Get().GetEndPlayMapDelegate().AddRaw(this, &LuaState::onGameEndPlay);
+		if (autoClose)
+			handlerForEndPlay = FGameDelegates::Get().GetEndPlayMapDelegate().AddRaw(this, &LuaState::onGameEndPlay);
+		else
+			handlerForEndPlay.Reset();
+
 		GUObjectArray.AddUObjectDeleteListener(this);
+		GUObjectArray.AddUObjectCreateListener(this);
         stackCount = 0;
         si = ++StateIndex;
 
@@ -393,6 +399,10 @@ namespace slua {
 		removeRef((UObject*)Object);
 		// remove cache
 		LuaObject::removeFromCache(L, ud);
+	}
+
+	void LuaState::NotifyUObjectCreated(const class UObjectBase *Object, int32 Index) {
+		// TODO
 	}
 
 	void LuaState::AddReferencedObjects(FReferenceCollector & Collector)

@@ -61,7 +61,10 @@ namespace slua {
 		static void scriptTimeout(lua_State *L, lua_Debug *ar);
 	};
 
-    class SLUA_UNREAL_API LuaState : public FUObjectArray::FUObjectDeleteListener, public FGCObject
+    class SLUA_UNREAL_API LuaState 
+		: public FUObjectArray::FUObjectDeleteListener
+		, public FUObjectArray::FUObjectCreateListener
+		, public FGCObject
     {
     public:
         LuaState(const char* name=nullptr);
@@ -95,7 +98,8 @@ namespace slua {
         int stateIndex() const { return si; }
         
         // init lua state
-        virtual bool init();
+		// autoClose indicate lua state auto close on EndPlay
+        virtual bool init(bool autoClose=true);
         // tick function
         virtual void tick(float dtime);
         // close lua state
@@ -152,7 +156,8 @@ namespace slua {
 
 		// if obj be deleted, call this function
 		virtual void NotifyUObjectDeleted(const class UObjectBase *Object, int32 Index) override;
-
+		// if obj be created, call this function
+		virtual void NotifyUObjectCreated(const class UObjectBase *Object, int32 Index) override;
 		// tell Engine which objs should be referenced
 		virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
        

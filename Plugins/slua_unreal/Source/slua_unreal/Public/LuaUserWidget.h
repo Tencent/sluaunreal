@@ -18,19 +18,23 @@
 #include "GameFramework/Actor.h"
 #include "LuaUserWidget.generated.h"
 
+using slua_Luabase = slua::LuaBase;
+
 UCLASS()
-class SLUA_UNREAL_API ULuaUserWidget : public UUserWidget, public LuaBase {
+class SLUA_UNREAL_API ULuaUserWidget : public UUserWidget, public slua_Luabase {
     GENERATED_BODY()
 
 protected:
 	virtual void NativeConstruct();
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime);
-	virtual void ProcessEvent(UFunction* func, void* params) override;
+	
 public:	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua|ULuaUserWidget")
 	FString LuaFilePath;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua|ULuaUserWidget")
 	FString LuaStateName;
+
+	virtual void ProcessEvent(UFunction* func, void* params) override;
 };
 

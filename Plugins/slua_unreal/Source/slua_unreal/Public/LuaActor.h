@@ -20,8 +20,10 @@
 #include "LuaActor.generated.h"
 
 
+using slua_Luabase = slua::LuaBase;
+
 UCLASS()
-class SLUA_UNREAL_API ALuaActor : public AActor, public LuaBase {
+class SLUA_UNREAL_API ALuaActor : public AActor, public slua_Luabase {
     GENERATED_BODY()
 	
 public:	
@@ -31,14 +33,15 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	virtual void ProcessEvent(UFunction* func, void* params) override;
-public:	
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
+public:	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua|LuaActor")
 	FString LuaFilePath;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua|LuaActor")
 	FString LuaStateName;
+
+	virtual void ProcessEvent(UFunction* func, void* params) override;
 };

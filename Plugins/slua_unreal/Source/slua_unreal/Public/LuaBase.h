@@ -15,52 +15,82 @@
 #include "CoreMinimal.h"
 #include "LuaState.h"
 
-class SLUA_UNREAL_API LuaBase {
-public:
-	virtual bool luaImplemented(UFunction* func, void* params);
-	virtual ~LuaBase() {}
-protected:
-	template<typename T>
-    bool init(T* ptrT,const char* typeName,const FString& stateName,const FString& luaPath)
-	{
-		auto ls = slua::LuaState::get();
-		if (stateName.Len() != 0) ls = slua::LuaState::get(stateName);
-		if (!ls) return false;
+namespace slua {
 
-		luaSelfTable = ls->doFile(TCHAR_TO_UTF8(*luaPath));
-		if (!luaSelfTable.isTable())
-			return false;
+	class SLUA_UNREAL_API LuaBase {
+	public:
+		virtual bool luaImplemented(UFunction* func, void* params);
+		virtual ~LuaBase() {}
+	protected:
+		template<typename T>
+		static int super(lua_State* L) {
+			// ud should be a luabase ptr
+			T* ud = LuaObject::checkUD<T>(L, 1);
+			if(!ud) luaL_error(L, "expect LuaBase table at arg 1");
 
-		auto L = ls->getLuaState();
-		// setup __cppinst
-		luaSelfTable.push(L);
+			if (!ud->currentFunc)
+				luaL_error(L, "can't call super here");
+			using Super = T::Super;
+			ud->Super::ProcessEvent(ud->currentFunc, ud->currentParams);
 
-		slua::LuaObject::push(L, ptrT);
-		lua_setfield(L, -2, SLUA_CPPINST);
-
-		// setup metatable
-		if (!metaTable.isValid()) {
-			luaL_newmetatable(L, typeName);
-			lua_pushcfunction(L, __index);
-			lua_setfield(L, -2, "__index");
-			lua_pushcfunction(L, __newindex);
-			lua_setfield(L, -2, "__newindex");
-			metaTable.set(L, -1);
-			lua_pop(L, 1);
+			return 0;
 		}
-		metaTable.push(L);
-		lua_setmetatable(L, -2);
 
-		// pop luaSelfTable
-		lua_pop(L, 1);
-		return true;
-	}
+		template<typename T>
+		bool init(T* ptrT, const char* typeName, const FString& stateName, const FString& luaPath)
+		{
+			if (luaPath.IsEmpty())
+				return false;
 
-	bool postInit(const char* tickFlag);
-	void tick(float DeltaTime);
-	static int __index(slua::lua_State* L);
-	static int __newindex(slua::lua_State* L);
-    slua::LuaVar luaSelfTable;
-	slua::LuaVar tickFunction;
-	static slua::LuaVar metaTable;
-};
+			auto ls = LuaState::get();
+			if (stateName.Len() != 0) ls = LuaState::get(stateName);
+			if (!ls) return false;
+
+			luaSelfTable = ls->doFile(TCHAR_TO_UTF8(*luaPath));
+			if (!luaSelfTable.isTable())
+				return false;
+
+			auto L = ls->getLuaState();
+			// setup __cppinst
+			luaSelfTable.push(L);
+
+			LuaObject::push(L, ptrT);
+			lua_setfield(L, -2, SLUA_CPPINST);
+
+			lua_pushcfunction(L, &LuaBase::super<T>);
+			lua_setfield(L, -2, "Super");
+
+			// setup metatable
+			if (!metaTable.isValid()) {
+				luaL_newmetatable(L, typeName);
+				lua_pushcfunction(L, __index);
+				lua_setfield(L, -2, "__index");
+				lua_pushcfunction(L, __newindex);
+				lua_setfield(L, -2, "__newindex");
+				metaTable.set(L, -1);
+				lua_pop(L, 1);
+			}
+			metaTable.push(L);
+			lua_setmetatable(L, -2);
+
+			// pop luaSelfTable
+			lua_pop(L, 1);
+			return true;
+		}
+
+		// store UFunction ptr nad params for super call
+		UFunction* currentFunc;
+		void* currentParams;
+
+		bool postInit(const char* tickFlag);
+		void tick(float DeltaTime);
+		static int __index(lua_State* L);
+		static int __newindex(lua_State* L);
+
+		LuaVar luaSelfTable;
+		LuaVar tickFunction;
+		static LuaVar metaTable;
+
+		friend struct UFunctionParamScope;
+	};
+}

@@ -22,6 +22,8 @@ function testcase:test(uworld,actor)
     -- store old actor for map2 use, test a bug
     oldactor = self
 
+    local bpClass = slua.loadClass("/Game/LuaBpActor.LuaBpActor")
+
     self.balls={}
     self.basepos={}
     self.rot={}
@@ -31,7 +33,7 @@ function testcase:test(uworld,actor)
         self.balls[n]=actor
         self.basepos[n]=p
         self.rot[n]=math.random(-100,100)
-        actor.Name = 'ActorCreateFromLua_'..tostring(n)
+        -- actor.Name = 'ActorCreateFromLua_'..tostring(n)
     end
     
     -- print("=====End test blueprint",self.bp.Name)

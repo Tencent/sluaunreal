@@ -14,89 +14,106 @@
 
 #include "LuaBase.h"
 
-slua::LuaVar LuaBase::metaTable;
+namespace slua {
 
-bool LuaBase::luaImplemented(UFunction * func, void * params)
-{
-	if (!func->HasAnyFunctionFlags(EFunctionFlags::FUNC_BlueprintEvent))
-		return false;
+	slua::LuaVar LuaBase::metaTable;
 
-	if (!luaSelfTable.isTable())
-		return false;
+	struct UFunctionParamScope {
+		LuaBase* pBase;
+		UFunctionParamScope(LuaBase* lb,UFunction* func, void* params) {
+			pBase = lb;
+			pBase->currentFunc = func;
+			pBase->currentParams = params;
+		}
+		~UFunctionParamScope() {
+			pBase->currentFunc = nullptr;
+			pBase->currentParams = nullptr;
+		}
+	};
 
-	slua::LuaVar lfunc = luaSelfTable.getFromTable<slua::LuaVar>((const char*)TCHAR_TO_UTF8(*func->GetName()),true);
-	if (!lfunc.isValid()) return false;
-	
-	return lfunc.callByUFunction(func, (uint8*)params,&luaSelfTable);
-}
+	bool LuaBase::luaImplemented(UFunction * func, void * params)
+	{
+		if (!func->HasAnyFunctionFlags(EFunctionFlags::FUNC_BlueprintEvent))
+			return false;
 
-// Called every frame
-void LuaBase::tick(float DeltaTime)
-{
-	if (!tickFunction.isValid())
-		return;
-	tickFunction.call(luaSelfTable, DeltaTime);
-}
+		if (!luaSelfTable.isTable())
+			return false;
 
-int LuaBase::__index(slua::lua_State * L)
-{
-	lua_pushstring(L, SLUA_CPPINST);
-	lua_rawget(L, 1);
-	if (!lua_isuserdata(L, -1))
-		luaL_error(L, "expect LuaBase table at arg 1");
-	// push key
-	lua_pushvalue(L, 2);
-	// get field from real actor
-	lua_gettable(L, -2);
-	return 1;
-}
+		slua::LuaVar lfunc = luaSelfTable.getFromTable<slua::LuaVar>((const char*)TCHAR_TO_UTF8(*func->GetName()), true);
+		if (!lfunc.isValid()) return false;
 
-static int setParent(slua::lua_State* L) {
-	// set field to obj, may raise an error
-	lua_settable(L, 1);
-	return 0;
-}
+		UFunctionParamScope scope(this, func, params);
+		return lfunc.callByUFunction(func, (uint8*)params, &luaSelfTable);
+	}
 
-int LuaBase::__newindex(slua::lua_State * L)
-{
-	lua_pushstring(L, SLUA_CPPINST);
-	lua_rawget(L, 1);
-	if (!lua_isuserdata(L, -1))
-		luaL_error(L, "expect LuaBase table at arg 1");
+	// Called every frame
+	void LuaBase::tick(float DeltaTime)
+	{
+		if (!tickFunction.isValid())
+			return;
+		tickFunction.call(luaSelfTable, DeltaTime);
+	}
 
-	lua_pushcfunction(L, setParent);
-	// push cpp inst
-	lua_pushvalue(L, -2);
-	// push key
-	lua_pushvalue(L, 2);
-	// push value
-	lua_pushvalue(L, 3);
-	// set ok?
-	if (lua_pcall(L, 3, 0, 0)) {
-		lua_pop(L, 1);
+	int LuaBase::__index(slua::lua_State * L)
+	{
+		lua_pushstring(L, SLUA_CPPINST);
+		lua_rawget(L, 1);
+		if (!lua_isuserdata(L, -1))
+			luaL_error(L, "expect LuaBase table at arg 1");
+		// push key
+		lua_pushvalue(L, 2);
+		// get field from real actor
+		lua_gettable(L, -2);
+		return 1;
+	}
+
+	static int setParent(slua::lua_State* L) {
+		// set field to obj, may raise an error
+		lua_settable(L, 1);
+		return 0;
+	}
+
+	int LuaBase::__newindex(slua::lua_State * L)
+	{
+		lua_pushstring(L, SLUA_CPPINST);
+		lua_rawget(L, 1);
+		if (!lua_isuserdata(L, -1))
+			luaL_error(L, "expect LuaBase table at arg 1");
+
+		lua_pushcfunction(L, setParent);
+		// push cpp inst
+		lua_pushvalue(L, -2);
 		// push key
 		lua_pushvalue(L, 2);
 		// push value
 		lua_pushvalue(L, 3);
-		// rawset to table
-		lua_rawset(L, 1);
-	}
-	return 0;
-}
-
-bool LuaBase::postInit(const char* tickFlag)
-{
-	if (!luaSelfTable.isTable())
-		return false;
-
-	bool tickEnabled = luaSelfTable.getFromTable<bool>(tickFlag,true);
-
-	if (tickEnabled && luaSelfTable.isTable()) {
-		tickFunction = luaSelfTable.getFromTable<slua::LuaVar>("Tick",true);
-		if (!tickFunction.isValid()) {
-			return false;
+		// set ok?
+		if (lua_pcall(L, 3, 0, 0)) {
+			lua_pop(L, 1);
+			// push key
+			lua_pushvalue(L, 2);
+			// push value
+			lua_pushvalue(L, 3);
+			// rawset to table
+			lua_rawset(L, 1);
 		}
-		return tickEnabled;
+		return 0;
 	}
-	return false;
+
+	bool LuaBase::postInit(const char* tickFlag)
+	{
+		if (!luaSelfTable.isTable())
+			return false;
+
+		bool tickEnabled = luaSelfTable.getFromTable<bool>(tickFlag, true);
+
+		if (tickEnabled && luaSelfTable.isTable()) {
+			tickFunction = luaSelfTable.getFromTable<slua::LuaVar>("Tick", true);
+			if (!tickFunction.isValid()) {
+				return false;
+			}
+			return tickEnabled;
+		}
+		return false;
+	}
 }

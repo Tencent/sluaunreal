@@ -31,6 +31,7 @@
 #include "LuaMemoryProfile.h"
 #include "HAL/RunnableThread.h"
 #include "GameDelegates.h"
+#include "LuaActor.h"
 
 namespace slua {
 
@@ -179,7 +180,6 @@ namespace slua {
         if(L) {
             lua_close(L);
 			GUObjectArray.RemoveUObjectDeleteListener(this);
-			GUObjectArray.RemoveUObjectCreateListener(this);
             stateMapFromIndex.Remove(si);
             L=nullptr;
         }
@@ -204,7 +204,6 @@ namespace slua {
 			handlerForEndPlay.Reset();
 
 		GUObjectArray.AddUObjectDeleteListener(this);
-		GUObjectArray.AddUObjectCreateListener(this);
         stackCount = 0;
         si = ++StateIndex;
 
@@ -399,10 +398,6 @@ namespace slua {
 		removeRef((UObject*)Object);
 		// remove cache
 		LuaObject::removeFromCache(L, ud);
-	}
-
-	void LuaState::NotifyUObjectCreated(const class UObjectBase *Object, int32 Index) {
-		// TODO
 	}
 
 	void LuaState::AddReferencedObjects(FReferenceCollector & Collector)

@@ -63,7 +63,6 @@ namespace slua {
 
     class SLUA_UNREAL_API LuaState 
 		: public FUObjectArray::FUObjectDeleteListener
-		, public FUObjectArray::FUObjectCreateListener
 		, public FGCObject
     {
     public:
@@ -156,8 +155,6 @@ namespace slua {
 
 		// if obj be deleted, call this function
 		virtual void NotifyUObjectDeleted(const class UObjectBase *Object, int32 Index) override;
-		// if obj be created, call this function
-		virtual void NotifyUObjectCreated(const class UObjectBase *Object, int32 Index) override;
 		// tell Engine which objs should be referenced
 		virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
        

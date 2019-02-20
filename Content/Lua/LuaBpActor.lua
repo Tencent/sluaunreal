@@ -22,4 +22,9 @@ function actor:Tick(dt)
     print("bpactor:Tick",self,dt)
 end
 
+function actor:bpcall(value)
+    assert(value==1024)
+    print("called from blueprint",value)
+end
+
 return actor

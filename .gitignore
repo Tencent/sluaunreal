@@ -12,3 +12,5 @@ Build
 democpp.code-workspace
 Config
 slua-unreal.code-workspace
+/democpp.sln
+/dep_android.bat

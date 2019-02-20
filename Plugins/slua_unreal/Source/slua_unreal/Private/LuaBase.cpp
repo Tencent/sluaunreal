@@ -107,13 +107,15 @@ namespace slua {
 			Log::Error("Can't find lua member function named% s to call", TCHAR_TO_UTF8(*func));
 			return false;
 		}
-
-		// push arg to lua
+		
 		auto L = luaSelfTable.getState();
+		// push self
+		luaSelfTable.push(L);
+		// push arg to lua
 		for (auto arg : args) {
 			arg.value.push(L);
 		}
-		return lfunc.callWithNArg(args.Num());
+		return lfunc.callWithNArg(args.Num()+1);
 	}
 
 	bool LuaBase::postInit(const char* tickFlag)

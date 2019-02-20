@@ -1,11 +1,11 @@
 
 local ui=slua.loadUI('/Game/Panel.Panel');
 ui:AddToViewport(0);
-local btn2=ui:FindWidget('Button1');
+local btn2=ui:FindWidget('btnClose');
 local index = 1
 local handler = btn2.OnClicked:Add(function() 
     index=index+1
-    print('say helloworld',index) 
+    print('panel closed',index) 
 	remove()
 	ui:RemoveFromViewport()
 	ui=nil

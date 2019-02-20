@@ -61,7 +61,7 @@ namespace slua {
 			// load blueprint widget from cpp, need add '_C' tail
 			path = FString::Format(TEXT("Blueprint'{0}_C'"), { path });
 		}
-
+		else
 		// auto add _C suffix
 		{
 			// remove last '

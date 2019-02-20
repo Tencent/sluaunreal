@@ -159,3 +159,6 @@ Test machine, MacOSX, Unreal 4.18 develop building, CPU i7 4GHz, test case can f
 slua-unreal依赖dot-clang做c++静态代码生成的工具稍后开源，目前常用FVector等常用类的静态生成代码已经附带。
 
 [使用帮助(Document in Chinese)](https://github.com/Tencent/sluaunreal/wiki)
+
+[调试器支持](https://github.com/Tencent/luapanda)
+[Debugger](https://github.com/Tencent/luapanda)

@@ -14,6 +14,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "LuaState.h"
+#include "LuaBlueprintLibrary.h"
 
 namespace slua {
 
@@ -30,7 +31,7 @@ namespace slua {
 
 			if (!ud->currentFunc)
 				luaL_error(L, "can't call super here");
-			using Super = T::Super;
+			using Super = typename T::Super;
 			ud->Super::ProcessEvent(ud->currentFunc, ud->currentParams);
 
 			return 0;
@@ -81,6 +82,9 @@ namespace slua {
 		// store UFunction ptr nad params for super call
 		UFunction* currentFunc;
 		void* currentParams;
+
+		// call member function in luaSelfTable
+		LuaVar callMember(FString name, const TArray<FLuaBPVar>& args);
 
 		bool postInit(const char* tickFlag);
 		void tick(float DeltaTime);

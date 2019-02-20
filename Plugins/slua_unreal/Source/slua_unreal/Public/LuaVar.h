@@ -220,6 +220,9 @@ namespace slua {
 
         bool toProperty(UProperty* p,uint8* ptr);
         bool callByUFunction(UFunction* ufunc,uint8* parms,LuaVar* pSelf = nullptr);
+
+		// get associate state
+		lua_State* getState() const;
     private:
         friend class LuaState;
 
@@ -272,7 +275,6 @@ namespace slua {
         };
 
         int stateIndex;
-        lua_State* getState() const;
 
         typedef struct {
             union {

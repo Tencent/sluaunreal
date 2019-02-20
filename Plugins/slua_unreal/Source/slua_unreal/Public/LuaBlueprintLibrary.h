@@ -25,7 +25,8 @@ USTRUCT(BlueprintType)
 struct SLUA_UNREAL_API FLuaBPVar {
 	GENERATED_USTRUCT_BODY()
 public:
-	FLuaBPVar(const slua::LuaVar& v):value(v) {}
+	FLuaBPVar(const slua::LuaVar& v) :value(v) {}
+	FLuaBPVar(slua::LuaVar&& v) :value(std::move(v)) {}
 	FLuaBPVar() {}
 
 	slua::LuaVar value;

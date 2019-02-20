@@ -29,11 +29,16 @@ protected:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime);
 	
 public:	
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua|ULuaUserWidget")
+	// below UPROPERTY and UFUNCTION can't be put to macro LUABASE_BODY
+	// so copy & paste them
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
 	FString LuaFilePath;
-
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua|ULuaUserWidget")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
 	FString LuaStateName;
+	UFUNCTION(BlueprintCallable, Category = "slua")
+	FLuaBPVar CallLuaMember(FString FunctionName, const TArray<FLuaBPVar>& Args) {
+		return callMember(FunctionName, Args);
+	}
 
 	virtual void ProcessEvent(UFunction* func, void* params) override;
 };

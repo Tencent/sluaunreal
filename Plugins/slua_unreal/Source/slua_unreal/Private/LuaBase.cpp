@@ -100,6 +100,22 @@ namespace slua {
 		return 0;
 	}
 
+	LuaVar LuaBase::callMember(FString func, const TArray<FLuaBPVar>& args)
+	{
+		slua::LuaVar lfunc = luaSelfTable.getFromTable<slua::LuaVar>((const char*)TCHAR_TO_UTF8(*func), true);
+		if (!lfunc.isValid()) {
+			Log::Error("Can't find lua member function named% s to call", TCHAR_TO_UTF8(*func));
+			return false;
+		}
+
+		// push arg to lua
+		auto L = luaSelfTable.getState();
+		for (auto arg : args) {
+			arg.value.push(L);
+		}
+		return lfunc.callWithNArg(args.Num());
+	}
+
 	bool LuaBase::postInit(const char* tickFlag)
 	{
 		if (!luaSelfTable.isTable())

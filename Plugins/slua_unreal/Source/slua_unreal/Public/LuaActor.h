@@ -20,6 +20,7 @@
 #include "GameFramework/Pawn.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/GameModeBase.h"
+#include "LuaBlueprintLibrary.h"
 #include "LuaActor.generated.h"
 
 #define LUABASE_BODY(NAME) \
@@ -58,10 +59,16 @@ public:
 		PrimaryActorTick.bCanEverTick = true;
 	}
 public:
+	// below UPROPERTY and UFUNCTION can't be put to macro LUABASE_BODY
+	// so copy & paste them
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua") 
 	FString LuaFilePath;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
 	FString LuaStateName;
+	UFUNCTION(BlueprintCallable, Category = "slua")
+	FLuaBPVar CallLuaMember(FString FunctionName, const TArray<FLuaBPVar>& Args) {
+		return callMember(FunctionName, Args);
+	}
 };
 
 UCLASS()
@@ -75,10 +82,16 @@ public:
 		PrimaryActorTick.bCanEverTick = true;
 	}
 public:
+	// below UPROPERTY and UFUNCTION can't be put to macro LUABASE_BODY
+	// so copy & paste them
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
 	FString LuaFilePath;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
 	FString LuaStateName;
+	UFUNCTION(BlueprintCallable, Category = "slua")
+	FLuaBPVar CallLuaMember(FString FunctionName, const TArray<FLuaBPVar>& Args) {
+		return callMember(FunctionName, Args);
+	}
 };
 
 UCLASS()
@@ -92,10 +105,16 @@ public:
 		PrimaryActorTick.bCanEverTick = true;
 	}
 public:
+	// below UPROPERTY and UFUNCTION can't be put to macro LUABASE_BODY
+	// so copy & paste them
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
 	FString LuaFilePath;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
 	FString LuaStateName;
+	UFUNCTION(BlueprintCallable, Category = "slua")
+	FLuaBPVar CallLuaMember(FString FunctionName, const TArray<FLuaBPVar>& Args) {
+		return callMember(FunctionName, Args);
+	}
 };
 
 UCLASS()
@@ -109,10 +128,16 @@ public:
 		PrimaryActorTick.bCanEverTick = true;
 	}
 public:
+	// below UPROPERTY and UFUNCTION can't be put to macro LUABASE_BODY
+	// so copy & paste them
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
 	FString LuaFilePath;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
 	FString LuaStateName;
+	UFUNCTION(BlueprintCallable, Category = "slua")
+	FLuaBPVar CallLuaMember(FString FunctionName, const TArray<FLuaBPVar>& Args) {
+		return callMember(FunctionName, Args);
+	}
 };
 
 UCLASS()
@@ -126,10 +151,16 @@ public:
 		PrimaryActorTick.bCanEverTick = true;
 	}
 public:
+	// below UPROPERTY and UFUNCTION can't be put to macro LUABASE_BODY
+	// so copy & paste them
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
 	FString LuaFilePath;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
 	FString LuaStateName;
+	UFUNCTION(BlueprintCallable, Category = "slua")
+	FLuaBPVar CallLuaMember(FString FunctionName, const TArray<FLuaBPVar>& Args) {
+		return callMember(FunctionName, Args);
+	}
 };
 
 UCLASS()
@@ -137,9 +168,15 @@ class SLUA_UNREAL_API ALuaGameModeBase : public AGameModeBase, public slua_Luaba
 	GENERATED_BODY()
 	LUABASE_BODY(LuaGameModeBase)
 public:
+	// below UPROPERTY and UFUNCTION can't be put to macro LUABASE_BODY
+	// so copy & paste them
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
 	FString LuaFilePath;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
 	FString LuaStateName;
+	UFUNCTION(BlueprintCallable, Category = "slua")
+	FLuaBPVar CallLuaMember(FString FunctionName, const TArray<FLuaBPVar>& Args) {
+		return callMember(FunctionName, Args);
+	}
 };
 

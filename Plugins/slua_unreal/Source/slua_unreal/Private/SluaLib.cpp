@@ -63,7 +63,6 @@ namespace slua {
 		}
 
 		// auto add _C suffix
-		if(!path.EndsWith(TEXT("_C'")))
 		{
 			// remove last '
 			path = path.Left(path.Len()-1);

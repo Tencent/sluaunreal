@@ -55,9 +55,22 @@ namespace slua {
         TArray<FStringFormatArg> Args;
         Args.Add(UTF8_TO_TCHAR(cls));
 
-        // load blueprint widget from cpp, need add '_C' tail
-        auto cui = FString::Format(TEXT("Blueprint'{0}_C'"),Args);
-		UClass* uclass = LoadClass<T>(NULL, *cui);
+		FString path(UTF8_TO_TCHAR(cls));
+		int32 index;
+		if (!path.FindChar(TCHAR('\''),index)) {
+			// load blueprint widget from cpp, need add '_C' tail
+			path = FString::Format(TEXT("Blueprint'{0}_C'"), { path });
+		}
+
+		// auto add _C suffix
+		if(!path.EndsWith(TEXT("_C'")))
+		{
+			// remove last '
+			path = path.Left(path.Len()-1);
+			path += TEXT("_C'");
+		}
+        
+		UClass* uclass = LoadClass<T>(NULL, *path);
         return uclass;
     }
 

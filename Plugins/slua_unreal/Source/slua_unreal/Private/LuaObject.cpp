@@ -374,6 +374,9 @@ namespace slua {
     int classConstruct(lua_State* L) {
         UClass* cls = LuaObject::checkValue<UClass*>(L, 1);
 		UObject* outter = LuaObject::checkValueOpt<UObject*>(L, 2, (UObject*)GetTransientPackage());
+		if (cls && !outter->IsA(cls->ClassWithin)) {
+			luaL_error(L, "Can't create object in %s", TCHAR_TO_UTF8(*outter->GetClass()->GetName()));
+		}
 		FName name = LuaObject::checkValueOpt<FName>(L, 3, FName(NAME_None));
         if(cls) {
             UObject* obj = NewObject<UObject>(outter,cls,name);

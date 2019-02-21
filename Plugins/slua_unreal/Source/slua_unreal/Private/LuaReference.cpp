@@ -31,95 +31,152 @@ namespace slua {
 		}
 
 
-		bool addRefByProperty(FReferenceCollector& collector, const UProperty* prop, void* base) {
+		bool addRef(const USetProperty* p, void* base, FReferenceCollector& collector)
+		{
 			bool ret = false;
-			if (auto p = Cast<UObjectProperty>(prop)) {
-				for (int n = 0; n < p->ArrayDim; ++n)
-				{
-					void* value = p->ContainerPtrToValuePtr<void>(base, n);
-					UObject* obj = p->GetObjectPropertyValue(value);
-					if (obj)
-					{
-						UObject* newobj = obj;
-						collector.AddReferencedObject(newobj);
-
-						if (newobj != obj)
-						{
-							ret = true;
-							p->SetObjectPropertyValue(value, newobj);
-						}
-					}
-				}
-				return ret;
-			}
-
-			if (auto p = Cast<UArrayProperty>(prop))
+			for (int32 n = 0; n < p->ArrayDim; ++n)
 			{
-				for (int n = 0; n < p->ArrayDim; ++n)
+				bool valuesChanged = false;
+				FScriptSetHelper_InContainer helper(p, base, n);
+
+				for (int32 index = 0; index < helper.GetMaxIndex(); ++index)
 				{
-					FScriptArrayHelper_InContainer helper(p, base, n);
-					for (int32 index = 0; index < helper.Num(); ++index)
+					if (helper.IsValidIndex(index))
 					{
-						ret |= addRefByProperty(collector, p->Inner, helper.GetRawPtr(n));
+						valuesChanged |= addRefByProperty(collector,
+							helper.GetElementProperty(), helper.GetElementPtr(index));
 					}
 				}
-				return ret;
-			}
 
-			if (auto p = Cast<UStructProperty>(prop)) {
-				for (int n = 0; n < prop->ArrayDim; ++n) {
-					addRefByStruct(collector, p->Struct, p->ContainerPtrToValuePtr<void>(base, n));
+				if (valuesChanged)
+				{
+					ret = true;
+					helper.Rehash();
 				}
-				return false;
 			}
+			return ret;
+		}
 
-			if (auto p = Cast<UDelegateProperty>(prop)) {
-				for (int n = 0; n < prop->ArrayDim; ++n) {
-					FScriptDelegate* value = p->GetPropertyValuePtr(p->ContainerPtrToValuePtr<void>(base, n));
-					addRefByDelegate(collector, *value);
-				}
-				return false;
-			}
-
-			if (auto p = Cast<UMapProperty>(prop))
+		bool addRef(const UMapProperty* p, void* base, FReferenceCollector& collector)
+		{
+			bool ret = false;
+			for (int n = 0; n < p->ArrayDim; ++n)
 			{
-				for (int n = 0; n < p->ArrayDim; ++n)
+				bool keyChanged = false;
+				bool valuesChanged = false;
+				FScriptMapHelper_InContainer helper(p, base, n);
+
+				for (int index = 0; index < helper.GetMaxIndex(); ++index)
 				{
-					bool keyChanged = false;
-					bool valuesChanged = false;
-					FScriptMapHelper_InContainer helper(p, base, n);
-
-					for (int index = 0; index < helper.GetMaxIndex(); ++index)
+					if (helper.IsValidIndex(index))
 					{
-						if (helper.IsValidIndex(index))
-						{
-							keyChanged = addRefByProperty(collector, helper.GetKeyProperty(), helper.GetKeyPtr(index));
-							valuesChanged = addRefByProperty(collector, helper.GetValueProperty(), helper.GetValuePtr(index));
-						}
+						keyChanged |= addRefByProperty(collector, helper.GetKeyProperty(), helper.GetKeyPtr(index));
+						valuesChanged |= addRefByProperty(collector, helper.GetValueProperty(), helper.GetValuePtr(index));
 					}
+				}
 
-					if (keyChanged || valuesChanged)
+				if (keyChanged || valuesChanged)
+				{
+					ret = true;
+					if (keyChanged)
+					{
+						helper.Rehash();
+					}
+				}
+			}
+			return ret;
+		}
+
+		bool addRef(const UObjectProperty* p, void* base, FReferenceCollector &collector)
+		{
+			bool ret = false;
+			for (int n = 0; n < p->ArrayDim; ++n)
+			{
+				void* value = p->ContainerPtrToValuePtr<void>(base, n);
+				UObject* obj = p->GetObjectPropertyValue(value);
+				if (obj)
+				{
+					UObject* newobj = obj;
+					collector.AddReferencedObject(newobj);
+
+					if (newobj != obj)
 					{
 						ret = true;
-						if (keyChanged)
-						{
-							helper.Rehash();
-						}
+						p->SetObjectPropertyValue(value, newobj);
 					}
 				}
-				return ret;
 			}
+			return ret;
+		}
 
+		bool addRef(const UArrayProperty* p, void* base, FReferenceCollector& collector)
+		{
+			bool ret = false;
+			for (int n = 0; n < p->ArrayDim; ++n)
+			{
+				FScriptArrayHelper_InContainer helper(p, base, n);
+				for (int32 index = 0; index < helper.Num(); ++index)
+				{
+					ret |= addRefByProperty(collector, p->Inner, helper.GetRawPtr(n));
+				}
+			}
+			return ret;
+		}
+
+		bool addRef(const UMulticastDelegateProperty* p, void* base, FReferenceCollector& collector)
+		{
+			for (int n = 0; n < p->ArrayDim; ++n)
+			{
+				FMulticastScriptDelegate* Value = p->GetPropertyValuePtr(p->ContainerPtrToValuePtr<void>(base, n));
+				addRefByMulticastDelegate(collector, *Value);
+			}
+			return false;
+		}
+
+		bool addRef(const UStructProperty* p, void* base, FReferenceCollector& collector)
+		{
+			for (int n = 0; n < p->ArrayDim; ++n) {
+				addRefByStruct(collector, p->Struct, p->ContainerPtrToValuePtr<void>(base, n));
+			}
+			return false;
+		}
+
+		bool addRef(const UDelegateProperty* p, void* base, FReferenceCollector& collector)
+		{
+			for (int n = 0; n < p->ArrayDim; ++n) {
+				FScriptDelegate* value = p->GetPropertyValuePtr(p->ContainerPtrToValuePtr<void>(base, n));
+				addRefByDelegate(collector, *value);
+			}
+			return false;
+		}
+
+		bool addRefByProperty(FReferenceCollector& collector, const UProperty* prop, void* base) {
+			
+			if (auto p = Cast<UObjectProperty>(prop)) {
+				return addRef(p, base, collector);
+			}
+			if (auto p = Cast<UArrayProperty>(prop))
+			{
+				return addRef(p, base, collector);
+			}
+			if (auto p = Cast<UStructProperty>(prop)) {
+				return addRef(p, base, collector);
+			}
+			if (auto p = Cast<UDelegateProperty>(prop)) {
+				return addRef(p, base, collector);
+			}
+			if (auto p = Cast<UMapProperty>(prop))
+			{
+				return addRef(p, base, collector);
+			}
+			if (auto p = Cast<USetProperty>(prop))
+			{
+				return addRef(p, base, collector);
+			}
 			if (auto p = Cast<UMulticastDelegateProperty>(prop))
 			{
-				for (int n = 0; n < p->ArrayDim; ++n)
-				{
-					FMulticastScriptDelegate* Value = p->GetPropertyValuePtr(p->ContainerPtrToValuePtr<void>(base, n));
-					addRefByMulticastDelegate(collector, *Value);
-				}
-				return false;
+				return addRef(p, base, collector);
 			}
-
 			return false;
 		}
 	}

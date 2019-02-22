@@ -246,7 +246,7 @@ namespace slua {
 
     void LuaVar::free() {
         for(size_t n=0;n<numOfVar;n++) {
-            if( (vars[n].luatype==LV_FUNCTION || vars[n].luatype==LV_TABLE) 
+            if( (vars[n].luatype==LV_FUNCTION || vars[n].luatype==LV_TABLE || vars[n].luatype == LV_USERDATA)
                 && vars[n].ref->isValid() )
                 vars[n].ref->release();
             else if(vars[n].luatype==LV_STRING)

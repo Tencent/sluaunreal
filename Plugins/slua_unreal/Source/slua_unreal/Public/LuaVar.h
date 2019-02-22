@@ -236,18 +236,18 @@ namespace slua {
         void alloc(int n);
 
         struct Ref {
-            Ref():ref(1) {}
+            Ref():refCount(1) {}
             virtual ~Ref() {}
             void addRef() {
-                ref++;
+				refCount++;
             }
             void release() {
-                ensure(ref>0);
-                if(--ref==0) {
+                ensure(refCount >0);
+                if(--refCount ==0) {
                     delete this;
                 }
             }
-            int ref;
+            int refCount;
         };
 
         struct RefStr : public Ref {

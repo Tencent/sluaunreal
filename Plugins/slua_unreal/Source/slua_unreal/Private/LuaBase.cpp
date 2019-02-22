@@ -103,8 +103,8 @@ namespace slua {
 	LuaVar LuaBase::callMember(FString func, const TArray<FLuaBPVar>& args)
 	{
 		slua::LuaVar lfunc = luaSelfTable.getFromTable<slua::LuaVar>((const char*)TCHAR_TO_UTF8(*func), true);
-		if (!lfunc.isValid()) {
-			Log::Error("Can't find lua member function named% s to call", TCHAR_TO_UTF8(*func));
+		if (!lfunc.isFunction()) {
+			Log::Error("Can't find lua member function named %s to call", TCHAR_TO_UTF8(*func));
 			return false;
 		}
 		
@@ -112,7 +112,7 @@ namespace slua {
 		// push self
 		luaSelfTable.push(L);
 		// push arg to lua
-		for (auto arg : args) {
+		for (auto& arg : args) {
 			arg.value.push(L);
 		}
 		return lfunc.callWithNArg(args.Num()+1);

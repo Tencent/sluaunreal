@@ -53,8 +53,10 @@ FLuaBPVar ULuaBlueprintLibrary::CallToLuaWithArgs(FString funcname,const TArray<
     if(StateName.Len()!=0) ls = LuaState::get(StateName);
     if(!ls) return FLuaBPVar();
     LuaVar f = ls->get(TCHAR_TO_UTF8(*funcname));
-    if(!f.isFunction()) 
+    if(!f.isFunction()) {
 		Log::Error("Can't find lua member function named %s to call", TCHAR_TO_UTF8(*funcname));
+        return LuaVar();
+    }
 
     for(auto& arg:args) {
         arg.value.push(ls->getLuaState());
@@ -69,8 +71,10 @@ FLuaBPVar ULuaBlueprintLibrary::CallToLua(FString funcname,FString StateName) {
     if(StateName.Len()!=0) ls = LuaState::get(StateName);
     if(!ls) return FLuaBPVar();
     LuaVar f = ls->get(TCHAR_TO_UTF8(*funcname));
-	if (!f.isFunction())
+	if (!f.isFunction()) {
 		Log::Error("Can't find lua member function named %s to call", TCHAR_TO_UTF8(*funcname));
+        return LuaVar();
+    }
     return f.callWithNArg(0);
 }
 

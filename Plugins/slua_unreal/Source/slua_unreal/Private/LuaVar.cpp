@@ -593,7 +593,7 @@ namespace slua {
         for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
             UProperty* prop = *it;
             uint64 propflag = prop->GetPropertyFlags();
-            if((propflag&CPF_ReturnParm) || (propflag&CPF_OutParm))
+            if((propflag&CPF_ReturnParm) || (propflag&CPF_OutParm && !(propflag&CPF_ConstParm)))
                 continue;
 
             pushArgByParms(prop,parms+prop->GetOffset_ForInternal());

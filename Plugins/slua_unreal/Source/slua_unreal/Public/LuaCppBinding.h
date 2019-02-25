@@ -442,6 +442,21 @@ namespace slua {
         LuaObject::addGlobalMethod(L, #NAME, x); \
     } \
 
+    #define DefGlobalMethod_With_Type(NAME,M,T) { \
+        lua_CFunction x=LuaCppBinding<T,M>::LuaCFunction; \
+        LuaObject::addGlobalMethod(L, #NAME, x); \
+    } \
+
+    #define DefGlobalMethod_With_Imp(NAME,BODY) { \
+        LuaObject::addGlobalMethod(L, #NAME,[](lua_State* L)->int BODY); }
+
+    #define DefGlobalMethod_With_Lambda(NAME,...) { \
+        static auto lambda = __VA_ARGS__; \
+        using BindType = LuaCallableBinding<decltype(lambda)>::Prototype; \
+        BindType::Func = &lambda; \
+        LuaObject::addGlobalMethod(L, #NAME, BindType::LuaCFunction); \
+    }
+
 	#define DefEnum(NAME,...) \
 		static int LuaEnum##NAME##_setup(lua_State* L) { \
 			LuaObject::newEnum(L, #NAME, #__VA_ARGS__, std::initializer_list<int>{(int)__VA_ARGS__}); \

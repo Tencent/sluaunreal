@@ -997,12 +997,17 @@ namespace slua {
     }
 
     void LuaObject::init(lua_State* L) {
-        regPusher<UIntProperty>();
+		regPusher<UIntProperty>();
+		regPusher<UUInt32Property>();
         regPusher<UInt64Property>();
         regPusher<UUInt64Property>();
-        regPusher<UFloatProperty>();
+		regPusher<UInt16Property>();
+		regPusher<UUInt16Property>();
+		regPusher<UInt8Property>();
+		regPusher<UByteProperty>(); // uint8
+		regPusher<UFloatProperty>();
+		regPusher<UDoubleProperty>();
         regPusher<UBoolProperty>();
-        regPusher<UByteProperty>();
         regPusher<UTextProperty>();
         regPusher<UStrProperty>();
         regPusher<UNameProperty>();
@@ -1016,12 +1021,17 @@ namespace slua {
 		regPusher(UEnumProperty::StaticClass(), pushEnumProperty);
 		regPusher(UClassProperty::StaticClass(), pushUClassProperty);
 		
-        regChecker<UIntProperty>();
+		regChecker<UIntProperty>();
+		regChecker<UUInt32Property>();
         regChecker<UInt64Property>();
         regChecker<UUInt64Property>();
-        regChecker<UBoolProperty>();
-        regChecker<UFloatProperty>();
-        regChecker<UByteProperty>();
+		regChecker<UInt16Property>();
+		regChecker<UUInt16Property>();
+		regChecker<UInt8Property>();
+		regChecker<UByteProperty>(); // uint8
+		regChecker<UFloatProperty>();
+		regChecker<UDoubleProperty>();
+		regChecker<UBoolProperty>();
         regChecker<UNameProperty>();
         regChecker<UTextProperty>();
         regChecker<UObjectProperty>();

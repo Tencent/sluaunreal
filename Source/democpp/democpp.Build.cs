@@ -10,11 +10,12 @@ public class democpp : ModuleRules
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "slua_unreal", "Slate", "SlateCore", "UMG" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "slua_unreal", "slua_profile", "Slate", "SlateCore", "UMG" });
 
         PrivateIncludePathModuleNames.AddRange(new string[] { "slua_unreal" });
-        PublicIncludePathModuleNames.AddRange(new string[] { "slua_unreal" });
+        PublicIncludePathModuleNames.AddRange(new string[] { "slua_unreal","slua_profile" });
 
+        Definitions.Add("ENABLE_PROFILER");
         // Uncomment if you are using Slate UI
         // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 

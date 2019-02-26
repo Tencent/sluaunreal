@@ -4,6 +4,7 @@
 #include "SluaTestActor.h"
 #include "SluaTestCase.h"
 #include "Engine/Engine.h"
+#include "slua_profile.h"
 
 
 ASluaTestActor* ASluaTestActor::instance=nullptr;
@@ -29,6 +30,7 @@ void ASluaTestActor::BeginPlay()
 // Called every frame
 void ASluaTestActor::Tick(float DeltaTime)
 {
+	PROFILER_WATCHER(x);
 	Super::Tick(DeltaTime);
 
 	state().call("update",DeltaTime);

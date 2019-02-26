@@ -1,6 +1,8 @@
 {
     "export_files": {
-        "TBaseStructure": "{ue4_dir}/Engine/Source/Runtime/CoreUObject/Public/UObject/Class.h",
+        "TBaseStructure": [
+            "{ue4_dir}/Engine/Source/Runtime/CoreUObject/Public/UObject/Class.h"
+        ],
         "Customs": {
             "FSlateFontInfo": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Fonts/SlateFontInfo.h",
             "FSlateBrush": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Styling/SlateBrush.h",

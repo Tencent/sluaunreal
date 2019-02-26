@@ -24,6 +24,10 @@ public class slua_profile : ModuleRules
         bEnforceIWYU = false;
         bEnableUndefinedIdentifierWarnings = false;
 
+        PrivateDependencyModuleNames.AddRange(new string[] { "slua_unreal" });
+        PublicIncludePathModuleNames.AddRange(new string[] { "slua_unreal" });
+        Definitions.Add("ENABLE_PROFILER");
+
         var externalSource = Path.Combine(ModuleDirectory, "../../External");
         var externalLib = Path.Combine(ModuleDirectory, "../../Library");
 
@@ -94,6 +98,7 @@ public class slua_profile : ModuleRules
                 "Slate",
                 "SlateCore",
                 "UMG",
+                "InputCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
             );

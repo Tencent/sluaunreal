@@ -4,7 +4,7 @@ local actor={}
 
 -- override event from blueprint
 function actor:ReceiveBeginPlay()
-    self.bCanEverTick = true
+    self.PrimaryActorTick.bCanEverTick = true
     -- set bCanBeDamaged property in parent
     self.bCanBeDamaged = false
     print("actor:ReceiveBeginPlay")

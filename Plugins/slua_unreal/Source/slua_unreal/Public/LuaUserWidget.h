@@ -27,7 +27,6 @@ class SLUA_UNREAL_API ULuaUserWidget : public UUserWidget, public slua_Luabase {
 protected:
 	virtual void NativeConstruct();
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime);
-	
 public:	
 	// below UPROPERTY and UFUNCTION can't be put to macro LUABASE_BODY
 	// so copy & paste them
@@ -41,5 +40,8 @@ public:
 	}
 
 	virtual void ProcessEvent(UFunction* func, void* params) override;
+	void SuperTick();
+private:
+	FGeometry currentGeometry;
 };
 

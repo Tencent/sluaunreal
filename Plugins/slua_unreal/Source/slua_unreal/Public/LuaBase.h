@@ -18,6 +18,9 @@
 
 namespace slua {
 
+// special tick function
+#define UFUNCTION_TICK ((UFunction*)-1)
+
 	class SLUA_UNREAL_API LuaBase {
 	public:
 		virtual bool luaImplemented(UFunction* func, void* params);
@@ -31,8 +34,16 @@ namespace slua {
 
 			if (!ud->currentFunc)
 				luaL_error(L, "can't call super here");
-			using Super = typename T::Super;
-			ud->Super::ProcessEvent(ud->currentFunc, ud->currentParams);
+			// tick function is a special function
+			// bpclass should override ReceiveTick
+			// c++ class should override Tick
+			// we hope lua user don't care about it
+			if (ud->currentFunc == UFUNCTION_TICK)
+				ud->SuperTick();
+			else {
+				using Super = typename T::Super;
+				ud->Super::ProcessEvent(ud->currentFunc, ud->currentParams);
+			}
 
 			return 0;
 		}
@@ -81,12 +92,15 @@ namespace slua {
 
 		// store UFunction ptr nad params for super call
 		UFunction* currentFunc;
-		void* currentParams;
+		union {
+			void* currentParams;
+			float deltaTime;
+		};
 
 		// call member function in luaSelfTable
 		LuaVar callMember(FString name, const TArray<FLuaBPVar>& args);
 
-		bool postInit(const char* tickFlag);
+		bool postInit(const char* tickFlag,bool rawget=true);
 		void tick(float DeltaTime);
 		static int __index(lua_State* L);
 		static int __newindex(lua_State* L);

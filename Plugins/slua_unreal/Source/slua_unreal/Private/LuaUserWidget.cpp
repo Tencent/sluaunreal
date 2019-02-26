@@ -19,15 +19,16 @@ void ULuaUserWidget::NativeConstruct()
 	if (!init(this, "LuaUserWidget", LuaStateName, LuaFilePath)) return;
 	Super::NativeConstruct();
 #if (ENGINE_MINOR_VERSION==18)
-	bCanEverTick = postInit("bHasScriptImplementedTick");
+	bCanEverTick = postInit("bHasScriptImplementedTick", false);
 #else
-	bHasScriptImplementedTick = postInit("bHasScriptImplementedTick");
+	bHasScriptImplementedTick = postInit("bHasScriptImplementedTick", false);
 #endif
 }
 
 void ULuaUserWidget::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)
 {
-	Super::NativeTick(MyGeometry, InDeltaTime);
+	// store current tick parameter MyGeometry
+	currentGeometry = MyGeometry;
 	tick(InDeltaTime);
 }
 
@@ -36,4 +37,9 @@ void ULuaUserWidget::ProcessEvent(UFunction * func, void * params)
 	if (luaImplemented(func, params))
 		return;
 	Super::ProcessEvent(func, params);
+}
+
+void ULuaUserWidget::SuperTick()
+{
+	Super::NativeTick(currentGeometry, deltaTime);
 }

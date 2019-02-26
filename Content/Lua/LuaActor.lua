@@ -15,8 +15,8 @@ function actor:ReceiveEndPlay(reason)
     print("actor:ReceiveEndPlay")
 end
 
-function actor:ReceiveTick(dt)
-    print("actor:ReceiveTick",self,dt)
+function actor:Tick(dt)
+    print("actor:Tick",self,dt)
     -- call actor function
     local pos = self:K2_GetActorLocation()
     -- can pass self as Actor*

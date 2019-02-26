@@ -25,6 +25,11 @@ namespace slua {
 			pBase->currentFunc = func;
 			pBase->currentParams = params;
 		}
+		UFunctionParamScope(LuaBase* lb, UFunction* func, float dt) {
+			pBase = lb;
+			pBase->currentFunc = func;
+			pBase->deltaTime = dt;
+		}
 		~UFunctionParamScope() {
 			pBase->currentFunc = nullptr;
 			pBase->currentParams = nullptr;
@@ -51,6 +56,7 @@ namespace slua {
 	{
 		if (!tickFunction.isValid())
 			return;
+		UFunctionParamScope scope(this, UFUNCTION_TICK, DeltaTime);
 		tickFunction.call(luaSelfTable, DeltaTime);
 	}
 
@@ -118,12 +124,12 @@ namespace slua {
 		return lfunc.callWithNArg(args.Num()+1);
 	}
 
-	bool LuaBase::postInit(const char* tickFlag)
+	bool LuaBase::postInit(const char* tickFlag,bool rawget)
 	{
 		if (!luaSelfTable.isTable())
 			return false;
 
-		bool tickEnabled = luaSelfTable.getFromTable<bool>(tickFlag, true);
+		bool tickEnabled = luaSelfTable.getFromTable<bool>(tickFlag, rawget);
 
 		if (tickEnabled && luaSelfTable.isTable()) {
 			tickFunction = luaSelfTable.getFromTable<slua::LuaVar>("Tick", true);

@@ -19,7 +19,7 @@ function actor:ReceiveEndPlay(reason)
 end
 
 function actor:ReceiveTick(dt)
-    print("btactor:ReceiveTick",self,dt)
+    print("bpactor:ReceiveTick",self,dt)
 end
 
 function actor:bpcall(value)

@@ -2,11 +2,14 @@
 local panel ={}
 
 function panel:Construct()
+    print"panel:Construct"
     self.bHasScriptImplementedTick = true
 end
 
 function panel:Tick()
-    print"panel:tick"
+    print("panel:tick")
+    -- call parent super
+    self:Super()
 end
 
 function panel:OnKeyDown(Geometry,Event)

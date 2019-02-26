@@ -26,15 +26,21 @@
 #define LUABASE_BODY(NAME) \
 protected: \
 	virtual void BeginPlay() override { \
-		if (!init(this, #NAME, LuaStateName, LuaFilePath)) return; \
+	if (!init(this, #NAME, LuaStateName, LuaFilePath)) return; \
 		Super::BeginPlay(); \
 		PrimaryActorTick.SetTickFunctionEnable(postInit("bCanEverTick")); \
 	} \
+	virtual void Tick(float DeltaTime) override { \
+		tick(DeltaTime); \
+	} \
 public:	\
 	virtual void ProcessEvent(UFunction* func, void* params) override { \
-		if (luaImplemented(func, params))  \
-			return; \
+	if (luaImplemented(func, params))  \
+		return; \
 		Super::ProcessEvent(func, params); \
+	} \
+	void SuperTick() { \
+		Super::Tick(deltaTime); \
 	} \
 
 using slua_Luabase = slua::LuaBase;

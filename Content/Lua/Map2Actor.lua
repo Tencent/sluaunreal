@@ -23,16 +23,19 @@ function actor:ReceiveBeginPlay()
         self.rot[n]=math.random(-100,100)
         actor.Name = 'ActorCreateFromLua_'..tostring(n)
     end
+    self:Super()
 end
 
 -- override event from blueprint
 function actor:ReceiveEndPlay(reason)
     print("actor:ReceiveEndPlay")
+    self:Super()
 end
 
 local HitResult = import('HitResult');
 local tt=0
 function actor:Tick(dt)
+    print("map2actor:Tick")
     tt=tt+dt
     for i,actor in pairs(self.balls) do
         local p = self.basepos[i]
@@ -42,6 +45,7 @@ function actor:Tick(dt)
         local offset = FVector(0,math.cos(tt)*rot,0)
         local ok,h=actor:K2_SetActorLocation(p+v+offset,true,h,true)
     end
+    self:Super()
 end
 
 return actor

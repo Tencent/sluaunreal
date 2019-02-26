@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #include "slua_profile_inspector.h"
+#include "slua_profile.h"
 
 extern const FName slua_profileTabName;
 
@@ -57,7 +58,7 @@ FString SProfilerInspector::GenBrevFuncName(FString &functionName)
 	return brevName;
 }
 
-void  SProfilerInspector::CopyFunctionNode(TSharedPtr<functionProfileInfo>& oldFuncNode, TSharedPtr<functionProfileInfo>& newFuncNode)
+void  SProfilerInspector::CopyFunctionNode(TSharedPtr<FunctionProfileInfo>& oldFuncNode, TSharedPtr<FunctionProfileInfo>& newFuncNode)
 {
 	newFuncNode->functionName = oldFuncNode->functionName;
 	newFuncNode->brevName = GenBrevFuncName(oldFuncNode->functionName);
@@ -147,7 +148,7 @@ void SProfilerInspector::AssignProfiler(TArray<SluaProfiler> &profilerArray, Slu
 			{
 				if (rootNodeIdx >= rootProfilers.Num())
 				{
-					TSharedPtr<functionProfileInfo> newFuncNode = MakeShareable(new functionProfileInfo);
+					TSharedPtr<FunctionProfileInfo> newFuncNode = MakeShareable(new FunctionProfileInfo);
 					CopyFunctionNode(funcNode, newFuncNode);
 					rootProfilers.Add(newFuncNode);
 				}
@@ -160,7 +161,7 @@ void SProfilerInspector::AssignProfiler(TArray<SluaProfiler> &profilerArray, Slu
 
 			if (nodeIdx >= profilers.Num())
 			{
-				TSharedPtr<functionProfileInfo> newFuncNode = MakeShareable(new functionProfileInfo);
+				TSharedPtr<FunctionProfileInfo> newFuncNode = MakeShareable(new FunctionProfileInfo);
 				CopyFunctionNode(funcNode, newFuncNode);
 				profilers.Add(newFuncNode);
 			}
@@ -194,7 +195,7 @@ void SProfilerInspector::AssignProfiler(SluaProfiler& srcProfilers, SluaProfiler
 	{
 		if (nodeIdx >= dstProfilers.Num())
 		{
-			TSharedPtr<functionProfileInfo> newFuncNode = MakeShareable(new functionProfileInfo);
+			TSharedPtr<FunctionProfileInfo> newFuncNode = MakeShareable(new FunctionProfileInfo);
 			CopyFunctionNode(funcNode, newFuncNode);
 			dstProfilers.Add(newFuncNode);
 		}
@@ -310,6 +311,7 @@ void SProfilerInspector::OnClearBtnClicked()
 
 	for (int sampleIdx = 0; sampleIdx<sampleNum; sampleIdx++)
 	{
+		tmpProfilersArraySamples[sampleIdx].Empty();
 		profilersArraySamples[sampleIdx].Empty();
 	}
 
@@ -345,7 +347,7 @@ TSharedRef<class SDockTab> SProfilerInspector::GetSDockTab()
 	horBox->AddSlot().HAlign(HAlign_Left).MaxWidth(5.0f).Padding(0, 200, 10, 0);
 
 	// init tree view
-	SAssignNew(treeview, STreeView<TSharedPtr<functionProfileInfo>>)
+	SAssignNew(treeview, STreeView<TSharedPtr<FunctionProfileInfo>>)
 		.ItemHeight(800)
 		.TreeItemsSource(&shownRootProfiler)
 		.OnGenerateRow_Raw(this, &SProfilerInspector::OnGenerateRowForList)
@@ -453,7 +455,7 @@ void SProfilerInspector::ShowProfilerTree(TArray<SluaProfiler> &selectedProfiler
 	return;
 }
 
-TSharedRef<ITableRow> SProfilerInspector::OnGenerateRowForList(TSharedPtr<functionProfileInfo> Item, const TSharedRef<STableViewBase>& OwnerTable)
+TSharedRef<ITableRow> SProfilerInspector::OnGenerateRowForList(TSharedPtr<FunctionProfileInfo> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	if (Item->functionName.IsEmpty())
 	{
@@ -500,9 +502,9 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateRowForList(TSharedPtr<functi
 	}
 }
 
-void SProfilerInspector::OnGetChildrenForTree(TSharedPtr<functionProfileInfo> Parent, TArray<TSharedPtr<functionProfileInfo>>& OutChildren)
+void SProfilerInspector::OnGetChildrenForTree(TSharedPtr<FunctionProfileInfo> Parent, TArray<TSharedPtr<FunctionProfileInfo>>& OutChildren)
 {
-	TArray<TSharedPtr<functionProfileInfo>> unSortedChildrenArray;
+	TArray<TSharedPtr<FunctionProfileInfo>> unSortedChildrenArray;
 
 	if (Parent.IsValid() && Parent->functionName.IsEmpty() == false)
 	{
@@ -534,7 +536,7 @@ void SProfilerInspector::OnGetChildrenForTree(TSharedPtr<functionProfileInfo> Pa
 			int pointIdx = Parent->mergeIdxArray[mergeIdx] + 1;
 			while (pointIdx < shownProfiler.Num() && shownProfiler[pointIdx]->layerIdx > Parent->layerIdx)
 			{
-				TSharedPtr<functionProfileInfo> &siblingNextNode = shownProfiler[pointIdx];
+				TSharedPtr<FunctionProfileInfo> &siblingNextNode = shownProfiler[pointIdx];
 				if (siblingNextNode->beMerged == false && siblingNextNode->layerIdx == (Parent->layerIdx + 1))
 				{
 					unSortedChildrenArray.Add(siblingNextNode);
@@ -545,7 +547,7 @@ void SProfilerInspector::OnGetChildrenForTree(TSharedPtr<functionProfileInfo> Pa
 		}
 
 		// sort array by cost time and add to OutChildren
-		unSortedChildrenArray.Sort([](const TSharedPtr<functionProfileInfo>& LHS, const TSharedPtr<functionProfileInfo>& RHS)
+		unSortedChildrenArray.Sort([](const TSharedPtr<FunctionProfileInfo>& LHS, const TSharedPtr<FunctionProfileInfo>& RHS)
 								{ return LHS->mergedCostTime > RHS->mergedCostTime; });
 
 		for (int idx=0; idx<unSortedChildrenArray.Num(); idx++)
@@ -560,7 +562,7 @@ void SProfilerInspector::MergeSiblingNode(int begIdx, int endIdx, TArray<int> pa
 		return;
 	}
 
-	TSharedPtr<functionProfileInfo> &node = shownProfiler[begIdx];
+	TSharedPtr<FunctionProfileInfo> &node = shownProfiler[begIdx];
 	node->mergedNum = 1;
 	node->mergedCostTime = node->costTime;
 	node->mergeIdxArray.Empty();
@@ -576,11 +578,11 @@ void SProfilerInspector::MergeSiblingNode(int begIdx, int endIdx, TArray<int> pa
 	}
 }
 
-void SProfilerInspector::SearchSiblingNode(SluaProfiler& profiler, int curIdx, int endIdx, TSharedPtr<functionProfileInfo> &node)
+void SProfilerInspector::SearchSiblingNode(SluaProfiler& profiler, int curIdx, int endIdx, TSharedPtr<FunctionProfileInfo> &node)
 {
 	while (curIdx != endIdx && profiler[curIdx]->layerIdx >= node->layerIdx)
 	{
-		TSharedPtr<functionProfileInfo> &nextNode = profiler[curIdx];
+		TSharedPtr<FunctionProfileInfo> &nextNode = profiler[curIdx];
 		if (nextNode->layerIdx == node->layerIdx && nextNode->functionName == node->functionName)
 		{
 			nextNode->beMerged = true;

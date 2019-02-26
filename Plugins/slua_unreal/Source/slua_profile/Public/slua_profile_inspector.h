@@ -1,4 +1,15 @@
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+// Tencent is pleased to support the open source community by making sluaunreal available.
+
+// Copyright (C) 2018 THL A29 Limited, a Tencent company. All rights reserved.
+// Licensed under the BSD 3-Clause License (the "License"); 
+// you may not use this file except in compliance with the License. You may obtain a copy of the License at
+
+// https://opensource.org/licenses/BSD-3-Clause
+
+// Unless required by applicable law or agreed to in writing, 
+// software distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and limitations under the License.
 
 #pragma once
 
@@ -10,12 +21,11 @@
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Notifications/SProgressBar.h"
 #include "Widgets/Views/STreeView.h"
-#include "slua_profile.h"
 
-struct functionProfileInfo;
-typedef TArray<TSharedPtr<functionProfileInfo>> SluaProfiler;
+struct FunctionProfileInfo;
+typedef TArray<TSharedPtr<FunctionProfileInfo>> SluaProfiler;
 
-class SProfilerInspector
+class SLUA_PROFILE_API SProfilerInspector
 {
 public:
 	SProfilerInspector();
@@ -23,8 +33,8 @@ public:
 
 	void Refresh(TArray<SluaProfiler>& curProfilersArray);
 	TSharedRef<class SDockTab> GetSDockTab();
-	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<functionProfileInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
-	void OnGetChildrenForTree(TSharedPtr<functionProfileInfo> Parent, TArray<TSharedPtr<functionProfileInfo>>& OutChildren);
+	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FunctionProfileInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
+	void OnGetChildrenForTree(TSharedPtr<FunctionProfileInfo> Parent, TArray<TSharedPtr<FunctionProfileInfo>>& OutChildren);
 	void StartChartRolling();
 
 private:
@@ -32,7 +42,7 @@ private:
 	const static int fixRowWidth = 300;
 	const static int refreshInterval = 50;
 
-	TSharedPtr<STreeView<TSharedPtr<functionProfileInfo>>> treeview;
+	TSharedPtr<STreeView<TSharedPtr<FunctionProfileInfo>>> treeview;
 	TSharedPtr<SCheckBox> profilerCheckBox;
 	TSharedPtr<SProgressBar> profilerBarArray[sampleNum];
 
@@ -62,9 +72,9 @@ private:
 	void AssignProfiler(TArray<SluaProfiler> &profilerArray, SluaProfiler& rootProfilers, SluaProfiler& profilers);
 	void AssignProfiler(SluaProfiler& srcProfilers, SluaProfiler& dstProfilers);
 	void MergeSiblingNode(int begIdx, int endIdx, TArray<int> parentMergeArray, int mergeArrayIdx);
-	void SearchSiblingNode(SluaProfiler& profiler, int curIdx, int endIdx, TSharedPtr<functionProfileInfo> &node);
+	void SearchSiblingNode(SluaProfiler& profiler, int curIdx, int endIdx, TSharedPtr<FunctionProfileInfo> &node);
 	FString GenBrevFuncName(FString &functionName);
-	void CopyFunctionNode(TSharedPtr<functionProfileInfo>& oldFuncNode, TSharedPtr<functionProfileInfo>& newFuncNode);
+	void CopyFunctionNode(TSharedPtr<FunctionProfileInfo>& oldFuncNode, TSharedPtr<FunctionProfileInfo>& newFuncNode);
 	void InitProfilerBar(int barIdx, TSharedPtr<SHorizontalBox>& horBox);
 	void OnClearBtnClicked();
 };

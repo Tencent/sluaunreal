@@ -28,58 +28,12 @@ public class slua_profile : ModuleRules
         PublicIncludePathModuleNames.AddRange(new string[] { "slua_unreal" });
         Definitions.Add("ENABLE_PROFILER");
 
-        var externalSource = Path.Combine(ModuleDirectory, "../../External");
-        var externalLib = Path.Combine(ModuleDirectory, "../../Library");
-
-        PublicIncludePaths.AddRange(
-            new string[] {
-                externalSource,
-                Path.Combine(externalSource, "lua"),
-				// ... add public include paths required here ...
-			}
-            );
-
-        switch (Target.Platform)
-        {
-            case UnrealTargetPlatform.IOS:
-                {
-                    PublicLibraryPaths.Add(Path.Combine(externalLib, "iOS"));
-                    PublicAdditionalLibraries.Add("lua");
-                    break;
-                }
-            case UnrealTargetPlatform.Android:
-                {
-                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/armeabi-v7a"));
-                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/x86"));
-                    PublicAdditionalLibraries.Add("lua");
-                    break;
-                }
-            case UnrealTargetPlatform.Win32:
-                {
-                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Win32"));
-                    PublicAdditionalLibraries.Add("lua.lib");
-                    break;
-                }
-            case UnrealTargetPlatform.Win64:
-                {
-                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Win64"));
-                    PublicAdditionalLibraries.Add("lua.lib");
-                    break;
-                }
-            case UnrealTargetPlatform.Mac:
-                {
-					// Unreal ignores PublicLibraryPaths on Mac. But why? 
-                    // PublicLibraryPaths.Add(Path.Combine(externalLib, "Mac"));
-                    PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Mac/liblua.a"));
-                    break;
-                }
-        }
 
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
                 "Core",
-				"UMG",
+                "UMG",
 				// ... add other public dependencies that you statically link with here ...
 			}
             );
@@ -101,14 +55,6 @@ public class slua_profile : ModuleRules
                 "InputCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
-            );
-
-
-        DynamicallyLoadedModuleNames.AddRange(
-            new string[]
-            {
-				// ... add any modules that your module loads dynamically here ...
-			}
-            );
+    );
     }
 }

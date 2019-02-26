@@ -35,7 +35,7 @@ enum slua_profiler_hook_event
 	TAILRET = 4
 };
 
-void debug_hook_c(NS_SLUA::lua_State *L, NS_SLUA::lua_Debug *ar)
+static void debug_hook_c(NS_SLUA::lua_State *L, NS_SLUA::lua_Debug *ar)
 {
 	if (ar->event == slua_profiler_hook_event::CALL)
 	{
@@ -69,7 +69,6 @@ void Fslua_profileModule::StartupModule()
 		FGlobalTabmanager::Get()->RegisterNomadTabSpawner(slua_profileTabName,
 			FOnSpawnTab::CreateRaw(this, &Fslua_profileModule::OnSpawnPluginTab))
 			.SetDisplayName(LOCTEXT("Flua_wrapperTabTitle", "slua Profiler"));
-		sluaProfilerSetHook = false;
 		TickDelegate = FTickerDelegate::CreateRaw(this, &Fslua_profileModule::Tick);
 		TickDelegateHandle = FTicker::GetCoreTicker().AddTicker(TickDelegate);
 	}
@@ -80,11 +79,11 @@ void Fslua_profileModule::ShutdownModule()
 	sluaProfilerInspector = nullptr;
 	ClearCurProfiler();
 
-	slua::LuaState *state = slua::LuaState::get(FString("main"));
-	if (state != nullptr && sluaProfilerSetHook == true)
+	slua::LuaState *state = slua::LuaState::get();
+	if (state != nullptr)
 	{
 		NS_SLUA::lua_sethook(state->getLuaState(), NULL, 0, 0);
-		sluaProfilerSetHook = false;
+		stateIndex = -1;
 	}
 
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(slua_profileTabName);
@@ -92,17 +91,10 @@ void Fslua_profileModule::ShutdownModule()
 
 bool Fslua_profileModule::Tick(float DeltaTime)
 {
-	slua::LuaState *state = slua::LuaState::get(FString("main"));
-	if (state != nullptr && sluaProfilerSetHook == false)
-	{
-		NS_SLUA::lua_sethook(state->getLuaState(), debug_hook_c, LUA_MASKCALL|LUA_MASKRET, 0);
-		sluaProfilerSetHook = true;
-	}
-	else
-	{
-		sluaProfilerSetHook = false;
-	}
-
+	if (!tabOpened)
+		return true;
+	
+	openHook();
 	sluaProfilerInspector->Refresh(curProfilersArray);
 	ClearCurProfiler();
 	return true;
@@ -113,7 +105,13 @@ TSharedRef<class SDockTab> Fslua_profileModule::OnSpawnPluginTab(const FSpawnTab
 	if (sluaProfilerInspector.IsValid())
 	{
 		sluaProfilerInspector->StartChartRolling();
-		return sluaProfilerInspector->GetSDockTab();
+		auto tab = sluaProfilerInspector->GetSDockTab();
+
+		openHook();
+
+		tab->SetOnTabClosed(SDockTab::FOnTabClosedCallback::CreateRaw(this, &Fslua_profileModule::OnTabClosed));
+		tabOpened = true;
+		return tab;
 	}
 	else
 	{
@@ -145,7 +143,7 @@ void Profiler::BeginWatch(FString funcName)
 		return;
 	}
 
-	TSharedPtr<functionProfileInfo> funcInfo = MakeShareable(new functionProfileInfo);
+	TSharedPtr<FunctionProfileInfo> funcInfo = MakeShareable(new FunctionProfileInfo);
 	funcInfo->functionName = funcName;
 	FDateTime Time = FDateTime::Now();
 	funcInfo->begTime = Time.GetTicks()/ ETimespan::NanosecondsPerTick;
@@ -169,7 +167,7 @@ void Profiler::EndWatch()
 	size_t idx = 0;
 	for (idx = curProfiler.Num(); idx > 0; idx--)
 	{
-		TSharedPtr<functionProfileInfo> &funcInfo = curProfiler[idx - 1];
+		TSharedPtr<FunctionProfileInfo> &funcInfo = curProfiler[idx - 1];
 		if (funcInfo->endTime == -1)
 		{
 			FDateTime Time = FDateTime::Now();
@@ -181,12 +179,12 @@ void Profiler::EndWatch()
 	}
 
 	// check wether node has child
-	TSharedPtr<functionProfileInfo> &funcInfo = curProfiler[idx - 1];
+	TSharedPtr<FunctionProfileInfo> &funcInfo = curProfiler[idx - 1];
 	int64_t childCostTime = 0;
 	bool hasChild = false;
 	for (; idx < curProfiler.Num(); idx++)
 	{
-		TSharedPtr<functionProfileInfo> &nextFuncInfo = curProfiler[idx];
+		TSharedPtr<FunctionProfileInfo> &nextFuncInfo = curProfiler[idx];
 		if (nextFuncInfo->layerIdx <= funcInfo->layerIdx)
 		{
 			break;
@@ -200,7 +198,7 @@ void Profiler::EndWatch()
 
 	if (hasChild == true)
 	{
-		TSharedPtr<functionProfileInfo> otherFuncInfo = MakeShareable(new functionProfileInfo);
+		TSharedPtr<FunctionProfileInfo> otherFuncInfo = MakeShareable(new FunctionProfileInfo);
 		otherFuncInfo->functionName = "(other)";
 		otherFuncInfo->begTime = 0;
 		otherFuncInfo->endTime = 0;
@@ -226,6 +224,27 @@ void Fslua_profileModule::ClearCurProfiler()
 		iter.Empty();
 	}
 	curProfilersArray.Empty();
+}
+
+void Fslua_profileModule::OnTabClosed(TSharedRef<SDockTab>)
+{
+	// disable lua hook
+	slua::LuaState *state = slua::LuaState::get();
+	if (state != nullptr)
+		NS_SLUA::lua_sethook(state->getLuaState(), nullptr, 0, 0);
+	stateIndex = -1;
+	tabOpened = false;
+}
+
+void Fslua_profileModule::openHook()
+{
+	// enable lua hook
+	slua::LuaState *state = slua::LuaState::get();
+	if (state) {
+		if (stateIndex == state->stateIndex()) return;
+		NS_SLUA::lua_sethook(state->getLuaState(), debug_hook_c, LUA_MASKCALL | LUA_MASKRET, 0);
+		stateIndex = state->stateIndex();
+	}
 }
 
 void InitProfilerWatchThread()

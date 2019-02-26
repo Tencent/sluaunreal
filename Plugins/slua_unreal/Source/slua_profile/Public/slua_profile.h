@@ -1,10 +1,21 @@
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+// Tencent is pleased to support the open source community by making sluaunreal available.
+
+// Copyright (C) 2018 THL A29 Limited, a Tencent company. All rights reserved.
+// Licensed under the BSD 3-Clause License (the "License"); 
+// you may not use this file except in compliance with the License. You may obtain a copy of the License at
+
+// https://opensource.org/licenses/BSD-3-Clause
+
+// Unless required by applicable law or agreed to in writing, 
+// software distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and limitations under the License.
 
 #pragma once
 
 #include "InputCoreTypes.h"
 #include "ModuleManager.h"
-#include "Private/slua_profile_inspector.h"
+#include "slua_profile_inspector.h"
 
 #ifdef ENABLE_PROFILER
 #define PROFILER_WATCHER(x)  Profiler x(__FUNCTION__);
@@ -18,7 +29,7 @@
 #define PROFILER_END_WATCHER()
 #endif
 
-class Fslua_profileModule : public IModuleInterface
+class SLUA_PROFILE_API Fslua_profileModule : public IModuleInterface
 {
 public:
 
@@ -34,10 +45,13 @@ private:
 	FTickerDelegate TickDelegate;
 	FDelegateHandle TickDelegateHandle;
 	TSharedPtr<SProfilerInspector> sluaProfilerInspector;
-	bool sluaProfilerSetHook;
+	int stateIndex = -1;
+	bool tabOpened = false;
+	void OnTabClosed(TSharedRef<SDockTab> tab);
+	void openHook();
 };
 
-struct functionProfileInfo
+struct SLUA_PROFILE_API FunctionProfileInfo
 {
 	FString functionName;
 	FString brevName;

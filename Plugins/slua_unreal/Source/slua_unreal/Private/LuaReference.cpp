@@ -117,7 +117,7 @@ namespace slua {
 				FScriptArrayHelper_InContainer helper(p, base, n);
 				for (int32 index = 0; index < helper.Num(); ++index)
 				{
-					ret |= addRefByProperty(collector, p->Inner, helper.GetRawPtr(n));
+					ret |= addRefByProperty(collector, p->Inner, helper.GetRawPtr(index));
 				}
 			}
 			return ret;

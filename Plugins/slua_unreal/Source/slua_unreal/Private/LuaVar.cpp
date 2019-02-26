@@ -246,7 +246,7 @@ namespace slua {
 
     void LuaVar::free() {
         for(size_t n=0;n<numOfVar;n++) {
-            if( (vars[n].luatype==LV_FUNCTION || vars[n].luatype==LV_TABLE) 
+            if( (vars[n].luatype==LV_FUNCTION || vars[n].luatype==LV_TABLE || vars[n].luatype == LV_USERDATA)
                 && vars[n].ref->isValid() )
                 vars[n].ref->release();
             else if(vars[n].luatype==LV_STRING)
@@ -593,7 +593,7 @@ namespace slua {
         for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
             UProperty* prop = *it;
             uint64 propflag = prop->GetPropertyFlags();
-            if((propflag&CPF_ReturnParm) || (propflag&CPF_OutParm))
+            if((propflag&CPF_ReturnParm) || (propflag&CPF_OutParm && !(propflag&CPF_ConstParm)))
                 continue;
 
             pushArgByParms(prop,parms+prop->GetOffset_ForInternal());

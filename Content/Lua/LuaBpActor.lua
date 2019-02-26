@@ -18,8 +18,8 @@ function actor:ReceiveEndPlay(reason)
     self:Super()
 end
 
-function actor:Tick(dt)
-    print("bpactor:Tick",self,dt)
+function actor:ReceiveTick(dt)
+    print("btactor:ReceiveTick",self,dt)
 end
 
 function actor:bpcall(value)

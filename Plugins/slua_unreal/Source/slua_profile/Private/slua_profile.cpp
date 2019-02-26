@@ -12,52 +12,228 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #include "slua_profile.h"
-#include "Widgets/Docking/SDockTab.h"
-#include "Widgets/Layout/SBox.h"
-#include "Widgets/Text/STextBlock.h"
-#include "Widgets/Input/SEditableTextBox.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "FileManager.h"
 #include "Engine/GameEngine.h"
+#include "Containers/Ticker.h"
+#include "LuaState.h"
+#include "lua.h"
 
 #define LOCTEXT_NAMESPACE "Fslua_profileModule"
+
 static const FName slua_profileTabName("slua_profile");
+SluaProfiler curProfiler;
+TArray<SluaProfiler> curProfilersArray;
+uint32_t currentLayer = 0;
+uint32_t profilerThreadId = 0;
+
+enum slua_profiler_hook_event
+{
+	CALL = 0,
+	RETURN = 1,
+	LINE = 2,
+	TAILRET = 4
+};
+
+void debug_hook_c(NS_SLUA::lua_State *L, NS_SLUA::lua_Debug *ar)
+{
+	if (ar->event == slua_profiler_hook_event::CALL)
+	{
+		if (lua_getinfo(L, "nSl", ar) != 0)
+		{
+			FString functionName = ar->short_src;
+			functionName += ":";
+			functionName += FString::FromInt(ar->linedefined);
+			functionName += " ";
+			functionName += ar->name;
+			PROFILER_BEGIN_WATCHER_WITH_FUNC_NAME(functionName)
+		}
+		else
+		{
+			FString functionName = "invalid_lua_function";
+			PROFILER_BEGIN_WATCHER_WITH_FUNC_NAME(functionName)
+		}
+	}
+	else if (ar->event == slua_profiler_hook_event::RETURN)
+	{
+		PROFILER_END_WATCHER()
+	}
+}
 
 void Fslua_profileModule::StartupModule()
 {
-	if (GIsEditor && !IsRunningCommandlet()) {
-		FGlobalTabmanager::Get()->RegisterNomadTabSpawner(slua_profileTabName, FOnSpawnTab::CreateRaw(this, &Fslua_profileModule::OnSpawnPluginTab))
-			.SetDisplayName(LOCTEXT("Flua_wrapperTabTitle", "slua Profiler"))
-			.SetMenuType(ETabSpawnerMenuType::Hidden);
+	if (GIsEditor && !IsRunningCommandlet())
+	{
+		InitProfilerWatchThread();
+		sluaProfilerInspector = MakeShareable(new SProfilerInspector);
+		FGlobalTabmanager::Get()->RegisterNomadTabSpawner(slua_profileTabName,
+			FOnSpawnTab::CreateRaw(this, &Fslua_profileModule::OnSpawnPluginTab))
+			.SetDisplayName(LOCTEXT("Flua_wrapperTabTitle", "slua Profiler"));
+		sluaProfilerSetHook = false;
+		TickDelegate = FTickerDelegate::CreateRaw(this, &Fslua_profileModule::Tick);
+		TickDelegateHandle = FTicker::GetCoreTicker().AddTicker(TickDelegate);
 	}
 }
 
 void Fslua_profileModule::ShutdownModule()
 {
+	sluaProfilerInspector = nullptr;
+	ClearCurProfiler();
+
+	slua::LuaState *state = slua::LuaState::get(FString("main"));
+	if (state != nullptr && sluaProfilerSetHook == true)
+	{
+		NS_SLUA::lua_sethook(state->getLuaState(), NULL, 0, 0);
+		sluaProfilerSetHook = false;
+	}
+
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(slua_profileTabName);
+}
+
+bool Fslua_profileModule::Tick(float DeltaTime)
+{
+	slua::LuaState *state = slua::LuaState::get(FString("main"));
+	if (state != nullptr && sluaProfilerSetHook == false)
+	{
+		NS_SLUA::lua_sethook(state->getLuaState(), debug_hook_c, LUA_MASKCALL|LUA_MASKRET, 0);
+		sluaProfilerSetHook = true;
+	}
+	else
+	{
+		sluaProfilerSetHook = false;
+	}
+
+	sluaProfilerInspector->Refresh(curProfilersArray);
+	ClearCurProfiler();
+	return true;
 }
 
 TSharedRef<class SDockTab> Fslua_profileModule::OnSpawnPluginTab(const FSpawnTabArgs & SpawnTabArgs)
 {
-	FText WidgetText = LOCTEXT("WindowWidgetText", "Add code to display profiler");
+	if (sluaProfilerInspector.IsValid())
+	{
+		sluaProfilerInspector->StartChartRolling();
+		return sluaProfilerInspector->GetSDockTab();
+	}
+	else
+	{
+		return SNew(SDockTab).TabRole(ETabRole::NomadTab);
+	}
+}
 
-	return SNew(SDockTab)
-		.TabRole(ETabRole::NomadTab)
-		[
-			// Put your tab content here!
-			SNew(SBox)
-			.HAlign(HAlign_Left)
-			.VAlign(VAlign_Top)
-			[
-				SNew(SVerticalBox)
-				+ SVerticalBox::Slot()[
-					SNew(STextBlock)
-						.Text(WidgetText)
-				]
-			]
-		];
+/////////////////////////////////////////////////////////////////////////////////////
+
+bool isWatchThread()
+{	
+	uint32_t pid = FPlatformTLS::GetCurrentThreadId();
+	if (profilerThreadId == 0)
+	{
+		profilerThreadId = pid;
+		return true;
+	}
+	else if (pid != profilerThreadId)
+	{
+		return false;
+	}
+	return true;
+}
+
+void Profiler::BeginWatch(FString funcName)
+{
+	if (isWatchThread() != true)
+	{
+		return;
+	}
+
+	TSharedPtr<functionProfileInfo> funcInfo = MakeShareable(new functionProfileInfo);
+	funcInfo->functionName = funcName;
+	FDateTime Time = FDateTime::Now();
+	funcInfo->begTime = Time.GetTicks()/ ETimespan::NanosecondsPerTick;
+	funcInfo->endTime = -1;
+	funcInfo->costTime = 0;
+	funcInfo->layerIdx = currentLayer;
+	funcInfo->beMerged = false;
+	funcInfo->mergedNum = 1;
+	curProfiler.Add(funcInfo);
+	currentLayer++;
+}
+
+void Profiler::EndWatch()
+{
+	if (isWatchThread() != true || currentLayer <= 0)
+	{
+		return;
+	}
+
+	// find the end watch function node
+	size_t idx = 0;
+	for (idx = curProfiler.Num(); idx > 0; idx--)
+	{
+		TSharedPtr<functionProfileInfo> &funcInfo = curProfiler[idx - 1];
+		if (funcInfo->endTime == -1)
+		{
+			FDateTime Time = FDateTime::Now();
+			funcInfo->endTime = Time.GetTicks() / ETimespan::NanosecondsPerTick;
+			funcInfo->costTime = funcInfo->endTime - funcInfo->begTime;
+			funcInfo->mergedCostTime = funcInfo->costTime;
+			break;
+		}
+	}
+
+	// check wether node has child
+	TSharedPtr<functionProfileInfo> &funcInfo = curProfiler[idx - 1];
+	int64_t childCostTime = 0;
+	bool hasChild = false;
+	for (; idx < curProfiler.Num(); idx++)
+	{
+		TSharedPtr<functionProfileInfo> &nextFuncInfo = curProfiler[idx];
+		if (nextFuncInfo->layerIdx <= funcInfo->layerIdx)
+		{
+			break;
+		}
+		if (nextFuncInfo->layerIdx == (funcInfo->layerIdx + 1))
+		{
+			hasChild = true;
+			childCostTime += nextFuncInfo->costTime;
+		}
+	}
+
+	if (hasChild == true)
+	{
+		TSharedPtr<functionProfileInfo> otherFuncInfo = MakeShareable(new functionProfileInfo);
+		otherFuncInfo->functionName = "(other)";
+		otherFuncInfo->begTime = 0;
+		otherFuncInfo->endTime = 0;
+		otherFuncInfo->costTime = funcInfo->costTime - childCostTime;
+		otherFuncInfo->mergedCostTime = otherFuncInfo->costTime;
+		otherFuncInfo->layerIdx = currentLayer;
+		otherFuncInfo->beMerged = false;
+		otherFuncInfo->mergedNum = 1;
+		curProfiler.Add(otherFuncInfo);
+	}
+	currentLayer--;
+	if (currentLayer == 0)
+	{
+		curProfilersArray.Add(curProfiler);
+		curProfiler.Empty();
+	}
+}
+
+void Fslua_profileModule::ClearCurProfiler()
+{
+	for (auto &iter : curProfilersArray)
+	{
+		iter.Empty();
+	}
+	curProfilersArray.Empty();
+}
+
+void InitProfilerWatchThread()
+{
+	profilerThreadId = FPlatformTLS::GetCurrentThreadId();
 }
 
 #undef LOCTEXT_NAMESPACE
 	
 IMPLEMENT_MODULE(Fslua_profileModule, slua_profile)
+

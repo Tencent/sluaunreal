@@ -176,6 +176,7 @@ namespace slua {
         if(L) {
             lua_close(L);
 			GUObjectArray.RemoveUObjectDeleteListener(this);
+			FCoreUObjectDelegates::GetPostGarbageCollect().Remove(pgcHandler);
             stateMapFromIndex.Remove(si);
             L=nullptr;
         }
@@ -193,6 +194,7 @@ namespace slua {
         if(!mainState) 
             mainState = this;
 
+		pgcHandler = FCoreUObjectDelegates::GetPostGarbageCollect().AddRaw(this, &LuaState::onEngineGC);
 		GUObjectArray.AddUObjectDeleteListener(this);
         stackCount = 0;
         si = ++StateIndex;
@@ -317,6 +319,11 @@ namespace slua {
 			for (auto& prop : pair.Value) 
 				reinterpret_cast<GenericUserData*>(prop)->flag |= UD_HADFREE;
 		propLinks.Empty();
+	}
+
+	void LuaState::onEngineGC()
+	{
+		// TODO
 	}
 
     LuaVar LuaState::doBuffer(const uint8* buf,uint32 len, const char* chunk, LuaVar* pEnv) {

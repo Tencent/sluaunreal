@@ -176,6 +176,8 @@ namespace slua {
 		void linkProp(void* parent, void* prop);
 		void releaseLink(void* prop);
 		void releaseAllLink();
+		// unreal gc will call this funciton
+		void onEngineGC();
 
 		TMap<void*, TArray<void*>> propLinks;
         int stackCount;
@@ -189,6 +191,8 @@ namespace slua {
 		FDeadLoopCheck* deadLoopCheck;
 
 		TSet <UObject*> objRefs;
+
+		FDelegateHandle pgcHandler;
 
         static LuaState* mainState;
 

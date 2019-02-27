@@ -184,12 +184,21 @@ namespace slua {
         int si;
         FString stateName;
 
-        TMap<UClass*,TMap<FString,UFunction*>*> classMap;
-
-		TMap<UClass*, int32> classInstanceNums;
+		// cache ufunction ptr if index by lua
+		struct ClassFunctionCache {
+			typedef TMap<FString, TWeakObjectPtr<UFunction>> CacheItem;
+			typedef TMap<TWeakObjectPtr<UClass>, CacheItem> CacheMap;
+			CacheMap cacheMap;
+			UFunction* find(UClass* uclass, const char* fname);
+			void cache(UClass* uclass, const char* fname, UFunction* func);
+			void clear() {
+				cacheMap.Empty();
+			}
+		} classMap;
 
 		FDeadLoopCheck* deadLoopCheck;
 
+		// hold UObjects pushed to lua
 		TSet <UObject*> objRefs;
 
 		FDelegateHandle pgcHandler;

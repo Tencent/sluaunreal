@@ -40,7 +40,7 @@ public:
 	}
 
 	virtual void ProcessEvent(UFunction* func, void* params) override;
-	void SuperTick();
+	void superTick() override;
 private:
 	FGeometry currentGeometry;
 };

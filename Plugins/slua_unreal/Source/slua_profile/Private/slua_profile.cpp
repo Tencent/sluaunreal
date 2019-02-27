@@ -92,7 +92,10 @@ void Fslua_profileModule::ShutdownModule()
 bool Fslua_profileModule::Tick(float DeltaTime)
 {
 	if (!tabOpened)
+	{
+		ClearCurProfiler();
 		return true;
+	}		
 	
 	openHook();
 	sluaProfilerInspector->Refresh(curProfilersArray);

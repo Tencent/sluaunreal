@@ -14,8 +14,7 @@
 #include "slua_profile_inspector.h"
 #include "slua_profile.h"
 
-extern const FName slua_profileTabName;
-
+static const FName slua_profileTabNameInspector("slua_profile");
 ///////////////////////////////////////////////////////////////////////////
 SProfilerInspector::SProfilerInspector()
 {
@@ -447,7 +446,7 @@ void SProfilerInspector::ShowProfilerTree(TArray<SluaProfiler> &selectedProfiler
 {
 	AssignProfiler(selectedProfiler, shownRootProfiler, shownProfiler);
 
-	TSharedPtr<SDockTab, ESPMode::NotThreadSafe> curDockTab = FGlobalTabmanager::Get()->FindExistingLiveTab(slua_profileTabName);
+	TSharedPtr<SDockTab, ESPMode::NotThreadSafe> curDockTab = FGlobalTabmanager::Get()->FindExistingLiveTab(slua_profileTabNameInspector);
 	if (treeview.IsValid())
 	{
 		treeview->RequestTreeRefresh();

@@ -36,11 +36,20 @@ public:
 	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FunctionProfileInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
 	void OnGetChildrenForTree(TSharedPtr<FunctionProfileInfo> Parent, TArray<TSharedPtr<FunctionProfileInfo>>& OutChildren);
 	void StartChartRolling();
+	bool GetNeedProfilerCleared() const
+	{
+		return needProfilerCleared;
+	}
+	void SetNeedProfilerCleared(const bool needClear)
+	{
+		needProfilerCleared = needClear;
+	}
 
 private:
 	const static int sampleNum = 250;
 	const static int fixRowWidth = 300;
 	const static int refreshInterval = 50;
+	const float perMilliSec = 1000.0f;
 
 	TSharedPtr<STreeView<TSharedPtr<FunctionProfileInfo>>> treeview;
 	TSharedPtr<SCheckBox> profilerCheckBox;
@@ -52,7 +61,9 @@ private:
 	int arrayOffset;
 	int lastArrayOffset;
 	float maxProfileSamplesCostTime;
+	float avgProfileSamplesCostTime;
 	bool hasCleared;
+	bool needProfilerCleared;
 
 	TArray<SluaProfiler> tmpProfilersArraySamples[sampleNum];
 	TArray<SluaProfiler> profilersArraySamples[sampleNum];

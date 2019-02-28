@@ -23,7 +23,9 @@ SProfilerInspector::SProfilerInspector()
 	lastArrayOffset = 0;
 	refreshIdx = 0;
 	maxProfileSamplesCostTime = 0.0f;
+	avgProfileSamplesCostTime = 0.0f;
 	hasCleared = false;
+	needProfilerCleared = false;
 }
 
 SProfilerInspector::~SProfilerInspector()
@@ -109,8 +111,10 @@ void SProfilerInspector::Refresh(TArray<SluaProfiler>& curProfilersArray)
 void SProfilerInspector::RefreshBarValue()
 {
 	maxProfileSamplesCostTime = 0.0f;
+	avgProfileSamplesCostTime = 0.0f;
 	lastArrayOffset = arrayOffset;
 	int sampleIdx = (arrayOffset == sampleNum - 1) ? 0 : arrayOffset + 1;
+	float totalSampleValue = 0.0f;
 	for (int idx = 0; idx<sampleNum; idx++)
 	{
 		TArray<SluaProfiler> &shownProfilerBar = profilersArraySamples[sampleIdx];
@@ -124,12 +128,16 @@ void SProfilerInspector::RefreshBarValue()
 			}
 		}
 		chartValArray[idx] = totalValue;
+		totalSampleValue += totalValue;
 		if (maxProfileSamplesCostTime < totalValue)
 		{
 			maxProfileSamplesCostTime = totalValue;
 		}
 		sampleIdx = (sampleIdx == sampleNum - 1) ? 0 : sampleIdx + 1;
 	}
+
+	avgProfileSamplesCostTime = totalSampleValue / sampleNum;
+
 }
 
 void SProfilerInspector::AssignProfiler(TArray<SluaProfiler> &profilerArray, SluaProfiler& rootProfilers, SluaProfiler& profilers)
@@ -253,7 +261,7 @@ void SProfilerInspector::InitProfilerBar(int barIdx, TSharedPtr<SHorizontalBox>&
 
 	SAssignNew(profilerBarArray[barIdx], SProgressBar)
 		.ToolTipText(TAttribute<FText>::Create([=]() {
-		return FText::AsNumber(chartValArray[barIdx] / 1000.0f);
+		return FText::AsNumber(chartValArray[barIdx] / perMilliSec);
 	}))
 		.BackgroundImage(&bgColor)
 		.BarFillType(EProgressBarFillType::BottomToTop).BorderPadding(FVector2D(0, 0))
@@ -327,6 +335,7 @@ void SProfilerInspector::OnClearBtnClicked()
 	}
 
 	hasCleared = true;
+	needProfilerCleared = true;
 }
 
 TSharedRef<class SDockTab> SProfilerInspector::GetSDockTab()
@@ -394,7 +403,10 @@ TSharedRef<class SDockTab> SProfilerInspector::GetSDockTab()
 				SNew(SVerticalBox)
 				+ SVerticalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Center)
 				[
-					SNew(STextBlock).Text(WidgetText)
+					SNew(STextBlock).Text_Lambda([=]() {
+						FString titleStr = FString::Printf(TEXT("============================ CPU profiler Max(%.2f ms), Avg(%.2f ms) ============================"),
+							maxProfileSamplesCostTime / perMilliSec, avgProfileSamplesCostTime / perMilliSec);
+						return FText::FromString(titleStr); })
 				]
 				+ SVerticalBox::Slot().AutoHeight()
 				[
@@ -456,7 +468,7 @@ void SProfilerInspector::ShowProfilerTree(TArray<SluaProfiler> &selectedProfiler
 
 TSharedRef<ITableRow> SProfilerInspector::OnGenerateRowForList(TSharedPtr<FunctionProfileInfo> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
-	if (Item->functionName.IsEmpty())
+	if (Item->functionName.IsEmpty() || Item->beMerged == true || shownProfiler[Item->globalIdx]->beMerged == true)
 	{
 		return
 			SNew(STableRow< TSharedPtr<FString> >, OwnerTable);
@@ -486,11 +498,7 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateRowForList(TSharedPtr<Functi
 									return FText::FromString(shownProfiler[Item->globalIdx]->functionName);
 								}))
 				+ SHeaderRow::Column("Time ms").DefaultLabel(TAttribute<FText>::Create([=]() {
-									/*if (shownProfiler[Item->globalIdx]->functionName.IsEmpty())
-									{
-										return FText::FromString("");
-									}*/
-									return FText::AsNumber(shownProfiler[Item->globalIdx]->mergedCostTime / 1000.0f);
+									return FText::AsNumber(shownProfiler[Item->globalIdx]->mergedCostTime / perMilliSec);
 								}))
 								.FixedWidth(fixRowWidth)
 				+ SHeaderRow::Column("Calls").DefaultLabel(TAttribute<FText>::Create([=]() {
@@ -505,8 +513,17 @@ void SProfilerInspector::OnGetChildrenForTree(TSharedPtr<FunctionProfileInfo> Pa
 {
 	TArray<TSharedPtr<FunctionProfileInfo>> unSortedChildrenArray;
 
-	if (Parent.IsValid() && Parent->functionName.IsEmpty() == false)
+	if (Parent.IsValid() && Parent->functionName.IsEmpty() == false
+		&& shownProfiler[Parent->globalIdx]->beMerged == false)
 	{
+		if (Parent->layerIdx == 0)
+		{
+			Parent->mergeIdxArray.Empty();
+			MergeSiblingNode(Parent->globalIdx, shownProfiler.Num(), Parent->mergeIdxArray, 0);
+			CopyFunctionNode(shownProfiler[Parent->globalIdx], Parent);
+			Parent->mergeIdxArray = shownProfiler[Parent->globalIdx]->mergeIdxArray;
+		}
+
 		int globalIdx = Parent->globalIdx + 1;
 		int layerIdx = Parent->layerIdx;
 
@@ -570,16 +587,20 @@ void SProfilerInspector::MergeSiblingNode(int begIdx, int endIdx, TArray<int> pa
 	SearchSiblingNode(shownProfiler, pointIdx, endIdx, node);
 
 	// merge with other parent nodes' child which function name is the same with self parent
+	if (mergeArrayIdx >= parentMergeArray.Num())
+	{
+		return;
+	}
 	for (size_t idx = mergeArrayIdx; idx<parentMergeArray.Num(); idx++)
 	{
-		int pointIdx = parentMergeArray[idx] + 1;
+		pointIdx = parentMergeArray[idx] + 1;
 		SearchSiblingNode(shownProfiler, pointIdx, endIdx, node);
 	}
 }
 
 void SProfilerInspector::SearchSiblingNode(SluaProfiler& profiler, int curIdx, int endIdx, TSharedPtr<FunctionProfileInfo> &node)
 {
-	while (curIdx != endIdx && profiler[curIdx]->layerIdx >= node->layerIdx)
+	while (curIdx < endIdx && profiler[curIdx]->layerIdx >= node->layerIdx)
 	{
 		TSharedPtr<FunctionProfileInfo> &nextNode = profiler[curIdx];
 		if (nextNode->layerIdx == node->layerIdx && nextNode->functionName == node->functionName)

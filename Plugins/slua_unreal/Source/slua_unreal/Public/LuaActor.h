@@ -17,6 +17,7 @@
 #include "LuaState.h"
 #include "LuaBase.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/HUD.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/GameModeBase.h"
@@ -39,7 +40,7 @@ public:	\
 		return; \
 		Super::ProcessEvent(func, params); \
 	} \
-	void SuperTick() { \
+	void superTick() override { \
 		Super::Tick(deltaTime); \
 	} \
 
@@ -182,3 +183,23 @@ public:
 	}
 };
 
+UCLASS()
+class SLUA_UNREAL_API ALuaHUD : public AHUD, public slua_Luabase {
+	GENERATED_BODY()
+		LUABASE_BODY(LuaHUD)
+public:
+	ALuaHUD(const FObjectInitializer & ObjectInitializer = FObjectInitializer::Get())
+		:AHUD(ObjectInitializer)
+	{
+		PrimaryActorTick.bCanEverTick = true;
+	}
+public:
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+		FString LuaFilePath;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+		FString LuaStateName;
+	UFUNCTION(BlueprintCallable, Category = "slua")
+		FLuaBPVar CallLuaMember(FString FunctionName, const TArray<FLuaBPVar>& Args) {
+		return callMember(FunctionName, Args);
+	}
+};

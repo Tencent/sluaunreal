@@ -39,7 +39,7 @@ void ULuaUserWidget::ProcessEvent(UFunction * func, void * params)
 	Super::ProcessEvent(func, params);
 }
 
-void ULuaUserWidget::SuperTick()
+void ULuaUserWidget::superTick()
 {
 	Super::NativeTick(currentGeometry, deltaTime);
 }

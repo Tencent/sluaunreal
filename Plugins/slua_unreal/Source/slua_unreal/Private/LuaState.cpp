@@ -176,6 +176,7 @@ namespace slua {
         if(L) {
             lua_close(L);
 			GUObjectArray.RemoveUObjectDeleteListener(this);
+			FCoreUObjectDelegates::GetPostGarbageCollect().Remove(pgcHandler);
             stateMapFromIndex.Remove(si);
             L=nullptr;
         }
@@ -193,13 +194,13 @@ namespace slua {
         if(!mainState) 
             mainState = this;
 
+		pgcHandler = FCoreUObjectDelegates::GetPostGarbageCollect().AddRaw(this, &LuaState::onEngineGC);
 		GUObjectArray.AddUObjectDeleteListener(this);
         stackCount = 0;
         si = ++StateIndex;
 
 		propLinks.Empty();
-		classInstanceNums.Empty();
-		classMap.Empty();
+		classMap.clear();
 		objRefs.Empty();
 
 #if WITH_EDITOR
@@ -317,6 +318,15 @@ namespace slua {
 			for (auto& prop : pair.Value) 
 				reinterpret_cast<GenericUserData*>(prop)->flag |= UD_HADFREE;
 		propLinks.Empty();
+	}
+
+	// engine will call this function on post gc
+	void LuaState::onEngineGC()
+	{
+		// find freed uclass
+		for(ClassFunctionCache::CacheMap::TIterator it(classMap.cacheMap);it;++it)
+			if (!it.Key().IsValid()) 
+				classMap.cacheMap.Remove(it.Key());
 	}
 
     LuaVar LuaState::doBuffer(const uint8* buf,uint32 len, const char* chunk, LuaVar* pEnv) {
@@ -490,37 +500,10 @@ namespace slua {
 	void LuaState::addRef(UObject* obj)
 	{
 		objRefs.Add(obj);
-
-		UClass* objClass = obj->GetClass();
-		int32* instanceNumPtr = classInstanceNums.Find(objClass);
-		if (!instanceNumPtr)
-		{
-			instanceNumPtr = &classInstanceNums.Add(objClass, 0);
-		}
-
-		(*instanceNumPtr)++;
 	}
 
 	void LuaState::removeRef(UObject* obj)
 	{
-		UClass* objClass = obj->GetClass();
-		int32* instanceNumPtr = classInstanceNums.Find(objClass);
-		// maybe lua had removeRef, so don't need removeRef twice
-		if (!instanceNumPtr) return;
-		(*instanceNumPtr)--;
-		ensure((*instanceNumPtr) >= 0);
-		if (*instanceNumPtr == 0)
-		{
-			classInstanceNums.Remove(objClass);
-
-			auto classFunctionsPtr = classMap.Find(objClass);
-			if (classFunctionsPtr)
-			{
-				delete *classFunctionsPtr;
-				classMap.Remove(objClass);
-			}
-		}
-
 		objRefs.Remove(obj);
 	}
 
@@ -606,4 +589,19 @@ namespace slua {
 		luaL_error(L, "script exec timeout");
 	}
 
+	UFunction* LuaState::ClassFunctionCache::find(UClass* uclass, const char* fname)
+	{
+		auto item = cacheMap.Find(uclass);
+		if (!item) return nullptr;
+		auto func = item->Find(UTF8_TO_TCHAR(fname));
+		if(func!=nullptr)
+			return func->IsValid() ? func->Get() : nullptr;
+		return nullptr;
+	}
+
+	void LuaState::ClassFunctionCache::cache(UClass* uclass, const char* fname, UFunction* func)
+	{
+		auto& item = cacheMap.FindOrAdd(uclass);
+		item.Add(UTF8_TO_TCHAR(fname), func);
+	}
 }

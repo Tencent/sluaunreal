@@ -39,7 +39,7 @@ namespace slua {
 			// c++ class should override Tick
 			// we hope lua user don't care about it
 			if (ud->currentFunc == UFUNCTION_TICK)
-				ud->SuperTick();
+				ud->superTick();
 			else {
 				using Super = typename T::Super;
 				ud->Super::ProcessEvent(ud->currentFunc, ud->currentParams);
@@ -102,6 +102,8 @@ namespace slua {
 
 		bool postInit(const char* tickFlag,bool rawget=true);
 		void tick(float DeltaTime);
+		// should override this function to support super::tick
+		virtual void superTick() = 0;
 		static int __index(lua_State* L);
 		static int __newindex(lua_State* L);
 

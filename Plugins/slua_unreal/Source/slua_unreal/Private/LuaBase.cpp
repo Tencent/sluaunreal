@@ -54,9 +54,11 @@ namespace slua {
 	// Called every frame
 	void LuaBase::tick(float DeltaTime)
 	{
-		if (!tickFunction.isValid())
-			return;
 		UFunctionParamScope scope(this, UFUNCTION_TICK, DeltaTime);
+		if (!tickFunction.isValid()) {
+			superTick();
+			return;
+		}
 		tickFunction.call(luaSelfTable, DeltaTime);
 	}
 
@@ -133,9 +135,6 @@ namespace slua {
 
 		if (tickEnabled && luaSelfTable.isTable()) {
 			tickFunction = luaSelfTable.getFromTable<slua::LuaVar>("Tick", true);
-			if (!tickFunction.isValid()) {
-				return false;
-			}
 			return tickEnabled;
 		}
 		return false;

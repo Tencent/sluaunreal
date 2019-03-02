@@ -71,16 +71,16 @@ void  SProfilerInspector::CopyFunctionNode(TSharedPtr<FunctionProfileInfo>& oldF
 	newFuncNode->globalIdx = oldFuncNode->globalIdx;
 }
 
-void SProfilerInspector::Refresh(TArray<SluaProfiler>& curProfilersArray)
+void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray)
 {
-	if (stopChartRolling == true || curProfilersArray.Num() == 0)
+	if (stopChartRolling == true || profilersArray.Num() == 0)
 	{
 		return;
 	}
 
-	AssignProfiler(curProfilersArray, tmpRootProfiler, tmpProfiler);
+	AssignProfiler(profilersArray, tmpRootProfiler, tmpProfiler);
 
-	tmpProfilersArraySamples[arrayOffset] = curProfilersArray;
+	tmpProfilersArraySamples[arrayOffset] = profilersArray;
 	arrayOffset = (arrayOffset + 1) >= sampleNum ? 0 : (arrayOffset + 1);
 
 	if (NeedReBuildInspector() == true && treeview.IsValid() && tmpRootProfiler.Num() != 0)
@@ -572,7 +572,7 @@ void SProfilerInspector::MergeSiblingNode(int begIdx, int endIdx, TArray<int> pa
 	// merge with other parent nodes' child which function name is the same with self parent
 	for (size_t idx = mergeArrayIdx; idx<parentMergeArray.Num(); idx++)
 	{
-		int pointIdx = parentMergeArray[idx] + 1;
+		pointIdx = parentMergeArray[idx] + 1;
 		SearchSiblingNode(shownProfiler, pointIdx, endIdx, node);
 	}
 }

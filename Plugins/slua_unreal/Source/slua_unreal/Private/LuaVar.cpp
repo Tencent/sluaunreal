@@ -584,12 +584,13 @@ namespace slua {
 			lua_pop(L, n);
             return true;
         }
-
+        // push self if valid
         int n=0;
 		if (pSelf) {
 			pSelf->push();
 			n++;
 		}
+        // push arguments to lua state
         for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
             UProperty* prop = *it;
             uint64 propflag = prop->GetPropertyFlags();
@@ -599,10 +600,24 @@ namespace slua {
             pushArgByParms(prop,parms+prop->GetOffset_ForInternal());
             n++;
         }
-        docall(n);
+        
+        int ret = docall(n);
+        // if lua return value
+        if(ret>0) {
+            auto L = getState();
+            // we only handle first lua return value
+            UProperty* prop = func->GetReturnProperty();
+            auto checkder = LuaObject::getChecker(prop);
+            if (checkder) {
+                (*checkder)(L, prop, parms+prop->GetOffset_ForInternal(), lua_absindex(L, -ret));
+            }
+            // pop returned value
+            lua_pop(L, ret);
+        }
 		return true;
     }
 
+    // clone luavar
     void LuaVar::varClone(lua_var& tv,const lua_var& ov) const {
         switch(ov.luatype) {
         case LV_INT:

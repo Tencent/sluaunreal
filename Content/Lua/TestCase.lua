@@ -68,3 +68,10 @@ print("info.name",info.name)
 assert(info.name=="女战士")
 assert(info.id==1001001)
 assert(info.level==12)
+
+t.OnTestGetCount:Bind(function (s)
+    print(s)
+    return 1111
+end)
+
+t:TestUnicastDelegate("test unicast delegate")

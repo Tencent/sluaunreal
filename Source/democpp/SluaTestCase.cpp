@@ -391,3 +391,9 @@ int USluaTestCase::ReturnIntWithInt(int i) {
 int USluaTestCase::FuncWithStr(FString str) {
     return str.Len();
 }
+
+void USluaTestCase::TestUnicastDelegate(FString str)
+{
+    int32 retVal = OnTestGetCount.IsBound() ? OnTestGetCount.Execute(str) : -1;
+    slua::Log::Log("TestUnicastDelegate retVal=%d", retVal);
+}

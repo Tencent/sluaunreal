@@ -161,9 +161,26 @@ namespace slua {
         return LuaObject::pushType<LuaMultiDelegateWrap*>(L,wrapobj,"LuaMultiDelegateWrap",setupMT,gc);
     }
 
+    void clear(lua_State* L, LuaDelegateWrap* ldw) {
+        auto object = ldw->delegate->GetUObject();
+		if (object)
+		{
+			ULuaDelegate* delegateObj = Cast<ULuaDelegate>(object);
+			if (delegateObj)
+			{
+				delegateObj->dispose();
+				LuaObject::removeRef(L, object);
+			}
+		}
+		ldw->delegate->Clear();
+    }
+
 	int LuaDelegate::Bind(lua_State* L)
 	{
 		CheckUD(LuaDelegateWrap, L, 1);
+
+        // clear old delegate object
+        if(UD) clear(L,UD);
 
 		// bind luafucntion and signature function
 		auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(), ULuaDelegate::StaticClass());
@@ -184,17 +201,7 @@ namespace slua {
 	int LuaDelegate::Clear(lua_State* L)
 	{
 		CheckUD(LuaDelegateWrap, L, 1);
-		auto object = UD->delegate->GetUObject();
-		if (object)
-		{
-			ULuaDelegate* delegateObj = Cast<ULuaDelegate>(object);
-			if (delegateObj)
-			{
-				delegateObj->dispose();
-				LuaObject::removeRef(L, object);
-			}
-		}
-		UD->delegate->Clear();
+		if(UD) clear(L,UD);
 		return 0;
 	}
 

@@ -602,18 +602,18 @@ namespace slua {
         }
         
         int ret = docall(n);
+        auto L = getState();
         // if lua return value
-        if(ret>0) {
-            auto L = getState();
-            // we only handle first lua return value
-            UProperty* prop = func->GetReturnProperty();
-            auto checkder = LuaObject::getChecker(prop);
+        // we only handle first lua return value
+        if(ret>0 && bHasReturnParam) {
+            auto prop = func->GetReturnProperty();
+            auto checkder = prop?LuaObject::getChecker(prop):nullptr;
             if (checkder) {
                 (*checkder)(L, prop, parms+prop->GetOffset_ForInternal(), lua_absindex(L, -ret));
             }
-            // pop returned value
-            lua_pop(L, ret);
         }
+        // pop returned value
+        lua_pop(L, ret);
 		return true;
     }
 

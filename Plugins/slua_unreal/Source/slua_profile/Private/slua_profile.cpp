@@ -222,6 +222,13 @@ void Profiler::EndWatch()
 
 void Fslua_profileModule::ClearCurProfiler()
 {
+	if (sluaProfilerInspector.IsValid() && sluaProfilerInspector->GetNeedProfilerCleared())
+	{
+		curProfiler.Empty();
+		currentLayer = 0;
+		sluaProfilerInspector->SetNeedProfilerCleared(false);
+	}
+
 	for (auto &iter : curProfilersArray)
 	{
 		iter.Empty();

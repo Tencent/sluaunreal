@@ -75,3 +75,12 @@ t.OnTestGetCount:Bind(function (s)
 end)
 
 t:TestUnicastDelegate("test unicast delegate")
+
+-- test TArray<UObject>
+
+foos = t.foos
+t:setupfoo(t)
+print("get foos",foos,foos:Num())
+for i=1,foos:Num() do
+    print("foos property",i,foos:Get(i-1))
+end

@@ -254,12 +254,14 @@ USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
 }
 
 void USluaTestCase::setupfoo(UObject* obj) {
-    foos.Add(obj);
+	foos.Add(obj);
+	foos.Add(obj);
+	foos.Add(obj);
+	foos.Add(obj);
 }
 
 void USluaTestCase::delfoo() {
-    if(foos.Num()>0)
-        foos.RemoveAt(0);
+	foos.Empty();
 }
 
 const FUserInfo& USluaTestCase::GetUserInfo() {

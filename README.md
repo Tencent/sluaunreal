@@ -22,6 +22,9 @@ slua-unreal is unreal4 plugin, you can use lua language to develop game login an
 * 支持蓝图out标记参数，支持c++非const引用作为out类型参数返回。
 * 自动检查脚本死循环，当代码运行超时自动报错。
 * 支持多luastate实例，用于创建不同运行环境的luastate。
+* lua代码支持cpu profile
+
+![1](profiler.png)
 
 ## Feature
 
@@ -35,6 +38,7 @@ slua-unreal is unreal4 plugin, you can use lua language to develop game login an
 * call lua function from blueprint, vise versa
 * detect dead loop code, report error if happen dead loop
 * support multi state for isolate lua runtime
+* cpu profile tool
 
 # 使用方法简单范例
 

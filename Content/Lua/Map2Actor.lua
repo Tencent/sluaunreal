@@ -11,14 +11,14 @@ function actor:ReceiveBeginPlay()
     local world = self:GetWorld()
     local bpClass = slua.loadClass("/Game/TestActor.TestActor")
 
-    self.balls={}
     self.basepos={}
     self.rot={}
+    self.ballarr = slua.Array(UEnums.EPropertyClass.Object)
 
     for n=1,10 do
         local p = FVector(math.random(-100,100),math.random(-100,100),0)
         local actor = world:SpawnActor(bpClass,p,nil,nil)
-        self.balls[n]=actor
+        self.ballarr:Add(actor)
         self.basepos[n]=p
         self.rot[n]=math.random(-100,100)
         actor.Name = 'ActorCreateFromLua_'..tostring(n)
@@ -35,9 +35,9 @@ end
 local HitResult = import('HitResult');
 local tt=0
 function actor:Tick(dt)
-    print("map2actor:Tick")
     tt=tt+dt
-    for i,actor in pairs(self.balls) do
+    for i=1,10 do
+        local actor = self.ballarr:Get(i-1)
         local p = self.basepos[i]
         local h = HitResult()
         local rot = self.rot[i]

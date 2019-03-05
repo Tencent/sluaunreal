@@ -242,8 +242,8 @@ namespace slua {
 	int LuaMap::__ctor(lua_State* L) {
 		auto keyType = (UE4CodeGen_Private::EPropertyClass)LuaObject::checkValue<int>(L, 1);
 		auto valueType = (UE4CodeGen_Private::EPropertyClass)LuaObject::checkValue<int>(L, 2);
-		auto keyProp = createProperty(keyType);
-		auto valueProp = createProperty(valueType);
+		auto keyProp = PropertyProto::createProperty(keyType);
+		auto valueProp = PropertyProto::createProperty(valueType);
 		return push(L, keyProp, valueProp, nullptr);
 	}
 

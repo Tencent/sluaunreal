@@ -40,7 +40,7 @@ namespace slua {
     DefDeduceType(FString, Str);
 
     // definition of property
-    struct PropertyProto {
+    struct SLUA_UNREAL_API PropertyProto {
         PropertyProto(UE4CodeGen_Private::EPropertyClass t) :type(t), cls(nullptr) {}
         PropertyProto(UE4CodeGen_Private::EPropertyClass t,UClass* c) :type(t), cls(c) {}
 
@@ -51,9 +51,11 @@ namespace slua {
 
         UE4CodeGen_Private::EPropertyClass type;
         UClass* cls;
+
+        // create UProperty by PropertyProto
+        // returned UProperty should be collect by yourself
+        static UProperty* createProperty(const PropertyProto& p);
     }; 
 
-    // create UProperty by PropertyProto
-    // returned UProperty should be collect by yourself
-    UProperty* createProperty(const PropertyProto& p);
+    
 }

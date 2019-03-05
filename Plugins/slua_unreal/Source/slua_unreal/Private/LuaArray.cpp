@@ -177,7 +177,7 @@ namespace slua {
 		auto type = (UE4CodeGen_Private::EPropertyClass) LuaObject::checkValue<int>(L,1);
 		auto cls = LuaObject::checkValueOpt<UClass*>(L, 2, nullptr);
 		auto array = FScriptArray();
-		return push(L, createProperty({ type, cls }), &array);
+		return push(L, PropertyProto::createProperty({ type, cls }), &array);
     }
 
     int LuaArray::Num(lua_State* L) {

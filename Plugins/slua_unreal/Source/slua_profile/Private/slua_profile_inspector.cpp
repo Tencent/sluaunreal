@@ -71,6 +71,7 @@ void  SProfilerInspector::CopyFunctionNode(TSharedPtr<FunctionProfileInfo>& oldF
 	newFuncNode->beMerged = oldFuncNode->beMerged;
 	newFuncNode->mergedNum = oldFuncNode->mergedNum;
 	newFuncNode->globalIdx = oldFuncNode->globalIdx;
+	newFuncNode->isDuplicated = oldFuncNode->isDuplicated;
 }
 
 void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray)
@@ -87,6 +88,7 @@ void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray)
 
 	if (NeedReBuildInspector() == true && treeview.IsValid() && tmpRootProfiler.Num() != 0)
 	{
+		SortProfiler(tmpRootProfiler);
 		AssignProfiler(tmpRootProfiler, shownRootProfiler);
 		AssignProfiler(tmpProfiler, shownProfiler);
 		
@@ -454,9 +456,51 @@ void SProfilerInspector::RemoveProfilerBarOnMouseMoveEvent()
 	}
 }
 
+void SProfilerInspector::SortProfiler(SluaProfiler &shownRootProfiler)
+{
+	SluaProfiler duplictedNodeArray;
+	for (int idx = 0; idx < shownRootProfiler.Num(); idx++)//(auto &funcNode : shownRootProfiler)
+	{
+		TSharedPtr<FunctionProfileInfo> &funcNode = shownRootProfiler[idx];
+		if (funcNode->isDuplicated == true)
+		{
+			continue;
+		}
+		for (int jdx = idx + 1; jdx < shownRootProfiler.Num(); jdx++)
+		{
+			TSharedPtr<FunctionProfileInfo> &funcNode2 = shownRootProfiler[jdx];
+			if (funcNode2->isDuplicated == true)
+			{
+				continue;
+			}
+			if (funcNode->functionName == funcNode2->functionName)
+			{
+				funcNode2->isDuplicated = true;
+				duplictedNodeArray.Add(funcNode2);
+			}
+		}
+	}
+
+	for (int idx = 0; idx < shownRootProfiler.Num(); idx++)
+	{
+		if (shownRootProfiler[idx]->isDuplicated == true)
+		{
+			shownRootProfiler.RemoveAt(idx);
+			idx--;
+		}
+	}
+
+	for (int idx = 0; idx < duplictedNodeArray.Num(); idx++)
+	{
+		shownRootProfiler.Add(duplictedNodeArray[idx]);
+	}
+}
+
 void SProfilerInspector::ShowProfilerTree(TArray<SluaProfiler> &selectedProfiler)
 {
-	AssignProfiler(selectedProfiler, shownRootProfiler, shownProfiler);
+	AssignProfiler(selectedProfiler, tmpRootProfiler, shownProfiler);
+	SortProfiler(tmpRootProfiler);
+	AssignProfiler(tmpRootProfiler, shownRootProfiler);
 
 	TSharedPtr<SDockTab, ESPMode::NotThreadSafe> curDockTab = FGlobalTabmanager::Get()->FindExistingLiveTab(slua_profileTabNameInspector);
 	if (treeview.IsValid())
@@ -471,7 +515,7 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateRowForList(TSharedPtr<Functi
 	if (Item->functionName.IsEmpty() || Item->beMerged == true || shownProfiler[Item->globalIdx]->beMerged == true)
 	{
 		return
-			SNew(STableRow< TSharedPtr<FString> >, OwnerTable);
+			SNew(STableRow< TSharedPtr<FString> >, OwnerTable);	
 	}
 	else
 	{

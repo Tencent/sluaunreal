@@ -88,6 +88,7 @@ private:
 	void CopyFunctionNode(TSharedPtr<FunctionProfileInfo>& oldFuncNode, TSharedPtr<FunctionProfileInfo>& newFuncNode);
 	void InitProfilerBar(int barIdx, TSharedPtr<SHorizontalBox>& horBox);
 	void OnClearBtnClicked();
+	void SortProfiler(SluaProfiler &shownRootProfiler);
 };
 
 

@@ -62,44 +62,44 @@ static void debug_hook_c(NS_SLUA::lua_State *L, NS_SLUA::lua_Debug *ar)
 
 void Fslua_profileModule::StartupModule()
 {
-// 	if (GIsEditor && !IsRunningCommandlet())
-// 	{
-// 		InitProfilerWatchThread();
-// 		sluaProfilerInspector = MakeShareable(new SProfilerInspector);
-// 		FGlobalTabmanager::Get()->RegisterNomadTabSpawner(slua_profileTabName,
-// 			FOnSpawnTab::CreateRaw(this, &Fslua_profileModule::OnSpawnPluginTab))
-// 			.SetDisplayName(LOCTEXT("Flua_wrapperTabTitle", "slua Profiler"));
-// 		TickDelegate = FTickerDelegate::CreateRaw(this, &Fslua_profileModule::Tick);
-// 		TickDelegateHandle = FTicker::GetCoreTicker().AddTicker(TickDelegate);
-// 	}
+	if (GIsEditor && !IsRunningCommandlet())
+	{
+		InitProfilerWatchThread();
+		sluaProfilerInspector = MakeShareable(new SProfilerInspector);
+		FGlobalTabmanager::Get()->RegisterNomadTabSpawner(slua_profileTabName,
+			FOnSpawnTab::CreateRaw(this, &Fslua_profileModule::OnSpawnPluginTab))
+			.SetDisplayName(LOCTEXT("Flua_wrapperTabTitle", "slua Profiler"));
+		TickDelegate = FTickerDelegate::CreateRaw(this, &Fslua_profileModule::Tick);
+		TickDelegateHandle = FTicker::GetCoreTicker().AddTicker(TickDelegate);
+	}
 }
 
 void Fslua_profileModule::ShutdownModule()
 {
-// 	sluaProfilerInspector = nullptr;
-// 	ClearCurProfiler();
-// 
-// 	slua::LuaState *state = slua::LuaState::get();
-// 	if (state != nullptr)
-// 	{
-// 		NS_SLUA::lua_sethook(state->getLuaState(), NULL, 0, 0);
-// 		stateIndex = -1;
-// 	}
-// 
-// 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(slua_profileTabName);
+	sluaProfilerInspector = nullptr;
+	ClearCurProfiler();
+
+	slua::LuaState *state = slua::LuaState::get();
+	if (state != nullptr)
+	{
+		NS_SLUA::lua_sethook(state->getLuaState(), NULL, 0, 0);
+		stateIndex = -1;
+	}
+
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(slua_profileTabName);
 }
 
 bool Fslua_profileModule::Tick(float DeltaTime)
 {
-// 	if (!tabOpened)
-// 	{
-// 		ClearCurProfiler();
-// 		return true;
-// 	}		
-// 	
-// 	openHook();
-// 	sluaProfilerInspector->Refresh(curProfilersArray);
-// 	ClearCurProfiler();
+	if (!tabOpened)
+	{
+		ClearCurProfiler();
+		return true;
+	}		
+	
+	openHook();
+	sluaProfilerInspector->Refresh(curProfilersArray);
+	ClearCurProfiler();
 	return true;
 }
 

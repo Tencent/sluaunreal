@@ -481,6 +481,16 @@ namespace slua {
             return push(L,static_cast<int>(v));
         }
 
+		template<typename T>
+		static int push(lua_State* L, const TArray<T>& v) {
+			return LuaArray::push(L, v);
+		}
+
+		template<typename K,typename V>
+		static int push(lua_State* L, const TMap<K,V>& v) {
+			return LuaMap::push(L, v);
+		}
+
 		// static int push(lua_State* L, FScriptArray* array);
         
         static int pushNil(lua_State* L) {
@@ -490,7 +500,47 @@ namespace slua {
 
         static void addExtensionMethod(UClass* cls,const char* n,lua_CFunction func,bool isStatic=false);
 
-		static UProperty* createProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type, UClass* cls=nullptr);
+		// definition of property
+		struct PropertyProto {
+			PropertyProto(UE4CodeGen_Private::EPropertyClass t) :type(t), cls(nullptr) {}
+			PropertyProto(UE4CodeGen_Private::EPropertyClass t,UClass* c) :type(t), cls(c) {}
+
+			template<typename T>
+			struct DeduceType;
+
+			// convert T to UE4CodeGen_Private::EPropertyClass
+			#define DefDeduceType(A,B) \
+			template<> struct DeduceType<A> { \
+				static const UE4CodeGen_Private::EPropertyClass value = UE4CodeGen_Private::EPropertyClass::B; \
+			};\
+			
+			DefDeduceType(uint8, Byte);
+			DefDeduceType(int8, Int8);
+			DefDeduceType(int16, Int16);
+			DefDeduceType(int, Int);
+			DefDeduceType(int64, Int64);
+			DefDeduceType(uint16, UInt16);
+			DefDeduceType(uint32, UInt32);
+			DefDeduceType(uint64, UInt64);
+			DefDeduceType(float, Float);
+			DefDeduceType(double, Double);
+			DefDeduceType(bool, Bool);
+			DefDeduceType(UObject*, Object);
+			DefDeduceType(FString, Str);
+
+
+			template<typename T>
+			static PropertyProto get() {
+				return PropertyProto(DeduceType<T>::value);
+			}
+
+			UE4CodeGen_Private::EPropertyClass type;
+			UClass* cls;
+		}; 
+
+		// create UProperty by PropertyProto
+		// returned UProperty should be collect by yourself
+		static UProperty* createProperty(const PropertyProto& p);
 
         static UFunction* findCacheFunction(lua_State* L,UClass* cls,const char* fname);
         static void cacheFunction(lua_State* L, UClass* cls,const char* fame,UFunction* func);

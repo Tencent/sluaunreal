@@ -35,8 +35,8 @@ namespace slua {
 		SluaUtil::reg(L, "Map", __ctor);
 	}
 
-	int LuaMap::push(lua_State* L, UProperty* keyProp, UProperty* valueProp, FScriptMap* buf) {
-		auto luaMap = new LuaMap(keyProp, valueProp, buf);
+	int LuaMap::push(lua_State* L, UProperty* keyProp, UProperty* valueProp, const FScriptMap* buf, bool frombp) {
+		auto luaMap = new LuaMap(keyProp, valueProp, buf, frombp);
 		return LuaObject::pushType(L, luaMap, "LuaMap", setupMT, gc);
 	}
 
@@ -63,7 +63,7 @@ namespace slua {
 	}
 
 
-	LuaMap::LuaMap(UProperty* kp, UProperty* vp, FScriptMap* buf) : 
+	LuaMap::LuaMap(UProperty* kp, UProperty* vp, const FScriptMap* buf, bool frombp) : 
 		map( new FScriptMap ),
 		keyProp(kp), 
 		valueProp(vp) ,
@@ -71,14 +71,12 @@ namespace slua {
 		propObj(nullptr),
 		helper(FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, map)) 
 	{
-		keyProp->PropertyFlags |= CPF_HasGetValueTypeHash;
 		if (buf) {
 			clone(map,kp,vp,buf);
-			createdByBp = true;
+			createdByBp = frombp;
 		} else {
 			createdByBp = false;
 		}
-		
 	} 
 
 	LuaMap::LuaMap(UMapProperty* p, UObject* obj) : 
@@ -244,8 +242,8 @@ namespace slua {
 	int LuaMap::__ctor(lua_State* L) {
 		auto keyType = (UE4CodeGen_Private::EPropertyClass)LuaObject::checkValue<int>(L, 1);
 		auto valueType = (UE4CodeGen_Private::EPropertyClass)LuaObject::checkValue<int>(L, 2);
-		auto keyProp = LuaObject::createProperty(L, keyType);
-		auto valueProp = LuaObject::createProperty(L, valueType);
+		auto keyProp = LuaObject::createProperty(keyType);
+		auto valueProp = LuaObject::createProperty(valueType);
 		return push(L, keyProp, valueProp, nullptr);
 	}
 

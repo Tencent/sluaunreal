@@ -25,7 +25,14 @@ namespace slua {
         static void reg(lua_State* L);
         static void clone(FScriptArray* destArray, UProperty* p, const FScriptArray* srcArray);
 		static int push(lua_State* L, UProperty* prop, FScriptArray* array);
-		static int push(lua_State* L,UArrayProperty* prop,UObject* obj);
+		static int push(lua_State* L, UArrayProperty* prop, UObject* obj);
+
+		template<typename T>
+		static int push(lua_State* L, const TArray<T>& v) {
+			UProperty* prop = LuaObject::createProperty(LuaObject::PropertyProto::get<T>());
+			auto array = reinterpret_cast<const FScriptArray*>(&v);
+			return push(L, prop, const_cast<FScriptArray*>(array));
+		}
 
 		LuaArray(UProperty* prop, FScriptArray* buf);
 		LuaArray(UArrayProperty* prop, UObject* obj);

@@ -35,3 +35,14 @@ map:Add(5,"500")
 f3:testArrMap(100,arr,map)
 local ret = f3:testArrMap2(200,arr,map)
 print(tostring(ret))
+
+local f=FooChild(0)
+local arr = f:getTArray()
+for i=1,arr:Num() do
+    print("arr value",i,arr:Get(i-1))
+end
+
+local map = f:getTMap()
+for k,v in pairs(map) do
+    print("map value",k,v)
+end

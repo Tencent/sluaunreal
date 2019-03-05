@@ -96,10 +96,10 @@ namespace slua {
 		return propOuter.Get();
 	}
 	
-	UProperty* LuaObject::createProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type, UClass* cls) {
+	UProperty* LuaObject::createProperty(const PropertyProto& proto) {
 		UProperty* p = nullptr;
 		UObject* outer = getPropertyOutter();
-		switch (type) {
+		switch (proto.type) {
 			case UE4CodeGen_Private::EPropertyClass::Byte:
 				p = NewObject<UProperty>(outer, UByteProperty::StaticClass());
                 break;
@@ -141,7 +141,7 @@ namespace slua {
                 break;
 			case UE4CodeGen_Private::EPropertyClass::Object: {
 				auto op = NewObject<UObjectProperty>(outer, UObjectProperty::StaticClass());
-				op->SetPropertyClass(cls);
+				op->SetPropertyClass(proto.cls);
 				p = op;
 				break;
 			}

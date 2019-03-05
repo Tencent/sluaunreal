@@ -176,6 +176,14 @@ namespace slua {
 			return 100;
 		}
 
+		TArray<FString> getTArray() {
+			return {"a","b","c","d"};
+		}
+
+		TMap<int,FString> getTMap() {
+			return { {1,"s"},{2,"a"},{3,"b"} };
+		}
+
         LuaVar event;
     };
 
@@ -186,6 +194,8 @@ namespace slua {
         DefLuaMethod(eventTrigger,&FooChild::eventTrigger)
 		DefLuaMethod(testArrMap, &FooChild::testArrMap)
 		DefLuaMethod(testArrMap2, &FooChild::testArrMap2)
+		DefLuaMethod(getTArray, &FooChild::getTArray)
+		DefLuaMethod(getTMap, &FooChild::getTMap)
     EndDef(FooChild,&FooChild::create)
 
 

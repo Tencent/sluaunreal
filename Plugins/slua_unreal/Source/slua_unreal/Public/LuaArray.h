@@ -17,6 +17,7 @@
 #include "UObject/UnrealType.h"
 #include "UObject/GCObject.h"
 #include "Runtime/Launch/Resources/Version.h"
+#include "PropertyDef.h"
 
 namespace slua {
 
@@ -29,7 +30,7 @@ namespace slua {
 
 		template<typename T>
 		static int push(lua_State* L, const TArray<T>& v) {
-			UProperty* prop = LuaObject::createProperty(LuaObject::PropertyProto::get<T>());
+			UProperty* prop = createProperty(PropertyProto::get<T>());
 			auto array = reinterpret_cast<const FScriptArray*>(&v);
 			return push(L, prop, const_cast<FScriptArray*>(array));
 		}

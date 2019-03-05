@@ -17,6 +17,7 @@
 #include "UObject/UnrealType.h"
 #include "UObject/GCObject.h"
 #include "Runtime/Launch/Resources/Version.h"
+#include "PropertyDef.h"
 
 namespace slua {
 
@@ -49,8 +50,8 @@ namespace slua {
 		static int push(lua_State* L, UMapProperty* prop, UObject* obj);
 		template<typename K,typename V>
 		static int push(lua_State* L, const TMap<K, V>& v) {
-			UProperty* keyProp = LuaObject::createProperty(LuaObject::PropertyProto::get<K>());
-			UProperty* valueProp = LuaObject::createProperty(LuaObject::PropertyProto::get<V>());
+			UProperty* keyProp = createProperty(PropertyProto::get<K>());
+			UProperty* valueProp = createProperty(PropertyProto::get<V>());
 			return push(L, keyProp, valueProp, reinterpret_cast<const FScriptMap*>(&v),false);
 		}
 

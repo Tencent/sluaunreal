@@ -500,48 +500,6 @@ namespace slua {
 
         static void addExtensionMethod(UClass* cls,const char* n,lua_CFunction func,bool isStatic=false);
 
-		// definition of property
-		struct PropertyProto {
-			PropertyProto(UE4CodeGen_Private::EPropertyClass t) :type(t), cls(nullptr) {}
-			PropertyProto(UE4CodeGen_Private::EPropertyClass t,UClass* c) :type(t), cls(c) {}
-
-			template<typename T>
-			struct DeduceType;
-
-			// convert T to UE4CodeGen_Private::EPropertyClass
-			#define DefDeduceType(A,B) \
-			template<> struct DeduceType<A> { \
-				static const UE4CodeGen_Private::EPropertyClass value = UE4CodeGen_Private::EPropertyClass::B; \
-			};\
-			
-			DefDeduceType(uint8, Byte);
-			DefDeduceType(int8, Int8);
-			DefDeduceType(int16, Int16);
-			DefDeduceType(int, Int);
-			DefDeduceType(int64, Int64);
-			DefDeduceType(uint16, UInt16);
-			DefDeduceType(uint32, UInt32);
-			DefDeduceType(uint64, UInt64);
-			DefDeduceType(float, Float);
-			DefDeduceType(double, Double);
-			DefDeduceType(bool, Bool);
-			DefDeduceType(UObject*, Object);
-			DefDeduceType(FString, Str);
-
-
-			template<typename T>
-			static PropertyProto get() {
-				return PropertyProto(DeduceType<T>::value);
-			}
-
-			UE4CodeGen_Private::EPropertyClass type;
-			UClass* cls;
-		}; 
-
-		// create UProperty by PropertyProto
-		// returned UProperty should be collect by yourself
-		static UProperty* createProperty(const PropertyProto& p);
-
         static UFunction* findCacheFunction(lua_State* L,UClass* cls,const char* fname);
         static void cacheFunction(lua_State* L, UClass* cls,const char* fame,UFunction* func);
 

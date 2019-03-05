@@ -64,6 +64,7 @@ struct SLUA_PROFILE_API FunctionProfileInfo
 	int layerIdx;
 	int mergedNum;
 	bool beMerged;
+	bool isDuplicated = false;
 	TArray<int> mergeIdxArray;
 };
 

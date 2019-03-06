@@ -739,6 +739,9 @@ namespace slua {
 			return 0;
 
 		LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L, i);
+		if(!ls)
+			luaL_error(L, "expect struct but got nil");
+
 		if (p->GetSize() != ls->size)
 			luaL_error(L, "expect struct size == %d, but got %d", p->GetSize(), ls->size);
 		p->CopyCompleteValue(parms, ls->buf);

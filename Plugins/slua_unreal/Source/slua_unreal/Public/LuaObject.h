@@ -481,6 +481,16 @@ namespace slua {
             return push(L,static_cast<int>(v));
         }
 
+		template<typename T>
+		static int push(lua_State* L, const TArray<T>& v) {
+			return LuaArray::push(L, v);
+		}
+
+		template<typename K,typename V>
+		static int push(lua_State* L, const TMap<K,V>& v) {
+			return LuaMap::push(L, v);
+		}
+
 		// static int push(lua_State* L, FScriptArray* array);
         
         static int pushNil(lua_State* L) {
@@ -489,8 +499,6 @@ namespace slua {
         }
 
         static void addExtensionMethod(UClass* cls,const char* n,lua_CFunction func,bool isStatic=false);
-
-		static UProperty* createProperty(lua_State* L, UE4CodeGen_Private::EPropertyClass type, UClass* cls=nullptr);
 
         static UFunction* findCacheFunction(lua_State* L,UClass* cls,const char* fname);
         static void cacheFunction(lua_State* L, UClass* cls,const char* fame,UFunction* func);

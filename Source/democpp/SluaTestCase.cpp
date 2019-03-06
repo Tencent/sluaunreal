@@ -176,6 +176,14 @@ namespace slua {
 			return 100;
 		}
 
+		TArray<FString> getTArray() {
+			return {"a","b","c","d"};
+		}
+
+		TMap<int,FString> getTMap() {
+			return { {1,"s"},{2,"a"},{3,"b"} };
+		}
+
         LuaVar event;
     };
 
@@ -186,6 +194,8 @@ namespace slua {
         DefLuaMethod(eventTrigger,&FooChild::eventTrigger)
 		DefLuaMethod(testArrMap, &FooChild::testArrMap)
 		DefLuaMethod(testArrMap2, &FooChild::testArrMap2)
+		DefLuaMethod(getTArray, &FooChild::getTArray)
+		DefLuaMethod(getTMap, &FooChild::getTMap)
     EndDef(FooChild,&FooChild::create)
 
 
@@ -254,12 +264,14 @@ USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
 }
 
 void USluaTestCase::setupfoo(UObject* obj) {
-    foos.Add(obj);
+	foos.Add(obj);
+	foos.Add(obj);
+	foos.Add(obj);
+	foos.Add(obj);
 }
 
 void USluaTestCase::delfoo() {
-    if(foos.Num()>0)
-        foos.RemoveAt(0);
+	foos.Empty();
 }
 
 const FUserInfo& USluaTestCase::GetUserInfo() {
@@ -390,4 +402,10 @@ int USluaTestCase::ReturnIntWithInt(int i) {
 
 int USluaTestCase::FuncWithStr(FString str) {
     return str.Len();
+}
+
+void USluaTestCase::TestUnicastDelegate(FString str)
+{
+    int32 retVal = OnTestGetCount.IsBound() ? OnTestGetCount.Execute(str) : -1;
+    slua::Log::Log("TestUnicastDelegate retVal=%d", retVal);
 }

@@ -17,6 +17,7 @@
 #include "UObject/UnrealType.h"
 #include "UObject/GCObject.h"
 #include "Runtime/Launch/Resources/Version.h"
+#include "PropertyUtil.h"
 
 namespace slua {
 
@@ -45,11 +46,18 @@ namespace slua {
 
 	public:
 		static void reg(lua_State* L);
-		static int push(lua_State* L, UProperty* keyProp, UProperty* valueProp, FScriptMap* buf);
+		static int push(lua_State* L, UProperty* keyProp, UProperty* valueProp, const FScriptMap* buf, bool frombp=true);
 		static int push(lua_State* L, UMapProperty* prop, UObject* obj);
+		template<typename K,typename V>
+		static int push(lua_State* L, const TMap<K, V>& v) {
+			UProperty* keyProp = PropertyProto::createProperty(PropertyProto::get<K>());
+			UProperty* valueProp = PropertyProto::createProperty(PropertyProto::get<V>());
+			return push(L, keyProp, valueProp, reinterpret_cast<const FScriptMap*>(&v),false);
+		}
+
 		static void clone(FScriptMap* dest,UProperty* keyProp, UProperty* valueProp,const FScriptMap* src);
 
-		LuaMap(UProperty* keyProp, UProperty* valueProp, FScriptMap* buf);
+		LuaMap(UProperty* keyProp, UProperty* valueProp, const FScriptMap* buf, bool frombp);
 		LuaMap(UMapProperty* prop, UObject* obj);
 		~LuaMap();
 

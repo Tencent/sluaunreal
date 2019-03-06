@@ -74,16 +74,16 @@ void  SProfilerInspector::CopyFunctionNode(TSharedPtr<FunctionProfileInfo>& oldF
 	newFuncNode->isDuplicated = oldFuncNode->isDuplicated;
 }
 
-void SProfilerInspector::Refresh(TArray<SluaProfiler>& curProfilersArray)
+void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray)
 {
-	if (stopChartRolling == true || curProfilersArray.Num() == 0)
+	if (stopChartRolling == true || profilersArray.Num() == 0)
 	{
 		return;
 	}
 
-	AssignProfiler(curProfilersArray, tmpRootProfiler, tmpProfiler);
+	AssignProfiler(profilersArray, tmpRootProfiler, tmpProfiler);
 
-	tmpProfilersArraySamples[arrayOffset] = curProfilersArray;
+	tmpProfilersArraySamples[arrayOffset] = profilersArray;
 	arrayOffset = (arrayOffset + 1) >= sampleNum ? 0 : (arrayOffset + 1);
 
 	if (NeedReBuildInspector() == true && treeview.IsValid() && tmpRootProfiler.Num() != 0)
@@ -456,19 +456,19 @@ void SProfilerInspector::RemoveProfilerBarOnMouseMoveEvent()
 	}
 }
 
-void SProfilerInspector::SortProfiler(SluaProfiler &shownRootProfiler)
+void SProfilerInspector::SortProfiler(SluaProfiler &rootProfiler)
 {
 	SluaProfiler duplictedNodeArray;
-	for (int idx = 0; idx < shownRootProfiler.Num(); idx++)//(auto &funcNode : shownRootProfiler)
+	for (int idx = 0; idx < rootProfiler.Num(); idx++)//(auto &funcNode : rootProfiler)
 	{
-		TSharedPtr<FunctionProfileInfo> &funcNode = shownRootProfiler[idx];
+		TSharedPtr<FunctionProfileInfo> &funcNode = rootProfiler[idx];
 		if (funcNode->isDuplicated == true)
 		{
 			continue;
 		}
-		for (int jdx = idx + 1; jdx < shownRootProfiler.Num(); jdx++)
+		for (int jdx = idx + 1; jdx < rootProfiler.Num(); jdx++)
 		{
-			TSharedPtr<FunctionProfileInfo> &funcNode2 = shownRootProfiler[jdx];
+			TSharedPtr<FunctionProfileInfo> &funcNode2 = rootProfiler[jdx];
 			if (funcNode2->isDuplicated == true)
 			{
 				continue;

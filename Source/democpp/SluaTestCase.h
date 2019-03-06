@@ -135,4 +135,13 @@ public:
 	FORCEINLINE int inlineFunc() { return 1; }
 
 	FUserInfo info;
+
+    DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(int32, FOnTestGetCount, FString, str);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (IsBindableEvent = "True"))
+    FOnTestGetCount OnTestGetCount;
+
+    UFUNCTION(BlueprintCallable, Category = "Lua|TestCase")
+    void TestUnicastDelegate(FString str);
+    
 };

@@ -49,7 +49,9 @@ public:
 private:
     slua::LuaVar* luafunction;
     UFunction* ufunction;
+#if WITH_EDITOR
 	FString pName;
+#endif
 };
 
 namespace slua {

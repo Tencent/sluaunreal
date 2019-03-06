@@ -1,4 +1,6 @@
 
+local WBL = import("WidgetBlueprintLibrary")
+
 local panel ={}
 
 function panel:Construct()
@@ -22,6 +24,7 @@ end
 
 function panel:OnMouseMove(Geometry,Event)
     print"panel:OnMouseMove"
+    return WBL.Unhandled()
 end
 
 return panel

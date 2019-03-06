@@ -512,45 +512,42 @@ void SProfilerInspector::ShowProfilerTree(TArray<SluaProfiler> &selectedProfiler
 
 TSharedRef<ITableRow> SProfilerInspector::OnGenerateRowForList(TSharedPtr<FunctionProfileInfo> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
-	if (Item->functionName.IsEmpty() || Item->beMerged == true || shownProfiler[Item->globalIdx]->beMerged == true)
+	// make each row in tree is align
+	float rowWidth = fixRowWidth;
+	if (Item->layerIdx == 0)
 	{
-		return
-			SNew(STableRow< TSharedPtr<FString> >, OwnerTable);	
+		rowWidth = rowWidth - 12;
 	}
 	else
 	{
-		// make each row in tree is align
-		float rowWidth = fixRowWidth;
-		if (Item->layerIdx == 0)
-		{
-			rowWidth = rowWidth - 12;
-		}
-		else
-		{
-			rowWidth = rowWidth - (Item->layerIdx + 1) * 10;
-		}
-
-		return
-			SNew(STableRow< TSharedPtr<FString> >, OwnerTable)
-			.Padding(2.0f)
-			[
-				SNew(SHeaderRow)
-				+ SHeaderRow::Column("Overview").DefaultLabel(TAttribute<FText>::Create([=]() {
-									return FText::FromString(shownProfiler[Item->globalIdx]->brevName);								
-								}))
-								.FixedWidth(rowWidth).DefaultTooltip(TAttribute<FText>::Create([=]() {
-									return FText::FromString(shownProfiler[Item->globalIdx]->functionName);
-								}))
-				+ SHeaderRow::Column("Time ms").DefaultLabel(TAttribute<FText>::Create([=]() {
-									return FText::AsNumber(shownProfiler[Item->globalIdx]->mergedCostTime / perMilliSec);
-								}))
-								.FixedWidth(fixRowWidth)
-				+ SHeaderRow::Column("Calls").DefaultLabel(TAttribute<FText>::Create([=]() {
-									return FText::AsNumber(shownProfiler[Item->globalIdx]->mergedNum);
-								}))
-								.FixedWidth(fixRowWidth)
-			];
+		rowWidth = rowWidth - (Item->layerIdx + 1) * 10;
 	}
+
+	return
+		SNew(STableRow< TSharedPtr<FString> >, OwnerTable)
+		.Padding(2.0f).Visibility_Lambda([=]() {
+			if (Item->functionName.IsEmpty() || Item->beMerged == true || shownProfiler[Item->globalIdx]->beMerged == true)
+				return EVisibility::Hidden;
+			else
+				return EVisibility::Visible;
+			})
+		[
+			SNew(SHeaderRow)
+			+ SHeaderRow::Column("Overview").DefaultLabel(TAttribute<FText>::Create([=]() {
+								return FText::FromString(shownProfiler[Item->globalIdx]->brevName);								
+							}))
+							.FixedWidth(rowWidth).DefaultTooltip(TAttribute<FText>::Create([=]() {
+								return FText::FromString(shownProfiler[Item->globalIdx]->functionName);
+							}))
+			+ SHeaderRow::Column("Time ms").DefaultLabel(TAttribute<FText>::Create([=]() {
+								return FText::AsNumber(shownProfiler[Item->globalIdx]->mergedCostTime / perMilliSec);
+							}))
+							.FixedWidth(fixRowWidth)
+			+ SHeaderRow::Column("Calls").DefaultLabel(TAttribute<FText>::Create([=]() {
+								return FText::AsNumber(shownProfiler[Item->globalIdx]->mergedNum);
+							}))
+							.FixedWidth(fixRowWidth)
+		];
 }
 
 void SProfilerInspector::OnGetChildrenForTree(TSharedPtr<FunctionProfileInfo> Parent, TArray<TSharedPtr<FunctionProfileInfo>>& OutChildren)

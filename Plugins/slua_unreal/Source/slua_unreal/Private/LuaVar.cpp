@@ -601,19 +601,35 @@ namespace slua {
             n++;
         }
         
-        int ret = docall(n);
+        int retCount = docall(n);
+		int remain = retCount;
         auto L = getState();
         // if lua return value
         // we only handle first lua return value
-        if(ret>0 && bHasReturnParam) {
+        if(remain >0 && bHasReturnParam) {
             auto prop = func->GetReturnProperty();
             auto checkder = prop?LuaObject::getChecker(prop):nullptr;
             if (checkder) {
-                (*checkder)(L, prop, parms+prop->GetOffset_ForInternal(), lua_absindex(L, -ret));
+                (*checkder)(L, prop, parms+prop->GetOffset_ForInternal(), lua_absindex(L, -remain));
             }
+			remain--;
         }
+
+		// fill lua return value to blueprint stack if argument is out param
+		for (TFieldIterator<UProperty> it(func); remain >0 && it && (it->PropertyFlags&CPF_Parm); ++it) {
+			UProperty* prop = *it;
+			uint64 propflag = prop->GetPropertyFlags();
+			if (propflag&CPF_OutParm && !(propflag&CPF_ConstParm))
+			{
+				auto checkder = prop ? LuaObject::getChecker(prop) : nullptr;
+				if (checkder) {
+					(*checkder)(L, prop, parms + prop->GetOffset_ForInternal(), lua_absindex(L, -remain));
+				}
+				remain--;
+			}
+		}
         // pop returned value
-        lua_pop(L, ret);
+        lua_pop(L, retCount);
 		return true;
     }
 

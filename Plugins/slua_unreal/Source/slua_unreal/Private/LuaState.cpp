@@ -380,6 +380,8 @@ namespace slua {
 			return;
 
 		GenericUserData* ud = (GenericUserData*)lua_touserdata(L, -1);
+		// pop ud
+		lua_pop(L, 1);
 		// this cached ud is weak ref
 		// maybe gc by lua, so check flag
 		if (ud->flag & UD_HADFREE)
@@ -387,10 +389,8 @@ namespace slua {
 
 		// indicate ud had be free
 		ud->flag |= UD_HADFREE;
-		// pop ud
-		lua_pop(L, 1);
 		// remove ref, Object must be an UObject in slua
-		removeRef((UObject*)Object);
+		removeRef((uint32)Index);
 		// remove cache
 		LuaObject::removeFromCache(L, ud);
 	}
@@ -499,12 +499,17 @@ namespace slua {
 
 	void LuaState::addRef(UObject* obj)
 	{
-		objRefs.Add(obj);
+		objRefs.Add(obj->GetUniqueID(), obj);
 	}
 
 	void LuaState::removeRef(UObject* obj)
 	{
-		objRefs.Remove(obj);
+		objRefs.Remove(obj->GetUniqueID());
+	}
+
+	void LuaState::removeRef(uint32 id)
+	{
+		objRefs.Remove(id);
 	}
 
 	FDeadLoopCheck::FDeadLoopCheck()

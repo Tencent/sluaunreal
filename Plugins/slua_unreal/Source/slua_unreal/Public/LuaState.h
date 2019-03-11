@@ -143,7 +143,7 @@ namespace slua {
 		// create named table, support "x.x.x.x", put table to _G
 		LuaVar createTable(const char* key);
 
-		const TSet<UObject*>& cacheSet() const {
+		const TMap<uint32,UObject*>& cacheSet() const {
 			return objRefs;
 		}
 
@@ -151,6 +151,7 @@ namespace slua {
 		void addRef(UObject* obj);
 		// remove obj from ref
 		void removeRef(UObject* obj);
+		void removeRef(uint32 id);
 
 		// if obj be deleted, call this function
 		virtual void NotifyUObjectDeleted(const class UObjectBase *Object, int32 Index) override;
@@ -199,7 +200,7 @@ namespace slua {
 		FDeadLoopCheck* deadLoopCheck;
 
 		// hold UObjects pushed to lua
-		TSet <UObject*> objRefs;
+		TMap <uint32, UObject*> objRefs;
 
 		FDelegateHandle pgcHandler;
 

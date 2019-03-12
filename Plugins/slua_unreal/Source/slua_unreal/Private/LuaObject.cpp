@@ -735,12 +735,9 @@ namespace slua {
 		auto p = Cast<UObjectProperty>(prop);
 		ensure(p);
 		UObject* arg = LuaObject::checkValue<UObject*>(L, i);
-		if (arg)
-		{
-			if (arg->GetClass() != p->PropertyClass && !arg->GetClass()->IsChildOf(p->PropertyClass))
-				luaL_error(L, "arg %d expect %s, but got %s", i,
-					TCHAR_TO_UTF8(*p->PropertyClass->GetName()), TCHAR_TO_UTF8(*arg->GetClass()->GetName()));
-		}
+		if (arg && arg->GetClass() != p->PropertyClass && !arg->GetClass()->IsChildOf(p->PropertyClass))
+			luaL_error(L, "arg %d expect %s, but got %s", i,
+				TCHAR_TO_UTF8(*p->PropertyClass->GetName()), TCHAR_TO_UTF8(*arg->GetClass()->GetName()));
 		p->SetPropertyValue(parms, arg);
 		return LuaObject::push(L, arg);
 	}

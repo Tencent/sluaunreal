@@ -6,12 +6,27 @@ local panel ={}
 function panel:Construct()
     print"panel:Construct"
     self.bHasScriptImplementedTick = true
+
+    self.imgs = {
+        {
+        src="Texture2D'/Game/boy.boy'",
+        name="boy",
+        },
+        {
+        src="Texture2D'/Game/girl.girl'",
+        name="girl",
+        }
+    }
 end
 
 function panel:Tick()
     print("panel:tick")
     -- call parent super
     self:Super()
+    local item = self.imgs[math.random(1,2)]
+    local texture = slua.loadObject(item.src)
+    self.Item.Image_42:SetBrushFromTexture( texture,false )
+    self.Item.TextBlock_43:SetText(item.name)
 end
 
 function panel:OnKeyDown(Geometry,Event)

@@ -1,5 +1,5 @@
 
-local ui=slua.loadUI('/Game/Panel.Panel');
+local ui=slua.loadUI('/Game/Panel.Panel',world);
 ui:AddToViewport(0);
 local btn2=ui:FindWidget('btnClose');
 local index = 1

@@ -20,6 +20,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Misc/AssertionMacros.h"
 #include "LuaDelegate.h"
+#include "Blueprint/WidgetTree.h"
 #if WITH_EDITOR
 // Fix compile issue when using unity build
 #ifdef G
@@ -40,6 +41,7 @@ namespace slua {
         RegMetaMethod(L, createDelegate);
 		RegMetaMethod(L, loadClass);
 		RegMetaMethod(L, dumpUObjects);
+		RegMetaMethod(L, loadObject);
         lua_setglobal(L,"slua");
     }
 
@@ -79,25 +81,54 @@ namespace slua {
         if(uclass==nullptr) luaL_error(L,"Can't find class named %s",cls);
         return LuaObject::pushClass(L,uclass);
     }
+
+	int SluaUtil::loadObject(lua_State* L) {
+		const char* objname = luaL_checkstring(L, 1);
+		UObject* outter = LuaObject::checkValueOpt<UObject*>(L, 2);
+		return LuaObject::push(L, LoadObject<UObject>(outter, UTF8_TO_TCHAR(objname)));
+	}
     
     int SluaUtil::loadUI(lua_State* L) {
-
-        UGameInstance* GameInstance = nullptr;
-        #if WITH_EDITOR
-        UUnrealEdEngine* engine = Cast<UUnrealEdEngine>(GEngine);
-        if(engine && engine->PlayWorld) GameInstance = engine->PlayWorld->GetGameInstance();
-        #else
-        UGameEngine* engine = Cast<UGameEngine>(GEngine);
-        if(engine) GameInstance = engine->GameInstance;
-        #endif
-        
-        if(!GameInstance) luaL_error(L,"gameinstance missing");
-        
+      
         const char* cls = luaL_checkstring(L,1);
+		UObject* obj = LuaObject::checkValueOpt<UObject*>(L, 2);
         auto uclass = loadClassT<UUserWidget>(cls);
         if(uclass==nullptr) luaL_error(L,"Can't find class named %s",cls);
         
-        UUserWidget* widget = CreateWidget<UUserWidget>(GameInstance,uclass);
+		UUserWidget* widget = nullptr;
+		// obj can be 5 type
+		if (obj) {
+			if (obj->IsA<UWorld>())
+				widget = CreateWidget<UUserWidget>(Cast<UWorld>(obj), uclass);
+			else if (obj->IsA<UWidget>())
+				widget = CreateWidget<UUserWidget>(Cast<UWidget>(obj), uclass);
+			else if (obj->IsA<UWidgetTree>())
+				widget = CreateWidget<UUserWidget>(Cast<UWidgetTree>(obj), uclass);
+			else if (obj->IsA<APlayerController>())
+				widget = CreateWidget<UUserWidget>(Cast<APlayerController>(obj), uclass);
+			else if (obj->IsA<UGameInstance>())
+				widget = CreateWidget<UUserWidget>(Cast<UGameInstance>(obj), uclass);
+			else
+				luaL_error(L, "arg 2 expect UWorld or UWidget or UWidgetTree or APlayerController or UGameInstance, but got %s",
+					TCHAR_TO_UTF8(*obj->GetName()));
+		}
+
+		if(!widget) {
+			// using GameInstance as default
+			UGameInstance* GameInstance = nullptr;
+#if WITH_EDITOR
+			UUnrealEdEngine* engine = Cast<UUnrealEdEngine>(GEngine);
+			if (engine && engine->PlayWorld) GameInstance = engine->PlayWorld->GetGameInstance();
+#else
+			UGameEngine* engine = Cast<UGameEngine>(GEngine);
+			if (engine) GameInstance = engine->GameInstance;
+#endif
+
+			if (!GameInstance) luaL_error(L, "gameinstance missing");
+			widget = CreateWidget<UUserWidget>(GameInstance, uclass);
+		}
+
+		
         return LuaObject::push(L,widget);
     }
 

@@ -26,6 +26,7 @@ namespace slua {
         static int loadUI(lua_State* L);
         static int loadClass(lua_State* L);
 		static int createDelegate(lua_State* L);
+		static int loadObject(lua_State* L);
 		// dump all uobject that referenced by lua
 		static int dumpUObjects(lua_State* L);
     };

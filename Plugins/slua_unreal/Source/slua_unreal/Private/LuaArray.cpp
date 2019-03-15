@@ -176,6 +176,8 @@ namespace slua {
     int LuaArray::__ctor(lua_State* L) {
 		auto type = (UE4CodeGen_Private::EPropertyClass) LuaObject::checkValue<int>(L,1);
 		auto cls = LuaObject::checkValueOpt<UClass*>(L, 2, nullptr);
+        if(type==UE4CodeGen_Private::EPropertyClass::Object && !cls)
+            luaL_error(L,"Array of UObject should have secend parameter is UClass");
 		auto array = FScriptArray();
 		return push(L, PropertyProto::createProperty({ type, cls }), &array);
     }

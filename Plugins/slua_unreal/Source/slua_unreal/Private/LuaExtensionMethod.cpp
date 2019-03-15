@@ -29,6 +29,11 @@ namespace slua {
             });
 
 			REG_EXTENSION_METHOD(AActor, "GetWorld", &AActor::GetWorld);
+			REG_EXTENSION_METHOD_IMP(UObject, "GetClass", {
+                CheckUD(UObject,L,1);
+                if(!UD) luaL_error(L,"arg 1 expect UObject");
+                return LuaObject::push(L,UD->GetClass());
+            });
 
             // resolve overloaded member function
             REG_EXTENSION_METHOD_WITHTYPE(UWorld,"SpawnActor",&UWorld::SpawnActor,AActor* (UWorld::*)( UClass*, FVector const*,FRotator const*, const FActorSpawnParameters&));

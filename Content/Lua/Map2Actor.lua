@@ -13,7 +13,7 @@ function actor:ReceiveBeginPlay()
 
     self.basepos={}
     self.rot={}
-    self.ballarr = slua.Array(UEnums.EPropertyClass.Object)
+    self.ballarr = slua.Array(UEnums.EPropertyClass.Object,bpClass)
 
     for n=1,10 do
         local p = FVector(math.random(-100,100),math.random(-100,100),0)

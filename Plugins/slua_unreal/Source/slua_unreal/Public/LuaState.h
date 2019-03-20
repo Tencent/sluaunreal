@@ -18,6 +18,7 @@
 #include "LuaVar.h"
 #include <string>
 #include <memory>
+#include <atomic>
 #include "HAL/Runnable.h"
 
 #define SLUA_LUACODE "[sluacode]"
@@ -43,7 +44,7 @@ namespace slua {
 		void Stop() override;
 		void onScriptTimeout();
 	private:
-		ScriptTimeoutEvent* timeoutEvent;
+		std::atomic<ScriptTimeoutEvent*> timeoutEvent;
 		FThreadSafeCounter timeoutCounter;
 		FThreadSafeCounter stopCounter;
 		FThreadSafeCounter frameCounter;

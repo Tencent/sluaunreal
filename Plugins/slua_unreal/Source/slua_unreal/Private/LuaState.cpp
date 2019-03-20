@@ -550,7 +550,7 @@ namespace slua {
 	{
 		if (frameCounter.Increment() == 1) {
 			timeoutCounter.Set(0);
-			timeoutEvent = pEvent;
+			timeoutEvent.store(pEvent);
 		}
 	}
 
@@ -561,7 +561,8 @@ namespace slua {
 
 	void FDeadLoopCheck::onScriptTimeout()
 	{
-		if (timeoutEvent) timeoutEvent->onTimeout();
+		auto pEvent = timeoutEvent.load();
+		if (pEvent) pEvent->onTimeout();
 	}
 
 	LuaScriptCallGuard::LuaScriptCallGuard(lua_State * L_)

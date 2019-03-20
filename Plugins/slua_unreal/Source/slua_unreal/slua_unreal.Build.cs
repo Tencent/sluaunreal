@@ -69,6 +69,12 @@ public class slua_unreal : ModuleRules
                     PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Mac/liblua.a"));
                     break;
                 }
+            case UnrealTargetPlatform.Linux:
+                {
+                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Linux"));
+                    PublicAdditionalLibraries.Add("lua");
+                    break;
+                }
         }
 
         PublicDependencyModuleNames.AddRange(

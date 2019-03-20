@@ -502,7 +502,7 @@ void SProfilerInspector::ShowProfilerTree(TArray<SluaProfiler> &selectedProfiler
 	SortProfiler(tmpRootProfiler);
 	AssignProfiler(tmpRootProfiler, shownRootProfiler);
 
-	TSharedPtr<SDockTab, ESPMode::NotThreadSafe> curDockTab = FGlobalTabmanager::Get()->FindExistingLiveTab(slua_profileTabNameInspector);
+	auto curDockTab = FGlobalTabmanager::Get()->FindExistingLiveTab(slua_profileTabNameInspector);
 	if (treeview.IsValid())
 	{
 		treeview->RequestTreeRefresh();

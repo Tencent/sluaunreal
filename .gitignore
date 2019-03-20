@@ -14,3 +14,5 @@ Config
 slua-unreal.code-workspace
 /democpp.sln
 /dep_android.bat
+CMakeFiles
+CMakeCache.txt

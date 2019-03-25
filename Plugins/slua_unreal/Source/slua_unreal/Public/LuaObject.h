@@ -163,6 +163,7 @@ namespace slua {
 		template<typename T>
 		static T* maybeAnUDTable(lua_State* L, int p,bool checkfree) {
 			if(lua_istable(L, p)) {
+                AutoStack as(L);
 				lua_getfield(L, p, SLUA_CPPINST);
 				if (lua_type(L, -1) == LUA_TUSERDATA)
 					return checkUD<T>(L, lua_absindex(L, -1), checkfree);

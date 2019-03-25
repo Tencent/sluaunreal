@@ -84,14 +84,14 @@ namespace slua {
 
 	int SluaUtil::loadObject(lua_State* L) {
 		const char* objname = luaL_checkstring(L, 1);
-		UObject* outter = LuaObject::checkValueOpt<UObject*>(L, 2);
+		UObject* outter = LuaObject::checkValueOpt<UObject*>(L, 2, nullptr);
 		return LuaObject::push(L, LoadObject<UObject>(outter, UTF8_TO_TCHAR(objname)));
 	}
     
     int SluaUtil::loadUI(lua_State* L) {
       
         const char* cls = luaL_checkstring(L,1);
-		UObject* obj = LuaObject::checkValueOpt<UObject*>(L, 2);
+		UObject* obj = LuaObject::checkValueOpt<UObject*>(L, 2, nullptr);
         auto uclass = loadClassT<UUserWidget>(cls);
         if(uclass==nullptr) luaL_error(L,"Can't find class named %s",cls);
         

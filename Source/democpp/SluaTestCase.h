@@ -25,11 +25,15 @@ struct FUserInfo {
 	GENERATED_BODY()
 public:
 	UPROPERTY()
+	UObject* obj;
+	UPROPERTY()
 	FString name;
 	UPROPERTY()
 	int id;
 	UPROPERTY()
 	int level;
+	UPROPERTY()
+	TArray<int> pos;
 };
 
 UCLASS()
@@ -47,6 +51,12 @@ public:
 
     UPROPERTY(BlueprintReadWrite)
     TArray<FString> strs;
+
+	UPROPERTY(BlueprintReadWrite)
+	TMap<int,FUserInfo> userInfo;
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<FUserInfo> userArray;
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     void setupfoo(UObject* obj);
@@ -134,6 +144,7 @@ public:
 
 	FORCEINLINE int inlineFunc() { return 1; }
 
+	UPROPERTY(BlueprintReadWrite)
 	FUserInfo info;
 
     DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(int32, FOnTestGetCount, FString, str);

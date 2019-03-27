@@ -136,7 +136,7 @@ namespace slua {
 		bool addRef(const UStructProperty* p, void* base, FReferenceCollector& collector)
 		{
 			for (int n = 0; n < p->ArrayDim; ++n) {
-				addRefByStruct(collector, p->Struct, p->ContainerPtrToValuePtr<void>(base, n));
+				addRefByStruct(collector, p->Struct, base);
 			}
 			return false;
 		}

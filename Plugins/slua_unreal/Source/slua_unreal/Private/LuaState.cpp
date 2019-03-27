@@ -177,6 +177,7 @@ namespace slua {
             lua_close(L);
 			GUObjectArray.RemoveUObjectDeleteListener(this);
 			FCoreUObjectDelegates::GetPostGarbageCollect().Remove(pgcHandler);
+			FWorldDelegates::OnWorldCleanup.Remove(wcHandler);
             stateMapFromIndex.Remove(si);
             L=nullptr;
         }
@@ -195,6 +196,7 @@ namespace slua {
             mainState = this;
 
 		pgcHandler = FCoreUObjectDelegates::GetPostGarbageCollect().AddRaw(this, &LuaState::onEngineGC);
+		wcHandler = FWorldDelegates::OnWorldCleanup.AddRaw(this, &LuaState::onWorldCleanup);
 		GUObjectArray.AddUObjectDeleteListener(this);
         stackCount = 0;
         si = ++StateIndex;
@@ -329,6 +331,11 @@ namespace slua {
 				classMap.cacheMap.Remove(it.Key());
 	}
 
+	void LuaState::onWorldCleanup(UWorld * World, bool bSessionEnded, bool bCleanupResources)
+	{
+		unlinkUObject(World, World->GetUniqueID());
+	}
+
     LuaVar LuaState::doBuffer(const uint8* buf,uint32 len, const char* chunk, LuaVar* pEnv) {
         AutoStack g(L);
         int errfunc = pushErrorHandler(L);
@@ -374,6 +381,11 @@ namespace slua {
     }
 
 	void LuaState::NotifyUObjectDeleted(const UObjectBase * Object, int32 Index)
+	{
+		unlinkUObject(Object, Index);
+	}
+
+	void LuaState::unlinkUObject(const UObjectBase * Object, int32 Index)
 	{
 		// pop ud to stack
 		if (!LuaObject::getFromCache(L, const_cast<UObjectBase *>(Object), nullptr, false))

@@ -18,10 +18,6 @@ local btn1 = ui["Button_0"]
 local h_openmap = btn1.OnClicked:Add(function()
 	print("open new map")
 	local bp = bpClass(world.CurrentLevel)
-	-- set world to nil to unref world
-	world = nil
-	actor = nil
-	collectgarbage("collect")
 	bp:LoadNewMap("Map2")
 end);
 

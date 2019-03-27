@@ -156,9 +156,9 @@ namespace slua {
 
 		// if obj be deleted, call this function
 		virtual void NotifyUObjectDeleted(const class UObjectBase *Object, int32 Index) override;
+
 		// tell Engine which objs should be referenced
 		virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
-       
         static int pushErrorHandler(lua_State* L);
     protected:
         LoadFileDelegate loadFileDelegate;
@@ -180,6 +180,11 @@ namespace slua {
 		void releaseAllLink();
 		// unreal gc will call this funciton
 		void onEngineGC();
+		// on world cleanup
+		void onWorldCleanup(UWorld* World, bool bSessionEnded, bool bCleanupResources);
+		// unlink UObject, flag Object had been free, and remove from cache and objRefs
+		void unlinkUObject(const UObjectBase * Object, int32 Index);
+
 
 		TMap<void*, TArray<void*>> propLinks;
         int stackCount;
@@ -204,6 +209,7 @@ namespace slua {
 		TMap <uint32, UObject*> objRefs;
 
 		FDelegateHandle pgcHandler;
+		FDelegateHandle wcHandler;
 
         static LuaState* mainState;
 

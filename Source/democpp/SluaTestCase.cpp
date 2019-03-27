@@ -258,9 +258,13 @@ USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
     REG_EXTENSION_METHOD(USluaTestCase, "constRetFunc", &USluaTestCase::constRetFunc);
 	REG_EXTENSION_METHOD(USluaTestCase, "inlineFunc", &USluaTestCase::inlineFunc);
 
+	info.obj = this;
 	info.name = UTF8_TO_TCHAR("女战士");
 	info.id = 1001001;
 	info.level = 12;
+	info.pos = { 1,2,3,4 };
+
+	userInfo.Add(1, info);
 }
 
 void USluaTestCase::setupfoo(UObject* obj) {

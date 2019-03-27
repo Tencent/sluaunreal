@@ -84,3 +84,12 @@ print("get foos",foos,foos:Num())
 for i=1,foos:Num() do
     print("foos property",i,foos:Get(i-1))
 end
+
+userInfo = t.userInfo
+print("userInfo",userInfo)
+
+userArray = t.userArray
+print("userArray",userArray)
+
+info = t.info
+print("info",info)

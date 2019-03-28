@@ -263,6 +263,7 @@ USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
 	info.id = 1001001;
 	info.level = 12;
 	info.pos = { 1,2,3,4 };
+	info.ids = { 1,2,3,4 };
 
 	userInfo.Add(1, info);
 }

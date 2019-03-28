@@ -129,8 +129,8 @@ namespace slua {
 				bool keyChanged = false;
 				bool valuesChanged = false;
 
-				keyChanged = LuaReference::addRefByProperty(Collector, keyProp, keyPtr);
-				valuesChanged = LuaReference::addRefByProperty(Collector, valueProp, valuePtr);
+				keyChanged = LuaReference::addRefByProperty(Collector, keyProp, keyPtr, false);
+				valuesChanged = LuaReference::addRefByProperty(Collector, valueProp, valuePtr, false);
 				if(keyChanged) helper.Rehash();
 				
 				index += 1;

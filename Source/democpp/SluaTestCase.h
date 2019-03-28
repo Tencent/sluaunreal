@@ -19,21 +19,43 @@
 #include "Blueprint/UserWidget.h"
 #include "SluaTestCase.generated.h"
 
+USTRUCT(BlueprintType)
+struct FUserInfo2 {
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<int> p1;
+};
+
+USTRUCT(BlueprintType)
+struct FUserInfo1 {
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<int> p2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TMap<int,FUserInfo2> p3;
+};
 
 USTRUCT(BlueprintType)
 struct FUserInfo {
 	GENERATED_BODY()
 public:
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UObject* obj;
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString name;
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int id;
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int level;
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<int> pos;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<int> ids;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FUserInfo1 others;
 };
 
 UCLASS()

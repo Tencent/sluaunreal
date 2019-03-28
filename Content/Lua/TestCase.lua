@@ -93,3 +93,6 @@ print("userArray",userArray)
 
 info = t.info
 print("info",info)
+
+map1 = t:GetMap()
+print("map1",map1)

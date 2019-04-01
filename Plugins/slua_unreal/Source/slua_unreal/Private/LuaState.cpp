@@ -326,9 +326,16 @@ namespace slua {
 	void LuaState::onEngineGC()
 	{
 		// find freed uclass
-		for(ClassFunctionCache::CacheMap::TIterator it(classMap.cacheMap);it;++it)
-			if (!it.Key().IsValid()) 
-				classMap.cacheMap.Remove(it.Key());
+		for (ClassFunctionCache::CacheMap::TIterator it(classMap.cacheMap); it; ++it)
+			if (!it.Key().IsValid())
+				it.RemoveCurrent();
+
+		// erase all null reference
+		// Collector.AddReferencedObjects will set inner item is nullptr
+		// so check and remove it
+		for (TSet<UObject*>::TIterator it(objRefs); it; ++it)
+			if (*it == nullptr) 
+				it.RemoveCurrent();
 	}
 
 	void LuaState::onWorldCleanup(UWorld * World, bool bSessionEnded, bool bCleanupResources)
@@ -402,7 +409,7 @@ namespace slua {
 		// indicate ud had be free
 		ud->flag |= UD_HADFREE;
 		// remove ref, Object must be an UObject in slua
-		removeRef((uint32)Index);
+		removeRef((UObject*)Object);
 		// remove cache
 		LuaObject::removeFromCache(L, ud);
 	}
@@ -511,17 +518,12 @@ namespace slua {
 
 	void LuaState::addRef(UObject* obj)
 	{
-		objRefs.Add(obj->GetUniqueID(), obj);
+		objRefs.Add(obj);
 	}
 
 	void LuaState::removeRef(UObject* obj)
 	{
-		objRefs.Remove(obj->GetUniqueID());
-	}
-
-	void LuaState::removeRef(uint32 id)
-	{
-		objRefs.Remove(id);
+		objRefs.Remove(obj);
 	}
 
 	FDeadLoopCheck::FDeadLoopCheck()

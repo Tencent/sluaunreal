@@ -145,7 +145,7 @@ namespace slua {
 		lua_newtable(L);
 		int index = 1;
 		for (auto& it : map) {
-			LuaObject::push(L, getUObjName(it));
+			LuaObject::push(L, getUObjName(it.Key));
 			lua_seti(L, -2, index++);
 		}
 		return 1;
@@ -157,7 +157,7 @@ namespace slua {
 		if (!state) return;
 		auto& map = state->cacheSet();
 		for (auto& it : map) {
-			Log::Log("Pushed UObject %s", TCHAR_TO_UTF8(*getUObjName(it)));
+			Log::Log("Pushed UObject %s", TCHAR_TO_UTF8(*getUObjName(it.Key)));
 		}
 	}
 

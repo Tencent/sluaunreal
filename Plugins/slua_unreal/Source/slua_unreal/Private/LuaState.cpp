@@ -329,18 +329,11 @@ namespace slua {
 		for (ClassFunctionCache::CacheMap::TIterator it(classMap.cacheMap); it; ++it)
 			if (!it.Key().IsValid())
 				it.RemoveCurrent();
-
-		// erase all null reference
-		// Collector.AddReferencedObjects will set inner item is nullptr
-		// so check and remove it
-		for (TSet<UObject*>::TIterator it(objRefs); it; ++it)
-			if (*it == nullptr) 
-				it.RemoveCurrent();
 	}
 
 	void LuaState::onWorldCleanup(UWorld * World, bool bSessionEnded, bool bCleanupResources)
 	{
-		unlinkUObject(World, World->GetUniqueID());
+		unlinkUObject(World);
 	}
 
     LuaVar LuaState::doBuffer(const uint8* buf,uint32 len, const char* chunk, LuaVar* pEnv) {
@@ -389,21 +382,21 @@ namespace slua {
 
 	void LuaState::NotifyUObjectDeleted(const UObjectBase * Object, int32 Index)
 	{
-		unlinkUObject(Object, Index);
+		unlinkUObject(Object);
 	}
 
-	void LuaState::unlinkUObject(const UObjectBase * Object, int32 Index)
+	void LuaState::unlinkUObject(const UObjectBase * Object)
 	{
-		// pop ud to stack
-		if (!LuaObject::getFromCache(L, const_cast<UObjectBase *>(Object), nullptr, false))
+		// find Object from objRefs, maybe nothing
+		auto udptr = objRefs.Find((UObject*)Object);
+		// maybe Object not push to lua
+		if (!udptr) {
 			return;
+		}
 
-		GenericUserData* ud = (GenericUserData*)lua_touserdata(L, -1);
-		// pop ud
-		lua_pop(L, 1);
-		// this cached ud is weak ref
-		// maybe gc by lua, so check flag
-		if (ud->flag & UD_HADFREE)
+		GenericUserData* ud = *udptr;
+		// maybe ud is nullptr or had been freed
+		if (!ud || ud->flag & UD_HADFREE)
 			return;
 
 		// indicate ud had be free
@@ -411,12 +404,21 @@ namespace slua {
 		// remove ref, Object must be an UObject in slua
 		removeRef((UObject*)Object);
 		// remove cache
-		LuaObject::removeFromCache(L, ud);
+		LuaObject::removeFromCache(L, ud->ud);
 	}
 
 	void LuaState::AddReferencedObjects(FReferenceCollector & Collector)
 	{
-		Collector.AddReferencedObjects(objRefs);
+		// erase all null reference
+		// Collector.AddReferencedObjects will set inner item to nullptr
+		// so check and remove it
+		for (UObjectRefMap::TIterator it(objRefs); it; ++it)
+		{
+			UObject* item = it.Key();
+			Collector.AddReferencedObject(item);
+			if (item == nullptr)
+				it.RemoveCurrent();
+		}
 	}
 
 	int LuaState::pushErrorHandler(lua_State* L) {
@@ -516,9 +518,9 @@ namespace slua {
 		return ret;
 	}
 
-	void LuaState::addRef(UObject* obj)
+	void LuaState::addRef(UObject* obj,void* ud)
 	{
-		objRefs.Add(obj);
+		objRefs.Add(obj,(GenericUserData*)ud);
 	}
 
 	void LuaState::removeRef(UObject* obj)

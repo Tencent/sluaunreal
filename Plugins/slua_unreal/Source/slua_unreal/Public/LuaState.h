@@ -62,6 +62,8 @@ namespace slua {
 		static void scriptTimeout(lua_State *L, lua_Debug *ar);
 	};
 
+	typedef TMap<UObject*, GenericUserData*> UObjectRefMap;
+
     class SLUA_UNREAL_API LuaState 
 		: public FUObjectArray::FUObjectDeleteListener
 		, public FGCObject
@@ -144,14 +146,14 @@ namespace slua {
 		// create named table, support "x.x.x.x", put table to _G
 		LuaVar createTable(const char* key);
 
-		const TSet<UObject*>& cacheSet() const {
+		const UObjectRefMap& cacheSet() const {
 			return objRefs;
 		}
 
 		// add obj to ref, tell Engine don't collect this obj
-		void addRef(UObject* obj);
-		// remove obj from ref
-		void removeRef(UObject* obj);
+		void addRef(UObject* obj,void* ud);
+		// unlink UObject, flag Object had been free, and remove from cache and objRefs
+		void unlinkUObject(const UObjectBase * Object);
 
 		// if obj be deleted, call this function
 		virtual void NotifyUObjectDeleted(const class UObjectBase *Object, int32 Index) override;
@@ -181,8 +183,8 @@ namespace slua {
 		void onEngineGC();
 		// on world cleanup
 		void onWorldCleanup(UWorld* World, bool bSessionEnded, bool bCleanupResources);
-		// unlink UObject, flag Object had been free, and remove from cache and objRefs
-		void unlinkUObject(const UObjectBase * Object, int32 Index);
+		// remove obj from ref
+		void removeRef(UObject* obj);
 
 
 		TMap<void*, TArray<void*>> propLinks;
@@ -205,7 +207,7 @@ namespace slua {
 		FDeadLoopCheck* deadLoopCheck;
 
 		// hold UObjects pushed to lua
-		TSet<UObject*> objRefs;
+		UObjectRefMap objRefs;
 
 		FDelegateHandle pgcHandler;
 		FDelegateHandle wcHandler;

@@ -329,6 +329,9 @@ namespace slua {
 		for (ClassFunctionCache::CacheMap::TIterator it(classMap.cacheMap); it; ++it)
 			if (!it.Key().IsValid())
 				it.RemoveCurrent();
+		Log::Log("Unreal engine GC, perform lua gc");
+		// do more gc step
+		lua_gc(L, LUA_GCSTEP, 1024);
 	}
 
 	void LuaState::onWorldCleanup(UWorld * World, bool bSessionEnded, bool bCleanupResources)
@@ -550,6 +553,7 @@ namespace slua {
 			FPlatformProcess::Sleep(1.0f);
 			if (frameCounter.GetValue() != 0) {
 				timeoutCounter.Increment();
+				Log::Log("script run time %d", timeoutCounter.GetValue());
 				if(timeoutCounter.GetValue() >= MaxLuaExecTime)
 					onScriptTimeout();
 			}

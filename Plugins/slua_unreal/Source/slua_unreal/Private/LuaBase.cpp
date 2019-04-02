@@ -60,6 +60,8 @@ namespace slua {
 			return;
 		}
 		tickFunction.call(luaSelfTable, DeltaTime);
+		// try lua gc
+		lua_gc(tickFunction.getState(), LUA_GCSTEP, 128);
 	}
 
 	int LuaBase::__index(slua::lua_State * L)

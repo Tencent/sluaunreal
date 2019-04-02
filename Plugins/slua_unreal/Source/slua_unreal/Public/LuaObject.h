@@ -155,7 +155,7 @@ namespace slua {
 
 #define CHECK_UD_VALID if (ptr && ptr->flag&UD_HADFREE) { \
 		if (checkfree) \
-			luaL_error(L, "arg %d had been freed, can't be used", lua_absindex(L, p)); \
+			luaL_error(L, "arg %d had been freed(%p), can't be used", lua_absindex(L, p), ptr->ud); \
 		else \
 			return nullptr; \
 		}
@@ -409,19 +409,20 @@ namespace slua {
             return 1;
         }
 
-        static void addRef(lua_State* L,UObject* obj);
+        static void addRef(lua_State* L,UObject* obj, void* ud);
         static void removeRef(lua_State* L,UObject* obj);
 
         template<typename T>
         static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt,lua_CFunction gc) {
             if(getFromCache(L,obj,tn)) return 1;
-            addRef(L,obj);
             lua_pushcclosure(L,gc,0);
-            lua_pushcclosure(L,removeFromCacheGC,1);
             int f = lua_gettop(L);
             int r = pushType<T>(L,obj,tn,setupmt,f);
             lua_remove(L,f); // remove wraped gc function
-            if(r) cacheObj(L,obj);
+			if (r) {
+				addRef(L, obj , lua_touserdata(L,-1));
+				cacheObj(L, obj);
+			}
             return r;
         }
 
@@ -506,7 +507,7 @@ namespace slua {
 
         static bool getFromCache(lua_State* L, void* obj, const char* tn, bool check = true);
 		static void cacheObj(lua_State* L, void* obj);
-		static void removeFromCache(lua_State* L, GenericUserData* obj);
+		static void removeFromCache(lua_State* L, void* obj);
     private:
         static int setupClassMT(lua_State* L);
         static int setupInstanceMT(lua_State* L);
@@ -518,7 +519,6 @@ namespace slua {
         static int gcStructClass(lua_State* L);
 		static int gcStruct(lua_State* L);
         static int objectToString(lua_State* L);
-		static int removeFromCacheGC(lua_State* L);
         static void setupMetaTable(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc) {
             if(luaL_newmetatable(L, tn)) {
                 if(setupmt)

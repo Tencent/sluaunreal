@@ -329,13 +329,6 @@ namespace slua {
 		for (ClassFunctionCache::CacheMap::TIterator it(classMap.cacheMap); it; ++it)
 			if (!it.Key().IsValid())
 				it.RemoveCurrent();
-
-		// erase all null reference
-		// Collector.AddReferencedObjects will set inner item is nullptr
-		// so check and remove it
-		for (TSet<UObject*>::TIterator it(objRefs); it; ++it)
-			if (*it == nullptr) 
-				it.RemoveCurrent();
 	}
 
 	void LuaState::onWorldCleanup(UWorld * World, bool bSessionEnded, bool bCleanupResources)
@@ -389,35 +382,42 @@ namespace slua {
 
 	void LuaState::NotifyUObjectDeleted(const UObjectBase * Object, int32 Index)
 	{
-		unlinkUObject(Object);
+		unlinkUObject((const UObject*)Object);
 	}
 
-	void LuaState::unlinkUObject(const UObjectBase * Object)
+	void LuaState::unlinkUObject(const UObject * Object)
 	{
-		// remove ref, Object must be an UObject in slua
-		removeRef((UObject*)Object);
-
-		// pop ud to stack
-		if (!LuaObject::getFromCache(L, const_cast<UObjectBase *>(Object), nullptr, false))
+		// find Object from objRefs, maybe nothing
+		auto udptr = objRefs.Find(Object);
+		// maybe Object not push to lua
+		if (!udptr) {
 			return;
+		}
 
-		GenericUserData* ud = (GenericUserData*)lua_touserdata(L, -1);
-		// pop ud
-		lua_pop(L, 1);
-		// this cached ud is weak ref
-		// maybe gc by lua, so check flag
-		if (ud->flag & UD_HADFREE)
+		GenericUserData* ud = *udptr;
+		// maybe ud is nullptr or had been freed
+		if (!ud || ud->flag & UD_HADFREE)
 			return;
 
 		// indicate ud had be free
 		ud->flag |= UD_HADFREE;
+		// remove ref, Object must be an UObject in slua
+		objRefs.Remove(const_cast<UObject*>(Object));
 		// remove cache
-		LuaObject::removeFromCache(L, ud);
+		ensure(ud->ud == Object);
+		LuaObject::removeFromCache(L, ud->ud);
 	}
 
 	void LuaState::AddReferencedObjects(FReferenceCollector & Collector)
 	{
-		Collector.AddReferencedObjects(objRefs);
+		// erase all null reference
+		// Collector.AddReferencedObjects will set inner item to nullptr
+		// so check and remove it
+		for (UObjectRefMap::TIterator it(objRefs); it; ++it)
+		{
+			UObject* item = it.Key();
+			Collector.AddReferencedObject(item);
+		}
 	}
 
 	int LuaState::pushErrorHandler(lua_State* L) {
@@ -517,14 +517,15 @@ namespace slua {
 		return ret;
 	}
 
-	void LuaState::addRef(UObject* obj)
+	void LuaState::addRef(UObject* obj,void* ud)
 	{
-		objRefs.Add(obj);
-	}
-
-	void LuaState::removeRef(UObject* obj)
-	{
-		objRefs.Remove(obj);
+		auto* udptr = objRefs.Find(obj);
+		// if any obj find in objRefs, it should be flag freed and removed
+		if (udptr) {
+			(*udptr)->flag |= UD_HADFREE;
+			objRefs.Remove(obj);
+		}
+		objRefs.Add(obj,(GenericUserData*)ud);
 	}
 
 	FDeadLoopCheck::FDeadLoopCheck()

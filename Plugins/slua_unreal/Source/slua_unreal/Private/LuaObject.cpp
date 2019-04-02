@@ -812,15 +812,15 @@ namespace slua {
 		return checkType(L, -1, tn);
     }
 
-    void LuaObject::addRef(lua_State* L,UObject* obj) {
+    void LuaObject::addRef(lua_State* L,UObject* obj,void* ud) {
         auto sl = LuaState::get(L);
-        sl->addRef(obj);
+        sl->addRef(obj,ud);
     }
 
 
     void LuaObject::removeRef(lua_State* L,UObject* obj) {
         auto sl = LuaState::get(L);
-        sl->removeRef(obj);
+        sl->unlinkUObject(obj);
     }
 
 	void LuaObject::releaseLink(lua_State* L, void* prop) {
@@ -842,31 +842,19 @@ namespace slua {
         lua_pop(L,1); // pop cache table        
     }
 
-	void LuaObject::removeFromCache(lua_State * L, GenericUserData* ud)
+	void LuaObject::removeFromCache(lua_State * L, void* obj)
 	{
 		// get cache table
 		LuaState* ls = LuaState::get(L);
 		lua_geti(L, LUA_REGISTRYINDEX, ls->cacheObjRef);
 		ensure(lua_type(L, -1) == LUA_TTABLE);
-		lua_pushlightuserdata(L, ud->ud);
+		lua_pushlightuserdata(L, obj);
 		lua_pushnil(L);
 		// cache[obj] = nil
 		lua_rawset(L, -3);
 		// pop cache table;
 		lua_pop(L, 1);
 	}
-
-    int LuaObject::removeFromCacheGC(lua_State* L) {
-        int p = lua_upvalueindex(1);
-        // get real gc function
-        lua_CFunction gc = lua_tocfunction(L,p);
-        gc(L);
-        // check UD as light userdata
-        GenericUserData* ud = (GenericUserData*)lua_touserdata(L,1);
-		ud->flag |= UD_HADFREE;
-		removeFromCache(L,ud);
-        return 0;
-    }
 
 	void LuaObject::createTable(lua_State* L, const char * tn)
 	{

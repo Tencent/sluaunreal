@@ -42,6 +42,7 @@ namespace slua {
 		RegMetaMethod(L, loadClass);
 		RegMetaMethod(L, dumpUObjects);
 		RegMetaMethod(L, loadObject);
+		RegMetaMethod(L, threadGC);
         lua_setglobal(L,"slua");
     }
 
@@ -86,6 +87,17 @@ namespace slua {
 		const char* objname = luaL_checkstring(L, 1);
 		UObject* outter = LuaObject::checkValueOpt<UObject*>(L, 2, nullptr);
 		return LuaObject::push(L, LoadObject<UObject>(outter, UTF8_TO_TCHAR(objname)));
+	}
+
+	int SluaUtil::threadGC(lua_State * L)
+	{
+		const char* flag = luaL_checkstring(L, 1);
+		auto state = LuaState::get(L);
+		if (strcmp(flag, "on")==0)
+			state->enableMultiThreadGC = true;
+		else if(strcmp(flag,"off")==0)
+			state->enableMultiThreadGC = false;
+		return 0;
 	}
     
     int SluaUtil::loadUI(lua_State* L) {

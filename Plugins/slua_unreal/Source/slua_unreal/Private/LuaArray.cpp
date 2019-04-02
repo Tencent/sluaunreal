@@ -319,7 +319,7 @@ namespace slua {
 
     int LuaArray::gc(lua_State* L) {
         CheckUD(LuaArray,L,1);
-        delete UD;
+		LuaObject::deleteFGCObject(L,UD);
         return 0;   
     }
 

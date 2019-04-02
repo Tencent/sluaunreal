@@ -27,8 +27,6 @@ function remove()
 	for k,v in pairs(leaks) do
 		print(k,v)
 	end
-	collectgarbage("collect")
-
 	btn2.OnClicked:Remove(handler)
 	btn2=nil
 	btn1.OnClicked:Remove(h_openmap)

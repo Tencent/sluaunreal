@@ -100,7 +100,7 @@ namespace slua {
         int stateIndex() const { return si; }
         
         // init lua state
-        virtual bool init();
+        virtual bool init(bool enableMultiThreadGC=false);
         // tick function
         virtual void tick(float dtime);
         // close lua state
@@ -206,9 +206,13 @@ namespace slua {
 
 		// hold UObjects pushed to lua
 		UObjectRefMap objRefs;
+		// hold FGcObject to defer delete
+		TArray<FGCObject*> deferDelete;
 
 		FDelegateHandle pgcHandler;
 		FDelegateHandle wcHandler;
+
+		bool enableMultiThreadGC;
 
         static LuaState* mainState;
 

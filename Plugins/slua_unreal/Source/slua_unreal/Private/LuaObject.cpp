@@ -893,6 +893,16 @@ namespace slua {
 		lua_pop(L, 1);
 	}
 
+	void LuaObject::deleteFGCObject(lua_State* L, FGCObject * obj)
+	{
+		if (!IsGarbageCollecting())
+			delete obj;
+		else {
+			auto ls = LuaState::get(L);
+			ls->deferDelete.Add(obj);
+		}
+	}
+
 	void LuaObject::createTable(lua_State* L, const char * tn)
 	{
 		auto ls = LuaState::get(L);
@@ -938,7 +948,7 @@ namespace slua {
 
 	int LuaObject::gcStruct(lua_State* L) {
 		CheckUDGC(LuaStruct, L, 1);
-		delete UD;
+		deleteFGCObject(L,UD);
 		return 0;
 	}
 

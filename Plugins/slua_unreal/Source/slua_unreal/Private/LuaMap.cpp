@@ -346,7 +346,7 @@ namespace slua {
 
 	int LuaMap::gc(lua_State* L) {
 		CheckUD(LuaMap, L, 1);
-		delete UD;
+		LuaObject::deleteFGCObject(L,UD);
 		return 0;
 	}
 

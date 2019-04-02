@@ -17,6 +17,7 @@ function begin(uworld,uactor)
     assert(some.field.x==101)
     assert(some.field.y==103)
     assert(some.field.z==104)
+    slua.threadGC("on")
 
     testcase()
 end
@@ -50,6 +51,4 @@ function update(dt)
     TestArray.update(tt)
     TestMap.update(tt)
     TestBp:update(tt)
-
-    collectgarbage("collect")
 end

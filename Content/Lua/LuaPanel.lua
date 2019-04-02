@@ -21,6 +21,7 @@ end
 
 function panel:Destruct()
     print"panel:Destruct"
+    self.imgs = nil
 end
 
 function panel:Tick()

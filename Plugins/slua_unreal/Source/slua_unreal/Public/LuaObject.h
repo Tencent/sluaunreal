@@ -554,6 +554,7 @@ namespace slua {
         static bool getFromCache(lua_State* L, void* obj, const char* tn, bool check = true);
 		static void cacheObj(lua_State* L, void* obj);
 		static void removeFromCache(lua_State* L, void* obj);
+		static void deleteFGCObject(lua_State* L,FGCObject* obj);
     private:
         static int setupClassMT(lua_State* L);
         static int setupInstanceMT(lua_State* L);

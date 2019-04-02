@@ -187,7 +187,7 @@ namespace slua {
     }
 
 
-    bool LuaState::init() {
+    bool LuaState::init(bool gcFlag) {
 
         if(deadLoopCheck)
             return false;
@@ -195,6 +195,7 @@ namespace slua {
         if(!mainState) 
             mainState = this;
 
+		enableMultiThreadGC = gcFlag;
 		pgcHandler = FCoreUObjectDelegates::GetPostGarbageCollect().AddRaw(this, &LuaState::onEngineGC);
 		wcHandler = FWorldDelegates::OnWorldCleanup.AddRaw(this, &LuaState::onWorldCleanup);
 		GUObjectArray.AddUObjectDeleteListener(this);
@@ -329,9 +330,12 @@ namespace slua {
 		for (ClassFunctionCache::CacheMap::TIterator it(classMap.cacheMap); it; ++it)
 			if (!it.Key().IsValid())
 				it.RemoveCurrent();
-		Log::Log("Unreal engine GC, perform lua gc");
-		// do more gc step
-		lua_gc(L, LUA_GCSTEP, 1024);
+		// really delete FGCObject
+		for (auto ptr : deferDelete)
+			delete ptr;
+		deferDelete.Empty();
+
+		Log::Log("Unreal engine GC, lua used %d KB",lua_gc(L, LUA_GCCOUNT, 0));
 	}
 
 	void LuaState::onWorldCleanup(UWorld * World, bool bSessionEnded, bool bCleanupResources)
@@ -420,6 +424,8 @@ namespace slua {
 		{
 			UObject* item = it.Key();
 			Collector.AddReferencedObject(item);
+			// do more gc step in collecting thread
+			if(enableMultiThreadGC) lua_gc(L, LUA_GCCOLLECT, 128);
 		}
 	}
 

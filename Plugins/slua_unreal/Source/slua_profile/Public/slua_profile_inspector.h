@@ -82,7 +82,7 @@ private:
 	void ClearProfilerCharFillImage();
 	void AssignProfiler(TArray<SluaProfiler> &profilerArray, SluaProfiler& rootProfilers, SluaProfiler& profilers);
 	void AssignProfiler(SluaProfiler& srcProfilers, SluaProfiler& dstProfilers);
-	void MergeSiblingNode(int begIdx, int endIdx, TArray<int> parentMergeArray, int mergeArrayIdx);
+	void MergeSiblingNode(SluaProfiler& profiler, int begIdx, int endIdx, TArray<int> parentMergeArray, int mergeArrayIdx);
 	void SearchSiblingNode(SluaProfiler& profiler, int curIdx, int endIdx, TSharedPtr<FunctionProfileInfo> &node);
 	FString GenBrevFuncName(FString &functionName);
 	void CopyFunctionNode(TSharedPtr<FunctionProfileInfo>& oldFuncNode, TSharedPtr<FunctionProfileInfo>& newFuncNode);

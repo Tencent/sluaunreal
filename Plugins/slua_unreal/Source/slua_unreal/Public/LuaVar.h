@@ -68,6 +68,7 @@ namespace slua {
         void set(lua_Number v);
         void set(const char* v);
         void set(bool b);
+		void free();
 
         // push luavar to lua state, 
         // if l is null, push luavar to L
@@ -232,7 +233,6 @@ namespace slua {
         void init(lua_State* L,int p,Type t);
         void initTuple(lua_State* L,size_t n);
 
-        void free();
         void alloc(int n);
 
         struct Ref {

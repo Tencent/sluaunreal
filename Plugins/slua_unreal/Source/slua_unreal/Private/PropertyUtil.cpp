@@ -27,52 +27,52 @@ namespace slua {
 		UProperty* p = nullptr;
 		UObject* outer = getPropertyOutter();
 		switch (proto.type) {
-			case UE4CodeGen_Private::EPropertyClass::Byte:
+			case EPropertyClass::Byte:
 				p = NewObject<UProperty>(outer, UByteProperty::StaticClass());
                 break;
-			case UE4CodeGen_Private::EPropertyClass::Int8:
+			case EPropertyClass::Int8:
 				p = NewObject<UProperty>(outer, UInt8Property::StaticClass());
                 break;
-			case UE4CodeGen_Private::EPropertyClass::Int16:
+			case EPropertyClass::Int16:
 				p = NewObject<UProperty>(outer, UInt16Property::StaticClass());
                 break;
-			case UE4CodeGen_Private::EPropertyClass::Int:
+			case EPropertyClass::Int:
 				p = NewObject<UProperty>(outer, UIntProperty::StaticClass());
                 break;
-			case UE4CodeGen_Private::EPropertyClass::Int64:
+			case EPropertyClass::Int64:
 				p = NewObject<UProperty>(outer, UInt64Property::StaticClass());
                 break;
-			case UE4CodeGen_Private::EPropertyClass::UInt16:
+			case EPropertyClass::UInt16:
 				p = NewObject<UProperty>(outer, UUInt16Property::StaticClass());
                 break;
-			case UE4CodeGen_Private::EPropertyClass::UInt32:
+			case EPropertyClass::UInt32:
 				p = NewObject<UProperty>(outer, UUInt32Property::StaticClass());
                 break;
-			case UE4CodeGen_Private::EPropertyClass::UInt64:
+			case EPropertyClass::UInt64:
 				p = NewObject<UProperty>(outer, UUInt64Property::StaticClass());
                 break;
-			case UE4CodeGen_Private::EPropertyClass::UnsizedInt:
+			case EPropertyClass::UnsizedInt:
 				p = NewObject<UProperty>(outer, UUInt64Property::StaticClass());
                 break;
-			case UE4CodeGen_Private::EPropertyClass::UnsizedUInt:
+			case EPropertyClass::UnsizedUInt:
 				p = NewObject<UProperty>(outer, UUInt64Property::StaticClass());
                 break;
-			case UE4CodeGen_Private::EPropertyClass::Float:
+			case EPropertyClass::Float:
 				p = NewObject<UProperty>(outer, UFloatProperty::StaticClass());
                 break;
-			case UE4CodeGen_Private::EPropertyClass::Double:
+			case EPropertyClass::Double:
 				p = NewObject<UProperty>(outer, UDoubleProperty::StaticClass());
                 break;
-			case UE4CodeGen_Private::EPropertyClass::Bool:
+			case EPropertyClass::Bool:
 				p = NewObject<UProperty>(outer, UBoolProperty::StaticClass());
                 break;
-			case UE4CodeGen_Private::EPropertyClass::Object: {
+			case EPropertyClass::Object: {
 				auto op = NewObject<UObjectProperty>(outer, UObjectProperty::StaticClass());
 				op->SetPropertyClass(proto.cls);
 				p = op;
 				break;
 			}
-			case UE4CodeGen_Private::EPropertyClass::Str:
+			case EPropertyClass::Str:
 				p = NewObject<UProperty>(outer, UStrProperty::StaticClass());
                 break;
 		}

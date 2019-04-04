@@ -15,7 +15,9 @@
 
 #ifdef _MSC_VER
 #define WIN32_LEAN_AND_MEAN
-#include "windows.h"
+#include "AllowWindowsPlatformTypes.h"
+#include "Windows.h"
+#include "HideWindowsPlatformTypes.h"
 #else
 #include <iostream>
 #include <stdexcept>

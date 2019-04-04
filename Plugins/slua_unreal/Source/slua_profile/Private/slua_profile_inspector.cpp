@@ -72,6 +72,7 @@ void  SProfilerInspector::CopyFunctionNode(TSharedPtr<FunctionProfileInfo>& oldF
 	newFuncNode->mergedNum = oldFuncNode->mergedNum;
 	newFuncNode->globalIdx = oldFuncNode->globalIdx;
 	newFuncNode->isDuplicated = oldFuncNode->isDuplicated;
+	newFuncNode->mergeIdxArray = oldFuncNode->mergeIdxArray;
 }
 
 void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray)
@@ -88,8 +89,20 @@ void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray)
 
 	if (NeedReBuildInspector() == true && treeview.IsValid() && tmpRootProfiler.Num() != 0)
 	{
+		// merge tempRootProfiler funcNode
+		TArray<int> emptyMergeArray;
+		for (int idx = 0; idx < tmpRootProfiler.Num(); idx++)
+		{
+			TSharedPtr<FunctionProfileInfo> &funcNode = tmpRootProfiler[idx];
+			if (funcNode->beMerged == true || funcNode->functionName.IsEmpty())
+			{
+				continue;
+			}
+			MergeSiblingNode(tmpRootProfiler, idx, tmpRootProfiler.Num(), emptyMergeArray, 0);
+		}
+
 		SortProfiler(tmpRootProfiler);
-		AssignProfiler(tmpRootProfiler, shownRootProfiler);
+		AssignProfiler(tmpRootProfiler, shownRootProfiler);	
 		AssignProfiler(tmpProfiler, shownProfiler);
 		
 		if (hasCleared == true)
@@ -458,12 +471,30 @@ void SProfilerInspector::RemoveProfilerBarOnMouseMoveEvent()
 
 void SProfilerInspector::SortProfiler(SluaProfiler &rootProfiler)
 {
+	rootProfiler.Sort([](const TSharedPtr<FunctionProfileInfo>& LHS, const TSharedPtr<FunctionProfileInfo>& RHS)
+	{ 
+		if (LHS->mergedCostTime == RHS->mergedCostTime)
+		{
+			return LHS->globalIdx < RHS->globalIdx;
+		}
+		else
+		{
+			return LHS->mergedCostTime > RHS->mergedCostTime;
+		}
+	});
+
 	SluaProfiler duplictedNodeArray;
 	for (int idx = 0; idx < rootProfiler.Num(); idx++)//(auto &funcNode : rootProfiler)
 	{
 		TSharedPtr<FunctionProfileInfo> &funcNode = rootProfiler[idx];
 		if (funcNode->isDuplicated == true)
 		{
+			continue;
+		}
+		if (funcNode->functionName.IsEmpty())
+		{
+			funcNode->isDuplicated = true;
+			duplictedNodeArray.Add(funcNode);
 			continue;
 		}
 		for (int jdx = idx + 1; jdx < rootProfiler.Num(); jdx++)
@@ -481,24 +512,36 @@ void SProfilerInspector::SortProfiler(SluaProfiler &rootProfiler)
 		}
 	}
 
-	for (int idx = 0; idx < shownRootProfiler.Num(); idx++)
+	for (int idx = 0; idx < rootProfiler.Num(); idx++)
 	{
-		if (shownRootProfiler[idx]->isDuplicated == true)
+		if (rootProfiler[idx]->isDuplicated == true)
 		{
-			shownRootProfiler.RemoveAt(idx);
+			rootProfiler.RemoveAt(idx);
 			idx--;
 		}
 	}
 
 	for (int idx = 0; idx < duplictedNodeArray.Num(); idx++)
 	{
-		shownRootProfiler.Add(duplictedNodeArray[idx]);
+		rootProfiler.Add(duplictedNodeArray[idx]);
 	}
 }
 
 void SProfilerInspector::ShowProfilerTree(TArray<SluaProfiler> &selectedProfiler)
 {
 	AssignProfiler(selectedProfiler, tmpRootProfiler, shownProfiler);
+
+	TArray<int> emptyMergeArray;
+	for (int idx = 0; idx < tmpRootProfiler.Num(); idx++)
+	{
+		TSharedPtr<FunctionProfileInfo> &funcNode = tmpRootProfiler[idx];
+		if (funcNode->beMerged == true || funcNode->functionName.IsEmpty())
+		{
+			continue;
+		}
+		MergeSiblingNode(tmpRootProfiler, idx, tmpRootProfiler.Num(), emptyMergeArray, 0);
+	}
+
 	SortProfiler(tmpRootProfiler);
 	AssignProfiler(tmpRootProfiler, shownRootProfiler);
 
@@ -555,14 +598,11 @@ void SProfilerInspector::OnGetChildrenForTree(TSharedPtr<FunctionProfileInfo> Pa
 	TArray<TSharedPtr<FunctionProfileInfo>> unSortedChildrenArray;
 
 	if (Parent.IsValid() && Parent->functionName.IsEmpty() == false
-		&& shownProfiler[Parent->globalIdx]->beMerged == false)
+		&& Parent->beMerged == false)
 	{
 		if (Parent->layerIdx == 0)
 		{
-			Parent->mergeIdxArray.Empty();
-			MergeSiblingNode(Parent->globalIdx, shownProfiler.Num(), Parent->mergeIdxArray, 0);
-			CopyFunctionNode(shownProfiler[Parent->globalIdx], Parent);
-			Parent->mergeIdxArray = shownProfiler[Parent->globalIdx]->mergeIdxArray;
+			CopyFunctionNode(Parent, shownProfiler[Parent->globalIdx]);
 		}
 
 		int globalIdx = Parent->globalIdx + 1;
@@ -572,12 +612,12 @@ void SProfilerInspector::OnGetChildrenForTree(TSharedPtr<FunctionProfileInfo> Pa
 		{
 			if (layerIdx + 1 == shownProfiler[globalIdx]->layerIdx)
 			{
-				if (shownProfiler[globalIdx]->beMerged == true)
+				if (shownProfiler[globalIdx]->beMerged == true || shownProfiler[globalIdx]->functionName.IsEmpty())
 				{
 					continue;
 				}
 				// find sibling first
-				MergeSiblingNode(globalIdx, shownProfiler.Num(), Parent->mergeIdxArray, 0);
+				MergeSiblingNode(shownProfiler, globalIdx, shownProfiler.Num(), Parent->mergeIdxArray, 0);
 
 				unSortedChildrenArray.Add(shownProfiler[globalIdx]);
 			}
@@ -594,11 +634,11 @@ void SProfilerInspector::OnGetChildrenForTree(TSharedPtr<FunctionProfileInfo> Pa
 			while (pointIdx < shownProfiler.Num() && shownProfiler[pointIdx]->layerIdx > Parent->layerIdx)
 			{
 				TSharedPtr<FunctionProfileInfo> &siblingNextNode = shownProfiler[pointIdx];
-				if (siblingNextNode->beMerged == false && siblingNextNode->layerIdx == (Parent->layerIdx + 1))
+				if (siblingNextNode->beMerged == false && siblingNextNode->layerIdx == (Parent->layerIdx + 1) && !siblingNextNode->functionName.IsEmpty())
 				{
 					unSortedChildrenArray.Add(siblingNextNode);
 				}
-				MergeSiblingNode(pointIdx, Parent->mergeIdxArray.Num(), Parent->mergeIdxArray, mergeIdx+1);
+				MergeSiblingNode(shownProfiler, pointIdx, shownProfiler.Num(), Parent->mergeIdxArray, mergeIdx+1); // Parent->mergeIdxArray.Num() todo
 				pointIdx++;
 			}
 		}
@@ -612,20 +652,20 @@ void SProfilerInspector::OnGetChildrenForTree(TSharedPtr<FunctionProfileInfo> Pa
 	}
 }
 
-void SProfilerInspector::MergeSiblingNode(int begIdx, int endIdx, TArray<int> parentMergeArray, int mergeArrayIdx)
+void SProfilerInspector::MergeSiblingNode(SluaProfiler &profiler, int begIdx, int endIdx, TArray<int> parentMergeArray, int mergeArrayIdx)
 {
-	if (begIdx == endIdx || shownProfiler[begIdx]->beMerged == true)
+	if (begIdx == endIdx || profiler[begIdx]->beMerged == true)
 	{
 		return;
 	}
 
-	TSharedPtr<FunctionProfileInfo> &node = shownProfiler[begIdx];
+	TSharedPtr<FunctionProfileInfo> &node = profiler[begIdx];
 	node->mergedNum = 1;
 	node->mergedCostTime = node->costTime;
 	node->mergeIdxArray.Empty();
 
 	int pointIdx = begIdx + 1;
-	SearchSiblingNode(shownProfiler, pointIdx, endIdx, node);
+	SearchSiblingNode(profiler, pointIdx, endIdx, node);
 
 	// merge with other parent nodes' child which function name is the same with self parent
 	if (mergeArrayIdx >= parentMergeArray.Num())
@@ -635,7 +675,7 @@ void SProfilerInspector::MergeSiblingNode(int begIdx, int endIdx, TArray<int> pa
 	for (size_t idx = mergeArrayIdx; idx<parentMergeArray.Num(); idx++)
 	{
 		pointIdx = parentMergeArray[idx] + 1;
-		SearchSiblingNode(shownProfiler, pointIdx, endIdx, node);
+		SearchSiblingNode(profiler, pointIdx, endIdx, node);
 	}
 }
 
@@ -649,7 +689,7 @@ void SProfilerInspector::SearchSiblingNode(SluaProfiler& profiler, int curIdx, i
 			nextNode->beMerged = true;
 			node->mergedCostTime = node->mergedCostTime + nextNode->costTime;
 			node->mergedNum = node->mergedNum + 1;
-			node->mergeIdxArray.Add(curIdx);
+			node->mergeIdxArray.Add(nextNode->globalIdx);
 		}
 		curIdx++;
 	}

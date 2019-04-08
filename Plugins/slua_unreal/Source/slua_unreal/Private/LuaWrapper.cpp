@@ -3314,7 +3314,11 @@ namespace slua {
 				auto V = LuaObject::checkValue<int>(L, 3);
 				auto VVal = (unsigned char)V;
 				auto ret = __newFLinearColor();
+#if (ENGINE_MINOR_VERSION>=22) && (ENGINE_MAJOR_VERSION>=4)
+				*ret = FLinearColor::MakeFromHSV8(HVal, SVal, VVal);
+#else
 				*ret = FLinearColor::FGetHSV(HVal, SVal, VVal);
+#endif
 				LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC);
 				return 1;
 			}

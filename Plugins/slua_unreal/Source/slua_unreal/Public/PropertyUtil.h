@@ -15,13 +15,48 @@
 
 namespace slua {
 
+	// copy code from UE, avoid be removed from version 4.22
+	enum class EPropertyClass
+	{
+		Byte,
+		Int8,
+		Int16,
+		Int,
+		Int64,
+		UInt16,
+		UInt32,
+		UInt64,
+		UnsizedInt,
+		UnsizedUInt,
+		Float,
+		Double,
+		Bool,
+		SoftClass,
+		WeakObject,
+		LazyObject,
+		SoftObject,
+		Class,
+		Object,
+		Interface,
+		Name,
+		Str,
+		Array,
+		Map,
+		Set,
+		Struct,
+		Delegate,
+		MulticastDelegate,
+		Text,
+		Enum,
+	};
+
     template<typename T>
     struct DeduceType;
 
-    // convert T to UE4CodeGen_Private::EPropertyClass
+    // convert T to EPropertyClass
     #define DefDeduceType(A,B) \
     template<> struct DeduceType<A> { \
-        static const UE4CodeGen_Private::EPropertyClass value = UE4CodeGen_Private::EPropertyClass::B; \
+        static const EPropertyClass value = EPropertyClass::B; \
     };\
 
 
@@ -41,15 +76,15 @@ namespace slua {
 
     // definition of property
     struct SLUA_UNREAL_API PropertyProto {
-        PropertyProto(UE4CodeGen_Private::EPropertyClass t) :type(t), cls(nullptr) {}
-        PropertyProto(UE4CodeGen_Private::EPropertyClass t,UClass* c) :type(t), cls(c) {}
+        PropertyProto(EPropertyClass t) :type(t), cls(nullptr) {}
+        PropertyProto(EPropertyClass t,UClass* c) :type(t), cls(c) {}
 
         template<typename T>
         static PropertyProto get() {
             return PropertyProto(DeduceType<T>::value);
         }
 
-        UE4CodeGen_Private::EPropertyClass type;
+        EPropertyClass type;
         UClass* cls;
 
         // create UProperty by PropertyProto

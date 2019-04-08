@@ -18,6 +18,7 @@
 #include <algorithm>
 #include "LuaState.h"
 #include "LuaReference.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 #define GET_CHECKER(tag) \
 	auto tag##Checker = LuaObject::getChecker(UD->tag##Prop);\
@@ -142,7 +143,11 @@ namespace slua {
     }
 
 	uint8* LuaMap::getKeyPtr(uint8* pairPtr) {
+#if (ENGINE_MINOR_VERSION>=22) && (ENGINE_MAJOR_VERSION>=4)
+		return pairPtr;
+#else
 		return pairPtr + helper.MapLayout.KeyOffset;
+#endif
 	}
 
 	uint8* LuaMap::getValuePtr(uint8* pairPtr) {
@@ -240,8 +245,8 @@ namespace slua {
 	}
 
 	int LuaMap::__ctor(lua_State* L) {
-		auto keyType = (UE4CodeGen_Private::EPropertyClass)LuaObject::checkValue<int>(L, 1);
-		auto valueType = (UE4CodeGen_Private::EPropertyClass)LuaObject::checkValue<int>(L, 2);
+		auto keyType = (EPropertyClass)LuaObject::checkValue<int>(L, 1);
+		auto valueType = (EPropertyClass)LuaObject::checkValue<int>(L, 2);
 		auto keyProp = PropertyProto::createProperty(keyType);
 		auto valueProp = PropertyProto::createProperty(valueType);
 		return push(L, keyProp, valueProp, nullptr);

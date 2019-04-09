@@ -23,6 +23,9 @@
 #include "Misc/AssertionMacros.h"
 #include "LuaVar.h"
 #include "LuaCppBindingPost.h"
+#include "HttpModule.h"
+#include "IHttpRequest.h"
+#include "IHttpResponse.h"
 
 namespace slua {
 
@@ -273,6 +276,25 @@ namespace slua {
 		COUNT,
 	};
 	DefEnumClass(TestEnum2, TestEnum2::OK, TestEnum2::BAD, TestEnum2::COUNT);
+
+	// test http module 
+
+	DefLuaClass(IHttpResponse)
+		DefLuaMethod(GetResponseCode, &IHttpResponse::GetResponseCode)
+	EndDef(IHttpResponse, nullptr)
+
+	DefLuaClass(IHttpRequest)
+		DefLuaMethod(GetResponse, &IHttpRequest::GetResponse)
+	EndDef(IHttpRequest, nullptr)
+
+	DefLuaClass(FHttpModule)
+		DefLuaMethod_With_Lambda(Get, true, []()->FHttpModule* {
+		return &FHttpModule::Get();
+		})
+		DefLuaMethod(CreateRequest, &FHttpModule::CreateRequest)
+		DefLuaMethod(GetHttpTimeout, &FHttpModule::GetHttpTimeout)
+
+	EndDef(FHttpModule,nullptr)
 }
 
 USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)

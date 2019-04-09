@@ -91,8 +91,9 @@ namespace slua {
 		
 	#define UD_NOFLAG 0
 	#define UD_AUTOGC 1 // flag userdata should call __gc and maintain by lua
-	#define UD_HADFREE 2 // flag userdata had been freed
-	#define UD_SHAREDPTR 4 // it's a TSharedptr in userdata instead of raw pointer
+	#define UD_HADFREE 1<<2 // flag userdata had been freed
+	#define UD_SHAREDPTR 1<<3 // it's a TSharedptr in userdata instead of raw pointer
+	#define UD_THREADSAFEPTR 1<<4 // it's a TSharedptr with thread-safe mode in userdata instead of raw pointer
 
 #define DEF_USERDATA(T, NAME) \
 	struct NAME { \
@@ -148,10 +149,11 @@ namespace slua {
         LuaOwnedPtr(T* p):ptr(p) {}
     };
 
-	template<typename T>
+	template<typename T,ESPMode mode>
 	struct SharedPtrUD {
-		TSharedPtr<T> ptr;
-		SharedPtrUD(const TSharedPtr<T>& other) :ptr(other) {}
+		TSharedPtr<T, mode> ptr;
+		SharedPtrUD(const TSharedPtr<T, mode>& other) :ptr(other) {}
+		SharedPtrUD(const TSharedRef<T, mode>& other) :ptr(other) {}
 	};
 
 	FString getUObjName(UObject* obj);
@@ -214,11 +216,16 @@ namespace slua {
 
         // testudata, if T isn't uobject
         template<typename T>
-        static typename std::enable_if<!std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p,bool checkfree=true) {
+        static typename std::enable_if<!std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type 
+		testudata(lua_State* L,int p,bool checkfree=true) {
             auto ptr = (UserData<T*>*)luaL_testudata(L,p,TypeName<T>::value());
 			CHECK_UD_VALID;
+			// ptr is boxed shared ptr?
 			if (ptr && ptr->flag&UD_SHAREDPTR) {
-				auto sptr = (UserData<SharedPtrUD<T>*>*)ptr;
+				// ptr may be a ThreadSafe sharedptr or NotThreadSafe sharedptr
+				// but we don't care about it, we just Get raw ptr from it
+				// static_assert(sizeof(SharedPtrUD<T, ESPMode::NotThreadSafe>) == sizeof(SharedPtrUD<T, ESPMode::ThreadSafe>), "unexpected static assert");
+				auto sptr = (UserData<SharedPtrUD<T, ESPMode::NotThreadSafe>*>*)ptr;
 				// unbox shared ptr to rawptr
 				return sptr->ud->ptr.Get();
 			}
@@ -422,18 +429,30 @@ namespace slua {
         }
 
 		// for TSharePtr version
-		template<class T>
-		static int pushType(lua_State* L, SharedPtrUD<T>* cls, const char* tn) {
+
+		template<class T, ESPMode mode>
+		static int gcSharedPtrUD(lua_State* L) {
+			luaL_checktype(L, 1, LUA_TUSERDATA);
+			using BOXPUD = SharedPtrUD<T, mode>;
+			UserData<BOXPUD*>* ud = reinterpret_cast<UserData<BOXPUD*>*>(lua_touserdata(L, 1));
+			ud->flag |= UD_HADFREE;
+			SafeDelete(ud->ud);
+			return 0;
+		}
+
+		template<class T,ESPMode mode>
+		static int pushType(lua_State* L, SharedPtrUD<T, mode>* cls, const char* tn) {
 			if (!cls) {
 				lua_pushnil(L);
 				return 1;
 			}
-			using BOXPUD = SharedPtrUD<T>;
-			UserData<BOXPUD*>* ud = reinterpret_cast<UserData<BOXPUD*>*>(lua_newuserdata(L, sizeof(UserData<T>)));
+			using BOXPUD = SharedPtrUD<T, mode>;
+			UserData<BOXPUD*>* ud = reinterpret_cast<UserData<BOXPUD*>*>(lua_newuserdata(L, sizeof(UserData<BOXPUD*>)));
 			ud->parent = nullptr;
 			ud->ud = cls;
 			ud->flag = UD_AUTOGC|UD_SHAREDPTR;
-			setupMetaTable(L, tn);
+			if (mode == ESPMode::ThreadSafe) ud->flag |= UD_THREADSAFEPTR;
+			setupMetaTable(L, tn, gcSharedPtrUD<T,mode>);
 			return 1;
 		}
 
@@ -510,15 +529,27 @@ namespace slua {
 			return 0;
 		}
 
-		template<typename T>
-		static int push(lua_State* L, const TSharedPtr<T>& ptr) {
+		template<typename T, ESPMode mode>
+		static int push(lua_State* L, const TSharedPtr<T, mode>& ptr) {
 			// get raw ptr from sharedptr
 			T* rawptr = ptr.Get();
 			// get typename 
 			const char* tn = TypeName<T>::value();
 			if (getFromCache(L, rawptr, tn)) return 1;
-			int r = pushType<T>(L, new SharedPtrUD<T>(ptr), tn);
+			int r = pushType<T>(L, new SharedPtrUD<T, mode>(ptr), tn);
 			if (r) cacheObj(L, rawptr);
+			return r;
+		}
+
+		template<typename T, ESPMode mode>
+		static int push(lua_State* L, const TSharedRef<T, mode>& ref) {
+			// get raw ptr from sharedptr
+			T& rawref = ref.Get();
+			// get typename 
+			const char* tn = TypeName<T>::value();
+			if (getFromCache(L, &rawref, tn)) return 1;
+			int r = pushType<T>(L, new SharedPtrUD<T, mode>(ref), tn);
+			if (r) cacheObj(L, &rawref);
 			return r;
 		}
 
@@ -565,7 +596,7 @@ namespace slua {
         static int objectToString(lua_State* L);
         static void setupMetaTable(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc);
 		static void setupMetaTable(lua_State* L, const char* tn, lua_CFunction setupmt, int gc);
-		static void setupMetaTable(lua_State* L, const char* tn);
+		static void setupMetaTable(lua_State* L, const char* tn, lua_CFunction gc);
 
         template<class T>
         static int pushType(lua_State* L,T cls,const char* tn,lua_CFunction setupmt,int gc) {

@@ -640,11 +640,14 @@ namespace slua {
 		lua_setmetatable(L, -2);
 	}
 
-	void LuaObject::setupMetaTable(lua_State* L, const char* tn)
+	void LuaObject::setupMetaTable(lua_State* L, const char* tn, lua_CFunction gc)
 	{
 		luaL_getmetatable(L, tn);
 		if (lua_isnil(L, -1))
 			luaL_error(L, "Can't find type %s exported", tn);
+
+		lua_pushcfunction(L, gc);
+		lua_setfield(L, -2, "__gc");
 		lua_setmetatable(L, -2);
 	}
 

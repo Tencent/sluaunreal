@@ -46,3 +46,6 @@ local map = f:getTMap()
 for k,v in pairs(map) do
     print("map value",k,v)
 end
+
+local boxptr = f:getBoxPtr()
+print("box value",boxptr:getValue())

@@ -614,7 +614,41 @@ namespace slua {
 		return 1;
 	}
 
-    template<typename T>
+	void LuaObject::setupMetaTable(lua_State* L, const char* tn, lua_CFunction setupmt, lua_CFunction gc)
+	{
+		if (luaL_newmetatable(L, tn)) {
+			if (setupmt)
+				setupmt(L);
+			if (gc) {
+				lua_pushcfunction(L, gc);
+				lua_setfield(L, -2, "__gc");
+			}
+		}
+		lua_setmetatable(L, -2);
+	}
+
+	void LuaObject::setupMetaTable(lua_State* L, const char* tn, lua_CFunction setupmt, int gc)
+	{
+		if (luaL_newmetatable(L, tn)) {
+			if (setupmt)
+				setupmt(L);
+			if (gc) {
+				lua_pushvalue(L, gc);
+				lua_setfield(L, -2, "__gc");
+			}
+		}
+		lua_setmetatable(L, -2);
+	}
+
+	void LuaObject::setupMetaTable(lua_State* L, const char* tn)
+	{
+		luaL_getmetatable(L, tn);
+		if (lua_isnil(L, -1))
+			luaL_error(L, "Can't find type %s exported", tn);
+		lua_setmetatable(L, -2);
+	}
+
+	template<typename T>
     int pushUProperty(lua_State* L,UProperty* prop,uint8* parms) {
         auto p=Cast<T>(prop);
         ensure(p);

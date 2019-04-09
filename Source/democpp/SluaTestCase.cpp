@@ -125,6 +125,32 @@ namespace slua {
         })
     EndDef(Foo,&Foo::create)
 
+	class Box : public TSharedFromThis<Box> {
+	public:
+		Box() {
+			Log::Log("Box construct");
+		}
+		~Box() {
+			Log::Log("Box destruct");
+		}
+		int getValue() {
+			gi++;
+			Log::Log( "Box getValue" );
+			return 1024;
+		}
+
+		int getCount() {
+			Log::Log( "Box getCount" );
+			return gi++;
+		}
+		int gi;
+	};
+
+	DefLuaClass(Box)
+		DefLuaMethod(getValue, &Box::getValue)
+		DefLuaMethod(getCount, &Box::getCount)
+	EndDef(Box,nullptr)
+
     class FooChild : public Foo {
 
         LuaClassBody()
@@ -152,7 +178,8 @@ namespace slua {
         }
 
         void eventTrigger() {
-            event.call();
+			TSharedPtr<Box> ptr = getBoxPtr();
+            event.call(ptr);
         }
 
 		void testArrMap(float f, TArray<int> arr, TMap<int, FString> map) {
@@ -184,6 +211,10 @@ namespace slua {
 			return { {1,"s"},{2,"a"},{3,"b"} };
 		}
 
+		TSharedPtr<Box> getBoxPtr() {
+			return MakeShareable(new Box);
+		}
+
         LuaVar event;
     };
 
@@ -196,6 +227,7 @@ namespace slua {
 		DefLuaMethod(testArrMap2, &FooChild::testArrMap2)
 		DefLuaMethod(getTArray, &FooChild::getTArray)
 		DefLuaMethod(getTMap, &FooChild::getTMap)
+		DefLuaMethod(getBoxPtr, &FooChild::getBoxPtr)
     EndDef(FooChild,&FooChild::create)
 
 

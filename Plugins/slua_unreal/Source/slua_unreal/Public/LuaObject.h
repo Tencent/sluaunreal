@@ -90,8 +90,9 @@ namespace slua {
 
 		
 	#define UD_NOFLAG 0
-	#define UD_AUTOGC 1
-	#define UD_HADFREE 2
+	#define UD_AUTOGC 1 // flag userdata should call __gc and maintain by lua
+	#define UD_HADFREE 2 // flag userdata had been freed
+	#define UD_SHAREDPTR 4 // it's a TSharedptr in userdata instead of raw pointer
 
 #define DEF_USERDATA(T, NAME) \
 	struct NAME { \
@@ -147,6 +148,12 @@ namespace slua {
         LuaOwnedPtr(T* p):ptr(p) {}
     };
 
+	template<typename T>
+	struct SharedPtrUD {
+		TSharedPtr<T> ptr;
+		SharedPtrUD(const TSharedPtr<T>& other) :ptr(other) {}
+	};
+
 	FString getUObjName(UObject* obj);
 
     class SLUA_UNREAL_API LuaObject
@@ -175,7 +182,7 @@ namespace slua {
         template<typename T>
         static typename std::enable_if<std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p, bool checkfree=true) {
             UserData<UObject*>* ptr = (UserData<UObject*>*)luaL_testudata(L,p,"UObject");
-			CHECK_UD_VALID
+			CHECK_UD_VALID;
             T* t = ptr?Cast<T>(ptr->ud):nullptr;
 			if (!t && lua_isuserdata(L, p)) {
 				luaL_getmetafield(L, p, "__name");
@@ -200,7 +207,7 @@ namespace slua {
         template<typename T>
         static typename std::enable_if<std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p, bool checkfree=true) {
             auto ptr = (UserData<T*>*)luaL_testudata(L,p,"UObject");
-			CHECK_UD_VALID
+			CHECK_UD_VALID;
 			if (!ptr) return maybeAnUDTable<T>(L, p, checkfree);
             return ptr?ptr->ud:nullptr;
         }
@@ -209,7 +216,12 @@ namespace slua {
         template<typename T>
         static typename std::enable_if<!std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p,bool checkfree=true) {
             auto ptr = (UserData<T*>*)luaL_testudata(L,p,TypeName<T>::value());
-			CHECK_UD_VALID
+			CHECK_UD_VALID;
+			if (ptr && ptr->flag&UD_SHAREDPTR) {
+				auto sptr = (UserData<SharedPtrUD<T>*>*)ptr;
+				// unbox shared ptr to rawptr
+				return sptr->ud->ptr.Get();
+			}
 			if (!ptr) return maybeAnUDTable<T>(L, p, checkfree);
             return ptr?ptr->ud:nullptr;
         }
@@ -409,6 +421,22 @@ namespace slua {
             return 1;
         }
 
+		// for TSharePtr version
+		template<class T>
+		static int pushType(lua_State* L, SharedPtrUD<T>* cls, const char* tn) {
+			if (!cls) {
+				lua_pushnil(L);
+				return 1;
+			}
+			using BOXPUD = SharedPtrUD<T>;
+			UserData<BOXPUD*>* ud = reinterpret_cast<UserData<BOXPUD*>*>(lua_newuserdata(L, sizeof(UserData<T>)));
+			ud->parent = nullptr;
+			ud->ud = cls;
+			ud->flag = UD_AUTOGC|UD_SHAREDPTR;
+			setupMetaTable(L, tn);
+			return 1;
+		}
+
         static void addRef(lua_State* L,UObject* obj, void* ud);
         static void removeRef(lua_State* L,UObject* obj);
 
@@ -478,6 +506,22 @@ namespace slua {
             return push(L,TypeName<T>::value(),ptr.ptr,UD_AUTOGC);
         }
 
+		static int gcSharedPtr(lua_State *L) {
+			return 0;
+		}
+
+		template<typename T>
+		static int push(lua_State* L, const TSharedPtr<T>& ptr) {
+			// get raw ptr from sharedptr
+			T* rawptr = ptr.Get();
+			// get typename 
+			const char* tn = TypeName<T>::value();
+			if (getFromCache(L, rawptr, tn)) return 1;
+			int r = pushType<T>(L, new SharedPtrUD<T>(ptr), tn);
+			if (r) cacheObj(L, rawptr);
+			return r;
+		}
+
         template<typename T>
         static int push(lua_State* L,T v,typename std::enable_if<std::is_enum<T>::value>::type* = nullptr) {
             return push(L,static_cast<int>(v));
@@ -519,29 +563,9 @@ namespace slua {
         static int gcStructClass(lua_State* L);
 		static int gcStruct(lua_State* L);
         static int objectToString(lua_State* L);
-        static void setupMetaTable(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc) {
-            if(luaL_newmetatable(L, tn)) {
-                if(setupmt)
-                    setupmt(L);
-                if(gc) {
-                    lua_pushcfunction(L,gc);
-                    lua_setfield(L,-2,"__gc");
-                }
-            }
-            lua_setmetatable(L, -2);
-        }
-
-        static void setupMetaTable(lua_State* L,const char* tn,lua_CFunction setupmt,int gc) {
-            if(luaL_newmetatable(L, tn)) {
-                if(setupmt)
-                    setupmt(L);
-                if(gc) {
-                    lua_pushvalue(L,gc);
-                    lua_setfield(L,-2,"__gc");
-                }
-            }
-            lua_setmetatable(L, -2);
-        }
+        static void setupMetaTable(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc);
+		static void setupMetaTable(lua_State* L, const char* tn, lua_CFunction setupmt, int gc);
+		static void setupMetaTable(lua_State* L, const char* tn);
 
         template<class T>
         static int pushType(lua_State* L,T cls,const char* tn,lua_CFunction setupmt,int gc) {

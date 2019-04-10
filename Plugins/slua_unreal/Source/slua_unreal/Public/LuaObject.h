@@ -456,7 +456,7 @@ namespace slua {
 			return 1;
 		}
 
-        static void addRef(lua_State* L,UObject* obj, void* ud);
+		static void addRef(lua_State* L,UObject* obj, void* ud);
         static void removeRef(lua_State* L,UObject* obj);
 
         template<typename T>
@@ -552,6 +552,13 @@ namespace slua {
 			if (r) cacheObj(L, &rawref);
 			return r;
 		}
+
+		// for TBaseDelegate
+		template<class R, class ...ARGS>
+		static int push(lua_State* L, TBaseDelegate<R, ARGS...>& delegate) {
+			return LuaDelegate::push(L, delegate);
+		}
+		
 
         template<typename T>
         static int push(lua_State* L,T v,typename std::enable_if<std::is_enum<T>::value>::type* = nullptr) {

@@ -26,6 +26,7 @@
 #include "HttpModule.h"
 #include "IHttpRequest.h"
 #include "IHttpResponse.h"
+#include "LuaDelegate.h"
 
 namespace slua {
 
@@ -285,6 +286,24 @@ namespace slua {
 
 	DefLuaClass(IHttpRequest)
 		DefLuaMethod(GetResponse, &IHttpRequest::GetResponse)
+		DefLuaMethod(SetVerb, &IHttpRequest::SetVerb)
+		DefLuaMethod(ProcessRequest, &IHttpRequest::ProcessRequest)
+		DefLuaMethod(SetURL, &IHttpRequest::SetURL)
+		DefLuaMethod(SetContent, &IHttpRequest::SetContent)
+		//DefLuaMethod(OnRequestProgress, &IHttpRequest::OnRequestProgress)
+	{
+		lua_CFunction x = LuaCppBinding<decltype(&IHttpRequest::OnRequestProgress), &IHttpRequest::OnRequestProgress>::LuaCFunction;
+		constexpr bool inst = std::is_member_function_pointer<decltype(&IHttpRequest::OnRequestProgress)>::value;
+		LuaObject::addMethod(L, "OnRequestProgress", x, inst);
+	}
+		// DefLuaMethod(OnProcessRequestComplete, &IHttpRequest::OnProcessRequestComplete)
+	{
+		using T = decltype(&IHttpRequest::OnProcessRequestComplete);
+		lua_CFunction x = LuaCppBinding<T, &IHttpRequest::OnProcessRequestComplete>::LuaCFunction;
+		constexpr bool inst = std::is_member_function_pointer<T>::value;
+		LuaObject::addMethod(L, "OnProcessRequestComplete", x, inst);
+	}
+		DefLuaMethod(OnHeaderReceived, &IHttpRequest::OnHeaderReceived)
 	EndDef(IHttpRequest, nullptr)
 
 	DefLuaClass(FHttpModule)

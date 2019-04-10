@@ -49,3 +49,17 @@ end
 
 local boxptr = f:getBoxPtr()
 print("box value",boxptr:getValue())
+
+
+local http = FHttpModule.Get()
+local req = http:CreateRequest()
+req:SetURL("http://www.oa.com")
+req:SetVerb("get")
+print"http test begin"
+req:OnRequestProgress():Bind(function(req,p)
+    print("http",req,p)
+end)
+req:OnProcessRequestComplete():Bind(function(req,resp,ret)
+    print("http complete",req,resp,ret)
+end)
+req:ProcessRequest()

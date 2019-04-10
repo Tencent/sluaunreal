@@ -15,6 +15,8 @@
 #include "CoreMinimal.h"
 #include "lua/lua.hpp"
 #include <functional>
+#include <cstddef>
+#include <cstring>
 
 #ifndef SafeDelete
 #define SafeDelete(ptr) if(ptr) { delete ptr;ptr=nullptr; }
@@ -22,38 +24,38 @@
 
 namespace slua {
 
-    template<typename T>
-    struct AutoDeleteArray {
-        AutoDeleteArray(T* p):ptr(p) {}
-        ~AutoDeleteArray() { delete[] ptr; }
-        T* ptr;
-    };
+	template<typename T>
+	struct AutoDeleteArray {
+		AutoDeleteArray(T* p) :ptr(p) {}
+		~AutoDeleteArray() { delete[] ptr; }
+		T* ptr;
+	};
 
-    struct Defer {
-        Defer(const std::function<void()>& f):func(f) {}
-        ~Defer() { func(); }
-        const std::function<void()>& func;
-    };
+	struct Defer {
+		Defer(const std::function<void()>& f) :func(f) {}
+		~Defer() { func(); }
+		const std::function<void()>& func;
+	};
 
-    template<typename T>
+	template<typename T>
 	struct remove_cr
 	{
 		typedef T type;
 	};
 
-    template<typename T>
+	template<typename T>
 	struct remove_cr<const T&>
 	{
 		typedef typename remove_cr<T>::type type;
 	};
 
-    template<typename T>
+	template<typename T>
 	struct remove_cr<T&>
 	{
 		typedef typename remove_cr<T>::type type;
 	};
 
-    template<typename T>
+	template<typename T>
 	struct remove_cr<T&&>
 	{
 		typedef typename remove_cr<T>::type type;
@@ -95,7 +97,7 @@ namespace slua {
 			|| std::is_same<T, UObject>::value)
 			return luatype == LUA_TUSERDATA;
 		else if (std::is_same<T, void*>::value)
-			return luatype == LUA_TLIGHTUSERDATA || luatype == LUA_TUSERDATA; 
+			return luatype == LUA_TLIGHTUSERDATA || luatype == LUA_TUSERDATA;
 		else
 			return luatype != LUA_TNIL && luatype != LUA_TNONE;
 	}
@@ -120,4 +122,94 @@ namespace slua {
 
 		return true;
 	}
+
+	template<typename T, bool isUObject = std::is_base_of<UObject, T>::value>
+	struct TypeName {
+		static const char* value();
+	};
+
+	template<typename T>
+	struct TypeName<T, true> {
+		static const char* value() {
+			return "UObject";
+		}
+	};
+
+	template<typename T>
+	struct TypeName<const T, false> {
+		static const char* value() {
+			return TypeName<T>::value();
+		}
+	};
+
+	template<typename T>
+	struct TypeName<const T*, false> {
+		static const char* value() {
+			return TypeName<T>::value();
+		}
+	};
+
+#define DefTypeName(T) \
+    template<> \
+    struct TypeName<T, false> { \
+        static const char* value() { \
+            return #T;\
+        }\
+    };\
+
+	DefTypeName(void);
+	DefTypeName(int32);
+	DefTypeName(uint32);
+	DefTypeName(int16);
+	DefTypeName(uint16);
+	DefTypeName(int8);
+	DefTypeName(uint8);
+	DefTypeName(float);
+	DefTypeName(double);
+	DefTypeName(FString);
+	DefTypeName(bool);
+
+	template<typename T,ESPMode mode>
+	struct TypeName<TSharedPtr<T, mode>, false> {
+		static const char* value() {
+			return TypeName<T>::value();
+		}
+	};
+
+	// why not use std::string?
+	// std::string in unreal4 will caused crash
+	struct SimpleString {
+		TArray<char> data;
+		void append(const char* str) {
+			if (data.Num()>0 && data[data.Num() - 1] == 0)
+				data.RemoveAt(data.Num() - 1);
+			for (auto it = str; *it; it++)
+				data.Add(*it);
+			data.Add(0);
+		}
+		const char* c_str() {
+			return data.GetData();
+		}
+		void clear() {
+			data.Empty();
+		}
+	};
+
+	template<class R, class ...ARGS>
+	struct MakeGeneircTypeName {
+		static void get(SimpleString& output, const char* delimiter) {
+			MakeGeneircTypeName<R>::get(output, delimiter);
+			MakeGeneircTypeName<ARGS...>::get(output, delimiter);
+		}
+	};
+
+	template<class R>
+	struct MakeGeneircTypeName<R> {
+		static void get(SimpleString& output, const char* delimiter) {
+			output.append(TypeName<typename remove_cr<R>::type>::value());
+			output.append(delimiter);
+
+		}
+	};
+	
 }

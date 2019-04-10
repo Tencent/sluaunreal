@@ -106,40 +106,6 @@ namespace slua {
 	DEF_USERDATA(T, UserData);
 	DEF_USERDATA(void*, GenericUserData);
 
-    template<typename T, bool isUObject = std::is_base_of<UObject,T>::value>
-    struct TypeName {
-		static const char* value();
-    };
-
-    template<typename T>
-    struct TypeName<T, true> {
-        static const char* value() {
-            return "UObject";
-        }
-    };
-
-	template<typename T>
-	struct TypeName<const T, false> {
-		static const char* value() {
-			return TypeName<T>::value();
-		}
-	};
-
-    template<typename T>
-    struct TypeName<const T*, false> {
-        static const char* value() {
-			return TypeName<T>::value();
-        }
-    };
-
-    #define DefTypeName(T) \
-    template<> \
-    struct TypeName<T, false> { \
-        static const char* value() { \
-            return #T;\
-        }\
-    };\
-
     DefTypeName(LuaArray);
     DefTypeName(LuaMap);
 

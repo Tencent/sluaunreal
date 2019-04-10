@@ -71,20 +71,20 @@ namespace slua {
 	template<typename R, typename ...ARGS>
 	struct LuaDelegateWrapT {
 		TBaseDelegate<R, ARGS...>& delegate;
-		LuaVar luaFunc;
 
 		LuaDelegateWrapT(TBaseDelegate<R, ARGS...>& d) :delegate(d) {}
-
-		R callback(ARGS... args) {
-			LuaVar result = luaFunc.call(std::forward<ARGS>(args) ...);
-			return result.castTo<R>();// resultCast<R>(std::move(result));
-		}
 	};
+
 
 	template<typename R, typename ...ARGS>
 	struct TypeName<LuaDelegateWrapT<R, ARGS...>, false> {
+
 		static const char* value() {
-			return "LuaDelegateWrapT";
+			static SimpleString charArray;
+			charArray.clear();
+			charArray.append("LuaDelegateWrapT_");
+			MakeGeneircTypeName<R, ARGS...>::get(charArray,",");
+			return charArray.c_str();
 		}
 	};
 
@@ -94,9 +94,10 @@ namespace slua {
 
 		template<class R, class ...ARGS>
 		static int push(lua_State* L, TBaseDelegate<R, ARGS...>& delegate) {
-			auto wrapobj = new LuaDelegateWrapT<R, ARGS...>(delegate);
- 			return LuaObject::pushType<LuaDelegateWrapT<R,ARGS...>*>(L, wrapobj,
- 				"LuaDelegateWrapT", setupMTT<R,ARGS...>, gcT<R,ARGS...>);
+			using T = LuaDelegateWrapT<R, ARGS...>;
+			auto wrapobj = new T(delegate);
+ 			return LuaObject::pushType<T*>(L, wrapobj,
+				TypeName<T>::value(), setupMTT<R,ARGS...>, gcT<R,ARGS...>);
 		}
 
 	private:
@@ -110,8 +111,16 @@ namespace slua {
 		static int setupMTT(lua_State* L) {
 			LuaObject::setupMTSelfSearch(L);
 			lua_CFunction bind = BindT<R, ARGS...>;
+			lua_CFunction clear = ClearT<R, ARGS...>;
 			RegMetaMethodByName(L, "Bind", bind);
-			// RegMetaMethod(L, Clear);
+			RegMetaMethodByName(L, "Clear", clear);
+			return 0;
+		}
+
+		template<class R, class ...ARGS>
+		static int gcT(lua_State* L) {
+			LuaDelegateWrapT<R, ARGS...>* ud = LuaObject::checkUD<LuaDelegateWrapT<R, ARGS...>>(L, 1);
+			delete ud;
 			return 0;
 		}
 
@@ -122,17 +131,24 @@ namespace slua {
 			LuaVar func(L, 2);
 			if (func.isValid() && func.isFunction())
 			{
-				using T = LuaDelegateWrapT<R, ARGS...>;
-				ud->luaFunc = func;
-				ud->delegate.BindRaw(ud, &T::callback);
+				ud->delegate.BindLambda([=](ARGS... args) mutable->R {
+					LuaVar result = func.call(std::forward<ARGS>(args) ...);
+					return result.castTo<R>();
+				});
 			}
 			return 0;
 		}
 
 		template<class R, class ...ARGS>
-		static int gcT(lua_State* L) {
+		static void clearT(LuaDelegateWrapT<R, ARGS...>* ud) {
+			ud->delegate.Unbind();
+		}
+
+
+		template<class R, class ...ARGS>
+		static int ClearT(lua_State* L) {
 			LuaDelegateWrapT<R, ARGS...>* ud = LuaObject::checkUD<LuaDelegateWrapT<R, ARGS...>>(L, 1);
-			delete ud;
+			if(ud) clearT(ud);
 			return 0;
 		}
 	};

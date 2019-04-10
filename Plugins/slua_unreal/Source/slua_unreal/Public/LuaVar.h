@@ -119,6 +119,8 @@ namespace slua {
             lua_pop(L,1);
             return std::move(r);
         }
+
+
 		template<typename R>
 		inline void castTo(R& target) {
 			if (isValid())
@@ -325,5 +327,11 @@ namespace slua {
     inline LuaVar LuaObject::checkValue(lua_State* L, int p) {
         return LuaVar(L,p);
     }
+
+	template<>
+	inline void LuaVar::castTo()
+	{
+		return;
+	}
     
 }

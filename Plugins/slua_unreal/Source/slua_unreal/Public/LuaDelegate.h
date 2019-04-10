@@ -68,7 +68,6 @@ namespace slua {
         static int gc(lua_State* L);
     };
 
-
 	template<typename R, typename ...ARGS>
 	struct LuaDelegateWrapT {
 		TBaseDelegate<R, ARGS...>& delegate;
@@ -78,7 +77,7 @@ namespace slua {
 
 		R callback(ARGS... args) {
 			LuaVar result = luaFunc.call(std::forward<ARGS>(args) ...);
-			return resultCast<R>(std::move(result));
+			return result.castTo<R>();// resultCast<R>(std::move(result));
 		}
 	};
 
@@ -137,5 +136,10 @@ namespace slua {
 			return 0;
 		}
 	};
+
+	template<class R, class ...ARGS>
+	int LuaObject::push(lua_State* L, TBaseDelegate<R, ARGS...>& delegate) {
+		return LuaDelegate::push(L,delegate);
+	}
 }
 

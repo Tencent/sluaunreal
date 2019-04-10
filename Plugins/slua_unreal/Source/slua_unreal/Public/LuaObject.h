@@ -555,9 +555,7 @@ namespace slua {
 
 		// for TBaseDelegate
 		template<class R, class ...ARGS>
-		static int push(lua_State* L, TBaseDelegate<R, ARGS...>& delegate) {
-			return LuaDelegate::push(L, delegate);
-		}
+		static int push(lua_State* L, TBaseDelegate<R, ARGS...>& delegate);
 		
 
         template<typename T>

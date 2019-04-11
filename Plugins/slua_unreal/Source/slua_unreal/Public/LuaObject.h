@@ -184,7 +184,7 @@ namespace slua {
         template<typename T>
         static typename std::enable_if<!std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type 
 		testudata(lua_State* L,int p,bool checkfree=true) {
-            auto ptr = (UserData<T*>*)luaL_testudata(L,p,TypeName<T>::value());
+            auto ptr = (UserData<T*>*)luaL_testudata(L,p,TypeName<T>::value().c_str());
 			CHECK_UD_VALID;
 			// ptr is boxed shared ptr?
 			if (ptr && ptr->flag&UD_SHAREDPTR) {
@@ -269,10 +269,10 @@ namespace slua {
             if(checkfree && !typearg)
                 luaL_error(L,"expect userdata at %d",p);
 
-            if(LuaObject::isBaseTypeOf(L,typearg,TypeName<T>::value()))
+            if(LuaObject::isBaseTypeOf(L,typearg,TypeName<T>::value().c_str()))
                 return (T*) lua_touserdata(L,p);
             if(checkfree) 
-				luaL_error(L,"expect userdata %s, but got %s",TypeName<T>::value(),typearg);
+				luaL_error(L,"expect userdata %s, but got %s",TypeName<T>::value().c_str(),typearg);
             return nullptr;
         }
 
@@ -483,12 +483,12 @@ namespace slua {
 
         template<typename T>
         static int push(lua_State* L,T* ptr,typename std::enable_if<!std::is_base_of<UObject,T>::value>::type* = nullptr) {
-            return push(L,TypeName<T>::value(),ptr);
+            return push(L,TypeName<T>::value().c_str(),ptr);
         }
 
         template<typename T>
         static int push(lua_State* L,LuaOwnedPtr<T> ptr) {
-            return push(L,TypeName<T>::value(),ptr.ptr,UD_AUTOGC);
+            return push(L,TypeName<T>::value().c_str(),ptr.ptr,UD_AUTOGC);
         }
 
 		static int gcSharedPtr(lua_State *L) {
@@ -500,9 +500,9 @@ namespace slua {
 			// get raw ptr from sharedptr
 			T* rawptr = ptr.Get();
 			// get typename 
-			const char* tn = TypeName<T>::value();
-			if (getFromCache(L, rawptr, tn)) return 1;
-			int r = pushType<T>(L, new SharedPtrUD<T, mode>(ptr), tn);
+			auto tn = TypeName<T>::value();
+			if (getFromCache(L, rawptr, tn.c_str())) return 1;
+			int r = pushType<T>(L, new SharedPtrUD<T, mode>(ptr), tn.c_str());
 			if (r) cacheObj(L, rawptr);
 			return r;
 		}
@@ -512,9 +512,9 @@ namespace slua {
 			// get raw ptr from sharedptr
 			T& rawref = ref.Get();
 			// get typename 
-			const char* tn = TypeName<T>::value();
-			if (getFromCache(L, &rawref, tn)) return 1;
-			int r = pushType<T>(L, new SharedPtrUD<T, mode>(ref), tn);
+			auto tn = TypeName<T>::value();
+			if (getFromCache(L, &rawref, tn.c_str())) return 1;
+			int r = pushType<T>(L, new SharedPtrUD<T, mode>(ref), tn.c_str());
 			if (r) cacheObj(L, &rawref);
 			return r;
 		}

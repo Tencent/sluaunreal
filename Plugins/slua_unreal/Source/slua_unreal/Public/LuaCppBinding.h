@@ -362,20 +362,20 @@ namespace slua {
 
     #define LuaClassBody() \
         public: \
-        virtual const char* LUA_typename() const { \
+        virtual SimpleString LUA_typename() const { \
             return TypeName<decltype(this)>::value(); \
         } \
 
     #define __DefTypeName(CLS) \
         template<> \
-        const char* TypeName<CLS>::value() { \
-            return #CLS; \
+        SimpleString TypeName<CLS>::value() { \
+            return SimpleString(#CLS); \
         } \
 
     #define __DefTypeNameExtern(MODULE_API,CLS) \
         template<> \
-        MODULE_API const char* TypeName<CLS>::value() { \
-            return #CLS; \
+        MODULE_API SimpleString TypeName<CLS>::value() { \
+            return SimpleString(#CLS); \
         } \
     
     #define __DefLuaClassTail(CLS) \

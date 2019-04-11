@@ -79,12 +79,11 @@ namespace slua {
 	template<typename R, typename ...ARGS>
 	struct TypeName<LuaDelegateWrapT<R, ARGS...>, false> {
 
-		static const char* value() {
-			static SimpleString charArray;
-			charArray.clear();
-			charArray.append("LuaDelegateWrapT_");
-			MakeGeneircTypeName<R, ARGS...>::get(charArray,",");
-			return charArray.c_str();
+		static SimpleString value() {
+			SimpleString str;
+			str.append("LuaDelegateWrapT_");
+			MakeGeneircTypeName<R, ARGS...>::get(str,",");
+			return str;
 		}
 	};
 
@@ -97,7 +96,7 @@ namespace slua {
 			using T = LuaDelegateWrapT<R, ARGS...>;
 			auto wrapobj = new T(delegate);
  			return LuaObject::pushType<T*>(L, wrapobj,
-				TypeName<T>::value(), setupMTT<R,ARGS...>, gcT<R,ARGS...>);
+				TypeName<T>::value().c_str(), setupMTT<R,ARGS...>, gcT<R,ARGS...>);
 		}
 
 	private:
@@ -127,7 +126,7 @@ namespace slua {
 		template<class R, class ...ARGS>
 		static int BindT(lua_State* L) {
 			LuaDelegateWrapT<R, ARGS...>* ud = LuaObject::checkUD<LuaDelegateWrapT<R, ARGS...>>(L,1);
-
+			luaL_checktype(L, 2, LUA_TFUNCTION);
 			LuaVar func(L, 2);
 			if (func.isValid() && func.isFunction())
 			{

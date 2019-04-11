@@ -123,28 +123,56 @@ namespace slua {
 		return true;
 	}
 
+	// why not use std::string?
+	// std::string in unreal4 will caused crash
+	// why not use FString
+	// FString store wchar_t, we only need char
+	struct SimpleString {
+		TArray<char> data;
+		void append(const char* str) {
+			if (data.Num() > 0 && data[data.Num() - 1] == 0)
+				data.RemoveAt(data.Num() - 1);
+			for (auto it = str; *it; it++)
+				data.Add(*it);
+			data.Add(0);
+		}
+		void append(const SimpleString& str) {
+			append(str.c_str());
+		}
+		const char* c_str() const {
+			return data.GetData();
+		}
+		void clear() {
+			data.Empty();
+		}
+		SimpleString(const char* str) { append(str); }
+		SimpleString() {
+			data.Add(0);
+		}
+	};
+
 	template<typename T, bool isUObject = std::is_base_of<UObject, T>::value>
 	struct TypeName {
-		static const char* value();
+		static SimpleString value();
 	};
 
 	template<typename T>
 	struct TypeName<T, true> {
-		static const char* value() {
+		static SimpleString value() {
 			return "UObject";
 		}
 	};
 
 	template<typename T>
 	struct TypeName<const T, false> {
-		static const char* value() {
+		static SimpleString value() {
 			return TypeName<T>::value();
 		}
 	};
 
 	template<typename T>
 	struct TypeName<const T*, false> {
-		static const char* value() {
+		static SimpleString value() {
 			return TypeName<T>::value();
 		}
 	};
@@ -152,8 +180,8 @@ namespace slua {
 #define DefTypeName(T) \
     template<> \
     struct TypeName<T, false> { \
-        static const char* value() { \
-            return #T;\
+        static SimpleString value() { \
+            return SimpleString(#T);\
         }\
     };\
 
@@ -171,29 +199,39 @@ namespace slua {
 
 	template<typename T,ESPMode mode>
 	struct TypeName<TSharedPtr<T, mode>, false> {
-		static const char* value() {
-			return TypeName<T>::value();
+		static SimpleString value() {
+			SimpleString str;
+			str.append("TSharedPtr<");
+			str.append(TypeName<T>::value());
+			str.append(">");
+			return str;
 		}
 	};
 
-	// why not use std::string?
-	// std::string in unreal4 will caused crash
-	struct SimpleString {
-		TArray<char> data;
-		void append(const char* str) {
-			if (data.Num()>0 && data[data.Num() - 1] == 0)
-				data.RemoveAt(data.Num() - 1);
-			for (auto it = str; *it; it++)
-				data.Add(*it);
-			data.Add(0);
-		}
-		const char* c_str() {
-			return data.GetData();
-		}
-		void clear() {
-			data.Empty();
+	template<typename T>
+	struct TypeName<TArray<T>, false> {
+		static SimpleString value() {
+			SimpleString str;
+			str.append("TArray<");
+			str.append(TypeName<T>::value());
+			str.append(">");
+			return str;
 		}
 	};
+	template<typename K,typename V>
+	struct TypeName<TMap<K,V>, false> {
+		static SimpleString value() {
+			SimpleString str;
+			str.append("TMap<");
+			str.append(TypeName<K>::value());
+			str.append(",");
+			str.append(TypeName<V>::value());
+			str.append(">");
+			return str;
+		}
+	};
+
+	
 
 	template<class R, class ...ARGS>
 	struct MakeGeneircTypeName {
@@ -208,7 +246,6 @@ namespace slua {
 		static void get(SimpleString& output, const char* delimiter) {
 			output.append(TypeName<typename remove_cr<R>::type>::value());
 			output.append(delimiter);
-
 		}
 	};
 	

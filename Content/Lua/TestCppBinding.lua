@@ -53,7 +53,7 @@ print("box value",boxptr:getValue())
 
 local http = FHttpModule.Get()
 local req = http:CreateRequest()
-req:SetURL("http://www.oa.com")
+req:SetURL("http://www.baidu.com")
 req:SetVerb("get")
 print"http test begin"
 req:OnRequestProgress():Bind(function(req,sent,recv)

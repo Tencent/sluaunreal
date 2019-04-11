@@ -12,21 +12,15 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #include "SluaTestCase.h"
-#include "lua/lua.hpp"
-#include "LuaObject.h"
-#include "LuaCppBinding.h"
-#include "Log.h"
+#include "slua.h"
 #include "SluaTestActor.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/Package.h"
 #include "Blueprint/UserWidget.h"
 #include "Misc/AssertionMacros.h"
-#include "LuaVar.h"
-#include "LuaCppBindingPost.h"
 #include "HttpModule.h"
 #include "IHttpRequest.h"
 #include "IHttpResponse.h"
-#include "LuaDelegate.h"
 
 namespace slua {
 

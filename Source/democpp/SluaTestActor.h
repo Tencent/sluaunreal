@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "LuaState.h"
+#include "slua.h"
 #include "SluaTestActor.generated.h"
 
 UCLASS()

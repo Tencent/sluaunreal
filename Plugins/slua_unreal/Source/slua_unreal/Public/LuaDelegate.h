@@ -61,7 +61,6 @@ namespace slua {
         static int push(lua_State* L,FMulticastScriptDelegate* delegate,UFunction* ufunc, FString pName);
     private:
         static int setupMT(lua_State* L);
-        static int instanceIndex(lua_State* L);
         static int Add(lua_State* L);
         static int Remove(lua_State* L);
         static int Clear(lua_State* L);
@@ -101,7 +100,6 @@ namespace slua {
 
 	private:
 		static int setupMT(lua_State* L);
-		static int instanceIndex(lua_State* L);
 		static int Bind(lua_State* L);
 		static int Clear(lua_State* L);
 		static int gc(lua_State* L);

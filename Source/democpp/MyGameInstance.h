@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LuaState.h"
+#include "slua.h"
 #include "Engine/GameInstance.h"
 #include "MyGameInstance.generated.h"
 

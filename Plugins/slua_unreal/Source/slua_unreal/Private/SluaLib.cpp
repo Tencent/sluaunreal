@@ -93,10 +93,14 @@ namespace slua {
 	{
 		const char* flag = luaL_checkstring(L, 1);
 		auto state = LuaState::get(L);
-		if (strcmp(flag, "on")==0)
+		if (strcmp(flag, "on") == 0) {
 			state->enableMultiThreadGC = true;
-		else if(strcmp(flag,"off")==0)
+			lua_gc(L, LUA_GCSTOP, 0);
+		}
+		else if (strcmp(flag, "off") == 0) {
 			state->enableMultiThreadGC = false;
+			lua_gc(L, LUA_GCRESTART, 0);
+		}
 		return 0;
 	}
     

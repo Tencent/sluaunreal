@@ -268,6 +268,9 @@ namespace slua {
         LuaArray::reg(L);
         LuaMap::reg(L);
 
+		// disable gc in main thread
+		if (enableMultiThreadGC) lua_gc(L, LUA_GCSTOP, 0);
+
         lua_settop(L,0);
 
         return true;

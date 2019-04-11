@@ -427,9 +427,9 @@ namespace slua {
 		{
 			UObject* item = it.Key();
 			Collector.AddReferencedObject(item);
-			// do more gc step in collecting thread
-			if(enableMultiThreadGC) lua_gc(L, LUA_GCCOLLECT, 128);
 		}
+		// do more gc step in collecting thread
+		if (enableMultiThreadGC && L) lua_gc(L, LUA_GCCOLLECT, 128);
 	}
 
 	int LuaState::pushErrorHandler(lua_State* L) {

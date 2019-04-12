@@ -15,7 +15,11 @@ public class democpp : ModuleRules
         PrivateIncludePathModuleNames.AddRange(new string[] { "slua_unreal" });
         PublicIncludePathModuleNames.AddRange(new string[] { "slua_unreal","slua_profile" });
 
+#if UE_4_21_OR_LATER
+        PublicDefinitions.Add("ENABLE_PROFILER");
+#else
         Definitions.Add("ENABLE_PROFILER");
+#endif
         // Uncomment if you are using Slate UI
         // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 

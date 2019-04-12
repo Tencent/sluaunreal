@@ -26,7 +26,11 @@ public class slua_profile : ModuleRules
 
         PrivateDependencyModuleNames.AddRange(new string[] { "slua_unreal" });
         PublicIncludePathModuleNames.AddRange(new string[] { "slua_unreal" });
+#if UE_4_21_OR_LATER
+        PublicDefinitions.Add("ENABLE_PROFILER");
+#else
         Definitions.Add("ENABLE_PROFILER");
+#endif
 
 
         PublicDependencyModuleNames.AddRange(

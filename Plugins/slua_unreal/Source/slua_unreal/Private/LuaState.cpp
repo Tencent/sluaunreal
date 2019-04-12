@@ -420,15 +420,15 @@ namespace slua {
 
 	void LuaState::AddReferencedObjects(FReferenceCollector & Collector)
 	{
-		// erase all null reference
-		// Collector.AddReferencedObjects will set inner item to nullptr
-		// so check and remove it
 		for (UObjectRefMap::TIterator it(objRefs); it; ++it)
 		{
 			UObject* item = it.Key();
 			Collector.AddReferencedObject(item);
 		}
 		// do more gc step in collecting thread
+		// lua_gc can be call async in bg thread in some isolate position
+		// but this position equivalent to main thread
+		// we just try and find some proper async position
 		if (enableMultiThreadGC && L) lua_gc(L, LUA_GCCOLLECT, 128);
 	}
 

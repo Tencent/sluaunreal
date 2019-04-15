@@ -122,27 +122,16 @@ namespace slua {
 		}
 
 		template<class R, class ...ARGS>
-		struct BindData {
-			LuaVar func;
-
-			BindData(LuaVar v) :func(v) {}
-
-			R callback(ARGS ...args) {
-				LuaVar result = func.call(std::forward<ARGS>(args) ...);
-				return result.castTo<R>();
-			}
-		};
-
-		template<class R, class ...ARGS>
 		static int BindT(lua_State* L) {
 			LuaDelegateWrapT<R, ARGS...>* ud = LuaObject::checkUD<LuaDelegateWrapT<R, ARGS...>>(L,1);
 			luaL_checktype(L, 2, LUA_TFUNCTION);
 			LuaVar func(L, 2);
 			if (func.isValid() && func.isFunction())
 			{
-				using T = BindData<R, ARGS...>;
-				auto bd = TSharedRef<T>(new T(func));
-				ud->delegate.BindSP(bd, &T::callback);
+				ud->delegate.BindLambda([=](ARGS ...args) {
+					LuaVar result = func.call(std::forward<ARGS>(args) ...);
+					return result.castTo<R>();
+				});
 			}
 			return 0;
 		}

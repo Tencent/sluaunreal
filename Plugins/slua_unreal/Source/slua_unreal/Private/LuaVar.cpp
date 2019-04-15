@@ -532,7 +532,7 @@ namespace slua {
             return LV_TUPLE;
     }
 
-    int LuaVar::docall(int argn) {
+    int LuaVar::docall(int argn) const {
         if(!isValid()) {
             Log::Error("State of lua function is invalid");
             return 0;

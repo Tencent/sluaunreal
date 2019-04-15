@@ -22,6 +22,7 @@
 #include "IHttpRequest.h"
 #include "IHttpResponse.h"
 
+
 namespace slua {
 
     class Base {
@@ -206,7 +207,15 @@ namespace slua {
 		}
 
 		TMap<int,FString> getTMap() {
+#if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
 			return { {1,"s"},{2,"a"},{3,"b"} };
+#else
+			TMap<int, FString> ret;
+			ret.Add(1, "s");
+			ret.Add(2, "a");
+			ret.Add(3, "b");
+			return ret;
+#endif
 		}
 
 		TSharedPtr<Box> getBoxPtr() {
@@ -286,7 +295,9 @@ namespace slua {
 		DefLuaMethod(SetContent, &IHttpRequest::SetContent)
 		DefLuaMethod(OnRequestProgress, &IHttpRequest::OnRequestProgress)
 		DefLuaMethod(OnProcessRequestComplete, &IHttpRequest::OnProcessRequestComplete)
+#if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
 		DefLuaMethod(OnHeaderReceived, &IHttpRequest::OnHeaderReceived)
+#endif
 	EndDef(IHttpRequest, nullptr)
 
 	DefLuaClass(FHttpModule)

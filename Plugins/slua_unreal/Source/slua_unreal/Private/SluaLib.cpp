@@ -32,6 +32,7 @@
 #include "Engine/GameEngine.h"
 #endif
 #include "LuaMemoryProfile.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 namespace slua {
 
@@ -116,10 +117,12 @@ namespace slua {
 		if (obj) {
 			if (obj->IsA<UWorld>())
 				widget = CreateWidget<UUserWidget>(Cast<UWorld>(obj), uclass);
+#if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
 			else if (obj->IsA<UWidget>())
 				widget = CreateWidget<UUserWidget>(Cast<UWidget>(obj), uclass);
 			else if (obj->IsA<UWidgetTree>())
 				widget = CreateWidget<UUserWidget>(Cast<UWidgetTree>(obj), uclass);
+#endif
 			else if (obj->IsA<APlayerController>())
 				widget = CreateWidget<UUserWidget>(Cast<APlayerController>(obj), uclass);
 			else if (obj->IsA<UGameInstance>())

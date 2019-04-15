@@ -30,10 +30,11 @@ namespace slua
 	typename CallableExpand<CallableType, ReturnType, ArgTypes...>::TFunctionType
 	CallableExpand<CallableType, ReturnType, ArgTypes...>::makeTFunctionProxy(lua_State* L, int p)
 	{
+		luaL_checktype(L, p, LUA_TFUNCTION);
 		LuaVar func(L, p);
 		if (func.isValid() && func.isFunction())
 		{
-			return [=](ArgTypes&& ... args) mutable -> ReturnType
+			return [=](ArgTypes&& ... args) -> ReturnType
 			{
 				LuaVar result = func.call(std::forward<ArgTypes>(args) ...);
 				return resultCast<ReturnType>(std::move(result));

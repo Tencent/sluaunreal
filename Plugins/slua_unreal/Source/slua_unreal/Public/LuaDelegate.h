@@ -122,12 +122,12 @@ namespace slua {
 		}
 
 		template<class R, class ...ARGS>
-		struct BindData : TSharedFromThis<BindData<R,ARGS...>> {
+		struct BindData {
 			LuaVar func;
 
 			BindData(LuaVar v) :func(v) {}
 
-			R callback(ARGS&& ...args) {
+			R callback(ARGS ...args) {
 				LuaVar result = func.call(std::forward<ARGS>(args) ...);
 				return result.castTo<R>();
 			}

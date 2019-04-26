@@ -575,23 +575,28 @@ namespace slua {
 		stopCounter.Increment();
 	}
 
-	void FDeadLoopCheck::scriptEnter(ScriptTimeoutEvent* pEvent)
+	int FDeadLoopCheck::scriptEnter(ScriptTimeoutEvent* pEvent)
 	{
-		if (frameCounter.Increment() == 1) {
+		int ret = frameCounter.Increment();
+		if ( ret == 1) {
 			timeoutCounter.Set(0);
 			timeoutEvent.store(pEvent);
 		}
+		return ret;
 	}
 
-	void FDeadLoopCheck::scriptLeave()
+	int FDeadLoopCheck::scriptLeave()
 	{
-		frameCounter.Decrement();
+		return frameCounter.Decrement();
 	}
 
 	void FDeadLoopCheck::onScriptTimeout()
 	{
 		auto pEvent = timeoutEvent.load();
-		if (pEvent) pEvent->onTimeout();
+		if (pEvent) {
+			timeoutEvent.store(nullptr);
+			pEvent->onTimeout();
+		}
 	}
 
 	LuaScriptCallGuard::LuaScriptCallGuard(lua_State * L_)

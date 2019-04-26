@@ -36,8 +36,8 @@ namespace slua {
 		FDeadLoopCheck();
 		~FDeadLoopCheck();
 
-		void scriptEnter(ScriptTimeoutEvent* pEvent);
-		void scriptLeave();
+		int scriptEnter(ScriptTimeoutEvent* pEvent);
+		int scriptLeave();
 
 	protected:
 		uint32 Run() override;

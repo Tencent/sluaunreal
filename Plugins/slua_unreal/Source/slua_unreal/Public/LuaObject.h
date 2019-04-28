@@ -117,9 +117,9 @@ namespace slua {
 
 	template<typename T,ESPMode mode>
 	struct SharedPtrUD {
-		TSharedPtr<T, mode> ptr;
-		SharedPtrUD(const TSharedPtr<T, mode>& other) :ptr(other) {}
-		SharedPtrUD(const TSharedRef<T, mode>& other) :ptr(other) {}
+		TSharedRef<T, mode> ref;
+		SharedPtrUD(const TSharedPtr<T, mode>& other) :ref(other.ToSharedRef()) {}
+		SharedPtrUD(const TSharedRef<T, mode>& other) :ref(other) {}
 	};
 
 	FString getUObjName(UObject* obj);
@@ -188,12 +188,12 @@ namespace slua {
 			CHECK_UD_VALID;
 			// ptr is boxed shared ptr?
 			if (ptr && ptr->flag&UD_SHAREDPTR) {
-				// ptr may be a ThreadSafe sharedptr or NotThreadSafe sharedptr
+				// ptr may be a ThreadSafe sharedref or NotThreadSafe sharedref
 				// but we don't care about it, we just Get raw ptr from it
-				// static_assert(sizeof(SharedPtrUD<T, ESPMode::NotThreadSafe>) == sizeof(SharedPtrUD<T, ESPMode::ThreadSafe>), "unexpected static assert");
+				static_assert(sizeof(SharedPtrUD<T, ESPMode::NotThreadSafe>) == sizeof(SharedPtrUD<T, ESPMode::ThreadSafe>), "unexpected static assert");
 				auto sptr = (UserData<SharedPtrUD<T, ESPMode::NotThreadSafe>*>*)ptr;
 				// unbox shared ptr to rawptr
-				return sptr->ud->ptr.Get();
+				return &sptr->ud->ref.Get();
 			}
 			if (!ptr) return maybeAnUDTable<T>(L, p, checkfree);
             return ptr?ptr->ud:nullptr;

@@ -594,7 +594,7 @@ namespace slua {
         for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
             UProperty* prop = *it;
             uint64 propflag = prop->GetPropertyFlags();
-            if((propflag&CPF_ReturnParm) || (propflag&CPF_OutParm && !(propflag&CPF_ConstParm)))
+            if((propflag&CPF_ReturnParm) || IsRealOutParam(propflag))
                 continue;
 
             pushArgByParms(prop,parms+prop->GetOffset_ForInternal());
@@ -619,7 +619,7 @@ namespace slua {
 		for (TFieldIterator<UProperty> it(func); remain >0 && it && (it->PropertyFlags&CPF_Parm); ++it) {
 			UProperty* prop = *it;
 			uint64 propflag = prop->GetPropertyFlags();
-			if (propflag&CPF_OutParm && !(propflag&CPF_ConstParm))
+			if (IsRealOutParam(propflag))
 			{
 				auto checkder = prop ? LuaObject::getChecker(prop) : nullptr;
 				if (checkder) {

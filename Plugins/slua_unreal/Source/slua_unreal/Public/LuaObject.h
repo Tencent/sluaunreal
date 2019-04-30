@@ -53,6 +53,7 @@
 		luaL_error(L, "checkValue error, obj parent has been freed"); \
 	auto self = udptr->ud
 
+#define IsRealOutParam(propflag) ((propflag&CPF_OutParm) && !(propflag&CPF_ConstParm) && !(propflag&CPF_BlueprintReadOnly))
 
 namespace slua {
 

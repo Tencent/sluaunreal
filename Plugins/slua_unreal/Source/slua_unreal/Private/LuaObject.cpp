@@ -17,6 +17,7 @@
 #endif
 
 #include "LuaObject.h"
+#include "LuaVar.h"
 #include "LuaDelegate.h"
 #include "UObject/StructOnScope.h"
 #include "UObject/Class.h"
@@ -395,7 +396,7 @@ namespace slua {
 				if ((propflag&CPF_ReturnParm))
 					continue;
 			}
-			else if (propflag&CPF_OutParm && !(propflag&CPF_BlueprintReadOnly))
+			else if (IsRealOutParam(propflag))
 				continue;
 
             fillParamFromState(L,prop,params+prop->GetOffset_ForInternal(),i);
@@ -425,7 +426,7 @@ namespace slua {
                 continue;
 
 			// out params should be not const and not readonly
-            if((propflag&CPF_OutParm) && !(propflag&CPF_ConstParm) && !(propflag&CPF_BlueprintReadOnly))
+            if(IsRealOutParam(propflag))
                 ret += LuaObject::push(L,p,params+p->GetOffset_ForInternal());
         }
         

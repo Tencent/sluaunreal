@@ -395,7 +395,7 @@ namespace slua {
 				if ((propflag&CPF_ReturnParm))
 					continue;
 			}
-			else if (propflag&CPF_OutParm)
+			else if (propflag&CPF_OutParm && !(propflag&CPF_BlueprintReadOnly))
 				continue;
 
             fillParamFromState(L,prop,params+prop->GetOffset_ForInternal(),i);
@@ -424,7 +424,8 @@ namespace slua {
             if(propflag&CPF_ReturnParm)
                 continue;
 
-            if((propflag&CPF_OutParm) && !(propflag&CPF_ConstParm))
+			// out params should be not const and not readonly
+            if((propflag&CPF_OutParm) && !(propflag&CPF_ConstParm) && !(propflag&CPF_BlueprintReadOnly))
                 ret += LuaObject::push(L,p,params+p->GetOffset_ForInternal());
         }
         

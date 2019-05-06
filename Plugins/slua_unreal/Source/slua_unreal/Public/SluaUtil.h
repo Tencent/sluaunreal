@@ -248,5 +248,21 @@ namespace slua {
 			output.append(delimiter);
 		}
 	};
+
+	// return true if T is UObject or is base of UObject
+	template<class T>
+	struct IsUObject {
+		enum { value = std::is_base_of<UObject, T>::value || std::is_same<UObject, T>::value };
+	};
+
+	template<class T>
+	struct IsUObject<T*> {
+		enum { value = IsUObject<T>::value };
+	};
+
+	template<class T>
+	struct IsUObject<const T*> {
+		enum { value = IsUObject<T>::value };
+	};
 	
 }

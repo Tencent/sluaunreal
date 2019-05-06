@@ -95,6 +95,7 @@ namespace slua {
 	#define UD_HADFREE 1<<2 // flag userdata had been freed
 	#define UD_SHAREDPTR 1<<3 // it's a TSharedptr in userdata instead of raw pointer
 	#define UD_THREADSAFEPTR 1<<4 // it's a TSharedptr with thread-safe mode in userdata instead of raw pointer
+	#define UD_UOBJECT 1<<5 // flag it's an UObject
 
 #define DEF_USERDATA(T, NAME) \
 	struct NAME { \
@@ -381,7 +382,7 @@ namespace slua {
 
         typedef void SetupMetaTableFunc(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc);
 
-        template<class T>
+        template<class T, bool F = IsUObject<T>::value >
         static int pushType(lua_State* L,T cls,const char* tn,lua_CFunction setupmt=nullptr,lua_CFunction gc=nullptr) {
             if(!cls) {
                 lua_pushnil(L);
@@ -391,6 +392,7 @@ namespace slua {
 			ud->parent = nullptr;
             ud->ud = cls;
             ud->flag = gc!=nullptr?UD_AUTOGC:UD_NOFLAG;
+			if (F) ud->flag |= UD_UOBJECT;
             setupMetaTable(L,tn,setupmt,gc);
             return 1;
         }
@@ -407,7 +409,7 @@ namespace slua {
 			return 0;
 		}
 
-		template<class T,ESPMode mode>
+		template<class T,ESPMode mode, bool F = IsUObject<T>::value>
 		static int pushType(lua_State* L, SharedPtrUD<T, mode>* cls, const char* tn) {
 			if (!cls) {
 				lua_pushnil(L);
@@ -418,6 +420,7 @@ namespace slua {
 			ud->parent = nullptr;
 			ud->ud = cls;
 			ud->flag = UD_AUTOGC|UD_SHAREDPTR;
+			if (F) ud->flag |= UD_UOBJECT;
 			if (mode == ESPMode::ThreadSafe) ud->flag |= UD_THREADSAFEPTR;
 			setupMetaTable(L, tn, gcSharedPtrUD<T,mode>);
 			return 1;
@@ -571,7 +574,7 @@ namespace slua {
 		static void setupMetaTable(lua_State* L, const char* tn, lua_CFunction setupmt, int gc);
 		static void setupMetaTable(lua_State* L, const char* tn, lua_CFunction gc);
 
-        template<class T>
+        template<class T, bool F = IsUObject<T>::value>
         static int pushType(lua_State* L,T cls,const char* tn,lua_CFunction setupmt,int gc) {
             if(!cls) {
                 lua_pushnil(L);
@@ -581,8 +584,8 @@ namespace slua {
             UserData<T>* ud = reinterpret_cast< UserData<T>* >(lua_newuserdata(L, sizeof(UserData<T>)));
 			ud->parent = nullptr;
             ud->ud = cls;
-            ud->flag = UD_AUTOGC;
-            
+            ud->flag = F|UD_AUTOGC;
+			if (F) ud->flag |= UD_UOBJECT;
             setupMetaTable(L,tn,setupmt,gc);
             return 1;
         }

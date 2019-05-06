@@ -44,6 +44,7 @@ namespace slua {
 		RegMetaMethod(L, dumpUObjects);
 		RegMetaMethod(L, loadObject);
 		RegMetaMethod(L, threadGC);
+		RegMetaMethod(L, isValid);
         lua_setglobal(L,"slua");
     }
 
@@ -168,6 +169,21 @@ namespace slua {
 			lua_seti(L, -2, index++);
 		}
 		return 1;
+	}
+
+	int SluaUtil::isValid(lua_State * L)
+	{
+		luaL_checktype(L, 1, LUA_TUSERDATA);
+		GenericUserData *gud = (GenericUserData*)lua_touserdata(L, 1);
+		bool isValid = !(gud->flag & UD_HADFREE);
+		if(!isValid)
+			return LuaObject::push(L, isValid);
+		// if this ud is boxed UObject
+		if (gud->flag & UD_UOBJECT) {
+			UObject* obj = LuaObject::checkUD<UObject>(L, 1);
+			isValid = IsValid(obj);
+		}
+		return LuaObject::push(L, isValid);
 	}
 
 #if WITH_EDITOR

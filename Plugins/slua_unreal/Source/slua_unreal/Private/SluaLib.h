@@ -30,6 +30,8 @@ namespace slua {
 		static int threadGC(lua_State* L);
 		// dump all uobject that referenced by lua
 		static int dumpUObjects(lua_State* L);
+		// return whether an userdata is valid?
+		static int isValid(lua_State* L);
     };
 
 }

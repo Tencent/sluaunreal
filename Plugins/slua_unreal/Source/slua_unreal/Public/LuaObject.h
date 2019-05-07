@@ -97,16 +97,20 @@ namespace slua {
 	#define UD_THREADSAFEPTR 1<<4 // it's a TSharedptr with thread-safe mode in userdata instead of raw pointer
 	#define UD_UOBJECT 1<<5 // flag it's an UObject
 
-#define DEF_USERDATA(T, NAME) \
-	struct NAME { \
-		T ud; \
-		uint32 flag; \
-		void* parent; \
-	}
+	// Memory layout of GenericUserData and UserData should be same
+	struct GenericUserData {
+		void* ud;
+		uint32 flag;
+		void* parent;
+	};
 
-    template<class T>
-	DEF_USERDATA(T, UserData);
-	DEF_USERDATA(void*, GenericUserData);
+	template<class T>
+	struct UserData {
+		T ud; 
+		uint32 flag; 
+		void* parent; 
+		static_assert(sizeof(T)==sizeof(void*),"Userdata type should size equal to sizeof(void*)"); 
+	};
 
     DefTypeName(LuaArray);
     DefTypeName(LuaMap);
@@ -286,6 +290,25 @@ namespace slua {
 				return checkValue<T>(L, p);
 			}
 		}
+
+		template<class T>
+		static typename std::enable_if< std::is_pointer<T>::value,T >::type checkReturn(lua_State* L, int p) {
+			void* ud = lua_touserdata(L, p);
+			UserData<T> *udptr = reinterpret_cast<UserData<T>*>(ud);
+			if (udptr->flag & UD_HADFREE)
+				luaL_error(L, "checkValue error, obj parent has been freed");
+			return udptr->ud;
+		}
+
+		// if T isn't pointer, we should assume UserData box a pointer and dereference it to return
+		template<class T>
+		static typename std::enable_if< !std::is_pointer<T>::value,T >::type checkReturn(lua_State* L, int p) {
+			void* ud = lua_touserdata(L, p);
+			UserData<T*> *udptr = reinterpret_cast<UserData<T*>*>(ud);
+			if (udptr->flag & UD_HADFREE)
+				luaL_error(L, "checkValue error, obj parent has been freed");
+			return *(udptr->ud);
+		}
         
         template<class T>
 		static T checkValue(lua_State* L, int p) {
@@ -302,11 +325,7 @@ namespace slua {
 			if (!lua_isuserdata(L, p))
 				luaL_error(L, "expect userdata at arg %d", p);
 
-			void* ud = lua_touserdata(L, p);
-			UserData<T> *udptr = reinterpret_cast<UserData<T>*>(ud);
-			if (udptr->flag & UD_HADFREE)
-				luaL_error(L, "checkValue error, obj parent has been freed");
-			return udptr->ud;
+			return checkReturn<T>(L, p);
 		}
 
 		template<class T>

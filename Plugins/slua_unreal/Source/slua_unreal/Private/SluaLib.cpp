@@ -187,9 +187,14 @@ namespace slua {
 	}
 
 #if WITH_EDITOR
+#define CheckState(state) if(!state) { \
+	Log::Error("Not find any state is available"); \
+	return; \
+	} \
+
 	void dumpUObjects() {
 		auto state = LuaState::get();
-		if (!state) return;
+		CheckState(state);
 		auto& map = state->cacheSet();
 		for (auto& it : map) {
 			Log::Log("Pushed UObject %s", TCHAR_TO_UTF8(*getUObjName(it.Key)));
@@ -198,14 +203,23 @@ namespace slua {
 
 	void garbageCollect() {
 		auto state = LuaState::get();
+		CheckState(state);
 		lua_gc(state->getLuaState(), LUA_GCCOLLECT, 0);
 		Log::Log("Performed full lua gc");
 	}
 
 	void memUsed() {
 		auto state = LuaState::get();
+		CheckState(state);
 		int kb = lua_gc(state->getLuaState(), LUA_GCCOUNT, 0);
 		Log::Log("Lua use memory %d kb",kb);
+	}
+
+	void doString(const TArray<FString>& Args) {
+		auto state = LuaState::get();
+		CheckState(state);
+		FString script = FString::Join(Args, TEXT(" "));
+		state->doString(TCHAR_TO_UTF8(*script));
 	}
 
 	static FAutoConsoleCommand CVarDumpUObjects(
@@ -224,6 +238,12 @@ namespace slua {
 		TEXT("slua.Mem"),
 		TEXT("Print memory used"),
 		FConsoleCommandDelegate::CreateStatic(memUsed),
+		ECVF_Cheat);
+
+	static FAutoConsoleCommand CVarDo(
+		TEXT("slua.Do"),
+		TEXT("Run lua script"),
+		FConsoleCommandWithArgsDelegate::CreateStatic(doString),
 		ECVF_Cheat);
 #endif
 }

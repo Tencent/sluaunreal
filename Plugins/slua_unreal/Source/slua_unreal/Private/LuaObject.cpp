@@ -30,7 +30,6 @@
 #include "Log.h"
 #include "LuaState.h"
 #include "LuaWrapper.h"
-#include "LuaEnums.h"
 #include "SluaUtil.h"
 #include "LuaReference.h"
 
@@ -1035,7 +1034,6 @@ namespace slua {
 		regChecker(UClassProperty::StaticClass(), checkUClassProperty);
 		
 		LuaWrapper::init(L);
-		LuaEnums::init(L);
         ExtensionMethod::init();
     }
 

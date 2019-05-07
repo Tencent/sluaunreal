@@ -1,7 +1,7 @@
 local Test=import('SluaTestCase');
 local t=Test();
 
-local mm = {t:GetMap(), slua.Map(UEnums.EPropertyClass.Int, UEnums.EPropertyClass.Str)}
+local mm = {t:GetMap(), slua.Map(EPropertyClass.Int, EPropertyClass.Str)}
 
 local function test()
 	for i,v in ipairs(mm) do

@@ -24,7 +24,6 @@
 #include "lua/lua.hpp"
 #include <map>
 #include "LuaWrapper.h"
-#include "LuaEnums.h"
 #include "LuaArray.h"
 #include "LuaMap.h"
 #include "LuaSocketWrap.h"

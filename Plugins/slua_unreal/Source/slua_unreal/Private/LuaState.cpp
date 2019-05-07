@@ -41,15 +41,13 @@ namespace slua {
         const char* name = LuaObject::checkValue<const char*>(L,1);
         if(name) {
             UClass* uclass = FindObject<UClass>(ANY_PACKAGE, UTF8_TO_TCHAR(name));
-            if(uclass) {
-                LuaObject::pushClass(L,uclass);
-                return 1;
-            }
-            UScriptStruct* ustruct = FindObject<UScriptStruct>(ANY_PACKAGE, UTF8_TO_TCHAR(name));
-            if(ustruct) {
-                LuaObject::pushStruct(L,ustruct);
-                return 1;
-            }
+            if(uclass) return LuaObject::pushClass(L,uclass);
+            
+			UScriptStruct* ustruct = FindObject<UScriptStruct>(ANY_PACKAGE, UTF8_TO_TCHAR(name));
+            if(ustruct) return LuaObject::pushStruct(L,ustruct);
+
+			UEnum* uenum = FindObject<UEnum>(ANY_PACKAGE, UTF8_TO_TCHAR(name));
+			if (uenum) return LuaObject::pushEnum(L, uenum);
             
             luaL_error(L,"Can't find class named %s",name);
         }

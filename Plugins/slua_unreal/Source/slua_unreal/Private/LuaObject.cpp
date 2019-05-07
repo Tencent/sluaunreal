@@ -930,6 +930,20 @@ namespace slua {
         return pushGCObject<UScriptStruct*>(L,cls,"UScriptStruct",setupStructMT,gcStructClass);
     }
 
+	int LuaObject::pushEnum(lua_State * L, UEnum * e)
+	{
+		// return a enum as table
+		lua_newtable(L);
+		int num = e->NumEnums();
+		for (int i = 0; i < num; i++) {
+			FString name = e->GetNameStringByIndex(i);
+			int64 value = e->GetValueByIndex(i);
+			lua_pushinteger(L, value);
+			lua_setfield(L, -2, TCHAR_TO_UTF8(*name));
+		}
+		return 1;
+	}
+
     int LuaObject::gcObject(lua_State* L) {
 		CheckUDGC(UObject,L,1);
         removeRef(L,UD);

@@ -55,6 +55,7 @@ public class slua_profile : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
+                "EditorStyle",
                 "UMG",
                 "InputCore",
 				// ... add private dependencies that you statically link with here ...	

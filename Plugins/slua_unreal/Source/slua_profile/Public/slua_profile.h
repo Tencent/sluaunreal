@@ -38,18 +38,23 @@ public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
+	void PluginButtonClicked();
 private:
-	TSharedRef<class SDockTab> OnSpawnPluginTab(const class FSpawnTabArgs& SpawnTabArgs);
-	bool Tick(float DeltaTime);
-	void ClearCurProfiler();
-
+	// fields
 	FTickerDelegate TickDelegate;
 	FDelegateHandle TickDelegateHandle;
 	TSharedPtr<SProfilerInspector> sluaProfilerInspector;
 	int stateIndex = -1;
 	bool tabOpened = false;
+	TSharedPtr<class FUICommandList> PluginCommands;
+
+	// functions
 	void OnTabClosed(TSharedRef<SDockTab> tab);
 	void openHook();
+	TSharedRef<class SDockTab> OnSpawnPluginTab(const class FSpawnTabArgs& SpawnTabArgs);
+	bool Tick(float DeltaTime);
+	void ClearCurProfiler();
+	void AddMenuExtension(FMenuBuilder& Builder);
 };
 
 struct SLUA_PROFILE_API FunctionProfileInfo
@@ -66,6 +71,20 @@ struct SLUA_PROFILE_API FunctionProfileInfo
 	bool beMerged;
 	bool isDuplicated = false;
 	TArray<int> mergeIdxArray;
+};
+
+
+class Flua_profileCommands : public TCommands<Flua_profileCommands>
+{
+public:
+
+	Flua_profileCommands();
+
+	// TCommands<> interface
+	virtual void RegisterCommands() override;
+
+public:
+	TSharedPtr< FUICommandInfo > OpenPluginWindow;
 };
 
 class SLUA_PROFILE_API Profiler

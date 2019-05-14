@@ -105,6 +105,14 @@ namespace slua {
             callback = nullptr;
         }
 
+		int get_value() {
+			return value;
+		}
+
+		void set_value(int v) {
+			value = v;
+		}
+
         TFunction<void(int)> callback;
         int value;
     };
@@ -117,6 +125,7 @@ namespace slua {
         DefLuaMethod(virtualFunc,&Foo::virtualFunc)
         DefLuaMethod(setCallback,&Foo::setCallback)
         DefLuaMethod(docall,&Foo::docall)
+		DefLuaProperty(value,&Foo::get_value,&Foo::set_value,true)
         DefLuaMethod_With_Type(getFruit_1,&Foo::getFruit,Fruit (Foo::*) ())
         DefLuaMethod_With_Type(getFruit_2,&Foo::getFruit,Fruit (Foo::*) (int))
         DefLuaMethod_With_Lambda(helloWorld,false,[]()->void {

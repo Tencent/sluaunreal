@@ -275,8 +275,10 @@ namespace slua {
             if(checkfree && !typearg)
                 luaL_error(L,"expect userdata at %d",p);
 
-            if(LuaObject::isBaseTypeOf(L,typearg,TypeName<T>::value().c_str()))
-                return (T*) lua_touserdata(L,p);
+			if (LuaObject::isBaseTypeOf(L, typearg, TypeName<T>::value().c_str())) {
+				UserData<T*> *udptr = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, p));
+				return udptr->ud;
+			}
             if(checkfree) 
 				luaL_error(L,"expect userdata %s, but got %s",TypeName<T>::value().c_str(),typearg);
             return nullptr;

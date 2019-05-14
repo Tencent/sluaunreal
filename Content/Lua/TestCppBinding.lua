@@ -1,5 +1,6 @@
 -- test cpp binding
 local f1=Foo(1024)
+assert(f1.value==1024)
 local ee =f1:testEnum("hi",3)
 print("enum is " ..  type(ee) .. " " .. tostring(ee))
 local str=Foo.getStr()
@@ -17,6 +18,7 @@ f1:docall()
 f1:helloWorld()
 
 local f3=FooChild(2048)
+assert(f3.value==2048)
 f3:virtualFunc()
 f3:bar("f3")
 f3:baseFunc1()
@@ -37,6 +39,7 @@ local ret = f3:testArrMap2(200,arr,map)
 print(tostring(ret))
 
 local f=FooChild(0)
+assert(f.value==0)
 local arr = f:getTArray()
 for i=1,arr:Num() do
     print("arr value",i,arr:Get(i-1))

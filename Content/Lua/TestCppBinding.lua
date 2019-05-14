@@ -1,6 +1,8 @@
 -- test cpp binding
 local f1=Foo(1024)
 assert(f1.value==1024)
+f1.value=2048
+assert(f1.value==2048)
 local ee =f1:testEnum("hi",3)
 print("enum is " ..  type(ee) .. " " .. tostring(ee))
 local str=Foo.getStr()
@@ -19,6 +21,8 @@ f1:helloWorld()
 
 local f3=FooChild(2048)
 assert(f3.value==2048)
+f3.value=1024
+assert(f3.value==1024)
 f3:virtualFunc()
 f3:bar("f3")
 f3:baseFunc1()

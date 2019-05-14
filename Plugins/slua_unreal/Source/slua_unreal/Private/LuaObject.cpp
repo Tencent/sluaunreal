@@ -141,7 +141,6 @@ namespace slua {
 			// for each base
 			{
 				size_t cnt = lua_rawlen(L, -1);
-				int r = 0;
 				for (size_t n = 0; n < cnt; n++) {
 					lua_geti(L, -1, n + 1);
 					const char* tn = lua_tostring(L, -1);

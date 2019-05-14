@@ -265,4 +265,10 @@ namespace slua {
 		enum { value = IsUObject<T>::value };
 	};
 	
+	// lua long string 
+	// you can call push(L,{str,len}) to push LuaLString
+	struct LuaLString {
+		const char* buf;
+		size_t len;
+	};
 }

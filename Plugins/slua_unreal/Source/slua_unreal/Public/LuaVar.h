@@ -38,7 +38,8 @@ namespace slua {
         LuaVar(int v);
         LuaVar(size_t v);
         LuaVar(lua_Number v);
-        LuaVar(const char* v);
+		LuaVar(const char* v);
+		LuaVar(const char* v, size_t len);
         LuaVar(bool v);
 
         LuaVar(lua_State* L,int p);
@@ -66,7 +67,8 @@ namespace slua {
         void set(lua_Integer v);
         void set(int v);
         void set(lua_Number v);
-        void set(const char* v);
+		void set(const char* v, size_t len);
+		void set(const LuaLString& lstr);
         void set(bool b);
 		void free();
 
@@ -91,7 +93,8 @@ namespace slua {
         int64 asInt64() const;
         float asFloat() const;
         double asDouble() const;
-        const char* asString() const;
+        const char* asString(size_t* outlen=nullptr) const;
+		LuaLString asLString() const;
         bool asBool() const;
         void* asLightUD() const;
         template<typename T>
@@ -253,14 +256,18 @@ namespace slua {
         };
 
         struct RefStr : public Ref {
-            RefStr(const char* s)
-                :Ref()
-                ,str(strdup(s))
-            {}
+			RefStr(const char* s, size_t len)
+				:Ref()
+            {
+				buf = (char*) FMemory::Malloc(len);
+				FMemory::Memcpy(buf, s, len);
+				length = len;
+			}
             virtual ~RefStr() {
-                ::free(str);
+                FMemory::Free(buf);
             }
-            char* str;
+            char* buf;
+			size_t length;
         };
 
         struct RefRef: public Ref {

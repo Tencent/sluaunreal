@@ -13,10 +13,12 @@
 
 #pragma once
 
+#include "CoreMinimal.h"
 #include "Containers/Ticker.h"
 #include "InputCoreTypes.h"
 #include "ModuleManager.h"
 #include "slua_profile_inspector.h"
+#include "Framework/Commands/Commands.h"
 
 #ifdef ENABLE_PROFILER
 #define PROFILER_WATCHER(x)  Profiler x(__FUNCTION__);
@@ -73,7 +75,7 @@ struct SLUA_PROFILE_API FunctionProfileInfo
 	TArray<int> mergeIdxArray;
 };
 
-
+#if WITH_EDITOR
 class Flua_profileCommands : public TCommands<Flua_profileCommands>
 {
 public:
@@ -86,6 +88,7 @@ public:
 public:
 	TSharedPtr< FUICommandInfo > OpenPluginWindow;
 };
+#endif
 
 class SLUA_PROFILE_API Profiler
 {

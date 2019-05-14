@@ -222,7 +222,13 @@ namespace slua {
         lua_pop(L,1);
 	}
 
-    bool LuaObject::isBaseTypeOf(lua_State* L,const char* tn,const char* base) {
+	int LuaObject::push(lua_State * L, const LuaLString& lstr)
+	{
+		lua_pushlstring(L, lstr.buf, lstr.len);
+		return 1;
+	}
+
+	bool LuaObject::isBaseTypeOf(lua_State* L,const char* tn,const char* base) {
         AutoStack as(L);
         int t = luaL_getmetatable(L,tn);
         if(t!=LUA_TTABLE)

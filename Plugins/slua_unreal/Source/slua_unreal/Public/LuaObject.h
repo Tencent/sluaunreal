@@ -503,6 +503,7 @@ namespace slua {
         static int push(lua_State* L, UFunction* func, UClass* cls=nullptr);
 		static int push(lua_State* L, UProperty* up, uint8* parms);
 		static int push(lua_State* L, UProperty* up, UObject* obj);
+		static int push(lua_State* L, const LuaLString& lstr);
 
         // check tn is base of base
         static bool isBaseTypeOf(lua_State* L,const char* tn,const char* base);

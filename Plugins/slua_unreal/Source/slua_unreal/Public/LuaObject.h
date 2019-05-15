@@ -134,7 +134,7 @@ namespace slua {
     {
     private:
 
-#define CHECK_UD_VALID if (ptr && ptr->flag&UD_HADFREE) { \
+#define CHECK_UD_VALID(ptr) if (ptr && ptr->flag&UD_HADFREE) { \
 		if (checkfree) \
 			luaL_error(L, "arg %d had been freed(%p), can't be used", lua_absindex(L, p), ptr->ud); \
 		else \
@@ -156,7 +156,7 @@ namespace slua {
         template<typename T>
         static typename std::enable_if<std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p, bool checkfree=true) {
             UserData<UObject*>* ptr = (UserData<UObject*>*)luaL_testudata(L,p,"UObject");
-			CHECK_UD_VALID;
+			CHECK_UD_VALID(ptr);
             T* t = ptr?Cast<T>(ptr->ud):nullptr;
 			if (!t && lua_isuserdata(L, p)) {
 				luaL_getmetafield(L, p, "__name");
@@ -181,7 +181,7 @@ namespace slua {
         template<typename T>
         static typename std::enable_if<std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p, bool checkfree=true) {
             auto ptr = (UserData<T*>*)luaL_testudata(L,p,"UObject");
-			CHECK_UD_VALID;
+			CHECK_UD_VALID(ptr);
 			if (!ptr) return maybeAnUDTable<T>(L, p, checkfree);
             return ptr?ptr->ud:nullptr;
         }
@@ -191,7 +191,7 @@ namespace slua {
         static typename std::enable_if<!std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type 
 		testudata(lua_State* L,int p,bool checkfree=true) {
             auto ptr = (UserData<T*>*)luaL_testudata(L,p,TypeName<T>::value().c_str());
-			CHECK_UD_VALID;
+			CHECK_UD_VALID(ptr);
 			// ptr is boxed shared ptr?
 			if (ptr && ptr->flag&UD_SHAREDPTR) {
 				// ptr may be a ThreadSafe sharedref or NotThreadSafe sharedref
@@ -277,6 +277,7 @@ namespace slua {
 
 			if (LuaObject::isBaseTypeOf(L, typearg, TypeName<T>::value().c_str())) {
 				UserData<T*> *udptr = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, p));
+				CHECK_UD_VALID(udptr);
 				return udptr->ud;
 			}
             if(checkfree) 

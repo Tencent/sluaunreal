@@ -87,7 +87,7 @@ FLuaBPVar ULuaBlueprintLibrary::CreateVarFromInt(int i) {
 
 FLuaBPVar ULuaBlueprintLibrary::CreateVarFromString(FString s) {
     FLuaBPVar v;
-    v.value.set(TCHAR_TO_UTF8(*s));
+    v.value.set(TCHAR_TO_UTF8(*s),0);
     return v;
 }
 

@@ -259,6 +259,7 @@ namespace slua {
 			RefStr(const char* s, size_t len)
 				:Ref()
             {
+				if (len == 0) len = strlen(s);
 				buf = (char*) FMemory::Malloc(len);
 				FMemory::Memcpy(buf, s, len);
 				length = len;

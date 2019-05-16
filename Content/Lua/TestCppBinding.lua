@@ -55,8 +55,8 @@ for k,v in pairs(map) do
 end
 
 local boxptr = f:getBoxPtr()
-print("box value",boxptr:getValue())
-
+assert(boxptr:getCount()==1024)
+assert(boxptr:getCount()==1025)
 
 local http = FHttpModule.Get()
 local req = http:CreateRequest()

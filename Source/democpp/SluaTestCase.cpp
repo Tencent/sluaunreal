@@ -133,20 +133,15 @@ namespace slua {
         })
     EndDef(Foo,&Foo::create)
 
-	class Box : public TSharedFromThis<Box> {
+	class Box {
 	public:
 		Box() {
+			gi = 1024;
 			Log::Log("Box construct");
 		}
 		~Box() {
 			Log::Log("Box destruct");
 		}
-		int getValue() {
-			gi++;
-			Log::Log( "Box getValue" );
-			return 1024;
-		}
-
 		int getCount() {
 			Log::Log( "Box getCount" );
 			return gi++;
@@ -155,7 +150,6 @@ namespace slua {
 	};
 
 	DefLuaClass(Box)
-		DefLuaMethod(getValue, &Box::getValue)
 		DefLuaMethod(getCount, &Box::getCount)
 	EndDef(Box,nullptr)
 

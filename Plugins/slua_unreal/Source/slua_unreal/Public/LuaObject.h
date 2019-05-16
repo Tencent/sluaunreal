@@ -93,9 +93,10 @@ namespace slua {
 	#define UD_NOFLAG 0
 	#define UD_AUTOGC 1 // flag userdata should call __gc and maintain by lua
 	#define UD_HADFREE 1<<2 // flag userdata had been freed
-	#define UD_SHAREDPTR 1<<3 // it's a TSharedptr in userdata instead of raw pointer
-	#define UD_THREADSAFEPTR 1<<4 // it's a TSharedptr with thread-safe mode in userdata instead of raw pointer
-	#define UD_UOBJECT 1<<5 // flag it's an UObject
+	#define UD_SHAREDPTR 1<<3 // it's a TSharedPtr in userdata instead of raw pointer
+	#define UD_SHAREDREF 1<<4 // it's a TSharedRef in userdata instead of raw pointer
+	#define UD_THREADSAFEPTR 1<<5 // it's a TSharedptr with thread-safe mode in userdata instead of raw pointer
+	#define UD_UOBJECT 1<<6 // flag it's an UObject
 
 	// Memory layout of GenericUserData and UserData should be same
 	struct GenericUserData {
@@ -122,10 +123,29 @@ namespace slua {
     };
 
 	template<typename T,ESPMode mode>
-	struct SharedPtrUD {
+	struct SharedRefUD {
+	private:
 		TSharedRef<T, mode> ref;
-		SharedPtrUD(const TSharedPtr<T, mode>& other) :ref(other.ToSharedRef()) {}
-		SharedPtrUD(const TSharedRef<T, mode>& other) :ref(other) {}
+	public:
+		typedef T type;
+		SharedRefUD(const TSharedRef<T, mode>& other) :ref(other) {}
+		
+		T* get(lua_State *L) {
+			return &ref.Get();
+		}
+	};
+
+	template<typename T, ESPMode mode>
+	struct SharedPtrUD {
+	private:
+		TSharedPtr<T, mode> ptr;
+	public:
+		typedef T type;
+		SharedPtrUD(const TSharedPtr<T, mode>& other) :ptr(other) {}
+
+		T* get(lua_State *L) {
+			return ptr.Get();
+		}
 	};
 
 	FString getUObjName(UObject* obj);
@@ -186,6 +206,36 @@ namespace slua {
             return ptr?ptr->ud:nullptr;
         }
 
+		template<class T>
+		static typename std::enable_if<!std::is_base_of<TSharedFromThis<T>,T>::value, T*>::type
+		unboxSharedUD(lua_State* L, UserData<T*>* ptr) {
+			// ptr may be a ThreadSafe sharedref or NotThreadSafe sharedref
+			// but we don't care about it, we just Get raw ptr from it
+			static_assert(sizeof(SharedPtrUD<T, ESPMode::NotThreadSafe>) == sizeof(SharedPtrUD<T, ESPMode::ThreadSafe>), "unexpected static assert");
+			auto sptr = (UserData<SharedPtrUD<T, ESPMode::NotThreadSafe>*>*)ptr;
+			// unbox shared ptr to rawptr
+			return sptr->ud->get(L);
+		}
+
+		template<class T>
+		static typename std::enable_if<std::is_base_of<TSharedFromThis<T>, T>::value, T*>::type
+		unboxSharedUD(lua_State* L, UserData<T*>* ptr) {
+			// never run here
+			ensureMsgf(false, TEXT("You cannot use a TSharedPtr of one mode with a type which inherits TSharedFromThis of another mode."));
+			return nullptr;
+		}
+
+		
+		template<class T>
+		static T* unboxSharedUDRef(lua_State* L, UserData<T*>* ptr) {
+			// ptr may be a ThreadSafe sharedref or NotThreadSafe sharedref
+			// but we don't care about it, we just Get raw ptr from it
+			static_assert(sizeof(SharedRefUD<T, ESPMode::NotThreadSafe>) == sizeof(SharedRefUD<T, ESPMode::ThreadSafe>), "unexpected static assert");
+			auto sptr = (UserData<SharedRefUD<T, ESPMode::NotThreadSafe>*>*)ptr;
+			// unbox shared ptr to rawptr
+			return sptr->ud->get(L);
+		}
+
         // testudata, if T isn't uobject
         template<typename T>
         static typename std::enable_if<!std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type 
@@ -193,13 +243,13 @@ namespace slua {
             auto ptr = (UserData<T*>*)luaL_testudata(L,p,TypeName<T>::value().c_str());
 			CHECK_UD_VALID(ptr);
 			// ptr is boxed shared ptr?
-			if (ptr && ptr->flag&UD_SHAREDPTR) {
-				// ptr may be a ThreadSafe sharedref or NotThreadSafe sharedref
-				// but we don't care about it, we just Get raw ptr from it
-				static_assert(sizeof(SharedPtrUD<T, ESPMode::NotThreadSafe>) == sizeof(SharedPtrUD<T, ESPMode::ThreadSafe>), "unexpected static assert");
-				auto sptr = (UserData<SharedPtrUD<T, ESPMode::NotThreadSafe>*>*)ptr;
-				// unbox shared ptr to rawptr
-				return &sptr->ud->ref.Get();
+			if (ptr) {
+				if (ptr->flag&UD_SHAREDPTR) {
+					return unboxSharedUD<T>(L,ptr);
+				}
+				else if (ptr->flag&UD_SHAREDREF) {
+					return unboxSharedUDRef<T>(L,ptr);
+				}
 			}
 			if (!ptr) return maybeAnUDTable<T>(L, p, checkfree);
             return ptr?ptr->ud:nullptr;
@@ -422,13 +472,24 @@ namespace slua {
 		// for TSharePtr version
 
 		template<class T, ESPMode mode>
-		static int gcSharedPtrUD(lua_State* L) {
+		static int gcSharedUD(lua_State* L) {
 			luaL_checktype(L, 1, LUA_TUSERDATA);
-			using BOXPUD = SharedPtrUD<T, mode>;
-			UserData<BOXPUD*>* ud = reinterpret_cast<UserData<BOXPUD*>*>(lua_touserdata(L, 1));
+			UserData<T*>* ud = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, 1));
 			ud->flag |= UD_HADFREE;
 			SafeDelete(ud->ud);
 			return 0;
+		}
+
+		template<class BOXPUD, ESPMode mode, bool F>
+		static int pushSharedType(lua_State* L, BOXPUD* cls, const char* tn, int flag) {
+			UserData<BOXPUD*>* ud = reinterpret_cast<UserData<BOXPUD*>*>(lua_newuserdata(L, sizeof(UserData<BOXPUD*>)));
+			ud->parent = nullptr;
+			ud->ud = cls;
+			ud->flag = UD_AUTOGC | flag;
+			if (F) ud->flag |= UD_UOBJECT;
+			if (mode == ESPMode::ThreadSafe) ud->flag |= UD_THREADSAFEPTR;
+			setupMetaTable(L, tn, gcSharedUD<BOXPUD, mode>);
+			return 1;
 		}
 
 		template<class T,ESPMode mode, bool F = IsUObject<T>::value>
@@ -438,14 +499,17 @@ namespace slua {
 				return 1;
 			}
 			using BOXPUD = SharedPtrUD<T, mode>;
-			UserData<BOXPUD*>* ud = reinterpret_cast<UserData<BOXPUD*>*>(lua_newuserdata(L, sizeof(UserData<BOXPUD*>)));
-			ud->parent = nullptr;
-			ud->ud = cls;
-			ud->flag = UD_AUTOGC|UD_SHAREDPTR;
-			if (F) ud->flag |= UD_UOBJECT;
-			if (mode == ESPMode::ThreadSafe) ud->flag |= UD_THREADSAFEPTR;
-			setupMetaTable(L, tn, gcSharedPtrUD<T,mode>);
-			return 1;
+			return pushSharedType<BOXPUD,mode,F>(L, cls, tn, UD_SHAREDPTR);
+		}
+
+		template<class T, ESPMode mode, bool F = IsUObject<T>::value>
+		static int pushType(lua_State* L, SharedRefUD<T, mode>* cls, const char* tn) {
+			if (!cls) {
+				lua_pushnil(L);
+				return 1;
+			}
+			using BOXPUD = SharedRefUD<T, mode>;
+			return pushSharedType<BOXPUD, mode,F>(L, cls, tn, UD_SHAREDREF);
 		}
 
 		static void addRef(lua_State* L,UObject* obj, void* ud);
@@ -542,7 +606,7 @@ namespace slua {
 			// get typename 
 			auto tn = TypeName<T>::value();
 			if (getFromCache(L, &rawref, tn.c_str())) return 1;
-			int r = pushType<T>(L, new SharedPtrUD<T, mode>(ref), tn.c_str());
+			int r = pushType<T>(L, new SharedRefUD<T, mode>(ref), tn.c_str());
 			if (r) cacheObj(L, &rawref);
 			return r;
 		}

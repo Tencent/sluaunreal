@@ -133,12 +133,10 @@ namespace slua {
 		if (!luaSelfTable.isTable())
 			return false;
 
-		bool tickEnabled = luaSelfTable.getFromTable<bool>(tickFlag, rawget);
-
-		if (tickEnabled && luaSelfTable.isTable()) {
+		if (luaSelfTable.isTable()) {
 			tickFunction = luaSelfTable.getFromTable<slua::LuaVar>("Tick", true);
-			return tickEnabled;
 		}
-		return false;
+
+		return luaSelfTable.getFromTable<bool>(tickFlag, rawget);
 	}
 }

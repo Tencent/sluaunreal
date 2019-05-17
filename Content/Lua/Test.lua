@@ -2,7 +2,7 @@
 -- some.field come from c++
 some.field.y = 103
 EPropertyClass = import"EPropertyClass"
-
+PrintLog("LuaStateInitCallback ok")
 function begin(uworld,uactor)
     world=uworld
     actor=uactor
@@ -11,13 +11,7 @@ function begin(uworld,uactor)
     for k,v in pairs(e) do
         print("eeee",k,v)
     end
-    local util = slua.loadClass("Blueprint'/Game/util.util'")
-    local arr = slua.Array(EPropertyClass.Int)
-    arr:Add(1)
-    arr:Add(2)
-    arr:Add(3)
-    util.Foo(1,arr,actor)
-
+  
     assert(TestEnum.TE_COUNT==2)
     assert(TestEnum2.COUNT==2)
 

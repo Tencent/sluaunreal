@@ -264,6 +264,8 @@ namespace slua {
         LuaClass::reg(L);
         LuaArray::reg(L);
         LuaMap::reg(L);
+		
+		onInitEvent.Broadcast();
 
 		// disable gc in main thread
 		if (enableMultiThreadGC) lua_gc(L, LUA_GCSTOP, 0);

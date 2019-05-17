@@ -32,6 +32,7 @@ UMyGameInstance::UMyGameInstance() :state("main") {
 
 void UMyGameInstance::Init()
 {
+	state.onInitEvent.AddUObject(this, &UMyGameInstance::LuaStateInitCallback);
 	state.init();
 
 	state.setLoadFileDelegate([](const char* fn, uint32& len, FString& filepath)->uint8* {
@@ -60,4 +61,21 @@ void UMyGameInstance::Init()
 void UMyGameInstance::Shutdown()
 {
 	state.close();
+}
+
+static int32 PrintLog(slua::lua_State *L)
+{
+	FString str;
+	size_t len;
+	const char* s = luaL_tolstring(L, 1, &len);
+	if (s) str += UTF8_TO_TCHAR(s);
+	slua::Log::Log("PrintLog %s", TCHAR_TO_UTF8(*str));
+	return 0;
+}
+
+void UMyGameInstance::LuaStateInitCallback()
+{
+	slua::lua_State *L = state.getLuaState();
+	lua_pushcfunction(L, PrintLog);
+	lua_setglobal(L, "PrintLog");
 }

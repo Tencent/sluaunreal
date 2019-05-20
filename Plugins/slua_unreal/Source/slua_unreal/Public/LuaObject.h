@@ -265,7 +265,7 @@ namespace slua {
         static CheckPropertyFunction getChecker(UProperty* cls);
         static PushPropertyFunction getPusher(UClass* cls);
 
-		static bool matchType(lua_State* L, int p, const char* tn);
+		static bool matchType(lua_State* L, int p, const char* tn, bool noprefix=false);
 
 		static int classIndex(lua_State* L);
 		static int classNewindex(lua_State* L);

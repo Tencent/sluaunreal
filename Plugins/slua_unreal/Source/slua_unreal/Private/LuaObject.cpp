@@ -290,7 +290,7 @@ namespace slua {
         lua_pop(L,3);
 	}
 
-	bool LuaObject::matchType(lua_State* L, int p, const char* tn) {
+	bool LuaObject::matchType(lua_State* L, int p, const char* tn, bool noprefix) {
 		AutoStack autoStack(L);
 		if (!lua_isuserdata(L, p)) {
 			return false;
@@ -304,7 +304,9 @@ namespace slua {
 			return false;
 		}
 		auto name = luaL_checkstring(L, -1);
-        return strcmp(name,tn)==0;
+		// skip first prefix "F" or "U" or "A"
+		if(noprefix) return strcmp(name+1, tn) == 0;
+		else return strcmp(name,tn)==0;
 	}
 
     LuaObject::PushPropertyFunction LuaObject::getPusher(UClass* cls) {
@@ -824,8 +826,11 @@ namespace slua {
         ensure(p);
         auto uss = p->Struct;
 
-		if (LuaWrapper::checkValue(L, p, uss, parms, i))
-			return 0;
+		// skip first char to match type
+		if (LuaObject::matchType(L, i, TCHAR_TO_UTF8(*uss->GetName()),true)) {
+			if (LuaWrapper::checkValue(L, p, uss, parms, i))
+				return 0;
+		}
 
 		LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L, i);
 		if(!ls)

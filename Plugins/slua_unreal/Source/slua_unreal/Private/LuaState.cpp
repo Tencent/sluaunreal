@@ -66,6 +66,17 @@ namespace slua {
         return 0;
     }
 
+	int dofile(lua_State *L) {
+		auto fn = luaL_checkstring(L, 1);
+		auto ls = LuaState::get(L);
+		ensure(ls);
+		auto var = ls->doFile(fn);
+		if (var.isValid()) {
+			return var.push(L);
+		}
+		return 0;
+	}
+
     int error(lua_State* L) {
         const char* err = lua_tostring(L,1);
         luaL_traceback(L,L,err,1);
@@ -235,6 +246,9 @@ namespace slua {
         
         lua_pushcfunction(L,print);
         lua_setglobal(L, "print");
+
+		lua_pushcfunction(L, dofile);
+		lua_setglobal(L, "dofile");
 
         #if WITH_EDITOR
         // used for debug

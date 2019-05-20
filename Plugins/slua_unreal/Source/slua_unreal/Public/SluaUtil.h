@@ -14,6 +14,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "lua/lua.hpp"
+#include "lua/lstate.h"
 #include <functional>
 #include <cstddef>
 #include <cstring>
@@ -177,11 +178,26 @@ namespace slua {
 		}
 	};
 
+	template<typename T>
+	struct TypeName<T*, false> {
+		static SimpleString value() {
+			return TypeName<T>::value();
+		}
+	};
+
 #define DefTypeName(T) \
     template<> \
     struct TypeName<T, false> { \
         static SimpleString value() { \
             return SimpleString(#T);\
+        }\
+    };\
+
+#define DefTypeNameWithName(T,TN) \
+    template<> \
+    struct TypeName<T, false> { \
+        static SimpleString value() { \
+            return SimpleString(#TN);\
         }\
     };\
 
@@ -196,6 +212,32 @@ namespace slua {
 	DefTypeName(double);
 	DefTypeName(FString);
 	DefTypeName(bool);
+	DefTypeName(lua_State);
+	// add your custom Type-Maped here
+	DefTypeName(FHitResult);
+	DefTypeName(FActorSpawnParameters);
+	DefTypeName(FSlateFontInfo);
+	DefTypeName(FSlateBrush);
+	DefTypeName(FMargin);
+	DefTypeName(FGeometry);
+	DefTypeName(FSlateColor);
+	DefTypeName(FRotator);
+	DefTypeName(FTransform);
+	DefTypeName(FLinearColor);
+	DefTypeName(FColor);
+	DefTypeName(FVector);
+	DefTypeName(FVector2D);
+	DefTypeName(FRandomStream);
+	DefTypeName(FGuid);
+	DefTypeName(FBox2D);
+	DefTypeName(FFloatRangeBound);
+	DefTypeName(FFloatRange);
+	DefTypeName(FInt32RangeBound);
+	DefTypeName(FInt32Range);
+	DefTypeName(FFloatInterval);
+	DefTypeName(FInt32Interval);
+	DefTypeName(FPrimaryAssetType);
+	DefTypeName(FPrimaryAssetId);
 
 	template<typename T,ESPMode mode>
 	struct TypeName<TSharedPtr<T, mode>, false> {

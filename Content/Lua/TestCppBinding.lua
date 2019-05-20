@@ -49,6 +49,12 @@ for i=1,arr:Num() do
     print("arr value",i,arr:Get(i-1))
 end
 
+local HR = import('HitResult');
+local hit = HR()
+hit.Time=0.1
+hit.Distance=512
+assert(f:hit(hit)==hit.Distance)
+
 local map = f:getTMap()
 for k,v in pairs(map) do
     print("map value",k,v)

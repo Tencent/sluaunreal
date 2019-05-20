@@ -225,6 +225,13 @@ namespace slua {
 			return MakeShareable(new Box);
 		}
 
+		float hit(const FHitResult& r) {
+			float t = r.Time;
+			float d = r.Distance;
+			Log::Log("Time=%f, Distance=%f", t, d );
+			return r.Distance;
+		}
+
         LuaVar event;
     };
 
@@ -238,6 +245,7 @@ namespace slua {
 		DefLuaMethod(getTArray, &FooChild::getTArray)
 		DefLuaMethod(getTMap, &FooChild::getTMap)
 		DefLuaMethod(getBoxPtr, &FooChild::getBoxPtr)
+		DefLuaMethod(hit, &FooChild::hit)
     EndDef(FooChild,&FooChild::create)
 
 

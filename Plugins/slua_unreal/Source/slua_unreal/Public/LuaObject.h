@@ -97,6 +97,7 @@ namespace slua {
 	#define UD_SHAREDREF 1<<4 // it's a TSharedRef in userdata instead of raw pointer
 	#define UD_THREADSAFEPTR 1<<5 // it's a TSharedptr with thread-safe mode in userdata instead of raw pointer
 	#define UD_UOBJECT 1<<6 // flag it's an UObject
+	#define UD_USTRUCT 1<<7 // flag it's an UStruct
 
 	// Memory layout of GenericUserData and UserData should be same
 	struct GenericUserData {
@@ -346,20 +347,38 @@ namespace slua {
 
 		template<class T>
 		static typename std::enable_if< std::is_pointer<T>::value,T >::type checkReturn(lua_State* L, int p) {
-			void* ud = lua_touserdata(L, p);
-			UserData<T> *udptr = reinterpret_cast<UserData<T>*>(ud);
+			UserData<T> *udptr = reinterpret_cast<UserData<T>*>(lua_touserdata(L, p));
 			if (udptr->flag & UD_HADFREE)
 				luaL_error(L, "checkValue error, obj parent has been freed");
+			// if it's an UStruct, check struct type name is matched
+			if (udptr->flag & UD_USTRUCT) {
+				UserData<LuaStruct*> *structptr = reinterpret_cast<UserData<LuaStruct*>*>(udptr);
+				LuaStruct* ls = structptr->ud;
+				// skip first prefix like 'F','U','A'
+				if (sizeof(typename std::remove_pointer<T>::type) == ls->size && strcmp(TypeName<T>::value().c_str()+1, TCHAR_TO_UTF8(*ls->uss->GetName())) == 0)
+					return (T)(ls->buf);
+				else
+					luaL_error(L, "checkValue error, type dismatched, expect %s", TypeName<T>::value().c_str());
+			}
 			return udptr->ud;
 		}
 
 		// if T isn't pointer, we should assume UserData box a pointer and dereference it to return
 		template<class T>
 		static typename std::enable_if< !std::is_pointer<T>::value,T >::type checkReturn(lua_State* L, int p) {
-			void* ud = lua_touserdata(L, p);
-			UserData<T*> *udptr = reinterpret_cast<UserData<T*>*>(ud);
+			UserData<T*> *udptr = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, p));
 			if (udptr->flag & UD_HADFREE)
 				luaL_error(L, "checkValue error, obj parent has been freed");
+			// if it's an UStruct, check struct type name is matched
+			if (udptr->flag & UD_USTRUCT) {
+				UserData<LuaStruct*> *structptr = reinterpret_cast<UserData<LuaStruct*>*>(udptr);
+				LuaStruct* ls = structptr->ud;
+				// skip first prefix like 'F','U','A'
+				if (sizeof(T) == ls->size && strcmp(TypeName<T>::value().c_str() + 1, TCHAR_TO_UTF8(*ls->uss->GetName())) == 0)
+					return *((T*)(ls->buf));
+				else
+					luaL_error(L, "checkValue error, type dismatched, expect %s", TypeName<T>::value().c_str());
+			}
 			return *(udptr->ud);
 		}
         
@@ -468,6 +487,22 @@ namespace slua {
             setupMetaTable(L,tn,setupmt,gc);
             return 1;
         }
+
+		template<>
+		static int pushType<LuaStruct*,false>(lua_State* L, LuaStruct* cls, 
+			const char* tn, lua_CFunction setupmt, lua_CFunction gc) {
+			if (!cls) {
+				lua_pushnil(L);
+				return 1;
+			}
+			UserData<LuaStruct*>* ud = reinterpret_cast<UserData<LuaStruct*>*>(lua_newuserdata(L, sizeof(UserData<LuaStruct*>)));
+			ud->parent = nullptr;
+			ud->ud = cls;
+			ud->flag = gc != nullptr ? UD_AUTOGC : UD_NOFLAG;
+			ud->flag |= UD_USTRUCT;
+			setupMetaTable(L, tn, setupmt, gc);
+			return 1;
+		}
 
 		// for TSharePtr version
 

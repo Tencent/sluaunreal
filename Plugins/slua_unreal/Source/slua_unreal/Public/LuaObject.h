@@ -809,7 +809,7 @@ namespace slua {
     }
 
 	template<>
-	int LuaObject::pushType<LuaStruct*, false>(lua_State* L, LuaStruct* cls,
+	inline int LuaObject::pushType<LuaStruct*, false>(lua_State* L, LuaStruct* cls,
 		const char* tn, lua_CFunction setupmt, lua_CFunction gc) {
 		if (!cls) {
 			lua_pushnil(L);

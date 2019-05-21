@@ -105,6 +105,14 @@ namespace slua {
             callback = nullptr;
         }
 
+		int get_value() {
+			return value;
+		}
+
+		void set_value(int v) {
+			value = v;
+		}
+
         TFunction<void(int)> callback;
         int value;
     };
@@ -117,6 +125,7 @@ namespace slua {
         DefLuaMethod(virtualFunc,&Foo::virtualFunc)
         DefLuaMethod(setCallback,&Foo::setCallback)
         DefLuaMethod(docall,&Foo::docall)
+		DefLuaProperty(value,&Foo::get_value,&Foo::set_value,true)
         DefLuaMethod_With_Type(getFruit_1,&Foo::getFruit,Fruit (Foo::*) ())
         DefLuaMethod_With_Type(getFruit_2,&Foo::getFruit,Fruit (Foo::*) (int))
         DefLuaMethod_With_Lambda(helloWorld,false,[]()->void {
@@ -124,20 +133,15 @@ namespace slua {
         })
     EndDef(Foo,&Foo::create)
 
-	class Box : public TSharedFromThis<Box> {
+	class Box {
 	public:
 		Box() {
+			gi = 1024;
 			Log::Log("Box construct");
 		}
 		~Box() {
 			Log::Log("Box destruct");
 		}
-		int getValue() {
-			gi++;
-			Log::Log( "Box getValue" );
-			return 1024;
-		}
-
 		int getCount() {
 			Log::Log( "Box getCount" );
 			return gi++;
@@ -146,7 +150,6 @@ namespace slua {
 	};
 
 	DefLuaClass(Box)
-		DefLuaMethod(getValue, &Box::getValue)
 		DefLuaMethod(getCount, &Box::getCount)
 	EndDef(Box,nullptr)
 
@@ -222,6 +225,13 @@ namespace slua {
 			return MakeShareable(new Box);
 		}
 
+		float hit(const FHitResult& r) {
+			float t = r.Time;
+			float d = r.Distance;
+			Log::Log("Time=%f, Distance=%f", t, d );
+			return r.Distance;
+		}
+
         LuaVar event;
     };
 
@@ -235,6 +245,7 @@ namespace slua {
 		DefLuaMethod(getTArray, &FooChild::getTArray)
 		DefLuaMethod(getTMap, &FooChild::getTMap)
 		DefLuaMethod(getBoxPtr, &FooChild::getBoxPtr)
+		DefLuaMethod(hit, &FooChild::hit)
     EndDef(FooChild,&FooChild::create)
 
 

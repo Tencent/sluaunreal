@@ -32,9 +32,16 @@ void ULuaUserWidget::NativeDestruct() {
 
 void ULuaUserWidget::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)
 {
-	// store current tick parameter MyGeometry
-	currentGeometry = MyGeometry;
-	tick(InDeltaTime);
+	if (ensureMsgf(GetDesiredTickFrequency() != EWidgetTickFrequency::Never, TEXT("SObjectWidget and UUserWidget have mismatching tick states or UUserWidget::NativeTick was called manually (Never do this)")))
+	{
+		GInitRunaway();
+		TickActionsAndAnimation(MyGeometry, InDeltaTime);
+
+		if (bHasScriptImplementedTick) {
+			currentGeometry = MyGeometry;
+			tick(InDeltaTime);
+		}
+	}
 }
 
 void ULuaUserWidget::ProcessEvent(UFunction * func, void * params)
@@ -46,5 +53,5 @@ void ULuaUserWidget::ProcessEvent(UFunction * func, void * params)
 
 void ULuaUserWidget::superTick()
 {
-	Super::NativeTick(currentGeometry, deltaTime);
+	Super::Tick(currentGeometry, deltaTime);
 }

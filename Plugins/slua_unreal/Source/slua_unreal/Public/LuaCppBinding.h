@@ -437,6 +437,12 @@ namespace slua {
 		LuaObject::addMethod(L, #NAME, BindType::LuaCFunction, !Static); \
     }
 
+	#define DefLuaProperty(NAME,GET,SET,INST) { \
+        lua_CFunction get=LuaCppBinding<decltype(GET),GET>::LuaCFunction; \
+        lua_CFunction set=LuaCppBinding<decltype(SET),SET>::LuaCFunction; \
+        LuaObject::addField(L,#NAME,get,set,INST); \
+    }
+
     #define DefGlobalMethod(NAME,M) { \
         lua_CFunction x=LuaCppBinding<decltype(M),M>::LuaCFunction; \
         LuaObject::addGlobalMethod(L, #NAME, x); \
@@ -491,6 +497,6 @@ namespace slua {
 		BindType::Func = &lambda; \
 		LuaObject::addExtensionMethod(U::StaticClass(), N, BindType::LuaCFunction, Static); \
 	}
-    
+
 }
 

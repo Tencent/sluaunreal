@@ -18,7 +18,9 @@
 #include "Containers/Ticker.h"
 #include "LuaState.h"
 #include "lua.h"
+#if WITH_EDITOR
 #include "LevelEditor.h"
+#endif
 
 #define LOCTEXT_NAMESPACE "Fslua_profileModule"
 
@@ -78,6 +80,7 @@ namespace {
 
 void Fslua_profileModule::StartupModule()
 {
+#if WITH_EDITOR
 	Flua_profileCommands::Register();
 
 	PluginCommands = MakeShareable(new FUICommandList);
@@ -108,10 +111,12 @@ void Fslua_profileModule::StartupModule()
 		TickDelegate = FTickerDelegate::CreateRaw(this, &Fslua_profileModule::Tick);
 		TickDelegateHandle = FTicker::GetCoreTicker().AddTicker(TickDelegate);
 	}
+#endif
 }
 
 void Fslua_profileModule::ShutdownModule()
 {
+#if WITH_EDITOR
 	sluaProfilerInspector = nullptr;
 	ClearCurProfiler();
 
@@ -125,6 +130,7 @@ void Fslua_profileModule::ShutdownModule()
 	Flua_profileCommands::Unregister();
 
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(slua_profileTabName);
+#endif
 }
 
 void Fslua_profileModule::PluginButtonClicked()
@@ -166,7 +172,7 @@ TSharedRef<class SDockTab> Fslua_profileModule::OnSpawnPluginTab(const FSpawnTab
 }
 
 //////////////////////////////////////////////////////////////////////////
-
+#if WITH_EDITOR
 Flua_profileCommands::Flua_profileCommands()
 	: TCommands<Flua_profileCommands>(slua_profileTabName,
 		NSLOCTEXT("Contexts", "slua_profile", "slua_profile Plugin"), NAME_None, FEditorStyle::GetStyleSetName())
@@ -178,7 +184,7 @@ void Flua_profileCommands::RegisterCommands()
 {
 	UI_COMMAND(OpenPluginWindow, "slua Profile", "Open slua Profile tool", EUserInterfaceActionType::Button, FInputGesture());
 }
-
+#endif
 /////////////////////////////////////////////////////////////////////////////////////
 
 bool isWatchThread()
@@ -295,7 +301,9 @@ void Fslua_profileModule::ClearCurProfiler()
 
 void Fslua_profileModule::AddMenuExtension(FMenuBuilder & Builder)
 {
+#if WITH_EDITOR
 	Builder.AddMenuEntry(Flua_profileCommands::Get().OpenPluginWindow);
+#endif
 }
 
 void Fslua_profileModule::OnTabClosed(TSharedRef<SDockTab>)

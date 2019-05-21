@@ -24,6 +24,8 @@
 #define SLUA_LUACODE "[sluacode]"
 #define SLUA_CPPINST "__cppinst"
 
+DECLARE_MULTICAST_DELEGATE(FLuaStateInitEvent);
+
 namespace slua {
 
 	struct ScriptTimeoutEvent {
@@ -166,6 +168,10 @@ namespace slua {
         uint8* loadFile(const char* fn,uint32& len,FString& filepath);
 		static int loader(lua_State* L);
 		static int getStringFromMD5(lua_State* L);
+
+	public:
+		FLuaStateInitEvent onInitEvent;
+
     private:
         friend class LuaObject;
         friend class SluaUtil;
@@ -208,6 +214,7 @@ namespace slua {
 		UObjectRefMap objRefs;
 		// hold FGcObject to defer delete
 		TArray<FGCObject*> deferDelete;
+
 
 		FDelegateHandle pgcHandler;
 		FDelegateHandle wcHandler;

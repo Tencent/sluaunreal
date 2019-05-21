@@ -16,6 +16,7 @@
 #include "Containers/Ticker.h"
 #include "InputCoreTypes.h"
 #include "ModuleManager.h"
+#include "Commands.h"
 #include "slua_profile_inspector.h"
 
 #ifdef ENABLE_PROFILER

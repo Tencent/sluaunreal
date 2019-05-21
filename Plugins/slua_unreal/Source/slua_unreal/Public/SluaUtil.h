@@ -18,6 +18,7 @@
 #include <functional>
 #include <cstddef>
 #include <cstring>
+#include "SlateCore.h"
 
 #ifndef SafeDelete
 #define SafeDelete(ptr) if(ptr) { delete ptr;ptr=nullptr; }

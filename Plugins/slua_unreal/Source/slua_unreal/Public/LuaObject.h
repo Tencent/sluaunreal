@@ -488,22 +488,6 @@ namespace slua {
             return 1;
         }
 
-		template<>
-		static int pushType<LuaStruct*,false>(lua_State* L, LuaStruct* cls, 
-			const char* tn, lua_CFunction setupmt, lua_CFunction gc) {
-			if (!cls) {
-				lua_pushnil(L);
-				return 1;
-			}
-			UserData<LuaStruct*>* ud = reinterpret_cast<UserData<LuaStruct*>*>(lua_newuserdata(L, sizeof(UserData<LuaStruct*>)));
-			ud->parent = nullptr;
-			ud->ud = cls;
-			ud->flag = gc != nullptr ? UD_AUTOGC : UD_NOFLAG;
-			ud->flag |= UD_USTRUCT;
-			setupMetaTable(L, tn, setupmt, gc);
-			return 1;
-		}
-
 		// for TSharePtr version
 
 		template<class T, ESPMode mode>
@@ -823,4 +807,20 @@ namespace slua {
         luaL_checktype(L,p,LUA_TLIGHTUSERDATA);
         return lua_touserdata(L,p);
     }
+
+	template<>
+	int LuaObject::pushType<LuaStruct*, false>(lua_State* L, LuaStruct* cls,
+		const char* tn, lua_CFunction setupmt, lua_CFunction gc) {
+		if (!cls) {
+			lua_pushnil(L);
+			return 1;
+		}
+		UserData<LuaStruct*>* ud = reinterpret_cast<UserData<LuaStruct*>*>(lua_newuserdata(L, sizeof(UserData<LuaStruct*>)));
+		ud->parent = nullptr;
+		ud->ud = cls;
+		ud->flag = gc != nullptr ? UD_AUTOGC : UD_NOFLAG;
+		ud->flag |= UD_USTRUCT;
+		setupMetaTable(L, tn, setupmt, gc);
+		return 1;
+	}
 }

@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 
+#include "SlateColorBrush.h"
 #include "slua_profile_inspector.h"
 #include "slua_profile.h"
 
@@ -26,6 +27,7 @@ SProfilerInspector::SProfilerInspector()
 	avgProfileSamplesCostTime = 0.0f;
 	hasCleared = false;
 	needProfilerCleared = false;
+	chartValArray.SetNumUninitialized(sampleNum);
 }
 
 SProfilerInspector::~SProfilerInspector()
@@ -128,30 +130,39 @@ void SProfilerInspector::RefreshBarValue()
 	maxProfileSamplesCostTime = 0.0f;
 	avgProfileSamplesCostTime = 0.0f;
 	lastArrayOffset = arrayOffset;
-	int sampleIdx = (arrayOffset == sampleNum - 1) ? 0 : arrayOffset + 1;
+	int sampleIdx = arrayOffset;
 	float totalSampleValue = 0.0f;
 	for (int idx = 0; idx<sampleNum; idx++)
 	{
 		TArray<SluaProfiler> &shownProfilerBar = profilersArraySamples[sampleIdx];
 		float totalValue = 0.0f;
-		for (auto &iter : shownProfilerBar)
+		if (shownProfilerBar.Num() == 0)
 		{
-			for (auto &funcNode : iter)
-			{
-				totalValue += funcNode->costTime;
-				break;
-			}
+			chartValArray[idx] = -1.0f;
 		}
-		chartValArray[idx] = totalValue;
+		else
+		{
+			for (auto &iter : shownProfilerBar)
+			{
+				for (auto &funcNode : iter)
+				{
+					totalValue += funcNode->costTime;
+					break;
+				}
+			}
+			chartValArray[idx] = totalValue;
+		}
 		totalSampleValue += totalValue;
 		if (maxProfileSamplesCostTime < totalValue)
 		{
 			maxProfileSamplesCostTime = totalValue;
 		}
-		sampleIdx = (sampleIdx == sampleNum - 1) ? 0 : sampleIdx + 1;
+		sampleIdx = (sampleIdx == (sampleNum - 1)) ? 0 : (sampleIdx + 1);
 	}
 
 	avgProfileSamplesCostTime = totalSampleValue / sampleNum;
+
+	profilerWidget->SetArrayValue(chartValArray, maxProfileSamplesCostTime);
 
 }
 
@@ -248,20 +259,12 @@ bool SProfilerInspector::NeedReBuildInspector()
 	}
 }
 
-void SProfilerInspector::ClearProfilerCharFillImage()
-{
-	for (int barIdx = 0; barIdx<sampleNum; barIdx++)
-	{
-		profilerBarArray[barIdx]->SetFillImage(nullptr);
-	}
-}
-
 void SProfilerInspector::CheckBoxChanged(ECheckBoxState newState)
 {
 	if (newState == ECheckBoxState::Checked)
 	{
 		stopChartRolling = false;
-		ClearProfilerCharFillImage();
+		profilerWidget->ClearClickedPoint();
 	}
 	else
 	{
@@ -269,67 +272,18 @@ void SProfilerInspector::CheckBoxChanged(ECheckBoxState newState)
 	}
 }
 
-void SProfilerInspector::InitProfilerBar(int barIdx, TSharedPtr<SHorizontalBox>& horBox)
-{
-	static FSlateBrush bgColor;
-	bgColor.TintColor = FLinearColor(FColor(34, 34, 34));
-
-	SAssignNew(profilerBarArray[barIdx], SProgressBar)
-		.ToolTipText(TAttribute<FText>::Create([=]() {
-		return FText::AsNumber(chartValArray[barIdx] / perMilliSec);
-	}))
-		.BackgroundImage(&bgColor)
-		.BarFillType(EProgressBarFillType::BottomToTop).BorderPadding(FVector2D(0, 0))
-		.Percent(TAttribute<TOptional<float>>::Create([=]() {
-		if (maxProfileSamplesCostTime == 0.0f)
-		{
-			return 0.0f;
-		}
-		else
-		{
-			return chartValArray[barIdx] / maxProfileSamplesCostTime;
-		}
-	}));
-
-	profilerBarArray[barIdx]->SetOnMouseButtonDown(FPointerEventHandler::CreateLambda([=](const FGeometry&, const FPointerEvent&) -> FReply {
-		// stop scorlling and show the profiler info which we click
-		stopChartRolling = true;
-		profilerCheckBox->SetIsChecked(ECheckBoxState::Unchecked);
-		AddProfilerBarOnMouseMoveEvent();
-
-		int sampleIdx = lastArrayOffset + barIdx + 1;
-		if (sampleIdx >= sampleNum)
-		{
-			sampleIdx = sampleIdx - sampleNum;
-		}
-
-		ShowProfilerTree(profilersArraySamples[sampleIdx]);
-
-		ClearProfilerCharFillImage();
-		static FSlateBrush fillColor;
-		fillColor.TintColor = FLinearColor::Red;
-		profilerBarArray[barIdx]->SetFillImage(&fillColor);
-
-		return FReply::Handled();
-	}));
-
-	profilerBarArray[barIdx]->SetOnMouseButtonUp(FPointerEventHandler::CreateLambda([=](const FGeometry&, const FPointerEvent&) -> FReply {
-		RemoveProfilerBarOnMouseMoveEvent();
-		return FReply::Handled();
-	}));
-
-	horBox->AddSlot().HAlign(HAlign_Left).MaxWidth(5.0f)
-		[
-			profilerBarArray[barIdx].ToSharedRef()
-		];
-}
-
 void SProfilerInspector::OnClearBtnClicked()
 {
 	for (int barIdx = 0; barIdx<sampleNum; barIdx++)
 	{
-		chartValArray[barIdx] = 0.0f;
+		chartValArray[barIdx] = -1.0f;
 	}
+
+	TArray<float> emptyArray;
+	profilerWidget->SetArrayValue(emptyArray, 0);
+	profilerWidget->SetToolTipVal(-1);
+	profilerWidget->ClearClickedPoint();
+
 
 	for (int sampleIdx = 0; sampleIdx<sampleNum; sampleIdx++)
 	{
@@ -361,14 +315,91 @@ TSharedRef<class SDockTab> SProfilerInspector::GetSDockTab()
 		.OnCheckStateChanged_Raw(this, &SProfilerInspector::CheckBoxChanged)
 		.IsChecked(ECheckBoxState::Checked);
 
-	TSharedPtr<SHorizontalBox> horBox = SNew(SHorizontalBox);
-	// init bar chart with many progress bar
-	for (int idx = 0; idx < sampleNum; idx++)
-	{
-		InitProfilerBar(idx, horBox);
-	}
-	horBox->AddSlot().HAlign(HAlign_Left).MaxWidth(5.0f).Padding(0, 200, 10, 0);
+	SAssignNew(profilerWidget, SProfilerWidget);
 
+	static bool isMouseButtonDown = false;
+	profilerWidget->SetOnMouseButtonDown(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
+		// stop scorlling and show the profiler info which we click
+		isMouseButtonDown = true;
+		stopChartRolling = true;
+		profilerCheckBox->SetIsChecked(ECheckBoxState::Unchecked);
+
+		// calc sampleIdx
+		FVector2D cursorPos = inventoryGeometry.AbsoluteToLocal(mouseEvent.GetScreenSpacePosition());
+		int sampleIdx = profilerWidget->CalcClickSampleIdx(cursorPos);
+		sampleIdx = lastArrayOffset + sampleIdx;
+		if (sampleIdx >= cMaxSampleNum)
+		{
+			sampleIdx = sampleIdx - cMaxSampleNum;
+		}
+
+		if (profilersArraySamples[sampleIdx].Num() == 0)
+		{
+			TArray<SluaProfiler> tmp;
+			ShowProfilerTree(tmp);
+			return FReply::Handled();
+		}
+
+		if (sampleIdx >= 0)
+		{
+			ShowProfilerTree(profilersArraySamples[sampleIdx]);
+		}
+
+		return FReply::Handled();
+	}));
+
+	profilerWidget->SetOnMouseButtonUp(FPointerEventHandler::CreateLambda([=](const FGeometry&, const FPointerEvent&) -> FReply {
+		isMouseButtonDown = false;
+		return FReply::Handled();
+	}));
+
+	profilerWidget->SetOnMouseMove(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
+		// calc sampleIdx
+		FVector2D cursorPos = inventoryGeometry.AbsoluteToLocal(mouseEvent.GetScreenSpacePosition());
+		int sampleIdx = profilerWidget->CalcHoverSampleIdx(cursorPos);
+		static float lastToolTipVal = 0.0f;
+		if (sampleIdx >= 0 && lastToolTipVal != chartValArray[sampleIdx])
+		{
+			profilerWidget->SetToolTipVal(chartValArray[sampleIdx]/ perMilliSec);
+			lastToolTipVal = chartValArray[sampleIdx];
+		}
+		else if (sampleIdx < 0)
+		{
+			profilerWidget->SetToolTipVal(-1.0f);
+		}
+
+		////////////////////////////////
+		if (isMouseButtonDown == true)
+		{
+			// calc sampleIdx
+			FVector2D cursorPos = inventoryGeometry.AbsoluteToLocal(mouseEvent.GetScreenSpacePosition());
+			int sampleIdx = profilerWidget->CalcClickSampleIdx(cursorPos);
+			sampleIdx = lastArrayOffset + sampleIdx;
+			if (sampleIdx >= cMaxSampleNum)
+			{
+				sampleIdx = sampleIdx - cMaxSampleNum;
+			}
+
+			if (profilersArraySamples[sampleIdx].Num() == 0)
+			{
+				TArray<SluaProfiler> tmp;
+				ShowProfilerTree(tmp);
+				return FReply::Handled();
+			}
+
+			if (sampleIdx >= 0)
+			{
+				ShowProfilerTree(profilersArraySamples[sampleIdx]);
+			}
+		}
+		
+		return FReply::Handled();
+	}));
+
+	profilerWidget->SetOnMouseLeave(FSimpleNoReplyPointerEventHandler::CreateLambda([=](const FPointerEvent&) {
+		isMouseButtonDown = false;
+	}));
+	
 	// init tree view
 	SAssignNew(treeview, STreeView<TSharedPtr<FunctionProfileInfo>>)
 		.ItemHeight(800)
@@ -410,8 +441,12 @@ TSharedRef<class SDockTab> SProfilerInspector::GetSDockTab()
 				]
 			]
 			+ SScrollBox::Slot()
-			[
-				horBox.ToSharedRef()
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left)//.MaxWidth(25.0f).Padding(0, 230, 10, 0)
+				[
+					profilerWidget.ToSharedRef()
+				]
 			]
 			+ SScrollBox::Slot()
 			[
@@ -429,44 +464,6 @@ TSharedRef<class SDockTab> SProfilerInspector::GetSDockTab()
 				]
 			]
 		];
-}
-
-void SProfilerInspector::AddProfilerBarOnMouseMoveEvent()
-{
-	for (int progBarIdx = 0; progBarIdx < sampleNum; progBarIdx++)
-	{
-		profilerBarArray[progBarIdx]->SetOnMouseEnter(FNoReplyPointerEventHandler::CreateLambda([=](const FGeometry&, const FPointerEvent&){
-			// stop scorlling and show the profiler info which we click
-			stopChartRolling = true;
-			int sampleIdx = lastArrayOffset + progBarIdx + 1;
-			if (sampleIdx >= sampleNum)
-			{
-				sampleIdx = sampleIdx - sampleNum;
-			}
-
-			ShowProfilerTree(profilersArraySamples[sampleIdx]);
-
-			ClearProfilerCharFillImage();
-			static FSlateBrush fillColor;
-			fillColor.TintColor = FLinearColor::Red;
-			profilerBarArray[progBarIdx]->SetFillImage(&fillColor);
-		}));
-
-		profilerBarArray[progBarIdx]->SetOnMouseLeave(FSimpleNoReplyPointerEventHandler::CreateLambda([=](const FPointerEvent&) {
-			profilerBarArray[progBarIdx]->SetFillImage(nullptr);
-		}));
-	}
-}
-
-void SProfilerInspector::RemoveProfilerBarOnMouseMoveEvent()
-{
-	for (int progBarIdx = 0; progBarIdx < sampleNum; progBarIdx++)
-	{
-		profilerBarArray[progBarIdx]->SetOnMouseEnter(FNoReplyPointerEventHandler::CreateLambda([progBarIdx](const FGeometry&, const FPointerEvent&) {
-		}));
-		profilerBarArray[progBarIdx]->SetOnMouseLeave(FSimpleNoReplyPointerEventHandler::CreateLambda([=](const FPointerEvent&) {
-		}));
-	}
 }
 
 void SProfilerInspector::SortProfiler(SluaProfiler &rootProfiler)
@@ -529,6 +526,17 @@ void SProfilerInspector::SortProfiler(SluaProfiler &rootProfiler)
 
 void SProfilerInspector::ShowProfilerTree(TArray<SluaProfiler> &selectedProfiler)
 {
+	if (selectedProfiler.Num() == 0)
+	{
+		shownRootProfiler.Empty();
+		shownProfiler.Empty();
+		if (treeview.IsValid())
+		{
+			treeview->RequestTreeRefresh();
+		}
+		return;
+	}
+
 	AssignProfiler(selectedProfiler, tmpRootProfiler, shownProfiler);
 
 	TArray<int> emptyMergeArray;
@@ -545,7 +553,6 @@ void SProfilerInspector::ShowProfilerTree(TArray<SluaProfiler> &selectedProfiler
 	SortProfiler(tmpRootProfiler);
 	AssignProfiler(tmpRootProfiler, shownRootProfiler);
 
-	auto curDockTab = FGlobalTabmanager::Get()->FindExistingLiveTab(slua_profileTabNameInspector);
 	if (treeview.IsValid())
 	{
 		treeview->RequestTreeRefresh();
@@ -577,17 +584,34 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateRowForList(TSharedPtr<Functi
 		[
 			SNew(SHeaderRow)
 			+ SHeaderRow::Column("Overview").DefaultLabel(TAttribute<FText>::Create([=]() {
-								return FText::FromString(shownProfiler[Item->globalIdx]->brevName);								
+								if (shownProfiler.Num() > Item->globalIdx)
+								{
+									return FText::FromString(shownProfiler[Item->globalIdx]->brevName);
+								}
+								return FText::FromString("");								
 							}))
 							.FixedWidth(rowWidth).DefaultTooltip(TAttribute<FText>::Create([=]() {
-								return FText::FromString(shownProfiler[Item->globalIdx]->functionName);
+								if (shownProfiler.Num() > Item->globalIdx)
+								{
+									return FText::FromString(shownProfiler[Item->globalIdx]->functionName);
+								}
+								return FText::FromString("");
 							}))
 			+ SHeaderRow::Column("Time ms").DefaultLabel(TAttribute<FText>::Create([=]() {
-								return FText::AsNumber(shownProfiler[Item->globalIdx]->mergedCostTime / perMilliSec);
+								if (shownProfiler.Num() > Item->globalIdx)
+								{
+									return FText::AsNumber(shownProfiler[Item->globalIdx]->mergedCostTime / perMilliSec);
+								}
+								return FText::FromString("");
 							}))
 							.FixedWidth(fixRowWidth)
 			+ SHeaderRow::Column("Calls").DefaultLabel(TAttribute<FText>::Create([=]() {
-								return FText::AsNumber(shownProfiler[Item->globalIdx]->mergedNum);
+								if (shownProfiler.Num() > Item->globalIdx)
+								{
+									return FText::AsNumber(shownProfiler[Item->globalIdx]->mergedNum);
+								}
+								return FText::FromString("");
+								
 							}))
 							.FixedWidth(fixRowWidth)
 		];
@@ -693,6 +717,306 @@ void SProfilerInspector::SearchSiblingNode(SluaProfiler& profiler, int curIdx, i
 		}
 		curIdx++;
 	}
+}
+
+////////////////////////////// SProfilerWidget //////////////////////////////
+
+void SProfilerWidget::SetArrayValue(TArray<float>& chartValArray, float maxCostTime)
+{
+	m_arrayVal = chartValArray;
+	if (m_arrayVal.Num() == 0)
+	{
+		// clear line points
+		for (int32 i = 0; i < m_cSliceCount; i++)
+		{
+			FVector2D NewPoint(-1, -1);
+			m_arraylinePath[i] = NewPoint;
+		}
+	}
+	m_maxCostTime = maxCostTime;
+}
+
+void SProfilerWidget::Construct(const FArguments& InArgs)
+{
+	m_arraylinePath.SetNumUninitialized(m_cSliceCount);
+	m_maxCostTime = 0.0f;
+	m_pointInterval = 0.0f;
+	m_clickedPoint.X = -1.0f;
+	m_toolTipVal = -1.0f;
+
+	float maxPointValue = 40 * 1000.f; // set max value as 40ms
+	float stdLineValue = 16 * 1000.f;
+	FString stdLineName = "16ms(60FPS)";
+	AddStdLine(maxPointValue, stdLineValue, stdLineName);
+
+	stdLineValue = 33 * 1000.f;
+	stdLineName = "33ms(30FPS)";
+	AddStdLine(maxPointValue, stdLineValue, stdLineName);
+
+	SetToolTipText(TAttribute<FText>::Create([=]() {
+		if (m_toolTipVal < 0)
+			return FText::FromString("");
+		else
+			return FText::AsNumber(m_toolTipVal);
+	}));
+}
+
+void SProfilerWidget::SetToolTipVal(float val)
+{
+	m_toolTipVal = val;
+}
+
+FVector2D SProfilerWidget::ComputeDesiredSize(float size) const
+{
+	TSharedPtr<SWidget> parent = GetParentWidget();
+	FGeometry tmp = parent->GetCachedGeometry();
+	return FVector2D(tmp.Size.X, 220);
+}
+
+void SProfilerWidget::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
+{
+	m_widgetWidth = AllottedGeometry.Size.X;
+
+	if (m_arrayVal.Num() == 0)
+	{
+		return;
+	}
+
+	static float maxVal = 10 * 1000;
+	static float highVal = 200;
+
+	// calc standard line level accroding to max cost time
+	m_stdPositionY.Empty();
+	m_stdStr.Empty();
+	if (m_maxCostTime > 0)
+	{
+		CalcStdLine(m_maxCostTime);
+	}
+
+	for (int32 i = 0; i < m_cSliceCount; i++)
+	{
+		if (m_arrayVal[i] < 0)
+		{
+			FVector2D NewPoint(-1, -1);
+			m_arraylinePath[i] = NewPoint;
+		}
+		else
+		{
+			float yValue = 0;
+			
+			if (m_maxCostTime != 0.0f)
+			{
+				yValue = highVal * (m_arrayVal[i] / maxVal);
+			}
+			if (yValue > highVal)
+			{
+				FVector2D NewPoint((5 * i + m_cStdLeftPosition) * (m_widgetWidth / m_cStdWidth), 0);
+				m_arraylinePath[i] = NewPoint;
+			}
+			else
+			{
+				FVector2D NewPoint((5 * i + m_cStdLeftPosition) * (m_widgetWidth / m_cStdWidth), highVal - yValue);
+				m_arraylinePath[i] = NewPoint;
+			}
+		}
+	}
+
+	m_pointInterval = 5 * (m_widgetWidth / m_cStdWidth);
+}
+
+int SProfilerWidget::CalcHoverSampleIdx(const FVector2D cursorPos)
+{
+	for (int32 i = 0; i< m_cSliceCount; i++)
+	{
+		if (m_arraylinePath[i].X < 0)
+		{
+			continue;
+		}
+		int interval = m_arraylinePath[i].X - cursorPos.X;
+		if (interval >(-m_pointInterval / 2) && interval < (m_pointInterval / 2))
+		{
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+int SProfilerWidget::CalcClickSampleIdx(const FVector2D cursorPos)
+{
+	for (int32 i = 0; i< m_cSliceCount; i++)
+	{
+		int interval = m_arraylinePath[i].X - cursorPos.X;
+		if (interval > (-m_pointInterval / 2) && interval < (m_pointInterval / 2))
+		{
+			m_clickedPoint = m_arraylinePath[i];
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+void SProfilerWidget::ClearClickedPoint()
+{
+	m_clickedPoint.X = -1.0f;
+}
+
+void SProfilerWidget::DrawStdLine(const FGeometry& AllottedGeometry, FSlateWindowElementList& OutDrawElements, int32 LayerId, float positionY, FString stdStr) const
+{
+	TArray<FVector2D> valLineArray;
+	valLineArray.Add(FVector2D(30, positionY));
+	valLineArray.Add(FVector2D(m_widgetWidth, positionY));
+	FSlateDrawElement::MakeLines(
+		OutDrawElements,
+		LayerId,
+		AllottedGeometry.ToPaintGeometry(),
+		valLineArray,
+		ESlateDrawEffect::None,
+		FLinearColor::White,
+		true,
+		1.0f
+	);
+
+	FSlateColorBrush stBrushWhite_1 = FSlateColorBrush(FColorList::White);
+	FSlateDrawElement::MakeBox(
+		OutDrawElements,
+		LayerId,
+		AllottedGeometry.ToPaintGeometry(FVector2D(0, positionY - 10), FVector2D(80, 15)),
+		&stBrushWhite_1,
+		ESlateDrawEffect::None,
+		FLinearColor::Black
+	);
+
+	FSlateFontInfo FontInfo = FCoreStyle::Get().GetFontStyle("NormalFont");
+	FontInfo.Size = 10.0f;
+
+	FSlateDrawElement::MakeText(
+		OutDrawElements,
+		LayerId,
+		AllottedGeometry.ToPaintGeometry(FVector2D(0, positionY - 10), AllottedGeometry.Size),
+		stdStr,
+		FontInfo,
+		ESlateDrawEffect::None,
+		FLinearColor::White
+	);
+}
+
+void SProfilerWidget::CalcStdLine(float &maxCostTime)
+{
+	if (maxCostTime < 6000)
+	{
+		float maxPointValue = 7 * 1000.f;
+		float stdLineValue = 1 * 1000.f;
+		FString stdLineName = "1ms(1000FPS)";
+		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+
+		stdLineValue = 4 * 1000.f;
+		stdLineName = "4ms(250FPS)";
+		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+	}
+	else if (maxCostTime < 14000)
+	{
+		float maxPointValue = 15 * 1000.f;
+		float stdLineValue = 5 * 1000.f;
+		FString stdLineName = "5ms(200FPS)";
+		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+
+		stdLineValue = 10 * 1000.f;
+		stdLineName = "10ms(100FPS)";
+		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+	}
+	else if (maxCostTime < 30000)
+	{
+		float maxPointValue = 40 * 1000.f;
+		float stdLineValue = 16 * 1000.f;
+		FString stdLineName = "16ms(60FPS)";
+		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+
+		stdLineValue = 33 * 1000.f;
+		stdLineName = "33ms(30FPS)";
+		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+	}
+	else
+	{
+		float maxPointValue = 70 * 1000.f;
+		float stdLineValue = 16 * 1000.f;
+		FString stdLineName = "16ms(60FPS)";
+		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+
+		stdLineValue = 33 * 1000.f;
+		stdLineName = "33ms(30FPS)";
+		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+
+		stdLineValue = 66 * 1000.f;
+		stdLineName = "66ms(15FPS)";
+		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+	}
+}
+
+void SProfilerWidget::AddStdLine(float &maxPointValue, float &stdLineValue, FString &stdLineName)
+{
+	float positionY = m_cStdHighVal - m_cStdHighVal / maxPointValue * stdLineValue;
+	m_stdPositionY.Add(positionY);
+	m_stdStr.Add(stdLineName);
+}
+
+int32 SProfilerWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyClippingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
+{
+	if (m_clickedPoint.X != -1.0f)
+	{
+		TArray<FVector2D> clickedPointArray;
+		clickedPointArray.Add(FVector2D(m_clickedPoint.X, 0));
+		clickedPointArray.Add(FVector2D(m_clickedPoint.X, 200));
+		FSlateDrawElement::MakeLines(
+			OutDrawElements,
+			LayerId,
+			AllottedGeometry.ToPaintGeometry(),
+			clickedPointArray,
+			ESlateDrawEffect::None,
+			FLinearColor::White,
+			true,
+			6.0f
+		);
+	}
+
+	// draw std value line
+	for (int32 i = 0; i < m_stdStr.Num(); i++)
+	{
+		DrawStdLine(AllottedGeometry, OutDrawElements, LayerId, m_stdPositionY[i], m_stdStr[i]);
+	}
+
+	if (m_arrayVal.Num() == 0)
+	{
+		return LayerId;
+	}
+
+	for (int32 i=0; i< m_cSliceCount-1; i++)
+	{
+		if ((m_arraylinePath[i].X < 0 && m_arraylinePath[i].Y < 0)
+			|| (m_arraylinePath[i+1].X < 0 && m_arraylinePath[i+1].Y < 0))
+		{
+			continue;
+		}
+
+		TArray<FVector2D> circlePath;
+		FVector2D leftPoint(m_arraylinePath[i].X, m_arraylinePath[i].Y);
+		FVector2D rightPoint(m_arraylinePath[i+1].X, m_arraylinePath[i+1].Y);
+		circlePath.Add(leftPoint);
+		circlePath.Add(rightPoint);
+		FSlateDrawElement::MakeLines(
+			OutDrawElements,
+			LayerId,
+			AllottedGeometry.ToPaintGeometry(),
+			circlePath,
+			ESlateDrawEffect::None,
+			FLinearColor::Yellow,
+			true,
+			1.0f
+		);
+	}
+
+	return LayerId;
 }
 
 

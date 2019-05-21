@@ -24,6 +24,8 @@
 
 struct FunctionProfileInfo;
 typedef TArray<TSharedPtr<FunctionProfileInfo>> SluaProfiler;
+class SProfilerWidget;
+const int cMaxSampleNum = 250;
 
 class SLUA_PROFILE_API SProfilerInspector
 {
@@ -46,7 +48,7 @@ public:
 	}
 
 private:
-	const static int sampleNum = 250;
+	const static int sampleNum = cMaxSampleNum;
 	const static int fixRowWidth = 300;
 	const static int refreshInterval = 50;
 	const float perMilliSec = 1000.0f;
@@ -54,8 +56,9 @@ private:
 	TSharedPtr<STreeView<TSharedPtr<FunctionProfileInfo>>> treeview;
 	TSharedPtr<SCheckBox> profilerCheckBox;
 	TSharedPtr<SProgressBar> profilerBarArray[sampleNum];
+	TSharedPtr<SProfilerWidget> profilerWidget;
 
-	float chartValArray[sampleNum];
+	TArray<float> chartValArray;
 	bool stopChartRolling;
 	int refreshIdx;
 	int arrayOffset;
@@ -91,6 +94,43 @@ private:
 	void SortProfiler(SluaProfiler &shownRootProfiler);
 };
 
+class SLUA_PROFILE_API SProfilerWidget : public SCompoundWidget
+{
+public:
+	SLATE_BEGIN_ARGS(SProfilerWidget)
+	{}
+	SLATE_END_ARGS()
 
+	/** Constructs this widget with InArgs */
+	void Construct(const FArguments& InArgs);
+	void SetArrayValue(TArray<float> &chartValArray, float maxCostTime);
+	int CalcClickSampleIdx(const FVector2D cursorPos);
+	int CalcHoverSampleIdx(const FVector2D cursorPos);
+	void SetToolTipVal(float val);
+	void ClearClickedPoint();
 
+	// SWidget interface
+	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
+	virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyClippingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
+protected:
+	virtual FVector2D ComputeDesiredSize(float size) const override;
 
+private:
+	void DrawStdLine(const FGeometry& AllottedGeometry, FSlateWindowElementList& OutDrawElements, int32 LayerId, float positionY, FString stdStr) const;
+	void AddStdLine(float &maxPointValue, float &stdLineValue, FString &stdLineName);
+	void CalcStdLine(float &maxCostTime);
+
+	TArray<FVector2D> m_arraylinePath;
+	TArray<float> m_arrayVal;
+	TArray<float> m_stdPositionY;
+	TArray<FString> m_stdStr;
+	const int32 m_cSliceCount = cMaxSampleNum;
+	const float m_cStdWidth = 1300;
+	float m_widgetWidth;
+	const int32 m_cStdLeftPosition = 30;
+	float m_maxCostTime;
+	float m_pointInterval;
+	float m_toolTipVal;
+	FVector2D m_clickedPoint;
+	const float m_cStdHighVal = 200.0f;
+};

@@ -45,18 +45,6 @@ namespace slua {
         void init();
     }
 
-	FString getUObjName(UObject* obj) {
-#if WITH_EDITOR
-		if (auto ld=Cast<ULuaDelegate>(obj)) {
-			return ld->getPropName();
-		} else {
-			return obj->GetFName().ToString();
-		}
-#else
-		return obj->GetFName().ToString();
-#endif
-	}
-
     DefTypeName(LuaStruct)
 
     // construct lua struct
@@ -398,7 +386,7 @@ namespace slua {
             
             uint8* buf = (uint8*)FMemory::Malloc(size);
             uss->InitializeStruct(buf);
-            LuaStruct* ls=new LuaStruct{buf,size,uss};
+            LuaStruct* ls=new LuaStruct(buf,size,uss);
             LuaObject::push(L,ls);
             return 1;
         }
@@ -749,7 +737,7 @@ namespace slua {
 		uint8* buf = (uint8*)FMemory::Malloc(size);
 		uss->InitializeStruct(buf);
 		uss->CopyScriptStruct(buf, parms);
-		return LuaObject::push(L, new LuaStruct{buf,size,uss});
+		return LuaObject::push(L, new LuaStruct(buf,size,uss));
     }  
 
 	int pushUDelegateProperty(lua_State* L, UProperty* prop, uint8* parms) {

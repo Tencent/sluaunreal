@@ -15,6 +15,7 @@
 
 #include "CoreMinimal.h"
 #include <string>
+#include "slua.h"
 #include "Styling/SlateBrush.h"
 #include "Blueprint/UserWidget.h"
 #include "SluaTestCase.generated.h"
@@ -57,6 +58,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FUserInfo1 others;
 };
+
+namespace slua {
+	DefTypeName(FUserInfo);
+	DefTypeName(FUserInfo1);
+	DefTypeName(FUserInfo2);
+}
 
 UCLASS()
 class USluaTestCase : public UObject {

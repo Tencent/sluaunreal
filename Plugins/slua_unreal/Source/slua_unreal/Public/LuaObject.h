@@ -71,7 +71,7 @@ namespace slua {
         int top;
     };
 
-    struct LuaStruct : public FGCObject {
+    struct SLUA_UNREAL_API LuaStruct : public FGCObject {
         uint8* buf;
         uint32 size;
         UScriptStruct* uss;
@@ -148,8 +148,6 @@ namespace slua {
 			return ptr.Get();
 		}
 	};
-
-	FString getUObjName(UObject* obj);
 
     class SLUA_UNREAL_API LuaObject
     {
@@ -450,9 +448,23 @@ namespace slua {
 		template<class T>
 		static int push(lua_State* L, const char* fn, const T* v, uint32 flag = UD_NOFLAG) {
             if(getFromCache(L,void_cast(v),fn)) return 1;
-			NewUD(T, v, flag);
             luaL_getmetatable(L,fn);
+			// if v is the UnrealType
+			UScriptStruct* uss = nullptr;
+			if (lua_isnil(L, -1) && isUnrealStruct(fn, &uss)) {
+				lua_pop(L, 1); // pop nil
+				uint32 size = uss->GetStructureSize() ? uss->GetStructureSize() : 1;
+				ensure(size == sizeof(T));
+				uint8* buf = (uint8*)FMemory::Malloc(size);
+				uss->InitializeStruct(buf);
+				uss->CopyScriptStruct(buf, v);
+				cacheObj(L, void_cast(v));
+				return push(L, new LuaStruct(buf, size, uss));
+			}
+			NewUD(T, v, flag);
+			lua_pushvalue(L, -2);
 			lua_setmetatable(L, -2);
+			lua_remove(L, -2); // remove metatable of fn
             cacheObj(L,void_cast(v));
             return 1;
 		}
@@ -809,7 +821,7 @@ namespace slua {
     }
 
 	template<>
-	int LuaObject::pushType<LuaStruct*, false>(lua_State* L, LuaStruct* cls,
+	inline int LuaObject::pushType<LuaStruct*, false>(lua_State* L, LuaStruct* cls,
 		const char* tn, lua_CFunction setupmt, lua_CFunction gc) {
 		if (!cls) {
 			lua_pushnil(L);

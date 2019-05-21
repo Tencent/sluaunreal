@@ -19,6 +19,8 @@
 #include <cstddef>
 #include <cstring>
 #include "SlateCore.h"
+#include "Engine/EngineTypes.h"
+#include "Engine/World.h"
 
 #ifndef SafeDelete
 #define SafeDelete(ptr) if(ptr) { delete ptr;ptr=nullptr; }
@@ -314,4 +316,7 @@ namespace slua {
 		const char* buf;
 		size_t len;
 	};
+
+	FString SLUA_UNREAL_API getUObjName(UObject* obj);
+	bool SLUA_UNREAL_API isUnrealStruct(const char* tn, UScriptStruct** out);
 }

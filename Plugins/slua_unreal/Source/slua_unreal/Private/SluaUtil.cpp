@@ -1,3 +1,4 @@
+
 // Tencent is pleased to support the open source community by making sluaunreal available.
 
 // Copyright (C) 2018 THL A29 Limited, a Tencent company. All rights reserved.
@@ -11,17 +12,37 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 
-#pragma once
-#include "lua/lua.hpp"
-#include "Log.h"
-#include "SLuaUtil.h"
+#include "SluaUtil.h"
 #include "LuaObject.h"
-#include "LuaState.h"
 #include "LuaVar.h"
-#include "LuaArray.h"
-#include "LuaMap.h"
-#include "LuaBase.h"
-#include "LuaActor.h"
 #include "LuaDelegate.h"
-#include "LuaCppBinding.h"
-#include "LuaCppBindingPost.h"
+
+
+namespace slua {
+	FString getUObjName(UObject* obj) {
+#if WITH_EDITOR
+		if (auto ld = Cast<ULuaDelegate>(obj)) {
+			return ld->getPropName();
+		}
+		else {
+			return obj->GetFName().ToString();
+		}
+#else
+		return obj->GetFName().ToString();
+#endif
+	}
+
+	bool isUnrealStruct(const char* tn, UScriptStruct** out) {
+		ensure(tn != nullptr && strlen(tn) > 0);
+		// if prefix is the unreal prefix
+		if (tn[0] == 'F') {
+			// if can find it by name in package
+			UScriptStruct* ustruct = FindObject<UScriptStruct>(ANY_PACKAGE, UTF8_TO_TCHAR(tn+1));
+			if (ustruct) {
+				if(out) *out = ustruct;
+				return true;
+			}
+		}
+		return true;
+	}
+}

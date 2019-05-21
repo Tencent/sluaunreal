@@ -372,8 +372,8 @@ TSharedRef<class SDockTab> SProfilerInspector::GetSDockTab()
 		if (isMouseButtonDown == true)
 		{
 			// calc sampleIdx
-			FVector2D cursorPos = inventoryGeometry.AbsoluteToLocal(mouseEvent.GetScreenSpacePosition());
-			int sampleIdx = profilerWidget->CalcClickSampleIdx(cursorPos);
+			cursorPos = inventoryGeometry.AbsoluteToLocal(mouseEvent.GetScreenSpacePosition());
+			sampleIdx = profilerWidget->CalcClickSampleIdx(cursorPos);
 			sampleIdx = lastArrayOffset + sampleIdx;
 			if (sampleIdx >= cMaxSampleNum)
 			{

@@ -317,6 +317,23 @@ namespace slua {
 		size_t len;
 	};
 
+	// SFINAE test class has a specified member function
+	template <typename T>
+	class Has_LUA_typename
+	{
+	private:
+		typedef char WithType;
+		typedef int WithoutType;
+
+		template <typename C> 
+		static WithType test(decltype(&C::LUA_typename));
+		template <typename C> 
+		static WithoutType test(...);
+
+	public:
+		enum { value = sizeof(test<T>(0)) == sizeof(WithType) };
+	};
+
 	FString SLUA_UNREAL_API getUObjName(UObject* obj);
 	bool SLUA_UNREAL_API isUnrealStruct(const char* tn, UScriptStruct** out);
 }

@@ -605,9 +605,16 @@ namespace slua {
         static bool isBaseTypeOf(lua_State* L,const char* tn,const char* base);
 
         template<typename T>
-        static int push(lua_State* L,T* ptr,typename std::enable_if<!std::is_base_of<UObject,T>::value>::type* = nullptr) {
-            return push(L,TypeName<T>::value().c_str(),ptr);
+        static int push(lua_State* L,T* ptr,typename std::enable_if<!std::is_base_of<UObject,T>::value && !Has_LUA_typename<T>::value>::type* = nullptr) {
+            return push(L, TypeName<T>::value().c_str(), ptr);
         }
+
+		// if T has a member function named LUA_typename,
+		// used this branch
+		template<typename T>
+		static int push(lua_State* L, T* ptr, typename std::enable_if<!std::is_base_of<UObject, T>::value && Has_LUA_typename<T>::value>::type* = nullptr) {
+			return push(L, ptr->LUA_typename().c_str(), ptr);
+		}
 
         template<typename T>
         static int push(lua_State* L,LuaOwnedPtr<T> ptr) {

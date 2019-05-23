@@ -6,7 +6,7 @@
 #include "GenericPlatformFile.h"
 #include "HAL/FileManager.h"
 
-
+using namespace slua;
 
 // read file content
 static uint8* ReadFile(IPlatformFile& PlatformFile, FString path, uint32& len) {
@@ -73,9 +73,28 @@ static int32 PrintLog(slua::lua_State *L)
 	return 0;
 }
 
+static int32 NewLuaLib(lua_State *L)
+{
+	luaL_Reg _LuaFuncs[] = {
+		{"LuaNamePrintLog", PrintLog},
+		{NULL, NULL}
+	};
+	lua_newtable(L);
+	luaL_setfuncs(L, _LuaFuncs, 0);
+	return 1;
+}
+
 void UMyGameInstance::LuaStateInitCallback()
 {
 	slua::lua_State *L = state.getLuaState();
+
+	// 添加全局函数
 	lua_pushcfunction(L, PrintLog);
 	lua_setglobal(L, "PrintLog");
+
+	// 以前是直接使用luaL_requiref, 现在要改成如下方式注册
+	luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
+	lua_pushcfunction(L, NewLuaLib);
+	lua_setfield(L, -2, "LuaNameTestNewLib");
+	lua_pop(L, 1);
 }

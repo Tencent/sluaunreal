@@ -3,6 +3,7 @@
 some.field.y = 103
 EPropertyClass = import"EPropertyClass"
 PrintLog("LuaStateInitCallback ok")
+require("LuaNameTestNewLib").LuaNamePrintLog("this is lua name test model func")
 function begin(uworld,uactor)
     world=uworld
     actor=uactor

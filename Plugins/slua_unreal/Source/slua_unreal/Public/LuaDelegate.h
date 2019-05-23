@@ -15,6 +15,7 @@
 
 #include "CoreMinimal.h"
 #include "lua/lua.hpp"
+#include "SluaUtil.h"
 #include "LuaDelegate.generated.h"
 
 namespace slua {

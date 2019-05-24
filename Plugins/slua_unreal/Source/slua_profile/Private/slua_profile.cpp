@@ -20,7 +20,7 @@
 #include "lua.h"
 #if WITH_EDITOR
 #include "LevelEditor.h"
-#include "Editor/EditorStyle/Public/EditorStyle.h"
+#include "EditorStyle.h"
 #endif
 
 #define LOCTEXT_NAMESPACE "Fslua_profileModule"

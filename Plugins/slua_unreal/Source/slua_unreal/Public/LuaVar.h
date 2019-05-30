@@ -260,8 +260,10 @@ namespace slua {
 				:Ref()
             {
 				if (len == 0) len = strlen(s);
-				buf = (char*) FMemory::Malloc(len);
+				// alloc extra space for '\0'
+				buf = (char*) FMemory::Malloc(len+1);
 				FMemory::Memcpy(buf, s, len);
+				buf[len] = 0;
 				length = len;
 			}
             virtual ~RefStr() {

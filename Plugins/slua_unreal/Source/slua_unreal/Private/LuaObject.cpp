@@ -709,6 +709,13 @@ namespace slua {
 		return LuaMap::push(L, p->KeyProp, p->ValueProp, v);
     }
 
+	int pushUWeakProperty(lua_State* L, UProperty* prop, uint8* parms) {
+		auto p = Cast<UWeakObjectProperty>(prop);
+		ensure(p);
+		FWeakObjectPtr v = p->GetPropertyValue(parms);
+		return LuaObject::push(L, v);
+	}
+
     int checkUArrayProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UArrayProperty>(prop);
         ensure(p);
@@ -1004,6 +1011,18 @@ namespace slua {
         }
         return pushGCObject<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject);
     }
+
+	int LuaObject::push(lua_State* L, FWeakObjectPtr ptr) {
+		if (!ptr.IsValid()) {
+			lua_pushnil(L);
+			return 1;
+		}
+		UObject* obj = ptr.Get();
+		if (getFromCache(L, obj, "UObject")) return 1;
+		int r = pushWeakType(L, new WeakUObjectUD(ptr));
+		if (r) cacheObj(L, obj);
+		return r;
+	}
     
     template<typename T>
     inline void regPusher() {
@@ -1039,6 +1058,7 @@ namespace slua {
         regPusher(UStructProperty::StaticClass(),pushUStructProperty);
 		regPusher(UEnumProperty::StaticClass(), pushEnumProperty);
 		regPusher(UClassProperty::StaticClass(), pushUClassProperty);
+		regPusher(UWeakObjectProperty::StaticClass(), pushUWeakProperty);
 		
 		regChecker<UIntProperty>();
 		regChecker<UUInt32Property>();

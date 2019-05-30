@@ -66,11 +66,19 @@ namespace slua {
 }
 
 UCLASS()
+class UTestObject : public UObject {
+	GENERATED_UCLASS_BODY()
+};
+
+UCLASS()
 class USluaTestCase : public UObject {
     GENERATED_UCLASS_BODY()
 public:
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     static void StaticFunc();
+
+	UPROPERTY(BlueprintReadOnly)
+	TWeakObjectPtr<UObject> weakptr;
 
     UPROPERTY(BlueprintReadOnly)
     TArray<UObject*> foos;
@@ -183,5 +191,15 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Lua|TestCase")
     void TestUnicastDelegate(FString str);
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTestAAA, FString, str);
+	UPROPERTY(BlueprintAssignable)
+	FOnTestAAA OnTestAAA;
+
+	UFUNCTION(BlueprintCallable, Category = "Lua|TestCase")
+		void TestAAA(FString str)
+	{
+		OnTestAAA.Broadcast(str);
+	}
     
 };

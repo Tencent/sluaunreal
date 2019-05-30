@@ -321,6 +321,11 @@ namespace slua {
 	EndDef(FHttpModule,nullptr)
 }
 
+UTestObject::UTestObject(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer) {
+
+}
+
 USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -344,6 +349,8 @@ USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
 	info.ids = { 1,2,3,4 };
 
 	userInfo.Add(1, info);
+
+	weakptr = NewObject<UTestObject>(this,TEXT("TestUObject"));
 }
 
 void USluaTestCase::setupfoo(UObject* obj) {

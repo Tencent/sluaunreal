@@ -7,6 +7,21 @@ function begin(uworld,uactor)
     world=uworld
     actor=uactor
 
+    local util = slua.loadClass("Blueprint'/Game/util.util'")
+    --util.Foo(world)
+    print("util",util.GetTestString(world,""))
+
+    local Test=import('SluaTestCase');
+    local t=Test();
+    testobj = t
+    weakptr = testobj.weakptr
+    local v = FVector(10,20,30)
+    local v2 = FVector(1,2,3)
+    local i = 100
+    local i2 = 200
+    local s = "haha"
+    local v3, v2, i2 = t:TestStruct(v, 2, v2, i, i2, s)
+
     local e = import("EMeshBufferAccess")
     for k,v in pairs(e) do
         print("eeee",k,v)
@@ -55,4 +70,9 @@ function update(dt)
     TestArray.update(tt)
     TestMap.update(tt)
     TestBp:update(tt)
+
+    -- test weak ptr is alive?
+    if slua.isValid(weakptr) then
+        print("weak ptr",weakptr,weakptr:GetClass())
+    end
 end

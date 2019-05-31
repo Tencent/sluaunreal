@@ -183,6 +183,10 @@ namespace slua {
 			UObject* obj = LuaObject::checkUD<UObject>(L, 1);
 			isValid = IsValid(obj);
 		}
+		else if (gud->flag&UD_WEAKUPTR) {
+			UserData<WeakUObjectUD*>* wud = (UserData<WeakUObjectUD*>*)gud;
+			isValid = wud->ud->isValid();
+		}
 		return LuaObject::push(L, isValid);
 	}
 

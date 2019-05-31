@@ -107,9 +107,9 @@ FLuaBPVar ULuaBlueprintLibrary::CreateVarFromObject(UObject* o) {
     using namespace slua;
     auto ls = LuaState::get();
     if(!ls) return FLuaBPVar();
-    LuaObject::push(*ls,o);
-    LuaVar ret(*ls,-1);
-    lua_pop(*ls,1);
+    LuaObject::push(ls->getLuaState(),o);
+    LuaVar ret(ls->getLuaState(),-1);
+    lua_pop(ls->getLuaState(),1);
     return FLuaBPVar(ret);
 }
 

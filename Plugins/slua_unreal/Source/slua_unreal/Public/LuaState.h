@@ -141,6 +141,10 @@ namespace slua {
 		{
 			return L;
 		}
+		operator lua_State*() const
+		{
+			return L;
+		}
 
         // create a empty table
 		LuaVar createTable();

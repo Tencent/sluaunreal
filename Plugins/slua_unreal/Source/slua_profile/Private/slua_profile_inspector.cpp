@@ -443,7 +443,7 @@ TSharedRef<class SDockTab> SProfilerInspector::GetSDockTab()
 			+ SScrollBox::Slot()
 				[
 					SNew(SHorizontalBox)
-					+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left)//.MaxWidth(25.0f).Padding(0, 230, 10, 0)
+					+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Fill)//.MaxWidth(25.0f).Padding(0, 230, 10, 0)
 				[
 					profilerWidget.ToSharedRef()
 				]
@@ -768,9 +768,9 @@ void SProfilerWidget::SetToolTipVal(float val)
 
 FVector2D SProfilerWidget::ComputeDesiredSize(float size) const
 {
-	TSharedPtr<SWidget> parent = GetParentWidget();
-	FGeometry tmp = parent->GetCachedGeometry();
-	return FVector2D(tmp.Size.X, 220);
+	// width will fill parent auto
+	// so return zero
+	return FVector2D(0, 220);
 }
 
 void SProfilerWidget::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)

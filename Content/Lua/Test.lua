@@ -7,13 +7,6 @@ function begin(uworld,uactor)
     gworld=uworld
     gactor=uactor
 
-    local h = gactor.OnActorEndOverlap:Add(function() end)
-    gactor.OnActorEndOverlap:Remove(h)
-    print("xxx",gactor.OnActorEndOverlap)
-
-    local util = slua.loadClass("Blueprint'/Game/util.util'")
-    print("util",util.GetTestString(uworld,""))
-
     local Test=import('SluaTestCase');
     local t=Test();
     testobj = t

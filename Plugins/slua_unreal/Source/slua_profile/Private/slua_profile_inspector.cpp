@@ -372,7 +372,6 @@ TSharedRef<class SDockTab> SProfilerInspector::GetSDockTab()
 		if (isMouseButtonDown == true)
 		{
 			// calc sampleIdx
-			cursorPos = inventoryGeometry.AbsoluteToLocal(mouseEvent.GetScreenSpacePosition());
 			sampleIdx = profilerWidget->CalcClickSampleIdx(cursorPos);
 			sampleIdx = lastArrayOffset + sampleIdx;
 			if (sampleIdx >= cMaxSampleNum)
@@ -441,9 +440,9 @@ TSharedRef<class SDockTab> SProfilerInspector::GetSDockTab()
 				]
 			]
 			+ SScrollBox::Slot()
-				[
-					SNew(SHorizontalBox)
-					+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Fill)//.MaxWidth(25.0f).Padding(0, 230, 10, 0)
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Fill)
 				[
 					profilerWidget.ToSharedRef()
 				]
@@ -743,6 +742,7 @@ void SProfilerWidget::Construct(const FArguments& InArgs)
 	m_pointInterval = 0.0f;
 	m_clickedPoint.X = -1.0f;
 	m_toolTipVal = -1.0f;
+	m_widgetWidth = 0.0f;
 
 	float maxPointValue = 40 * 1000.f; // set max value as 40ms
 	float stdLineValue = 16 * 1000.f;
@@ -768,9 +768,7 @@ void SProfilerWidget::SetToolTipVal(float val)
 
 FVector2D SProfilerWidget::ComputeDesiredSize(float size) const
 {
-	// width will fill parent auto
-	// so return zero
-	return FVector2D(0, 220);
+	return FVector2D(m_widgetWidth, 220);
 }
 
 void SProfilerWidget::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)

@@ -16,7 +16,7 @@
 #include "LuaState.h"
 #include "LuaBlueprintLibrary.h"
 
-namespace slua {
+namespace NS_SLUA {
 
 // special tick function
 #define UFUNCTION_TICK ((UFunction*)-1)

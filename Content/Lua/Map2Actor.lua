@@ -24,6 +24,15 @@ function actor:ReceiveBeginPlay()
         actor.Name = 'ActorCreateFromLua_'..tostring(n)
     end
     self:Super()
+
+    -- test an issue
+    -- callLastMapActorMethod()
+end
+
+function callLastMapActorMethod()
+    for k,v in pairs(gactor.objs) do
+        print(k,v)
+    end
 end
 
 -- override event from blueprint

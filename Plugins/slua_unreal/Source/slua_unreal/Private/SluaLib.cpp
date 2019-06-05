@@ -34,7 +34,7 @@
 #include "LuaMemoryProfile.h"
 #include "Runtime/Launch/Resources/Version.h"
 
-namespace slua {
+namespace NS_SLUA {
 
     void SluaUtil::openLib(lua_State* L) {
         lua_newtable(L);

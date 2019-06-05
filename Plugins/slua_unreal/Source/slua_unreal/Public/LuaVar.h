@@ -26,7 +26,7 @@
 #define strdup _strdup
 #endif
 
-namespace slua {
+namespace NS_SLUA {
 
     class SLUA_UNREAL_API LuaVar {
     public:

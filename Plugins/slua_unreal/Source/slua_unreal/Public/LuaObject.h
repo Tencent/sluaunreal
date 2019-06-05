@@ -55,7 +55,7 @@
 
 #define IsRealOutParam(propflag) ((propflag&CPF_OutParm) && !(propflag&CPF_ConstParm) && !(propflag&CPF_BlueprintReadOnly))
 
-namespace slua {
+namespace NS_SLUA {
 
     class LuaVar;
 

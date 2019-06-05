@@ -32,7 +32,7 @@
 #include "GameDelegates.h"
 #include "LuaActor.h"
 
-namespace slua {
+namespace NS_SLUA {
 
 	const int MaxLuaExecTime = 5; // in second
 

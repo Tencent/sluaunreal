@@ -15,7 +15,7 @@
 
 #include "LuaVar.h"
 
-namespace slua
+namespace NS_SLUA
 {
 	template<typename T>
 	inline static T resultCast(LuaVar&& Var, typename std::enable_if<!std::is_void<T>::value, int>::type = 0)

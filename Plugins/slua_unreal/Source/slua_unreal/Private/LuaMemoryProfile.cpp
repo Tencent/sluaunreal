@@ -16,7 +16,7 @@
 #include "LuaState.h"
 #include "Log.h"
 #include "lua/lstate.h"
-namespace slua {
+namespace NS_SLUA {
 
 	// only calc memory alloc from lua script
 	// not include alloc from lua vm

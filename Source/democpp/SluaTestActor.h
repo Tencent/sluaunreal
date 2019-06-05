@@ -26,8 +26,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     void SetFName(FName name);
-	
-	static ASluaTestActor* instance;
 
-	slua::LuaState& state();
+	UPROPERTY(BlueprintReadWrite)
+	TArray<UObject*> objs;
 };

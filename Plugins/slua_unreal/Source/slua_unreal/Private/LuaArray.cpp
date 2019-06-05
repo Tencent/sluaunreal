@@ -18,7 +18,7 @@
 #include "LuaState.h"
 #include "LuaReference.h"
 
-namespace slua {
+namespace NS_SLUA {
 
     DefTypeName(LuaArray::Enumerator); 
 

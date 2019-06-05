@@ -13,7 +13,7 @@
 
 #pragma once
 
-namespace slua {
+namespace NS_SLUA {
     namespace LuaSocket {
         void init(lua_State *L);
     }

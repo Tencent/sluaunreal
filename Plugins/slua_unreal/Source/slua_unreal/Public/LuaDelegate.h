@@ -18,7 +18,7 @@
 #include "SluaUtil.h"
 #include "LuaDelegate.generated.h"
 
-namespace slua {
+namespace NS_SLUA {
     class LuaVar;
 }
 
@@ -32,8 +32,8 @@ public:
     ~ULuaDelegate();
 
     virtual void ProcessEvent( UFunction* Function, void* Parms );
-    void bindFunction(slua::lua_State *L, int p, UFunction *func);
-    void bindFunction(slua::lua_State *L, int p);
+    void bindFunction(NS_SLUA::lua_State *L, int p, UFunction *func);
+    void bindFunction(NS_SLUA::lua_State *L, int p);
     void bindFunction(UFunction *func);
 	void dispose();
 
@@ -48,14 +48,14 @@ public:
 #endif
 
 private:
-    slua::LuaVar* luafunction;
+    NS_SLUA::LuaVar* luafunction;
     UFunction* ufunction;
 #if WITH_EDITOR
 	FString pName;
 #endif
 };
 
-namespace slua {
+namespace NS_SLUA {
 
     class SLUA_UNREAL_API LuaMultiDelegate {
     public:

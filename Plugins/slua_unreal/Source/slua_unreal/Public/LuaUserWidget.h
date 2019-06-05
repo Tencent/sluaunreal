@@ -18,7 +18,7 @@
 #include "GameFramework/Actor.h"
 #include "LuaUserWidget.generated.h"
 
-using slua_Luabase = slua::LuaBase;
+using slua_Luabase = NS_SLUA::LuaBase;
 
 UCLASS()
 class SLUA_UNREAL_API ULuaUserWidget : public UUserWidget, public slua_Luabase {

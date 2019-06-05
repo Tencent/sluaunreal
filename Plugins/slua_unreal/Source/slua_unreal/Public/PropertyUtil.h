@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and limitations under the License.
 #pragma once
 #include "CoreMinimal.h"
+#include "lua.hpp"
 #include "PropertyUtil.generated.h"
 
 
@@ -51,7 +52,7 @@ enum class EPropertyClass
 	Enum,
 };
 
-namespace slua {
+namespace NS_SLUA {
 
     template<typename T>
     struct DeduceType;

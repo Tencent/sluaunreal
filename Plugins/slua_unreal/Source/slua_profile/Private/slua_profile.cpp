@@ -121,7 +121,7 @@ void Fslua_profileModule::ShutdownModule()
 	sluaProfilerInspector = nullptr;
 	ClearCurProfiler();
 
-	slua::LuaState *state = slua::LuaState::get();
+	NS_SLUA::LuaState *state = NS_SLUA::LuaState::get();
 	if (state != nullptr)
 	{
 		NS_SLUA::lua_sethook(state->getLuaState(), NULL, 0, 0);
@@ -310,7 +310,7 @@ void Fslua_profileModule::AddMenuExtension(FMenuBuilder & Builder)
 void Fslua_profileModule::OnTabClosed(TSharedRef<SDockTab>)
 {
 	// disable lua hook
-	slua::LuaState *state = slua::LuaState::get();
+	NS_SLUA::LuaState *state = NS_SLUA::LuaState::get();
 	if (state != nullptr)
 		NS_SLUA::lua_sethook(state->getLuaState(), nullptr, 0, 0);
 	stateIndex = -1;
@@ -320,7 +320,7 @@ void Fslua_profileModule::OnTabClosed(TSharedRef<SDockTab>)
 void Fslua_profileModule::openHook()
 {
 	// enable lua hook
-	slua::LuaState *state = slua::LuaState::get();
+	NS_SLUA::LuaState *state = NS_SLUA::LuaState::get();
 	if (state) {
 		if (stateIndex == state->stateIndex()) return;
 		NS_SLUA::lua_sethook(state->getLuaState(), debug_hook_c, LUA_MASKCALL | LUA_MASKRET, 0);

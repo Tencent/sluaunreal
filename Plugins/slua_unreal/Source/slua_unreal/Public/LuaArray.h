@@ -19,7 +19,7 @@
 #include "Runtime/Launch/Resources/Version.h"
 #include "PropertyUtil.h"
 
-namespace slua {
+namespace NS_SLUA {
 
     class SLUA_UNREAL_API LuaArray : public FGCObject {
     public:

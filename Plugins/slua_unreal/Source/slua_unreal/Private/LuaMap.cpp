@@ -28,7 +28,7 @@
 		return 0; \
 	}
 
-namespace slua {
+namespace NS_SLUA {
 
 	DefTypeName(LuaMap::Enumerator);
 

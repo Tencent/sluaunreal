@@ -17,7 +17,7 @@
 
 class UWidgetTree;
 
-namespace slua {
+namespace NS_SLUA {
 
     class SLUA_UNREAL_API LuaWidgetTree {
     public:

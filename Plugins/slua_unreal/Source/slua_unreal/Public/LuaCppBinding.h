@@ -18,7 +18,7 @@
 #include <cstddef>
 #include <type_traits>
 
-namespace slua {
+namespace NS_SLUA {
 
     template<int ...>
     struct IntList {};

@@ -4,12 +4,15 @@ some.field.y = 103
 EPropertyClass = import"EPropertyClass"
 PrintLog("LuaStateInitCallback ok")
 function begin(uworld,uactor)
-    world=uworld
-    actor=uactor
+    gworld=uworld
+    gactor=uactor
+
+    local h = gactor.OnActorEndOverlap:Add(function() end)
+    gactor.OnActorEndOverlap:Remove(h)
+    print("xxx",gactor.OnActorEndOverlap)
 
     local util = slua.loadClass("Blueprint'/Game/util.util'")
-    --util.Foo(world)
-    print("util",util.GetTestString(world,""))
+    print("util",util.GetTestString(uworld,""))
 
     local Test=import('SluaTestCase');
     local t=Test();
@@ -48,7 +51,7 @@ function testcase()
     require 'TestStruct'
     require 'TestCppBinding'
     TestBp=require 'TestBlueprint'
-    TestBp:test(world,actor)
+    TestBp:test(gworld,gactor)
 
     TestMap = require 'TestMap'
     TestArray = require 'TestArray'
@@ -66,7 +69,7 @@ local tt=0
 function update(dt)
     tt=tt+dt
     
-    TestActor.update(tt,actor)
+    TestActor.update(tt,gactor)
     TestArray.update(tt)
     TestMap.update(tt)
     TestBp:update(tt)

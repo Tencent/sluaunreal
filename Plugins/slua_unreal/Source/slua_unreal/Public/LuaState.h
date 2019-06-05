@@ -26,7 +26,7 @@
 
 DECLARE_MULTICAST_DELEGATE(FLuaStateInitEvent);
 
-namespace slua {
+namespace NS_SLUA {
 
 	struct ScriptTimeoutEvent {
 		virtual void onTimeout() = 0;

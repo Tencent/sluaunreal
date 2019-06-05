@@ -19,7 +19,7 @@
 #include "Runtime/Launch/Resources/Version.h"
 #include "PropertyUtil.h"
 
-namespace slua {
+namespace NS_SLUA {
 
 	template<typename T>
 	struct TPairTraits;

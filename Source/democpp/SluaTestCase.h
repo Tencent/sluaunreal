@@ -59,7 +59,7 @@ public:
 	FUserInfo1 others;
 };
 
-namespace slua {
+namespace NS_SLUA {
 	DefTypeName(FUserInfo);
 	DefTypeName(FUserInfo1);
 	DefTypeName(FUserInfo2);
@@ -116,10 +116,6 @@ public:
     // reg as extension method
     void SetArrayStrEx(const TArray<FString>& array);
     
-
-    UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
-    UUserWidget* GetWidget(FString name);
-
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     void TwoArgs(FString a,int b,float c,FString d,UObject* widget);   
 

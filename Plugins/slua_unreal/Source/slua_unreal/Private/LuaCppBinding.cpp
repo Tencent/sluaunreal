@@ -14,7 +14,7 @@
 #include "LuaObject.h"
 #include "LuaCppBinding.h"
 
-namespace slua {
+namespace NS_SLUA {
     TArray<lua_CFunction> *luaclasses = nullptr;
 
     LuaClass::LuaClass(lua_CFunction setup) {

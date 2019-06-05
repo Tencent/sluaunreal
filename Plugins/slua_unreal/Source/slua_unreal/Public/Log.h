@@ -13,8 +13,9 @@
 
 #pragma once
 #include "CoreMinimal.h"
+#include "lua.hpp"
 
-namespace slua {
+namespace NS_SLUA {
     namespace Log {
 
         void SLUA_UNREAL_API Error(const char* fmt,...);

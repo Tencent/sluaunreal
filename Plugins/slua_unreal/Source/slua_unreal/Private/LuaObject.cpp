@@ -33,7 +33,7 @@
 #include "SluaUtil.h"
 #include "LuaReference.h"
 
-namespace slua { 
+namespace NS_SLUA { 
 
 	TMap<UClass*,LuaObject::PushPropertyFunction> pusherMap;
 	TMap<UClass*,LuaObject::CheckPropertyFunction> checkerMap;
@@ -1222,7 +1222,7 @@ namespace slua {
     int LuaObject::setupClassMT(lua_State* L) {
         lua_pushcfunction(L,classConstruct);
         lua_setfield(L, -2, "__call");
-        lua_pushcfunction(L,slua::classIndex);
+        lua_pushcfunction(L,NS_SLUA::classIndex);
 		lua_setfield(L, -2, "__index");
 		lua_pushcfunction(L, objectToString);
 		lua_setfield(L, -2, "__tostring");

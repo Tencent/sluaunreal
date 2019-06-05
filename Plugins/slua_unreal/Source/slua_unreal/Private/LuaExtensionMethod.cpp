@@ -16,7 +16,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Log.h"
 
-namespace slua {
+namespace NS_SLUA {
 
     namespace ExtensionMethod {
         void init() {

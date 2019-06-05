@@ -43,6 +43,9 @@ public:	\
 	void superTick() override { \
 		Super::Tick(deltaTime); \
 	} \
+	NS_SLUA::LuaVar getSelfTable() const { \
+		return luaSelfTable; \
+	} \
 
 using slua_Luabase = NS_SLUA::LuaBase;
 

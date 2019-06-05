@@ -498,5 +498,10 @@ namespace NS_SLUA {
 		LuaObject::addExtensionMethod(U::StaticClass(), N, BindType::LuaCFunction, Static); \
 	}
 
+	#define REG_EXTENSION_PROPERTY(U,N,GETTER,SETTER) { \
+		using GetType = LuaCppBinding<decltype(GETTER),GETTER>; \
+		using SetType = LuaCppBinding<decltype(SETTER),SETTER>; \
+        LuaObject::addExtensionProperty(U::StaticClass(),N,GetType::LuaCFunction,SetType::LuaCFunction,GetType::IsStatic); }
+
 }
 

@@ -37,9 +37,28 @@ namespace NS_SLUA {
 
 	TMap<UClass*,LuaObject::PushPropertyFunction> pusherMap;
 	TMap<UClass*,LuaObject::CheckPropertyFunction> checkerMap;
+
+	struct ExtensionField {
+		bool isFunction = true;
+		union {
+			struct {
+				lua_CFunction getter;
+				lua_CFunction setter;
+			};
+			lua_CFunction func;
+		};
+
+		ExtensionField(lua_CFunction funcf) : isFunction(true), func(funcf) {
+			ensure(funcf);
+		}
+		ExtensionField(lua_CFunction getterf, lua_CFunction setterf) 
+			: isFunction(false)
+			, getter(getterf)
+			, setter(setterf) {}
+	};
     
-    TMap< UClass*, TMap<FString,lua_CFunction> > extensionMMap;
-    TMap< UClass*, TMap<FString,lua_CFunction> > extensionMMap_static;
+    TMap< UClass*, TMap<FString, ExtensionField> > extensionMMap;
+    TMap< UClass*, TMap<FString, ExtensionField> > extensionMMap_static;
 
     namespace ExtensionMethod{
         void init();
@@ -68,13 +87,25 @@ namespace NS_SLUA {
     void LuaObject::addExtensionMethod(UClass* cls,const char* n,lua_CFunction func,bool isStatic) {
         if(isStatic) {
             auto& extmap = extensionMMap_static.FindOrAdd(cls);
-            extmap.Add(n,func);
+            extmap.Add(n, ExtensionField(func));
         }
         else {
             auto& extmap = extensionMMap.FindOrAdd(cls);
-            extmap.Add(n,func);
+            extmap.Add(n, ExtensionField(func));
         }
     }
+
+	void LuaObject::addExtensionProperty(UClass * cls, const char * n, lua_CFunction getter, lua_CFunction setter, bool isStatic)
+	{
+		if (isStatic) {
+			auto& extmap = extensionMMap_static.FindOrAdd(cls);
+			extmap.Add(n, ExtensionField(getter,setter));
+		}
+		else {
+			auto& extmap = extensionMMap.FindOrAdd(cls);
+			extmap.Add(n, ExtensionField(getter, setter));
+		}
+	}
 
     static int findMember(lua_State* L,const char* name) {
        int popn = 0;
@@ -349,16 +380,30 @@ namespace NS_SLUA {
     int searchExtensionMethod(lua_State* L,UClass* cls,const char* name,bool isStatic=false) {
 
         // search class and its super
-        TMap<FString,lua_CFunction>* mapptr=nullptr;
+        TMap<FString,ExtensionField>* mapptr=nullptr;
         while(cls!=nullptr) {
             mapptr = isStatic?extensionMMap_static.Find(cls):extensionMMap.Find(cls);
             if(mapptr!=nullptr) {
-                // find function
-                auto funcptr = mapptr->Find(name);
-                if(funcptr!=nullptr) {
-                    lua_pushcfunction(L,*funcptr);
-                    return 1;
-                }
+                // find field
+                auto fieldptr = mapptr->Find(name);
+				if (fieldptr != nullptr) {
+					// is function
+					if (fieldptr->isFunction) {
+						lua_pushcfunction(L, fieldptr->func);
+						return 1;
+					} 
+					// is property
+					else {
+						if (!fieldptr->getter) luaL_error(L, "Property %s is set only", name);
+						lua_pushcfunction(L, fieldptr->getter);
+						if (!isStatic) {
+							lua_pushvalue(L, 1); // push self
+							lua_call(L, 1, 1);
+						} else 
+							lua_call(L, 0, 1);
+						return 1;
+					}
+				}
             }
             cls=cls->GetSuperClass();
         }   

@@ -15,6 +15,7 @@
 #include "CoreMinimal.h"
 #include "LuaState.h"
 #include "LuaBlueprintLibrary.h"
+#include "LuaBase.generated.h"
 
 namespace NS_SLUA {
 
@@ -64,9 +65,9 @@ namespace NS_SLUA {
 
 			auto L = ls->getLuaState();
 			// setup __cppinst
+			// we use rawpush to bind objptr and SLUA_CPPINST
 			luaSelfTable.push(L);
-
-			LuaObject::push(L, ptrT);
+			LuaObject::push(L, ptrT, true);
 			lua_setfield(L, -2, SLUA_CPPINST);
 
 			lua_pushcfunction(L, &LuaBase::super<T>);
@@ -114,3 +115,19 @@ namespace NS_SLUA {
 		friend struct UFunctionParamScope;
 	};
 }
+
+UINTERFACE()
+class ULuaTableObjectInterface : public UInterface
+{
+	GENERATED_UINTERFACE_BODY()
+};
+
+class ILuaTableObjectInterface {
+	GENERATED_IINTERFACE_BODY()
+
+public:
+	static bool isValid(ILuaTableObjectInterface* luaTableObj);
+	static int push(NS_SLUA::lua_State* L, ILuaTableObjectInterface* luaTableObj);
+
+	virtual NS_SLUA::LuaVar getSelfTable() const = 0;
+};

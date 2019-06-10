@@ -9,9 +9,6 @@ function actor:ReceiveBeginPlay()
     print("bpactor:ReceiveBeginPlay")
     -- call super ReceiveBeginPlay
     self:Super()
-
-    assert(self.__cppinst.__luaPart==self)
-    print("Get LuaPart test",self.__cppinst.__luaPart)
 end
 
 -- override event from blueprint

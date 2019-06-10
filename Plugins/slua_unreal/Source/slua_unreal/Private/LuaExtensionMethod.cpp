@@ -40,8 +40,8 @@ namespace NS_SLUA {
             // resolve overloaded member function
             REG_EXTENSION_METHOD_WITHTYPE(UWorld,"SpawnActor",&UWorld::SpawnActor,AActor* (UWorld::*)( UClass*, FVector const*,FRotator const*, const FActorSpawnParameters&));
 
-
-			REG_EXTENSION_PROPERTY(ALuaActor, "__luaPart", &ALuaActor::getSelfTable, nullptr);
+			// disable __luaPart
+			// REG_EXTENSION_PROPERTY(ALuaActor, "__luaPart", &ALuaActor::getSelfTable, nullptr);
 
         }
     }

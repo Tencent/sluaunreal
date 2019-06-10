@@ -14,6 +14,10 @@
 
 #include "LuaBase.h"
 
+
+ULuaTableObjectInterface::ULuaTableObjectInterface(const class FObjectInitializer& OI)
+	:Super(OI) {}
+
 namespace NS_SLUA {
 
 	NS_SLUA::LuaVar LuaBase::metaTable;
@@ -139,4 +143,16 @@ namespace NS_SLUA {
 
 		return luaSelfTable.getFromTable<bool>(tickFlag, rawget);
 	}
+}
+
+bool ILuaTableObjectInterface::isValid(ILuaTableObjectInterface * luaTableObj)
+{
+	return luaTableObj && luaTableObj->getSelfTable().isTable();
+}
+
+int ILuaTableObjectInterface::push(NS_SLUA::lua_State * L, ILuaTableObjectInterface * luaTableObj)
+{
+	if (!isValid(luaTableObj)) return NS_SLUA::LuaObject::pushNil(L);
+	auto self = luaTableObj->getSelfTable();
+	return self.push(L);
 }

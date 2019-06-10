@@ -50,7 +50,7 @@ public:	\
 using slua_Luabase = NS_SLUA::LuaBase;
 
 UCLASS()
-class SLUA_UNREAL_API ALuaActor : public AActor, public slua_Luabase {
+class SLUA_UNREAL_API ALuaActor : public AActor, public slua_Luabase, public ILuaTableObjectInterface {
 	GENERATED_BODY()
 	LUABASE_BODY(LuaActor)
 public:
@@ -78,7 +78,7 @@ public:
 };
 
 UCLASS()
-class SLUA_UNREAL_API ALuaPawn : public APawn, public slua_Luabase {
+class SLUA_UNREAL_API ALuaPawn : public APawn, public slua_Luabase, public ILuaTableObjectInterface {
 	GENERATED_BODY()
 	LUABASE_BODY(LuaPawn)
 public:
@@ -101,7 +101,7 @@ public:
 };
 
 UCLASS()
-class SLUA_UNREAL_API ALuaCharacter : public ACharacter, public slua_Luabase {
+class SLUA_UNREAL_API ALuaCharacter : public ACharacter, public slua_Luabase, public ILuaTableObjectInterface {
 	GENERATED_BODY()
 	LUABASE_BODY(LuaCharacter)
 public:
@@ -124,7 +124,7 @@ public:
 };
 
 UCLASS()
-class SLUA_UNREAL_API ALuaController : public AController, public slua_Luabase {
+class SLUA_UNREAL_API ALuaController : public AController, public slua_Luabase, public ILuaTableObjectInterface {
 	GENERATED_BODY()
 	LUABASE_BODY(LuaController)
 public:
@@ -147,7 +147,7 @@ public:
 };
 
 UCLASS()
-class SLUA_UNREAL_API ALuaPlayerController : public APlayerController, public slua_Luabase {
+class SLUA_UNREAL_API ALuaPlayerController : public APlayerController, public slua_Luabase, public ILuaTableObjectInterface {
 	GENERATED_BODY()
 	LUABASE_BODY(LuaPlayerController)
 public:
@@ -170,7 +170,7 @@ public:
 };
 
 UCLASS()
-class SLUA_UNREAL_API ALuaGameModeBase : public AGameModeBase, public slua_Luabase {
+class SLUA_UNREAL_API ALuaGameModeBase : public AGameModeBase, public slua_Luabase, public ILuaTableObjectInterface {
 	GENERATED_BODY()
 	LUABASE_BODY(LuaGameModeBase)
 public:
@@ -187,7 +187,7 @@ public:
 };
 
 UCLASS()
-class SLUA_UNREAL_API ALuaHUD : public AHUD, public slua_Luabase {
+class SLUA_UNREAL_API ALuaHUD : public AHUD, public slua_Luabase, public ILuaTableObjectInterface {
 	GENERATED_BODY()
 		LUABASE_BODY(LuaHUD)
 public:

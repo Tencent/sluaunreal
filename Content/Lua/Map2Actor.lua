@@ -25,9 +25,6 @@ function actor:ReceiveBeginPlay()
     end
     self:Super()
 
-    assert(self.__cppinst.__luaPart==self)
-    print("Get LuaPart test",self.__cppinst.__luaPart)
-
     -- test an issue
     -- callLastMapActorMethod()
 end

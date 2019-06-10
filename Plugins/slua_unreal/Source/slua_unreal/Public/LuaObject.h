@@ -211,7 +211,7 @@ namespace NS_SLUA {
 				}
 				FString clsname(lua_tostring(L, -1));
 				lua_pop(L, 1);
-				// skip firat char may be 'U' or 'A'
+				// skip first char may be 'U' or 'A'
 				if (clsname.Find(T::StaticClass()->GetName()) == 1) {
 					UserData<T*>* tptr = (UserData<T*>*) lua_touserdata(L, p);
 					t = tptr ? tptr->ud : nullptr;
@@ -626,7 +626,7 @@ namespace NS_SLUA {
         static int pushClass(lua_State* L,UClass* cls);
         static int pushStruct(lua_State* L,UScriptStruct* cls);
 		static int pushEnum(lua_State* L, UEnum* e);
-		static int push(lua_State* L, UObject* obj);
+		static int push(lua_State* L, UObject* obj, bool rawpush=false);
 		inline static int push(lua_State* L, const UObject* obj) {
 			return push(L, const_cast<UObject*>(obj));
 		}

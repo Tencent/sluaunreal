@@ -32,6 +32,7 @@
 #include "LuaWrapper.h"
 #include "SluaUtil.h"
 #include "LuaReference.h"
+#include "LuaBase.h"
 
 namespace NS_SLUA { 
 
@@ -531,7 +532,7 @@ namespace NS_SLUA {
 		FStructOnScope params(func);
 		fillParam(L, offset, func, params.GetStructMemory());
 		{
-			FEditorScriptExecutionGuard scriptGuard;
+			// FEditorScriptExecutionGuard scriptGuard;
 			// call function with params
 			obj->ProcessEvent(func, params.GetStructMemory());
 		}
@@ -1049,12 +1050,14 @@ namespace NS_SLUA {
 		return 0;
 	}
 
-    int LuaObject::push(lua_State* L, UObject* obj) {
-        if(!obj) {
-            lua_pushnil(L);
-            return 1;
-        }
-        return pushGCObject<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject);
+    int LuaObject::push(lua_State* L, UObject* obj, bool rawpush) {
+		if (!obj) return pushNil(L);
+		if (!rawpush) {
+			if (auto it = Cast<ILuaTableObjectInterface>(obj)) {
+				return ILuaTableObjectInterface::push(L, it);
+			}
+		}
+		return pushGCObject<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject);
     }
 
 	int LuaObject::push(lua_State* L, FWeakObjectPtr ptr) {

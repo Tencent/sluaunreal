@@ -57,9 +57,6 @@ namespace NS_SLUA {
 
     template<typename T>
     UClass* loadClassT(const char* cls) {
-        TArray<FStringFormatArg> Args;
-        Args.Add(UTF8_TO_TCHAR(cls));
-
 		FString path(UTF8_TO_TCHAR(cls));
 		int32 index;
 		if (!path.FindChar(TCHAR('\''),index)) {

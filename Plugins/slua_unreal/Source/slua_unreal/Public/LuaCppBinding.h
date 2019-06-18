@@ -18,7 +18,7 @@
 #include <cstddef>
 #include <type_traits>
 
-namespace slua {
+namespace NS_SLUA {
 
     template<int ...>
     struct IntList {};
@@ -497,6 +497,11 @@ namespace slua {
 		BindType::Func = &lambda; \
 		LuaObject::addExtensionMethod(U::StaticClass(), N, BindType::LuaCFunction, Static); \
 	}
+
+	#define REG_EXTENSION_PROPERTY(U,N,GETTER,SETTER) { \
+		using GetType = LuaCppBinding<decltype(GETTER),GETTER>; \
+		using SetType = LuaCppBinding<decltype(SETTER),SETTER>; \
+        LuaObject::addExtensionProperty(U::StaticClass(),N,GetType::LuaCFunction,SetType::LuaCFunction,GetType::IsStatic); }
 
 }
 

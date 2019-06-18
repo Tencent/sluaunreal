@@ -50,7 +50,7 @@ namespace {
     }
 }
 
-namespace slua {
+namespace NS_SLUA {
     namespace Log {
         #define LogBufDeclareWithFmt(buf,fmt) \
             char buf[10240];\

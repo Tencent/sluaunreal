@@ -16,7 +16,7 @@
 #include "LuaState.h"
 #include "Log.h"
 #include "lua/lstate.h"
-namespace slua {
+namespace NS_SLUA {
 
 	// only calc memory alloc from lua script
 	// not include alloc from lua vm
@@ -43,7 +43,7 @@ namespace slua {
 	inline void addRecord(LuaState* LS, void* ptr, size_t size) {
 		if (!memTrack) return;
 		// skip if lua_State is null, lua_State hadn't binded to LS
-		lua_State* L = *LS;
+		lua_State* L = LS->getLuaState();
 		if (!L) return;
 
 		LuaMemInfo memInfo;

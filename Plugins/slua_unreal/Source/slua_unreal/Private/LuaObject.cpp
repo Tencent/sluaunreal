@@ -32,14 +32,34 @@
 #include "LuaWrapper.h"
 #include "SluaUtil.h"
 #include "LuaReference.h"
+#include "LuaBase.h"
 
-namespace slua { 
+namespace NS_SLUA { 
 
 	TMap<UClass*,LuaObject::PushPropertyFunction> pusherMap;
 	TMap<UClass*,LuaObject::CheckPropertyFunction> checkerMap;
+
+	struct ExtensionField {
+		bool isFunction = true;
+		union {
+			struct {
+				lua_CFunction getter;
+				lua_CFunction setter;
+			};
+			lua_CFunction func;
+		};
+
+		ExtensionField(lua_CFunction funcf) : isFunction(true), func(funcf) {
+			ensure(funcf);
+		}
+		ExtensionField(lua_CFunction getterf, lua_CFunction setterf) 
+			: isFunction(false)
+			, getter(getterf)
+			, setter(setterf) {}
+	};
     
-    TMap< UClass*, TMap<FString,lua_CFunction> > extensionMMap;
-    TMap< UClass*, TMap<FString,lua_CFunction> > extensionMMap_static;
+    TMap< UClass*, TMap<FString, ExtensionField> > extensionMMap;
+    TMap< UClass*, TMap<FString, ExtensionField> > extensionMMap_static;
 
     namespace ExtensionMethod{
         void init();
@@ -68,13 +88,25 @@ namespace slua {
     void LuaObject::addExtensionMethod(UClass* cls,const char* n,lua_CFunction func,bool isStatic) {
         if(isStatic) {
             auto& extmap = extensionMMap_static.FindOrAdd(cls);
-            extmap.Add(n,func);
+            extmap.Add(n, ExtensionField(func));
         }
         else {
             auto& extmap = extensionMMap.FindOrAdd(cls);
-            extmap.Add(n,func);
+            extmap.Add(n, ExtensionField(func));
         }
     }
+
+	void LuaObject::addExtensionProperty(UClass * cls, const char * n, lua_CFunction getter, lua_CFunction setter, bool isStatic)
+	{
+		if (isStatic) {
+			auto& extmap = extensionMMap_static.FindOrAdd(cls);
+			extmap.Add(n, ExtensionField(getter,setter));
+		}
+		else {
+			auto& extmap = extensionMMap.FindOrAdd(cls);
+			extmap.Add(n, ExtensionField(getter, setter));
+		}
+	}
 
     static int findMember(lua_State* L,const char* name) {
        int popn = 0;
@@ -349,16 +381,30 @@ namespace slua {
     int searchExtensionMethod(lua_State* L,UClass* cls,const char* name,bool isStatic=false) {
 
         // search class and its super
-        TMap<FString,lua_CFunction>* mapptr=nullptr;
+        TMap<FString,ExtensionField>* mapptr=nullptr;
         while(cls!=nullptr) {
             mapptr = isStatic?extensionMMap_static.Find(cls):extensionMMap.Find(cls);
             if(mapptr!=nullptr) {
-                // find function
-                auto funcptr = mapptr->Find(name);
-                if(funcptr!=nullptr) {
-                    lua_pushcfunction(L,*funcptr);
-                    return 1;
-                }
+                // find field
+                auto fieldptr = mapptr->Find(name);
+				if (fieldptr != nullptr) {
+					// is function
+					if (fieldptr->isFunction) {
+						lua_pushcfunction(L, fieldptr->func);
+						return 1;
+					} 
+					// is property
+					else {
+						if (!fieldptr->getter) luaL_error(L, "Property %s is set only", name);
+						lua_pushcfunction(L, fieldptr->getter);
+						if (!isStatic) {
+							lua_pushvalue(L, 1); // push self
+							lua_call(L, 1, 1);
+						} else 
+							lua_call(L, 0, 1);
+						return 1;
+					}
+				}
             }
             cls=cls->GetSuperClass();
         }   
@@ -486,7 +532,7 @@ namespace slua {
 		FStructOnScope params(func);
 		fillParam(L, offset, func, params.GetStructMemory());
 		{
-			FEditorScriptExecutionGuard scriptGuard;
+			// FEditorScriptExecutionGuard scriptGuard;
 			// call function with params
 			obj->ProcessEvent(func, params.GetStructMemory());
 		}
@@ -708,6 +754,13 @@ namespace slua {
 		FScriptMap* v = p->GetPropertyValuePtr(parms);
 		return LuaMap::push(L, p->KeyProp, p->ValueProp, v);
     }
+
+	int pushUWeakProperty(lua_State* L, UProperty* prop, uint8* parms) {
+		auto p = Cast<UWeakObjectProperty>(prop);
+		ensure(p);
+		FWeakObjectPtr v = p->GetPropertyValue(parms);
+		return LuaObject::push(L, v);
+	}
 
     int checkUArrayProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UArrayProperty>(prop);
@@ -997,13 +1050,27 @@ namespace slua {
 		return 0;
 	}
 
-    int LuaObject::push(lua_State* L, UObject* obj) {
-        if(!obj) {
-            lua_pushnil(L);
-            return 1;
-        }
-        return pushGCObject<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject);
+    int LuaObject::push(lua_State* L, UObject* obj, bool rawpush) {
+		if (!obj) return pushNil(L);
+		if (!rawpush) {
+			if (auto it = Cast<ILuaTableObjectInterface>(obj)) {
+				return ILuaTableObjectInterface::push(L, it);
+			}
+		}
+		return pushGCObject<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject);
     }
+
+	int LuaObject::push(lua_State* L, FWeakObjectPtr ptr) {
+		if (!ptr.IsValid()) {
+			lua_pushnil(L);
+			return 1;
+		}
+		UObject* obj = ptr.Get();
+		if (getFromCache(L, obj, "UObject")) return 1;
+		int r = pushWeakType(L, new WeakUObjectUD(ptr));
+		if (r) cacheObj(L, obj);
+		return r;
+	}
     
     template<typename T>
     inline void regPusher() {
@@ -1039,6 +1106,7 @@ namespace slua {
         regPusher(UStructProperty::StaticClass(),pushUStructProperty);
 		regPusher(UEnumProperty::StaticClass(), pushEnumProperty);
 		regPusher(UClassProperty::StaticClass(), pushUClassProperty);
+		regPusher(UWeakObjectProperty::StaticClass(), pushUWeakProperty);
 		
 		regChecker<UIntProperty>();
 		regChecker<UUInt32Property>();
@@ -1202,7 +1270,7 @@ namespace slua {
     int LuaObject::setupClassMT(lua_State* L) {
         lua_pushcfunction(L,classConstruct);
         lua_setfield(L, -2, "__call");
-        lua_pushcfunction(L,slua::classIndex);
+        lua_pushcfunction(L,NS_SLUA::classIndex);
 		lua_setfield(L, -2, "__index");
 		lua_pushcfunction(L, objectToString);
 		lua_setfield(L, -2, "__tostring");

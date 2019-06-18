@@ -1,5 +1,5 @@
 
-local ui=slua.loadUI('/Game/Panel.Panel',world);
+local ui=slua.loadUI('/Game/Panel.Panel',gworld);
 ui:AddToViewport(0);
 local btn2=ui:FindWidget('btnClose');
 local index = 1
@@ -17,7 +17,7 @@ local bpClass = slua.loadClass("/Game/TestActor.TestActor")
 local btn1 = ui["Button_0"]
 local h_openmap = btn1.OnClicked:Add(function()
 	print("open new map")
-	local bp = bpClass(world.CurrentLevel)
+	local bp = bpClass(gworld.CurrentLevel)
 	bp:LoadNewMap("Map2")
 end);
 

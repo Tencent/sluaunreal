@@ -24,7 +24,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "LuaState.h"
 
-namespace slua {
+namespace NS_SLUA {
 
     LuaVar::LuaVar()
         :stateIndex(-1)

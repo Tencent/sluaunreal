@@ -16,7 +16,7 @@
 #include "luasocket/luasocket.h"
 #include "luasocket/mime.h"
 
-namespace slua {
+namespace NS_SLUA {
 
     namespace LuaSocket {
 

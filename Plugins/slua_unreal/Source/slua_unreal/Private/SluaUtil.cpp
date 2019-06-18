@@ -18,7 +18,7 @@
 #include "LuaDelegate.h"
 
 
-namespace slua {
+namespace NS_SLUA {
 	FString getUObjName(UObject* obj) {
 #if WITH_EDITOR
 		if (auto ld = Cast<ULuaDelegate>(obj)) {

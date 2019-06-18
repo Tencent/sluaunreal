@@ -27,5 +27,5 @@ public:
 	void LuaStateInitCallback();
 
 	// create global state, freed on app exit
-	slua::LuaState state;
+	NS_SLUA::LuaState state;
 };

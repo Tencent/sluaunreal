@@ -26,7 +26,7 @@
 #define SafeDelete(ptr) if(ptr) { delete ptr;ptr=nullptr; }
 #endif
 
-namespace slua {
+namespace NS_SLUA {
 
 	template<typename T>
 	struct AutoDeleteArray {

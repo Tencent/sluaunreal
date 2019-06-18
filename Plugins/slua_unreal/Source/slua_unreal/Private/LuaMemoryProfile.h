@@ -15,7 +15,7 @@
 #include "CoreMinimal.h"
 #include "lua/lua.hpp"
 
-namespace slua {
+namespace NS_SLUA {
 
 #if WITH_EDITOR
 	struct LuaMemInfo {

@@ -14,9 +14,13 @@
 
 #include "LuaBase.h"
 
-namespace slua {
 
-	slua::LuaVar LuaBase::metaTable;
+ULuaTableObjectInterface::ULuaTableObjectInterface(const class FObjectInitializer& OI)
+	:Super(OI) {}
+
+namespace NS_SLUA {
+
+	NS_SLUA::LuaVar LuaBase::metaTable;
 
 	struct UFunctionParamScope {
 		LuaBase* pBase;
@@ -44,7 +48,7 @@ namespace slua {
 		if (!luaSelfTable.isTable())
 			return false;
 
-		slua::LuaVar lfunc = luaSelfTable.getFromTable<slua::LuaVar>((const char*)TCHAR_TO_UTF8(*func->GetName()), true);
+		NS_SLUA::LuaVar lfunc = luaSelfTable.getFromTable<NS_SLUA::LuaVar>((const char*)TCHAR_TO_UTF8(*func->GetName()), true);
 		if (!lfunc.isValid()) return false;
 
 		UFunctionParamScope scope(this, func, params);
@@ -64,7 +68,7 @@ namespace slua {
 		lua_gc(tickFunction.getState(), LUA_GCSTEP, 128);
 	}
 
-	int LuaBase::__index(slua::lua_State * L)
+	int LuaBase::__index(NS_SLUA::lua_State * L)
 	{
 		lua_pushstring(L, SLUA_CPPINST);
 		lua_rawget(L, 1);
@@ -77,13 +81,13 @@ namespace slua {
 		return 1;
 	}
 
-	static int setParent(slua::lua_State* L) {
+	static int setParent(NS_SLUA::lua_State* L) {
 		// set field to obj, may raise an error
 		lua_settable(L, 1);
 		return 0;
 	}
 
-	int LuaBase::__newindex(slua::lua_State * L)
+	int LuaBase::__newindex(NS_SLUA::lua_State * L)
 	{
 		lua_pushstring(L, SLUA_CPPINST);
 		lua_rawget(L, 1);
@@ -112,7 +116,7 @@ namespace slua {
 
 	LuaVar LuaBase::callMember(FString func, const TArray<FLuaBPVar>& args)
 	{
-		slua::LuaVar lfunc = luaSelfTable.getFromTable<slua::LuaVar>((const char*)TCHAR_TO_UTF8(*func), true);
+		NS_SLUA::LuaVar lfunc = luaSelfTable.getFromTable<NS_SLUA::LuaVar>((const char*)TCHAR_TO_UTF8(*func), true);
 		if (!lfunc.isFunction()) {
 			Log::Error("Can't find lua member function named %s to call", TCHAR_TO_UTF8(*func));
 			return false;
@@ -134,9 +138,21 @@ namespace slua {
 			return false;
 
 		if (luaSelfTable.isTable()) {
-			tickFunction = luaSelfTable.getFromTable<slua::LuaVar>("Tick", true);
+			tickFunction = luaSelfTable.getFromTable<NS_SLUA::LuaVar>("Tick", true);
 		}
 
 		return luaSelfTable.getFromTable<bool>(tickFlag, rawget);
 	}
+}
+
+bool ILuaTableObjectInterface::isValid(ILuaTableObjectInterface * luaTableObj)
+{
+	return luaTableObj && luaTableObj->getSelfTable().isTable();
+}
+
+int ILuaTableObjectInterface::push(NS_SLUA::lua_State * L, ILuaTableObjectInterface * luaTableObj)
+{
+	if (!isValid(luaTableObj)) return NS_SLUA::LuaObject::pushNil(L);
+	auto self = luaTableObj->getSelfTable();
+	return self.push(L);
 }

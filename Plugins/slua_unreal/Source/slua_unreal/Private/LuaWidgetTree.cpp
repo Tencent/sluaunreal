@@ -15,7 +15,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "LuaObject.h"
 
-namespace slua {
+namespace NS_SLUA {
 
     int LuaWidgetTree::push(lua_State* L,UWidgetTree* tree) {
         return LuaObject::pushType(L,tree,"UWidgetTree",setupMT);

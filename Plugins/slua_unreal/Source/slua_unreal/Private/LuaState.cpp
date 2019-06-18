@@ -32,7 +32,7 @@
 #include "GameDelegates.h"
 #include "LuaActor.h"
 
-namespace slua {
+namespace NS_SLUA {
 
 	const int MaxLuaExecTime = 5; // in second
 
@@ -81,10 +81,17 @@ namespace slua {
         const char* err = lua_tostring(L,1);
         luaL_traceback(L,L,err,1);
         err = lua_tostring(L,2);
-        Log::Error("%s",err);
         lua_pop(L,1);
+		auto ls = LuaState::get(L);
+		ls->onError(err);
         return 0;
     }
+
+	void LuaState::onError(const char* err) {
+		if (errorDelegate) errorDelegate(err);
+		else Log::Error("%s", err);
+	}
+
      #if WITH_EDITOR
      // used for debug
 	int LuaState::getStringFromMD5(lua_State* L) {
@@ -137,7 +144,8 @@ namespace slua {
     static int StateIndex = 0;
 
 	LuaState::LuaState(const char* name)
-		:loadFileDelegate(nullptr)
+		: loadFileDelegate(nullptr)
+		, errorDelegate(nullptr)
 		, L(nullptr)
 		, cacheObjRef(LUA_NOREF)
 		, stackCount(0)

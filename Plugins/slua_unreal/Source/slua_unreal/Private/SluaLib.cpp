@@ -34,7 +34,7 @@
 #include "LuaMemoryProfile.h"
 #include "Runtime/Launch/Resources/Version.h"
 
-namespace slua {
+namespace NS_SLUA {
 
     void SluaUtil::openLib(lua_State* L) {
         lua_newtable(L);
@@ -182,6 +182,10 @@ namespace slua {
 		if (gud->flag & UD_UOBJECT) {
 			UObject* obj = LuaObject::checkUD<UObject>(L, 1);
 			isValid = IsValid(obj);
+		}
+		else if (gud->flag&UD_WEAKUPTR) {
+			UserData<WeakUObjectUD*>* wud = (UserData<WeakUObjectUD*>*)gud;
+			isValid = wud->ud->isValid();
 		}
 		return LuaObject::push(L, isValid);
 	}

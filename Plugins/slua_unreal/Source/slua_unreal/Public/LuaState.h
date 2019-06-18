@@ -26,7 +26,7 @@
 
 DECLARE_MULTICAST_DELEGATE(FLuaStateInitEvent);
 
-namespace slua {
+namespace NS_SLUA {
 
 	struct ScriptTimeoutEvent {
 		virtual void onTimeout() = 0;
@@ -80,7 +80,8 @@ namespace slua {
          * if find fn and load successful, return buf of file content, otherwise return nullptr
          * you must delete[] buf returned by function for free memory.
          */
-        typedef uint8* (*LoadFileDelegate) (const char* fn, uint32& len, FString& filepath);
+		typedef uint8* (*LoadFileDelegate) (const char* fn, uint32& len, FString& filepath);
+		typedef void (*ErrorDelegate) (const char* err);
 
         inline static LuaState* get(lua_State* l=nullptr) {
             // if L is nullptr, return main state
@@ -133,6 +134,8 @@ namespace slua {
 
         // set load delegation function to load lua code
 		void setLoadFileDelegate(LoadFileDelegate func);
+		// set error delegation function to handle error
+		void setErrorDelegate(ErrorDelegate func);
 
 		lua_State* getLuaState() const
 		{
@@ -163,8 +166,12 @@ namespace slua {
 		// tell Engine which objs should be referenced
 		virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
         static int pushErrorHandler(lua_State* L);
+
+		// call this function on script error
+		void onError(const char* err);
     protected:
-        LoadFileDelegate loadFileDelegate;
+		LoadFileDelegate loadFileDelegate;
+		ErrorDelegate errorDelegate;
         uint8* loadFile(const char* fn,uint32& len,FString& filepath);
 		static int loader(lua_State* L);
 		static int getStringFromMD5(lua_State* L);

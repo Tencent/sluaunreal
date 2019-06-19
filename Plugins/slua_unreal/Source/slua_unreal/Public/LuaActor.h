@@ -170,6 +170,70 @@ public:
 };
 
 UCLASS()
+class SLUA_UNREAL_API ULuaActorComponent : public UActorComponent, public slua_Luabase, public ILuaTableObjectInterface {
+	GENERATED_BODY()
+
+	struct TickTmpArgs {
+		float deltaTime;
+		enum ELevelTick tickType;
+		FActorComponentTickFunction *thisTickFunction;
+	};
+protected:
+	virtual void BeginPlay() override {
+	if (!init(this, "LuaActorComponent", LuaStateName, LuaFilePath)) return;
+		Super::BeginPlay();
+		PrimaryComponentTick.SetTickFunctionEnable(postInit("bCanEverTick"));
+		if (luaSelfTable.isTable()) {
+			compTickFunction = luaSelfTable.getFromTable<NS_SLUA::LuaVar>("TickComponent", true);
+		}
+	}
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override {
+		tickTmpArgs.deltaTime = DeltaTime;
+		tickTmpArgs.tickType = TickType;
+		tickTmpArgs.thisTickFunction = ThisTickFunction;
+		if (!compTickFunction.isValid()) {
+			superTick();
+			return;
+		}
+		compTickFunction.call(luaSelfTable, DeltaTime, TickType, ThisTickFunction);
+		// try lua gc
+		lua_gc(compTickFunction.getState(), LUA_GCSTEP, 128);
+	}
+public:
+	virtual void ProcessEvent(UFunction* func, void* params) override {
+	if (luaImplemented(func, params)) 
+		return;
+		Super::ProcessEvent(func, params);
+	}
+	void superTick() override {
+		Super::TickComponent(tickTmpArgs.deltaTime, tickTmpArgs.tickType, tickTmpArgs.thisTickFunction);
+	}
+	NS_SLUA::LuaVar getSelfTable() const {
+		return luaSelfTable;
+	}
+public:
+	ULuaActorComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get())
+		: UActorComponent(ObjectInitializer)
+	{
+		PrimaryComponentTick.bCanEverTick = true;
+	}
+public:
+	NS_SLUA::LuaVar compTickFunction;
+	struct TickTmpArgs tickTmpArgs;
+	// below UPROPERTY and UFUNCTION can't be put to macro LUABASE_BODY
+	// so copy & paste them
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+	FString LuaFilePath;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+	FString LuaStateName;
+	UFUNCTION(BlueprintCallable, Category = "slua")
+	FLuaBPVar CallLuaMember(FString FunctionName, const TArray<FLuaBPVar>& Args) {
+		return callMember(FunctionName, Args);
+	}
+
+};
+
+UCLASS()
 class SLUA_UNREAL_API ALuaGameModeBase : public AGameModeBase, public slua_Luabase, public ILuaTableObjectInterface {
 	GENERATED_BODY()
 	LUABASE_BODY(LuaGameModeBase)

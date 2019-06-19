@@ -152,7 +152,10 @@ bool ILuaTableObjectInterface::isValid(ILuaTableObjectInterface * luaTableObj)
 
 int ILuaTableObjectInterface::push(NS_SLUA::lua_State * L, ILuaTableObjectInterface * luaTableObj)
 {
-	if (!isValid(luaTableObj)) return NS_SLUA::LuaObject::pushNil(L);
+	if (!isValid(luaTableObj)) {
+		NS_SLUA::Log::Error("Can't get a valid lua self table, push nil instead.");
+		return NS_SLUA::LuaObject::pushNil(L);
+	}
 	auto self = luaTableObj->getSelfTable();
 	return self.push(L);
 }

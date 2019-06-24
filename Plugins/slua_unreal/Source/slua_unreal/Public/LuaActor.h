@@ -169,7 +169,7 @@ public:
 	}
 };
 
-UCLASS()
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class SLUA_UNREAL_API ULuaActorComponent : public UActorComponent, public slua_Luabase, public ILuaTableObjectInterface {
 	GENERATED_BODY()
 
@@ -222,9 +222,9 @@ public:
 	struct TickTmpArgs tickTmpArgs;
 	// below UPROPERTY and UFUNCTION can't be put to macro LUABASE_BODY
 	// so copy & paste them
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "slua")
 	FString LuaFilePath;
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "slua")
 	FString LuaStateName;
 	UFUNCTION(BlueprintCallable, Category = "slua")
 	FLuaBPVar CallLuaMember(FString FunctionName, const TArray<FLuaBPVar>& Args) {

@@ -183,21 +183,18 @@ protected:
 	if (!init(this, "LuaActorComponent", LuaStateName, LuaFilePath)) return;
 		Super::BeginPlay();
 		PrimaryComponentTick.SetTickFunctionEnable(postInit("bCanEverTick"));
-		if (luaSelfTable.isTable()) {
-			compTickFunction = luaSelfTable.getFromTable<NS_SLUA::LuaVar>("TickComponent", true);
-		}
 	}
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override {
 		tickTmpArgs.deltaTime = DeltaTime;
 		tickTmpArgs.tickType = TickType;
 		tickTmpArgs.thisTickFunction = ThisTickFunction;
-		if (!compTickFunction.isValid()) {
+		if (!tickFunction.isValid()) {
 			superTick();
 			return;
 		}
-		compTickFunction.call(luaSelfTable, DeltaTime, TickType, ThisTickFunction);
+		tickFunction.call(luaSelfTable, DeltaTime);
 		// try lua gc
-		lua_gc(compTickFunction.getState(), LUA_GCSTEP, 128);
+		lua_gc(tickFunction.getState(), LUA_GCSTEP, 128);
 	}
 public:
 	virtual void ProcessEvent(UFunction* func, void* params) override {
@@ -215,10 +212,10 @@ public:
 	ULuaActorComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get())
 		: UActorComponent(ObjectInitializer)
 	{
+		GetClass()->ClassFlags |= CLASS_CompiledFromBlueprint;
 		PrimaryComponentTick.bCanEverTick = true;
 	}
 public:
-	NS_SLUA::LuaVar compTickFunction;
 	struct TickTmpArgs tickTmpArgs;
 	// below UPROPERTY and UFUNCTION can't be put to macro LUABASE_BODY
 	// so copy & paste them

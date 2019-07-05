@@ -180,9 +180,16 @@ class SLUA_UNREAL_API ULuaActorComponent : public UActorComponent, public slua_L
 	};
 protected:
 	virtual void BeginPlay() override {
-	if (!init(this, "LuaActorComponent", LuaStateName, LuaFilePath)) return;
+		if (!init(this, "LuaActorComponent", LuaStateName, LuaFilePath)) return;
 		Super::BeginPlay();
+		if (!GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
+			ReceiveBeginPlay();
 		PrimaryComponentTick.SetTickFunctionEnable(postInit("bCanEverTick"));
+	}
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override {
+		Super::EndPlay(EndPlayReason);
+		if (!GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
+			ReceiveEndPlay(EndPlayReason);
 	}
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override {
 		tickTmpArgs.deltaTime = DeltaTime;
@@ -204,6 +211,8 @@ public:
 	}
 	void superTick() override {
 		Super::TickComponent(tickTmpArgs.deltaTime, tickTmpArgs.tickType, tickTmpArgs.thisTickFunction);
+		if (!GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
+			ReceiveTick(tickTmpArgs.deltaTime);
 	}
 	NS_SLUA::LuaVar getSelfTable() const {
 		return luaSelfTable;
@@ -212,7 +221,6 @@ public:
 	ULuaActorComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get())
 		: UActorComponent(ObjectInitializer)
 	{
-		GetClass()->ClassFlags |= CLASS_CompiledFromBlueprint;
 		PrimaryComponentTick.bCanEverTick = true;
 	}
 public:

@@ -91,7 +91,7 @@ namespace NS_SLUA {
 			return true;
 		}
 
-		// store UFunction ptr nad params for super call
+		// store UFunction ptr and params for super call
 		UFunction* currentFunc;
 		union {
 			void* currentParams;

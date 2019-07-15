@@ -21,7 +21,7 @@
 using slua_Luabase = NS_SLUA::LuaBase;
 
 UCLASS()
-class SLUA_UNREAL_API ULuaUserWidget : public UUserWidget, public slua_Luabase {
+class SLUA_UNREAL_API ULuaUserWidget : public UUserWidget, public slua_Luabase, public ILuaTableObjectInterface {
     GENERATED_BODY()
 
 protected:
@@ -42,6 +42,10 @@ public:
 
 	virtual void ProcessEvent(UFunction* func, void* params) override;
 	void superTick() override;
+
+	virtual NS_SLUA::LuaVar getSelfTable() const {
+		return luaSelfTable;
+	}
 private:
 	FGeometry currentGeometry;
 };

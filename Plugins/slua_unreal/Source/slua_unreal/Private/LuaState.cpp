@@ -425,6 +425,9 @@ namespace NS_SLUA {
 			return;
 		}
 
+		// remove ref, Object must be an UObject in slua
+		objRefs.Remove(const_cast<UObject*>(Object));
+
 		GenericUserData* ud = *udptr;
 		// maybe ud is nullptr or had been freed
 		if (!ud || ud->flag & UD_HADFREE)
@@ -432,8 +435,6 @@ namespace NS_SLUA {
 
 		// indicate ud had be free
 		ud->flag |= UD_HADFREE;
-		// remove ref, Object must be an UObject in slua
-		objRefs.Remove(const_cast<UObject*>(Object));
 		// remove cache
 		ensure(ud->ud == Object);
 		LuaObject::removeFromCache(L, ud->ud);

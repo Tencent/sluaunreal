@@ -1,6 +1,8 @@
 
 
 local actor={}
+
+local EPropertyClass = import"EPropertyClass"
 -- override event from blueprint
 function actor:ReceiveBeginPlay()
     self.bCanEverTick = true

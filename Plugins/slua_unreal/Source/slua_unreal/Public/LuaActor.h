@@ -180,24 +180,28 @@ class SLUA_UNREAL_API ULuaActorComponent : public UActorComponent, public slua_L
 	};
 protected:
 	virtual void BeginPlay() override {
-	if (!init(this, "LuaActorComponent", LuaStateName, LuaFilePath)) return;
+		if (!init(this, "LuaActorComponent", LuaStateName, LuaFilePath)) return;
 		Super::BeginPlay();
+		if (!GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
+			ReceiveBeginPlay();
 		PrimaryComponentTick.SetTickFunctionEnable(postInit("bCanEverTick"));
-		if (luaSelfTable.isTable()) {
-			compTickFunction = luaSelfTable.getFromTable<NS_SLUA::LuaVar>("TickComponent", true);
-		}
+	}
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override {
+		Super::EndPlay(EndPlayReason);
+		if (!GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
+			ReceiveEndPlay(EndPlayReason);
 	}
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override {
 		tickTmpArgs.deltaTime = DeltaTime;
 		tickTmpArgs.tickType = TickType;
 		tickTmpArgs.thisTickFunction = ThisTickFunction;
-		if (!compTickFunction.isValid()) {
+		if (!tickFunction.isValid()) {
 			superTick();
 			return;
 		}
-		compTickFunction.call(luaSelfTable, DeltaTime, TickType, ThisTickFunction);
+		tickFunction.call(luaSelfTable, DeltaTime);
 		// try lua gc
-		lua_gc(compTickFunction.getState(), LUA_GCSTEP, 128);
+		lua_gc(tickFunction.getState(), LUA_GCSTEP, 128);
 	}
 public:
 	virtual void ProcessEvent(UFunction* func, void* params) override {
@@ -207,6 +211,8 @@ public:
 	}
 	void superTick() override {
 		Super::TickComponent(tickTmpArgs.deltaTime, tickTmpArgs.tickType, tickTmpArgs.thisTickFunction);
+		if (!GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
+			ReceiveTick(tickTmpArgs.deltaTime);
 	}
 	NS_SLUA::LuaVar getSelfTable() const {
 		return luaSelfTable;
@@ -218,7 +224,6 @@ public:
 		PrimaryComponentTick.bCanEverTick = true;
 	}
 public:
-	NS_SLUA::LuaVar compTickFunction;
 	struct TickTmpArgs tickTmpArgs;
 	// below UPROPERTY and UFUNCTION can't be put to macro LUABASE_BODY
 	// so copy & paste them

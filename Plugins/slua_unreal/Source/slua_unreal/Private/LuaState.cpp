@@ -425,10 +425,12 @@ namespace NS_SLUA {
 			return;
 		}
 
+		GenericUserData* ud = *udptr;
+
+		// remove should put here avoid ud is invalid
 		// remove ref, Object must be an UObject in slua
 		objRefs.Remove(const_cast<UObject*>(Object));
 
-		GenericUserData* ud = *udptr;
 		// maybe ud is nullptr or had been freed
 		if (!ud || ud->flag & UD_HADFREE)
 			return;

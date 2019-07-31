@@ -14,9 +14,14 @@
 
 #include "LuaUserWidget.h"
 
+void ULuaUserWidget::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+	if (!init(this, "LuaUserWidget", LuaStateName, LuaFilePath)) return;
+}
+
 void ULuaUserWidget::NativeConstruct()
 {
-	if (!init(this, "LuaUserWidget", LuaStateName, LuaFilePath)) return;
 	Super::NativeConstruct();
 #if (ENGINE_MINOR_VERSION==18)
 	bCanEverTick = postInit("bHasScriptImplementedTick", false);

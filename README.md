@@ -1,3 +1,7 @@
+## What's slua-unreal?
+
+slua-unreal is unreal4 plugin, you can use lua language to develop game login and hot fix your lua code via this plugin, slua-unreal give you 3 way to wrap your c++ interface for lua, including reflection(by blueprint), c++ template and static code generation by a tool, meanwhile you can communicate with blueprint, call lua from blueprint, vice versa.
+
 # slua-unreal 是什么 
 
 slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射能力，结合libclang静态c++代码分析，自动化导出蓝图接口和静态c++接口，提供给lua语言，使得可以通过lua语言开发unreal游戏业务逻辑，方便游戏高效迭代开发，上线热更新，同时支持lua到c++双向，lua到蓝图双向调用，使用lua语言完美替代unreal的c++开发方式，修改业务逻辑不需要等待c++编译，大大提升开发速度。
@@ -6,13 +10,25 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 
 欢迎issue，pr，star，fork。
 
-## What's slua-unreal?
-
-slua-unreal is unreal4 plugin, you can use lua language to develop game login and hot fix your lua code via this plugin, slua-unreal give you 3 way to wrap your c++ interface fro lua, including reflection(by blueprint), c++ template and static code generation by a tool, meanwhile you can communicate with blueprint, call lua from blueprint, vice versa.
 
 ## Showcases
 
 ![icon_logo](https://user-images.githubusercontent.com/6227270/59747641-db6e1b80-92ab-11e9-81b6-7ca7ebfd6c0e.png)![logo](https://user-images.githubusercontent.com/6227270/59747461-80d4bf80-92ab-11e9-989b-44809d5b780c.png)
+
+## Feature
+
+* call reflection method exported by blueprint
+* add event listener for blueprint event as lua function
+* normal c++ function and class exported by c++ template 
+* auto code generation to wrap your normal c++ fucntion to lua
+* support enum, FVector etc
+* support operator overload in FVector or other struct class
+* support extension method to add a non-blueprint function to uobject for lua use(extent bluepirnt function)
+* call lua function from blueprint, vise versa
+* detect dead loop code, report error if happen dead loop
+* support multi state for isolate lua runtime
+* cpu profile tool
+* multithread lua gc
 
 # slua-unreal 有什么功能
 
@@ -31,20 +47,6 @@ slua-unreal is unreal4 plugin, you can use lua language to develop game login an
 
 ![1](profiler.png)
 
-## Feature
-
-* call reflection method exported by blueprint
-* add event listener for blueprint event as lua function
-* normal c++ function and class exported by c++ template 
-* auto code generation to wrap your normal c++ fucntion to lua
-* support enum, FVector etc
-* support operator overload in FVector or other struct class
-* support extension method to add a non-blueprint function to uobject for lua use(extent bluepirnt function)
-* call lua function from blueprint, vise versa
-* detect dead loop code, report error if happen dead loop
-* support multi state for isolate lua runtime
-* cpu profile tool
-* multithread lua gc
 
 # 使用方法简单范例
 

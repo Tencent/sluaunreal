@@ -111,7 +111,7 @@ namespace NS_SLUA {
         if(uclass==nullptr) luaL_error(L,"Can't find class named %s",cls);
         
 		UUserWidget* widget = nullptr;
-		// obj can be 5 type
+		// obj can be 5 types
 		if (obj) {
 			if (obj->IsA<UWorld>())
 				widget = CreateWidget<UUserWidget>(Cast<UWorld>(obj), uclass);

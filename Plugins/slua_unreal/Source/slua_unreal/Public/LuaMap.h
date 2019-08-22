@@ -134,7 +134,7 @@ namespace NS_SLUA {
 		struct Enumerator {
 			LuaMap* map = nullptr;
 			// hold referrence of LuaMap, avoid gc
-			void* holder = nullptr;
+			class LuaVar* holder = nullptr;
 			int32 index = 0;
 			int32 num = 0;
 

@@ -333,8 +333,7 @@ namespace NS_SLUA {
 
 	LuaArray::Enumerator::~Enumerator()
 	{
-		LuaVar* var = (LuaVar*)holder;
-		delete var;
+		SafeDelete(holder);
 	}
 
 }

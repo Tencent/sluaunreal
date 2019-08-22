@@ -348,8 +348,7 @@ namespace NS_SLUA {
 
 	LuaMap::Enumerator::~Enumerator()
 	{
-		LuaVar* var = (LuaVar*)holder;
-		delete var;
+		SafeDelete(holder);
 	}
 
 	int LuaMap::gc(lua_State* L) {

@@ -17,17 +17,21 @@
 void ULuaUserWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
-	if (!init(this, "LuaUserWidget", LuaStateName, LuaFilePath)) return;
+	init(this, "LuaUserWidget", LuaStateName, LuaFilePath);
 }
 
 void ULuaUserWidget::NativeConstruct()
 {
+	if (!LuaFilePath.IsEmpty() && !getSelfTable().isValid())
+		init(this, "LuaUserWidget", LuaStateName, LuaFilePath);
 	Super::NativeConstruct();
+	if (getSelfTable().isValid()) {
 #if (ENGINE_MINOR_VERSION==18)
-	bCanEverTick = postInit("bHasScriptImplementedTick", false);
+		bCanEverTick = postInit("bHasScriptImplementedTick", false);
 #else
-	bHasScriptImplementedTick = postInit("bHasScriptImplementedTick", false);
+		bHasScriptImplementedTick = postInit("bHasScriptImplementedTick", false);
 #endif
+	}
 }
 
 void ULuaUserWidget::NativeDestruct() {

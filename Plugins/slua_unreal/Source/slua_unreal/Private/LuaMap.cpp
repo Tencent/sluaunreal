@@ -307,6 +307,8 @@ namespace NS_SLUA {
 	int LuaMap::Pairs(lua_State* L) {
 		CheckUD(LuaMap, L, 1);
 		auto iter = new LuaMap::Enumerator();
+		// hold LuaMap
+		iter->holder = new LuaVar(L, 1);
 		iter->map = UD;
 		iter->index = 0;
 		iter->num = UD->helper.Num();
@@ -342,6 +344,12 @@ namespace NS_SLUA {
 		CheckUD(LuaMap::Enumerator, L, 1);
 		delete UD;
 		return 0;
+	}
+
+	LuaMap::Enumerator::~Enumerator()
+	{
+		LuaVar* var = (LuaVar*)holder;
+		delete var;
 	}
 
 	int LuaMap::gc(lua_State* L) {

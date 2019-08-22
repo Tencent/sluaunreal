@@ -43,6 +43,6 @@ namespace NS_SLUA {
 				return true;
 			}
 		}
-		return true;
+		return false;
 	}
 }

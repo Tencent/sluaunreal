@@ -92,10 +92,12 @@ namespace NS_SLUA {
         static int gc(lua_State* L);
 
 		struct Enumerator {
-			LuaArray* arr;
-			int32 index;
-
+			LuaArray* arr = nullptr;
+			// hold referrence of LuaArray, avoid gc
+			void* holder = nullptr;
+			int32 index = 0;
 			static int gc(lua_State* L);
+			~Enumerator();
 		};
     };
 }

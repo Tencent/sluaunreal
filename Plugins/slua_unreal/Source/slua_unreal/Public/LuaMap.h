@@ -132,11 +132,14 @@ namespace NS_SLUA {
 		void removeAt(int32 Index, int32 Count = 1);
 
 		struct Enumerator {
-			LuaMap* map;
-			int32 index;
-			int32 num;
+			LuaMap* map = nullptr;
+			// hold referrence of LuaMap, avoid gc
+			void* holder = nullptr;
+			int32 index = 0;
+			int32 num = 0;
 
 			static int gc(lua_State* L);
+			~Enumerator();
 		};
 
 	};

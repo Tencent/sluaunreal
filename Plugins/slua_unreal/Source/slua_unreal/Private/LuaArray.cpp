@@ -277,6 +277,8 @@ namespace NS_SLUA {
 	int LuaArray::Pairs(lua_State* L) {
 		CheckUD(LuaArray, L, 1);
 		auto iter = new LuaArray::Enumerator();
+		// hold LuaArray
+		iter->holder = new LuaVar(L, 1);
 		iter->arr = UD;
 		iter->index = 0;
 		lua_pushcfunction(L, LuaArray::Enumerable);
@@ -327,6 +329,12 @@ namespace NS_SLUA {
 		CheckUD(LuaArray::Enumerator, L, 1);
 		delete UD;
 		return 0;
+	}
+
+	LuaArray::Enumerator::~Enumerator()
+	{
+		LuaVar* var = (LuaVar*)holder;
+		delete var;
 	}
 
 }

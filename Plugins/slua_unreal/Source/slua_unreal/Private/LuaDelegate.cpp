@@ -107,7 +107,14 @@ namespace slua {
         if(!lua_islightuserdata(L,2))
             luaL_error(L,"arg 2 expect ULuaDelegate");
         auto obj =  reinterpret_cast<ULuaDelegate*>(lua_touserdata(L,2));
-        if(!obj->IsValidLowLevel()) return 0;
+		if (!obj->IsValidLowLevel())
+		{
+#if UE_BUILD_DEVELOPMENT
+			luaL_error(L, "Invalid ULuaDelegate!");
+#else
+			return 0;
+#endif
+		}
 
         FScriptDelegate Delegate;
         Delegate.BindUFunction(obj, TEXT("EventTrigger"));

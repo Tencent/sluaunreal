@@ -32,6 +32,8 @@
 #include "Engine/GameEngine.h"
 #endif
 #include "LuaMemoryProfile.h"
+#include "ArrayWriter.h"
+#include <chrono>
 
 namespace slua {
 
@@ -40,6 +42,10 @@ namespace slua {
         RegMetaMethod(L, loadUI);
         RegMetaMethod(L, createDelegate);
 		RegMetaMethod(L, loadClass);
+		RegMetaMethod(L, setTickFunction);
+		RegMetaMethod(L, makeProfilePackage);
+		RegMetaMethod(L, getNanoseconds);
+		RegMetaMethod(L, getMiliseconds);
 		RegMetaMethod(L, dumpUObjects);
 		RegMetaMethod(L, loadObject);
         lua_setglobal(L,"slua");
@@ -97,10 +103,12 @@ namespace slua {
 		if (obj) {
 			if (obj->IsA<UWorld>())
 				widget = CreateWidget<UUserWidget>(Cast<UWorld>(obj), uclass);
+#if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
 			else if (obj->IsA<UWidget>())
 				widget = CreateWidget<UUserWidget>(Cast<UWidget>(obj), uclass);
 			else if (obj->IsA<UWidgetTree>())
 				widget = CreateWidget<UUserWidget>(Cast<UWidgetTree>(obj), uclass);
+#endif
 			else if (obj->IsA<APlayerController>())
 				widget = CreateWidget<UUserWidget>(Cast<APlayerController>(obj), uclass);
 			else if (obj->IsA<UGameInstance>())
@@ -135,6 +143,55 @@ namespace slua {
         obj->bindFunction(L,1);
         return LuaObject::push(L,obj);
     }
+
+	int SluaUtil::setTickFunction(lua_State* L)
+	{
+		LuaVar func(L, 1, LuaVar::LV_FUNCTION);
+
+		LuaState* luaState = LuaState::get(L);
+		luaState->setTickFunction(func);
+		return 0;
+	}
+
+	int SluaUtil::makeProfilePackage(lua_State* L)
+	{
+		uint32 packageSize = 0;
+		int hookEvent = luaL_checknumber(L, 1);
+		int64_t time = luaL_checknumber(L, 2);
+		int lineDefined = luaL_checknumber(L, 3);
+		FString funcName(luaL_checkstring(L, 4));
+		FString shortSrc(luaL_checkstring(L, 5));
+
+		FArrayWriter messageWriter;
+		messageWriter << packageSize;
+		messageWriter << hookEvent;
+		messageWriter << time;
+		messageWriter << lineDefined;
+		messageWriter << funcName;
+		messageWriter << shortSrc;
+
+		messageWriter.Seek(0);
+		packageSize = messageWriter.Num() - sizeof(uint32);
+		messageWriter << packageSize;
+
+		lua_pushlstring(L, (const char*)(messageWriter.GetData()), messageWriter.Num());
+		return 1;
+	}
+
+	int SluaUtil::getNanoseconds(lua_State* L)
+	{
+		int64_t nanoSeconds = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000;
+		lua_pushnumber(L, nanoSeconds);
+		return 1;
+	}
+
+	int SluaUtil::getMiliseconds(lua_State* L)
+	{
+		int64_t nanoSeconds = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
+		lua_pushnumber(L, nanoSeconds);
+		return 1;
+	}
+
 	int SluaUtil::dumpUObjects(lua_State * L)
 	{
 		auto state = LuaState::get(L);

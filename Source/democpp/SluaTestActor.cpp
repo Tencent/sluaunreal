@@ -30,7 +30,6 @@ void ASluaTestActor::BeginPlay()
 // Called every frame
 void ASluaTestActor::Tick(float DeltaTime)
 {
-	PROFILER_WATCHER(x);
 	Super::Tick(DeltaTime);
 
 	state().call("update",DeltaTime);

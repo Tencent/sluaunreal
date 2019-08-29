@@ -26,7 +26,11 @@ public class slua_profile : ModuleRules
 
         PrivateDependencyModuleNames.AddRange(new string[] { "slua_unreal" });
         PublicIncludePathModuleNames.AddRange(new string[] { "slua_unreal" });
+#if UE_4_21_OR_LATER
+        PublicDefinitions.Add("ENABLE_PROFILER");
+#else
         Definitions.Add("ENABLE_PROFILER");
+#endif
 
 
         PublicDependencyModuleNames.AddRange(
@@ -41,6 +45,8 @@ public class slua_profile : ModuleRules
         if (Target.Type == TargetRules.TargetType.Editor)
         {
             PrivateDependencyModuleNames.Add("UnrealEd");
+            PrivateDependencyModuleNames.Add("EditorStyle");
+            PrivateDependencyModuleNames.Add("LevelEditor");
         }
 
 
@@ -53,6 +59,8 @@ public class slua_profile : ModuleRules
                 "SlateCore",
                 "UMG",
                 "InputCore",
+                "Networking",
+                "Sockets",
 				// ... add private dependencies that you statically link with here ...	
 			}
     );

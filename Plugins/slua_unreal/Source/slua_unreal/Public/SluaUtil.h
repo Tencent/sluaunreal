@@ -13,7 +13,6 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "lua/lua.hpp"
 #include <functional>
 
 #ifndef SafeDelete

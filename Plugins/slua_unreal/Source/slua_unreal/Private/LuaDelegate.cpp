@@ -96,7 +96,7 @@ namespace slua {
         UD->delegate->AddUnique(Delegate);
 
         // add reference
-        LuaObject::addRef(L,obj,nullptr);
+        LuaObject::addRef(L,obj,nullptr,true);
 
         lua_pushlightuserdata(L,obj);
         return 1;
@@ -175,8 +175,8 @@ namespace slua {
 			ULuaDelegate* delegateObj = Cast<ULuaDelegate>(object);
 			if (delegateObj)
 			{
-				delegateObj->dispose();
 				LuaObject::removeRef(L, object);
+				delegateObj->dispose();
 			}
 		}
 		ldw->delegate->Clear();
@@ -199,7 +199,7 @@ namespace slua {
 		UD->delegate->BindUFunction(obj, TEXT("EventTrigger"));
 
 		// add reference
-		LuaObject::addRef(L, obj, nullptr);
+		LuaObject::addRef(L, obj, nullptr, true);
 
 		lua_pushlightuserdata(L, obj);
 		return 1;

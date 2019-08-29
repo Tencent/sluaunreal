@@ -496,7 +496,7 @@ namespace slua {
                 // search extension method
                 return searchExtensionMethod(L,obj,name);
             }
-            return LuaObject::push(L,up,obj);
+            return LuaObject::push(L,up,obj,false);
         }
         else {   
 			LuaObject::cacheFunction(L, cls, name, func);
@@ -559,7 +559,7 @@ namespace slua {
         auto* cls = ls->uss;
         UProperty* up = FindStructPropertyByName(cls, name);
         if(!up) return 0;
-        return LuaObject::push(L,up,ls->buf+up->GetOffset_ForInternal());
+        return LuaObject::push(L,up,ls->buf+up->GetOffset_ForInternal(),false);
     }
 
     int newinstanceStructIndex(lua_State* L) {
@@ -615,13 +615,13 @@ namespace slua {
 	}
 
     template<typename T>
-    int pushUProperty(lua_State* L,UProperty* prop,uint8* parms) {
+    int pushUProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
         auto p=Cast<T>(prop);
         ensure(p);
         return LuaObject::push(L,p->GetPropertyValue(parms));
     }
 
-	int pushEnumProperty(lua_State* L, UProperty* prop, uint8* parms) {
+	int pushEnumProperty(lua_State* L, UProperty* prop, uint8* parms,bool ref) {
 		auto p = Cast<UEnumProperty>(prop);
 		ensure(p);
 		auto p2 = p->GetUnderlyingProperty();
@@ -630,14 +630,14 @@ namespace slua {
 		return LuaObject::push(L, i);
 	}
 
-    int pushUArrayProperty(lua_State* L,UProperty* prop,uint8* parms) {
+    int pushUArrayProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
         auto p = Cast<UArrayProperty>(prop);
         ensure(p);
         FScriptArray* v = p->GetPropertyValuePtr(parms);
 		return LuaArray::push(L, p->Inner, v);
     }
 
-    int pushUMapProperty(lua_State* L,UProperty* prop,uint8* parms) {
+    int pushUMapProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
         auto p = Cast<UMapProperty>(prop);
         ensure(p);
 		FScriptMap* v = p->GetPropertyValuePtr(parms);
@@ -660,7 +660,7 @@ namespace slua {
 		return 0;
 	}
 
-    int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms) {
+    int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
         auto p = Cast<UStructProperty>(prop);
         ensure(p);
         auto uss = p->Struct;
@@ -675,13 +675,14 @@ namespace slua {
 		return LuaObject::push(L, new LuaStruct{buf,size,uss});
     }  
 
-	int pushUDelegateProperty(lua_State* L, UProperty* prop, uint8* parms) {
+	int pushUDelegateProperty(lua_State* L, UProperty* prop, uint8* parms, bool ref) {
 		auto p = Cast<UDelegateProperty>(prop);
 		ensure(p);
 		FScriptDelegate* delegate = p->GetPropertyValuePtr(parms);
 		return LuaDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
 	}
-    int pushUMulticastDelegateProperty(lua_State* L,UProperty* prop,uint8* parms) {
+
+    int pushUMulticastDelegateProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
         auto p = Cast<UMulticastDelegateProperty>(prop);
         ensure(p);   
         FMulticastScriptDelegate* delegate = p->GetPropertyValuePtr(parms);
@@ -703,14 +704,14 @@ namespace slua {
         return 0;
     }
 	 
-    int pushUObjectProperty(lua_State* L,UProperty* prop,uint8* parms) {
+    int pushUObjectProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
         auto p = Cast<UObjectProperty>(prop);
         ensure(p);   
         UObject* o = p->GetPropertyValue(parms);
         if(auto tr=Cast<UWidgetTree>(o))
             return LuaWidgetTree::push(L,tr);
         else
-            return LuaObject::push(L,o);
+            return LuaObject::push(L,o,ref);
     }
 
     template<typename T>
@@ -762,7 +763,7 @@ namespace slua {
 		return 0;
     }
 	
-	int pushUClassProperty(lua_State* L, UProperty* prop, uint8* parms) {
+	int pushUClassProperty(lua_State* L, UProperty* prop, uint8* parms, bool ref) {
 		auto p = Cast<UClassProperty>(prop);
 		ensure(p);
 		UClass* cls = Cast<UClass>(p->GetPropertyValue(parms));
@@ -812,9 +813,9 @@ namespace slua {
 		return checkType(L, -1, tn);
     }
 
-    void LuaObject::addRef(lua_State* L,UObject* obj,void* ud) {
+    void LuaObject::addRef(lua_State* L,UObject* obj,void* ud,bool ref) {
         auto sl = LuaState::get(L);
-        sl->addRef(obj,ud);
+        sl->addRef(obj,ud,ref);
     }
 
 
@@ -870,7 +871,7 @@ namespace slua {
             lua_pushnil(L);
             return 1;
         }
-		return pushGCObject<UClass*>(L, cls, "UClass", setupClassMT, gcClass);
+		return pushGCObject<UClass*>(L, cls, "UClass", setupClassMT, gcClass, true);
     }
 
     int LuaObject::pushStruct(lua_State* L,UScriptStruct* cls) {
@@ -878,7 +879,7 @@ namespace slua {
             lua_pushnil(L);
             return 1;
         }    
-        return pushGCObject<UScriptStruct*>(L,cls,"UScriptStruct",setupStructMT,gcStructClass);
+        return pushGCObject<UScriptStruct*>(L,cls,"UScriptStruct",setupStructMT,gcStructClass,true);
     }
 
     int LuaObject::gcObject(lua_State* L) {
@@ -905,12 +906,12 @@ namespace slua {
 		return 0;
 	}
 
-    int LuaObject::push(lua_State* L, UObject* obj) {
+    int LuaObject::push(lua_State* L, UObject* obj, bool ref) {
         if(!obj) {
             lua_pushnil(L);
             return 1;
         }
-        return pushGCObject<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject);
+        return pushGCObject<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject,ref);
     }
     
     template<typename T>
@@ -987,10 +988,10 @@ namespace slua {
         return 1;
     }
 
-    int LuaObject::push(lua_State* L,UProperty* prop,uint8* parms) {
+    int LuaObject::push(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
         auto pusher = getPusher(prop);
         if (pusher)
-            return pusher(L,prop,parms);
+            return pusher(L,prop,parms,ref);
         else {
             FString name = prop->GetClass()->GetName();
             Log::Error("unsupport type %s to push",TCHAR_TO_UTF8(*name));
@@ -998,7 +999,7 @@ namespace slua {
         }
     }
 
-	int LuaObject::push(lua_State* L, UProperty* up, UObject* obj) {
+	int LuaObject::push(lua_State* L, UProperty* up, UObject* obj, bool ref) {
 		auto cls = up->GetClass();
 		// if it's an UArrayProperty
 		if (cls==UArrayProperty::StaticClass())
@@ -1007,7 +1008,7 @@ namespace slua {
         else if(cls==UMapProperty::StaticClass())
             return LuaMap::push(L,Cast<UMapProperty>(up),obj);
 		else
-			return push(L, up, up->ContainerPtrToValuePtr<uint8>(obj));
+			return push(L, up, up->ContainerPtrToValuePtr<uint8>(obj), ref);
 	}
 
 	int LuaObject::push(lua_State* L, LuaStruct* ls) {

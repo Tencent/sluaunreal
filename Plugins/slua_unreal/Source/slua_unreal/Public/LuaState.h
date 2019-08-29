@@ -150,8 +150,10 @@ namespace slua {
 			return objRefs;
 		}
 
+		void setTickFunction(LuaVar func);
+
 		// add obj to ref, tell Engine don't collect this obj
-		void addRef(UObject* obj,void* ud);
+		void addRef(UObject* obj,void* ud,bool ref);
 		// unlink UObject, flag Object had been free, and remove from cache and objRefs
 		void unlinkUObject(const UObject * Object);
 
@@ -209,6 +211,8 @@ namespace slua {
 
 		FDelegateHandle pgcHandler;
 		FDelegateHandle wcHandler;
+
+		LuaVar stateTickFunc;
 
         static LuaState* mainState;
 

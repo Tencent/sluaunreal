@@ -166,6 +166,11 @@ namespace slua {
             stackCount = top;
             Log::Error("Error: lua stack count should be zero , now is %d",top);
         }
+
+		if (stateTickFunc.isFunction())
+		{
+			stateTickFunc.call(dtime);
+		}
     }
 
     void LuaState::close() {
@@ -399,7 +404,12 @@ namespace slua {
 
 		GenericUserData* ud = *udptr;
 		// maybe ud is nullptr or had been freed
-		if (!ud || ud->flag & UD_HADFREE)
+		if (!ud) {
+			// remove should put here avoid ud is invalid
+			objRefs.Remove(const_cast<UObject*>(Object));
+			return;
+		}
+		else if (ud->flag & UD_HADFREE)
 			return;
 
 		// indicate ud had be free
@@ -419,6 +429,11 @@ namespace slua {
 		for (UObjectRefMap::TIterator it(objRefs); it; ++it)
 		{
 			UObject* item = it.Key();
+			GenericUserData* userData = it.Value();
+			if (userData && !(userData->flag | UD_REFERENCE))
+			{
+				continue;
+			}
 			Collector.AddReferencedObject(item);
 		}
 	}
@@ -520,7 +535,12 @@ namespace slua {
 		return ret;
 	}
 
-	void LuaState::addRef(UObject* obj,void* ud)
+	void LuaState::setTickFunction(LuaVar func)
+	{
+		stateTickFunc = func;
+	}
+
+	void LuaState::addRef(UObject* obj, void* ud, bool ref)
 	{
 		auto* udptr = objRefs.Find(obj);
 		// if any obj find in objRefs, it should be flag freed and removed
@@ -528,7 +548,12 @@ namespace slua {
 			(*udptr)->flag |= UD_HADFREE;
 			objRefs.Remove(obj);
 		}
-		objRefs.Add(obj,(GenericUserData*)ud);
+
+		GenericUserData* userData = (GenericUserData*)ud;
+		if (ref && userData) {
+			userData->flag |= UD_REFERENCE;
+		}
+		objRefs.Add(obj,userData);
 	}
 
 	FDeadLoopCheck::FDeadLoopCheck()

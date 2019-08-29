@@ -557,7 +557,7 @@ namespace slua {
 
     int LuaVar::pushArgByParms(UProperty* prop,uint8* parms) {
         auto L = getState();
-        if (LuaObject::push(L,prop,parms))
+        if (LuaObject::push(L,prop,parms,false))
             return prop->ElementSize;
         return 0;
     }
@@ -601,9 +601,9 @@ namespace slua {
             n++;
         }
         
+		auto L = getState();
         int retCount = docall(n);
 		int remain = retCount;
-        auto L = getState();
         // if lua return value
         // we only handle first lua return value
         if(remain >0 && bHasReturnParam) {

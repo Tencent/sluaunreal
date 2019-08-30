@@ -15,6 +15,8 @@
 #include "Common/TcpListener.h"
 #include "SharedPointer.h"
 #include "SocketSubsystem.h"
+#include "SluaUtil.h"
+#include "slua_profile.h"
 
 namespace slua
 {

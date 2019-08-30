@@ -176,12 +176,15 @@ namespace NS_SLUA {
     }
 
     // check lua top , this function can omit
-    void LuaState::tick(float dtime) {
-        int top = lua_gettop(L);
-        if(top!=stackCount) {
-            stackCount = top;
-            Log::Error("Error: lua stack count should be zero , now is %d",top);
-        }
+    void LuaState::Tick(float dtime) {
+		ensure(IsInGameThread());
+		if (!L) return;
+
+		int top = lua_gettop(L);
+		if (top != stackCount) {
+			stackCount = top;
+			Log::Error("Error: lua stack count should be zero , now is %d", top);
+		}
 
 		if (stateTickFunc.isFunction())
 		{
@@ -476,6 +479,11 @@ namespace NS_SLUA {
         ensure(ls!=nullptr);
         return ls->_pushErrorHandler(L);
     }
+
+	TStatId LuaState::GetStatId() const
+	{
+		RETURN_QUICK_DECLARE_CYCLE_STAT(LuaState, STATGROUP_Game);
+	}
 
 	int LuaState::_pushErrorHandler(lua_State* state) {
         lua_pushcfunction(state,error);

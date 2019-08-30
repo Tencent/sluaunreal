@@ -128,7 +128,7 @@ function this.debug_hook(event)
     end
 
     local info = debug.getinfo(2, "nSl")
-    if info.short_src and string.starts(info.short_src, "slua_profile.lua") then
+    if info.short_src and string.find(info.short_src,"slua_profile.lua") then
         return
     end
 

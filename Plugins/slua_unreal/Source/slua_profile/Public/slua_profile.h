@@ -56,7 +56,6 @@ private:
 
 	// functions
 	void OnTabClosed(TSharedRef<SDockTab> tab);
-	void openHook();
 	slua::FProfileServer* ProfileServer;
 
 	TSharedRef<class SDockTab> OnSpawnPluginTab(const class FSpawnTabArgs& SpawnTabArgs);

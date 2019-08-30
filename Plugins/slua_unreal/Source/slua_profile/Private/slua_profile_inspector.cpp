@@ -717,8 +717,7 @@ void SProfilerWidget::SetArrayValue(TArray<float>& chartValArray, float maxCostT
 		// clear line points
 		for (int32 i = 0; i < m_cSliceCount; i++)
 		{
-			FVector2D NewPoint(-1, -1);
-			m_arraylinePath[i] = NewPoint;
+			m_arraylinePath[i].Set(-1, -1);
 		}
 	}
 	m_maxCostTime = maxCostTime;
@@ -757,7 +756,7 @@ void SProfilerWidget::SetToolTipVal(float val)
 
 FVector2D SProfilerWidget::ComputeDesiredSize(float size) const
 {
-	return FVector2D(m_widgetWidth, 220);
+	return FVector2D(m_widgetWidth, cMaxViewHeight);
 }
 
 void SProfilerWidget::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
@@ -768,9 +767,6 @@ void SProfilerWidget::Tick(const FGeometry& AllottedGeometry, const double InCur
 	{
 		return;
 	}
-
-	static float maxVal = 10 * 1000;
-	static float highVal = 200;
 
 	// calc standard line level accroding to max cost time
 	m_stdPositionY.Empty();
@@ -793,16 +789,16 @@ void SProfilerWidget::Tick(const FGeometry& AllottedGeometry, const double InCur
 			
 			if (m_maxCostTime != 0.0f)
 			{
-				yValue = highVal * (m_arrayVal[i] / maxVal);
+				yValue = cMaxViewHeight * (m_arrayVal[i] / m_maxPointHeight);
 			}
-			if (yValue > highVal)
+			if (yValue > cMaxViewHeight)
 			{
 				FVector2D NewPoint((5 * i + m_cStdLeftPosition) * (m_widgetWidth / m_cStdWidth), 0);
 				m_arraylinePath[i] = NewPoint;
 			}
 			else
 			{
-				FVector2D NewPoint((5 * i + m_cStdLeftPosition) * (m_widgetWidth / m_cStdWidth), highVal - yValue);
+				FVector2D NewPoint((5 * i + m_cStdLeftPosition) * (m_widgetWidth / m_cStdWidth), cMaxViewHeight - yValue);
 				m_arraylinePath[i] = NewPoint;
 			}
 		}
@@ -893,57 +889,57 @@ void SProfilerWidget::CalcStdLine(float &maxCostTime)
 {
 	if (maxCostTime < 6000)
 	{
-		float maxPointValue = 7 * 1000.f;
+		m_maxPointHeight = 7 * 1000.f;
 		float stdLineValue = 1 * 1000.f;
 		FString stdLineName = "1ms(1000FPS)";
-		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+		AddStdLine(m_maxPointHeight, stdLineValue, stdLineName);
 
 		stdLineValue = 4 * 1000.f;
 		stdLineName = "4ms(250FPS)";
-		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+		AddStdLine(m_maxPointHeight, stdLineValue, stdLineName);
 	}
 	else if (maxCostTime < 14000)
 	{
-		float maxPointValue = 15 * 1000.f;
+		m_maxPointHeight = 15 * 1000.f;
 		float stdLineValue = 5 * 1000.f;
 		FString stdLineName = "5ms(200FPS)";
-		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+		AddStdLine(m_maxPointHeight, stdLineValue, stdLineName);
 
 		stdLineValue = 10 * 1000.f;
 		stdLineName = "10ms(100FPS)";
-		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+		AddStdLine(m_maxPointHeight, stdLineValue, stdLineName);
 	}
 	else if (maxCostTime < 30000)
 	{
-		float maxPointValue = 40 * 1000.f;
+		m_maxPointHeight = 40 * 1000.f;
 		float stdLineValue = 16 * 1000.f;
 		FString stdLineName = "16ms(60FPS)";
-		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+		AddStdLine(m_maxPointHeight, stdLineValue, stdLineName);
 
 		stdLineValue = 33 * 1000.f;
 		stdLineName = "33ms(30FPS)";
-		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+		AddStdLine(m_maxPointHeight, stdLineValue, stdLineName);
 	}
 	else
 	{
-		float maxPointValue = 70 * 1000.f;
+		m_maxPointHeight = 70 * 1000.f;
 		float stdLineValue = 16 * 1000.f;
 		FString stdLineName = "16ms(60FPS)";
-		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+		AddStdLine(m_maxPointHeight, stdLineValue, stdLineName);
 
 		stdLineValue = 33 * 1000.f;
 		stdLineName = "33ms(30FPS)";
-		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+		AddStdLine(m_maxPointHeight, stdLineValue, stdLineName);
 
 		stdLineValue = 66 * 1000.f;
 		stdLineName = "66ms(15FPS)";
-		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+		AddStdLine(m_maxPointHeight, stdLineValue, stdLineName);
 	}
 }
 
 void SProfilerWidget::AddStdLine(float &maxPointValue, float &stdLineValue, FString &stdLineName)
 {
-	float positionY = m_cStdHighVal - m_cStdHighVal / maxPointValue * stdLineValue;
+	float positionY = m_cStdHighVal - m_cStdHighVal * (stdLineValue / maxPointValue);
 	m_stdPositionY.Add(positionY);
 	m_stdStr.Add(stdLineName);
 }
@@ -954,7 +950,7 @@ int32 SProfilerWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	{
 		TArray<FVector2D> clickedPointArray;
 		clickedPointArray.Add(FVector2D(m_clickedPoint.X, 0));
-		clickedPointArray.Add(FVector2D(m_clickedPoint.X, 200));
+		clickedPointArray.Add(FVector2D(m_clickedPoint.X, cMaxViewHeight));
 		FSlateDrawElement::MakeLines(
 			OutDrawElements,
 			LayerId,

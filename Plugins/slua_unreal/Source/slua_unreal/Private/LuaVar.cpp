@@ -26,8 +26,9 @@
 
 namespace NS_SLUA {
 
+	const int INVALID_INDEX = -1;
     LuaVar::LuaVar()
-        :stateIndex(-1)
+        :stateIndex(INVALID_INDEX)
     {
         vars = nullptr;
         numOfVar = 0;
@@ -267,6 +268,7 @@ namespace NS_SLUA {
         numOfVar = 0;
         delete[] vars;
         vars = nullptr;
+		stateIndex = INVALID_INDEX;
     }
 
     void LuaVar::alloc(int n) {
@@ -497,7 +499,7 @@ namespace NS_SLUA {
     }
 
     bool LuaVar::isValid() const {
-        return stateIndex>0 && LuaState::isValid(stateIndex);
+        return numOfVar>0 && stateIndex>0 && LuaState::isValid(stateIndex);
     }
 
     bool LuaVar::isNil() const {

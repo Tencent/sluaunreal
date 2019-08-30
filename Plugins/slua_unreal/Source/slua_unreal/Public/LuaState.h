@@ -155,8 +155,10 @@ namespace NS_SLUA {
 			return objRefs;
 		}
 
+		void setTickFunction(LuaVar func);
+
 		// add obj to ref, tell Engine don't collect this obj
-		void addRef(UObject* obj,void* ud);
+		void addRef(UObject* obj,void* ud,bool ref);
 		// unlink UObject, flag Object had been free, and remove from cache and objRefs
 		void unlinkUObject(const UObject * Object);
 
@@ -227,6 +229,7 @@ namespace NS_SLUA {
 		FDelegateHandle wcHandler;
 
 		bool enableMultiThreadGC;
+		LuaVar stateTickFunc;
 
         static LuaState* mainState;
 

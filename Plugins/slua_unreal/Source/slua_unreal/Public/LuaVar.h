@@ -217,8 +217,8 @@ namespace NS_SLUA {
 
         // call function with pre-pushed n args
         inline LuaVar callWithNArg(int n) {
-            int nret = docall(n);
             auto L = getState();
+            int nret = docall(n);
             auto ret = LuaVar::wrapReturn(L,nret);
             lua_pop(L,nret);
             return ret;

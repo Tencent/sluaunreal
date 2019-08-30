@@ -104,5 +104,3 @@ public:
 	static void EndWatch(const FString& funcName, double nanoseconds);
 };
 
-void InitProfilerWatchThread();   // unsupport multi-thread function profile
-

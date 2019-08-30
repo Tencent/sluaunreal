@@ -36,7 +36,6 @@ namespace {
 	TQueue<TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe>, EQueueMode::Mpsc> profilerArrayQueue;
 
 	uint32_t currentLayer = 0;
-	uint32_t profilerThreadId = 0;
 
 	enum slua_profiler_hook_event
 	{
@@ -72,7 +71,6 @@ void Fslua_profileModule::StartupModule()
 
 	if (GIsEditor && !IsRunningCommandlet())
 	{
-		InitProfilerWatchThread();
 		sluaProfilerInspector = MakeShareable(new SProfilerInspector);
 		FGlobalTabmanager::Get()->RegisterNomadTabSpawner(slua_profileTabName,
 			FOnSpawnTab::CreateRaw(this, &Fslua_profileModule::OnSpawnPluginTab))
@@ -156,21 +154,6 @@ void Flua_profileCommands::RegisterCommands()
 }
 #endif
 /////////////////////////////////////////////////////////////////////////////////////
-
-bool isWatchThread()
-{	
-	uint32_t pid = FPlatformTLS::GetCurrentThreadId();
-	if (profilerThreadId == 0)
-	{
-		profilerThreadId = pid;
-		return true;
-	}
-	else if (pid != profilerThreadId)
-	{
-		return false;
-	}
-	return true;
-}
 
 void Profiler::BeginWatch(const FString& funcName, double nanoseconds)
 {
@@ -274,11 +257,6 @@ void Fslua_profileModule::OnTabClosed(TSharedRef<SDockTab>)
 		ProfileServer = nullptr;
 	}
 	tabOpened = false;
-}
-
-void InitProfilerWatchThread()
-{
-	profilerThreadId = FPlatformTLS::GetCurrentThreadId();
 }
 
 void Fslua_profileModule::debug_hook_c(int event, double nanoseconds, int linedefined, const FString& name, const FString& short_src)

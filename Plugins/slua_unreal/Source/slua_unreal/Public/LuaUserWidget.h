@@ -25,7 +25,9 @@ class SLUA_UNREAL_API ULuaUserWidget : public UUserWidget, public slua_Luabase, 
     GENERATED_BODY()
 
 protected:
+#if (ENGINE_MINOR_VERSION>20) && (ENGINE_MAJOR_VERSION>=4)
 	virtual void NativeOnInitialized() override;
+#endif
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;

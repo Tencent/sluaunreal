@@ -14,11 +14,13 @@
 
 #include "LuaUserWidget.h"
 
+#if (ENGINE_MINOR_VERSION>20) && (ENGINE_MAJOR_VERSION>=4)
 void ULuaUserWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 	if (!init(this, "LuaUserWidget", LuaStateName, LuaFilePath)) return;
 }
+#endif
 
 void ULuaUserWidget::NativeConstruct()
 {

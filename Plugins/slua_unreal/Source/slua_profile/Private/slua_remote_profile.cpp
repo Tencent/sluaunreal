@@ -65,10 +65,10 @@ namespace slua
 			int32 ActiveConnections = 0;
 			for (int32 Index = 0; Index < Connections.Num(); Index++)
 			{
-				auto& Connection = Connections[Index];
+				auto& conn = Connections[Index];
 
 				// handle disconnected by remote
-				switch (Connection->GetConnectionState())
+				switch (conn->GetConnectionState())
 				{
 				case FProfileConnection::STATE_Connected:
 					ActiveConnections++;
@@ -84,11 +84,11 @@ namespace slua
 				}
 			}
 
-			for (auto& Connection : Connections)
+			for (auto& conn : Connections)
 			{
 				TSharedPtr<FProfileMessage, ESPMode::ThreadSafe> Message;
 
-				while (Connection->ReceiveData(Message))
+				while (conn->ReceiveData(Message))
 				{
 					OnProfileMessageDelegate.ExecuteIfBound(Message);
 				}
@@ -135,8 +135,8 @@ namespace slua
 
 
 	FProfileConnection::FProfileConnection(FSocket* InSocket, const FIPv4Endpoint& InRemoteEndpoint)
-		: Socket(InSocket)
-		, RemoteEndpoint(InRemoteEndpoint)
+		: RemoteEndpoint(InRemoteEndpoint)
+		, Socket(InSocket)
 		, Thread(nullptr)
 		, TotalBytesReceived(0)
 		, RecvMessageDataRemaining(0)

@@ -29,14 +29,8 @@ DEFINE_LOG_CATEGORY(LogSluaProfile)
 
 namespace {
 	static const FName slua_profileTabName(TEXT("slua_profile"));
-	SluaProfiler curProfiler;
-	TArray<SluaProfiler> curProfilersArray;
-	uint32_t currentLayer = 0;
-	uint32_t profilerThreadId = 0;
 
 
-	enum slua_profiler_hook_event
-	{
 	static const FString CoroutineName(TEXT("coroutine"));
 	SluaProfiler curProfiler;
 	
@@ -53,43 +47,6 @@ namespace {
 		LINE = 2,
 		TAILRET = 4
 	};
-
-	static void debug_hook_c(NS_SLUA::lua_State *L, NS_SLUA::lua_Debug *ar)
-	{
-		if (ar->event == slua_profiler_hook_event::CALL)
-		{
-			if (lua_getinfo(L, "nSl", ar) != 0)
-			{
-				if (ar->linedefined == -1 && ar->name == nullptr)
-				{
-					return;
-				}
-				FString functionName = ar->short_src;
-				functionName += ":";
-				functionName += FString::FromInt(ar->linedefined);
-				functionName += " ";
-				functionName += ar->name;
-				PROFILER_BEGIN_WATCHER_WITH_FUNC_NAME(functionName)
-			}
-		}
-		else if (ar->event == slua_profiler_hook_event::RETURN)
-		{
-			if (lua_getinfo(L, "nSl", ar) != 0)
-			{
-				if (ar->linedefined == -1 && ar->name == nullptr)
-				{
-					return;
-				}
-				FString functionName = ar->short_src;
-				functionName += ":";
-				functionName += FString::FromInt(ar->linedefined);
-				functionName += " ";
-				functionName += ar->name;
-				PROFILER_END_WATCHER()
-			}
-		}
-	}
-
 }
 
 void Fslua_profileModule::StartupModule()
@@ -133,12 +90,6 @@ void Fslua_profileModule::ShutdownModule()
 	sluaProfilerInspector = nullptr;
 	ClearCurProfiler();
 
-	NS_SLUA::LuaState *state = NS_SLUA::LuaState::get();
-	if (state != nullptr)
-	{
-		NS_SLUA::lua_sethook(state->getLuaState(), NULL, 0, 0);
-		stateIndex = -1;
-	}
 	Flua_profileCommands::Unregister();
 
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(slua_profileTabName);
@@ -198,13 +149,6 @@ Flua_profileCommands::Flua_profileCommands()
 {
 
 }
-
-void Flua_profileCommands::RegisterCommands()
-{
-	UI_COMMAND(OpenPluginWindow, "slua Profile", "Open slua Profile tool", EUserInterfaceActionType::Button, FInputGesture());
-}
-#endif
-/////////////////////////////////////////////////////////////////////////////////////
 
 void Flua_profileCommands::RegisterCommands()
 {
@@ -309,27 +253,6 @@ void Fslua_profileModule::AddMenuExtension(FMenuBuilder & Builder)
 
 void Fslua_profileModule::OnTabClosed(TSharedRef<SDockTab>)
 {
-	// disable lua hook
-	NS_SLUA::LuaState *state = NS_SLUA::LuaState::get();
-	if (state != nullptr)
-		NS_SLUA::lua_sethook(state->getLuaState(), nullptr, 0, 0);
-	stateIndex = -1;
-	tabOpened = false;
-{
-#if WITH_EDITOR
-	Builder.AddMenuEntry(Flua_profileCommands::Get().OpenPluginWindow);
-#endif
-}
-
-void Fslua_profileModule::OnTabClosed(TSharedRef<SDockTab>)
-{
-	// enable lua hook
-	NS_SLUA::LuaState *state = NS_SLUA::LuaState::get();
-	if (state) {
-		if (stateIndex == state->stateIndex()) return;
-		NS_SLUA::lua_sethook(state->getLuaState(), debug_hook_c, LUA_MASKCALL | LUA_MASKRET, 0);
-		stateIndex = state->stateIndex();
-	}
 	if (ProfileServer)
 	{
 		delete ProfileServer;

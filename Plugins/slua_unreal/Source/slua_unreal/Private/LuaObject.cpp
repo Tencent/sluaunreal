@@ -755,7 +755,7 @@ namespace NS_SLUA {
 		return LuaMap::push(L, p->KeyProp, p->ValueProp, v);
     }
 
-	int pushUWeakProperty(lua_State* L, UProperty* prop, uint8* parms) {
+	int pushUWeakProperty(lua_State* L, UProperty* prop, uint8* parms,bool ref) {
 		auto p = Cast<UWeakObjectProperty>(prop);
 		ensure(p);
 		FWeakObjectPtr v = p->GetPropertyValue(parms);

@@ -59,6 +59,8 @@ public class slua_profile : ModuleRules
                 "SlateCore",
                 "UMG",
                 "InputCore",
+                "Networking",
+                "Sockets",
 				// ... add private dependencies that you statically link with here ...	
 			}
     );

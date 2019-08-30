@@ -176,12 +176,20 @@ namespace NS_SLUA {
     }
 
     // check lua top , this function can omit
-    void LuaState::tick(float dtime) {
-        int top = lua_gettop(L);
-        if(top!=stackCount) {
-            stackCount = top;
-            Log::Error("Error: lua stack count should be zero , now is %d",top);
-        }
+    void LuaState::Tick(float dtime) {
+		ensure(IsInGameThread());
+		if (!L) return;
+
+		int top = lua_gettop(L);
+		if (top != stackCount) {
+			stackCount = top;
+			Log::Error("Error: lua stack count should be zero , now is %d", top);
+		}
+
+		if (stateTickFunc.isFunction())
+		{
+			stateTickFunc.call(dtime);
+		}
     }
 
     void LuaState::close() {
@@ -432,7 +440,12 @@ namespace NS_SLUA {
 		objRefs.Remove(const_cast<UObject*>(Object));
 
 		// maybe ud is nullptr or had been freed
-		if (!ud || ud->flag & UD_HADFREE)
+		if (!ud) {
+			// remove should put here avoid ud is invalid
+			objRefs.Remove(const_cast<UObject*>(Object));
+			return;
+		}
+		else if (ud->flag & UD_HADFREE)
 			return;
 
 		// indicate ud had be free
@@ -447,6 +460,11 @@ namespace NS_SLUA {
 		for (UObjectRefMap::TIterator it(objRefs); it; ++it)
 		{
 			UObject* item = it.Key();
+			GenericUserData* userData = it.Value();
+			if (userData && !(userData->flag & UD_REFERENCE))
+			{
+				continue;
+			}
 			Collector.AddReferencedObject(item);
 		}
 		// do more gc step in collecting thread
@@ -461,6 +479,11 @@ namespace NS_SLUA {
         ensure(ls!=nullptr);
         return ls->_pushErrorHandler(L);
     }
+
+	TStatId LuaState::GetStatId() const
+	{
+		RETURN_QUICK_DECLARE_CYCLE_STAT(LuaState, STATGROUP_Game);
+	}
 
 	int LuaState::_pushErrorHandler(lua_State* state) {
         lua_pushcfunction(state,error);
@@ -553,7 +576,12 @@ namespace NS_SLUA {
 		return ret;
 	}
 
-	void LuaState::addRef(UObject* obj,void* ud)
+	void LuaState::setTickFunction(LuaVar func)
+	{
+		stateTickFunc = func;
+	}
+
+	void LuaState::addRef(UObject* obj, void* ud, bool ref)
 	{
 		auto* udptr = objRefs.Find(obj);
 		// if any obj find in objRefs, it should be flag freed and removed
@@ -561,7 +589,12 @@ namespace NS_SLUA {
 			(*udptr)->flag |= UD_HADFREE;
 			objRefs.Remove(obj);
 		}
-		objRefs.Add(obj,(GenericUserData*)ud);
+
+		GenericUserData* userData = (GenericUserData*)ud;
+		if (ref && userData) {
+			userData->flag |= UD_REFERENCE;
+		}
+		objRefs.Add(obj,userData);
 	}
 
 	FDeadLoopCheck::FDeadLoopCheck()

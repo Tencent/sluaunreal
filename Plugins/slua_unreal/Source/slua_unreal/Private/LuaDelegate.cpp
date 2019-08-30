@@ -96,7 +96,7 @@ namespace NS_SLUA {
         UD->delegate->AddUnique(Delegate);
 
         // add reference
-        LuaObject::addRef(L,obj,nullptr);
+        LuaObject::addRef(L,obj,nullptr,true);
 
         lua_pushlightuserdata(L,obj);
         return 1;
@@ -107,7 +107,14 @@ namespace NS_SLUA {
         if(!lua_islightuserdata(L,2))
             luaL_error(L,"arg 2 expect ULuaDelegate");
         auto obj =  reinterpret_cast<ULuaDelegate*>(lua_touserdata(L,2));
-        if(!obj->IsValidLowLevel()) return 0;
+		if (!obj->IsValidLowLevel())
+		{
+#if UE_BUILD_DEVELOPMENT
+			luaL_error(L, "Invalid ULuaDelegate!");
+#else
+			return 0;
+#endif
+		}
 
         FScriptDelegate Delegate;
         Delegate.BindUFunction(obj, TEXT("EventTrigger"));
@@ -168,8 +175,8 @@ namespace NS_SLUA {
 			ULuaDelegate* delegateObj = Cast<ULuaDelegate>(object);
 			if (delegateObj)
 			{
-				delegateObj->dispose();
 				LuaObject::removeRef(L, object);
+				delegateObj->dispose();
 			}
 		}
 		ldw->delegate->Clear();
@@ -192,7 +199,7 @@ namespace NS_SLUA {
 		UD->delegate->BindUFunction(obj, TEXT("EventTrigger"));
 
 		// add reference
-		LuaObject::addRef(L, obj, nullptr);
+		LuaObject::addRef(L, obj, nullptr, true);
 
 		lua_pushlightuserdata(L, obj);
 		return 1;

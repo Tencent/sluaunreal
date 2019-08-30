@@ -29,7 +29,6 @@ void ASluaTestActor::BeginPlay()
 // Called every frame
 void ASluaTestActor::Tick(float DeltaTime)
 {
-	PROFILER_WATCHER(x);
 	Super::Tick(DeltaTime);
 
 	NS_SLUA::LuaState* ls = NS_SLUA::LuaState::get();

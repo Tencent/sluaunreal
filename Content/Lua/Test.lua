@@ -1,3 +1,5 @@
+-- open profile
+require 'TestProfile'
 
 -- some.field come from c++
 some.field.y = 103

@@ -69,6 +69,7 @@ namespace NS_SLUA {
     class SLUA_UNREAL_API LuaState 
 		: public FUObjectArray::FUObjectDeleteListener
 		, public FGCObject
+		, public FTickableGameObject
     {
     public:
         LuaState(const char* name=nullptr);
@@ -104,8 +105,7 @@ namespace NS_SLUA {
         
         // init lua state
         virtual bool init(bool enableMultiThreadGC=false);
-        // tick function
-        virtual void tick(float dtime);
+        
         // close lua state
         virtual void close();
 
@@ -155,8 +155,10 @@ namespace NS_SLUA {
 			return objRefs;
 		}
 
+		void setTickFunction(LuaVar func);
+
 		// add obj to ref, tell Engine don't collect this obj
-		void addRef(UObject* obj,void* ud);
+		void addRef(UObject* obj,void* ud,bool ref);
 		// unlink UObject, flag Object had been free, and remove from cache and objRefs
 		void unlinkUObject(const UObject * Object);
 
@@ -166,6 +168,10 @@ namespace NS_SLUA {
 		// tell Engine which objs should be referenced
 		virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
         static int pushErrorHandler(lua_State* L);
+
+		// tickable object methods
+		virtual void Tick(float DeltaTime) override;
+		virtual TStatId GetStatId() const override;
 
 		// call this function on script error
 		void onError(const char* err);
@@ -227,6 +233,7 @@ namespace NS_SLUA {
 		FDelegateHandle wcHandler;
 
 		bool enableMultiThreadGC;
+		LuaVar stateTickFunc;
 
         static LuaState* mainState;
 

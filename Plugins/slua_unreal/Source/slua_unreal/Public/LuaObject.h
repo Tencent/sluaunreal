@@ -99,6 +99,7 @@ namespace NS_SLUA {
 	#define UD_UOBJECT 1<<6 // flag it's an UObject
 	#define UD_USTRUCT 1<<7 // flag it's an UStruct
 	#define UD_WEAKUPTR 1<<8 // flag it's a weak UObject ptr
+	#define UD_REFERENCE 1<<9
 
 	struct UDBase {
 		uint32 flag;
@@ -289,7 +290,7 @@ namespace NS_SLUA {
 
     public:
 
-        typedef int (*PushPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms);
+        typedef int (*PushPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms,bool ref);
         typedef int (*CheckPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms,int i);
 
         static CheckPropertyFunction getChecker(UClass* prop);
@@ -330,10 +331,6 @@ namespace NS_SLUA {
 			lua_pop(L, 1);
 		}
         static void init(lua_State* L);
-
-
-        
-
 
         // check arg at p is exported lua class named __name in field 
         // of metable of the class, if T is base of class or class is T, 
@@ -596,18 +593,18 @@ namespace NS_SLUA {
 			return pushSharedType<BOXPUD, mode,F>(L, cls, tn, UD_SHAREDREF);
 		}
 
-		static void addRef(lua_State* L,UObject* obj, void* ud);
+        static void addRef(lua_State* L,UObject* obj, void* ud, bool ref);
         static void removeRef(lua_State* L,UObject* obj);
 
         template<typename T>
-        static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt,lua_CFunction gc) {
+        static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt,lua_CFunction gc,bool ref) {
             if(getFromCache(L,obj,tn)) return 1;
             lua_pushcclosure(L,gc,0);
             int f = lua_gettop(L);
             int r = pushType<T>(L,obj,tn,setupmt,f);
             lua_remove(L,f); // remove wraped gc function
 			if (r) {
-				addRef(L, obj , lua_touserdata(L,-1));
+				addRef(L, obj, lua_touserdata(L, -1), ref);
 				cacheObj(L, obj);
 			}
             return r;
@@ -626,7 +623,7 @@ namespace NS_SLUA {
         static int pushClass(lua_State* L,UClass* cls);
         static int pushStruct(lua_State* L,UScriptStruct* cls);
 		static int pushEnum(lua_State* L, UEnum* e);
-		static int push(lua_State* L, UObject* obj, bool rawpush=false);
+		static int push(lua_State* L, UObject* obj, bool rawpush=false, bool ref=true);
 		inline static int push(lua_State* L, const UObject* obj) {
 			return push(L, const_cast<UObject*>(obj));
 		}
@@ -651,9 +648,9 @@ namespace NS_SLUA {
 		static int push(lua_State* L, const char* str);
 		static int push(lua_State* L, const LuaVar& v);
         static int push(lua_State* L, UFunction* func, UClass* cls=nullptr);
-		static int push(lua_State* L, UProperty* up, uint8* parms);
-		static int push(lua_State* L, UProperty* up, UObject* obj);
 		static int push(lua_State* L, const LuaLString& lstr);
+		static int push(lua_State* L, UProperty* up, uint8* parms, bool ref=true);
+		static int push(lua_State* L, UProperty* up, UObject* obj, bool ref=true);
 
         // check tn is base of base
         static bool isBaseTypeOf(lua_State* L,const char* tn,const char* base);

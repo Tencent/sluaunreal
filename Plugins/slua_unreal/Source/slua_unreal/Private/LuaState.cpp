@@ -315,6 +315,10 @@ namespace NS_SLUA {
 		loadFileDelegate = func;
 	}
 
+	void LuaState::setErrorDelegate(ErrorDelegate func) {
+		errorDelegate = func;
+	}
+
 	static void* findParent(GenericUserData* parent) {
 		auto pp = parent;
 		while(true) {

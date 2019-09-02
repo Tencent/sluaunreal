@@ -25,6 +25,7 @@ local connectPort
 local currentRunState
 local currentHookState
 local stopConnectTime = 0
+local profileTotalCost = 0
 
 local ignoreHook = false
 
@@ -90,6 +91,7 @@ function this.changeHookState(state)
     currentHookState = state
 
     if currentHookState == HookState.UNHOOK then
+        profileTotalCost = 0
         if OpenAttachMode == true then
             debug.sethook(this.debug_hook, "r", 1000000)
         else
@@ -113,7 +115,12 @@ function this.reGetSock()
     end
 end
 
+local function startsWith(source, start)
+    return string.sub(source,1,string.len(start))== start
+end
+
 function this.debug_hook(event)
+    local start = getTime()
     if ignoreHook then
         return
     end
@@ -128,12 +135,14 @@ function this.debug_hook(event)
     end
 
     local info = debug.getinfo(2, "nSl")
-    if info.short_src and string.starts(info.short_src, "slua_profile.lua") then
+    if info.short_src and startsWith(info.short_src, "slua_profile.lua") then
         return
     end
 
-    local block = slua.makeProfilePackage(eventID, getTime(), info.linedefined, info.name or "", info.short_src or "")
+    local block = slua.makeProfilePackage(eventID, start - profileTotalCost, info.linedefined, info.name or "", info.short_src or "")
     this.sendMsg(block)
+
+    profileTotalCost = profileTotalCost + (getTime() - start)
 end
 
 function this.sendMsg(msg)

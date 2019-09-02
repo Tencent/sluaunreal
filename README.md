@@ -29,6 +29,7 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 * support multi state for isolate lua runtime
 * cpu profile tool
 * multithread lua gc
+* profiler tools, supported in device
 
 # slua-unreal 有什么功能
 
@@ -44,6 +45,7 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 * 支持多luastate实例，用于创建不同运行环境的luastate。
 * lua代码支持cpu profile
 * lua 多线程 GC
+* 性能分析工具，支持连接真机分析
 
 ![1](profiler.png)
 

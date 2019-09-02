@@ -268,7 +268,6 @@ namespace NS_SLUA {
         numOfVar = 0;
         delete[] vars;
         vars = nullptr;
-		stateIndex = INVALID_INDEX;
     }
 
     void LuaVar::alloc(int n) {

@@ -12,19 +12,18 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #include "SluaTestCase.h"
-#include "lua/lua.hpp"
-#include "LuaObject.h"
-#include "LuaCppBinding.h"
-#include "Log.h"
+#include "slua.h"
 #include "SluaTestActor.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/Package.h"
 #include "Blueprint/UserWidget.h"
 #include "Misc/AssertionMacros.h"
-#include "LuaVar.h"
-#include "LuaCppBindingPost.h"
+#include "HttpModule.h"
+#include "IHttpRequest.h"
+#include "IHttpResponse.h"
 
-namespace slua {
+
+namespace NS_SLUA {
 
     class Base {
         LuaClassBody()
@@ -106,6 +105,14 @@ namespace slua {
             callback = nullptr;
         }
 
+		int get_value() {
+			return value;
+		}
+
+		void set_value(int v) {
+			value = v;
+		}
+
         TFunction<void(int)> callback;
         int value;
     };
@@ -118,12 +125,33 @@ namespace slua {
         DefLuaMethod(virtualFunc,&Foo::virtualFunc)
         DefLuaMethod(setCallback,&Foo::setCallback)
         DefLuaMethod(docall,&Foo::docall)
+		DefLuaProperty(value,&Foo::get_value,&Foo::set_value,true)
         DefLuaMethod_With_Type(getFruit_1,&Foo::getFruit,Fruit (Foo::*) ())
         DefLuaMethod_With_Type(getFruit_2,&Foo::getFruit,Fruit (Foo::*) (int))
         DefLuaMethod_With_Lambda(helloWorld,false,[]()->void {
-            slua::Log::Log("Hello World from slua");
+            NS_SLUA::Log::Log("Hello World from slua");
         })
     EndDef(Foo,&Foo::create)
+
+	class Box {
+	public:
+		Box() {
+			gi = 1024;
+			Log::Log("Box construct");
+		}
+		~Box() {
+			Log::Log("Box destruct");
+		}
+		int getCount() {
+			Log::Log( "Box getCount" );
+			return gi++;
+		}
+		int gi;
+	};
+
+	DefLuaClass(Box)
+		DefLuaMethod(getCount, &Box::getCount)
+	EndDef(Box,nullptr)
 
     class FooChild : public Foo {
 
@@ -152,7 +180,8 @@ namespace slua {
         }
 
         void eventTrigger() {
-            event.call();
+			TSharedPtr<Box> ptr = getBoxPtr();
+            event.call(ptr);
         }
 
 		void testArrMap(float f, TArray<int> arr, TMap<int, FString> map) {
@@ -192,6 +221,17 @@ namespace slua {
 #endif
 		}
 
+		TSharedPtr<Box> getBoxPtr() {
+			return MakeShareable(new Box);
+		}
+
+		float hit(const FHitResult& r) {
+			float t = r.Time;
+			float d = r.Distance;
+			Log::Log("Time=%f, Distance=%f", t, d );
+			return r.Distance;
+		}
+
         LuaVar event;
     };
 
@@ -204,6 +244,8 @@ namespace slua {
 		DefLuaMethod(testArrMap2, &FooChild::testArrMap2)
 		DefLuaMethod(getTArray, &FooChild::getTArray)
 		DefLuaMethod(getTMap, &FooChild::getTMap)
+		DefLuaMethod(getBoxPtr, &FooChild::getBoxPtr)
+		DefLuaMethod(hit, &FooChild::hit)
     EndDef(FooChild,&FooChild::create)
 
 
@@ -249,13 +291,46 @@ namespace slua {
 		COUNT,
 	};
 	DefEnumClass(TestEnum2, TestEnum2::OK, TestEnum2::BAD, TestEnum2::COUNT);
+
+	// test http module 
+
+	DefLuaClass(IHttpResponse)
+		DefLuaMethod(GetResponseCode, &IHttpResponse::GetResponseCode)
+	EndDef(IHttpResponse, nullptr)
+
+	DefLuaClass(IHttpRequest)
+		DefLuaMethod(GetResponse, &IHttpRequest::GetResponse)
+		DefLuaMethod(SetVerb, &IHttpRequest::SetVerb)
+		DefLuaMethod(ProcessRequest, &IHttpRequest::ProcessRequest)
+		DefLuaMethod(SetURL, &IHttpRequest::SetURL)
+		DefLuaMethod(SetContent, &IHttpRequest::SetContent)
+		DefLuaMethod(OnRequestProgress, &IHttpRequest::OnRequestProgress)
+		DefLuaMethod(OnProcessRequestComplete, &IHttpRequest::OnProcessRequestComplete)
+#if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
+		DefLuaMethod(OnHeaderReceived, &IHttpRequest::OnHeaderReceived)
+#endif
+	EndDef(IHttpRequest, nullptr)
+
+	DefLuaClass(FHttpModule)
+		DefLuaMethod_With_Lambda(Get, true, []()->FHttpModule* {
+		return &FHttpModule::Get();
+		})
+		DefLuaMethod(CreateRequest, &FHttpModule::CreateRequest)
+		DefLuaMethod(GetHttpTimeout, &FHttpModule::GetHttpTimeout)
+
+	EndDef(FHttpModule,nullptr)
+}
+
+UTestObject::UTestObject(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer) {
+
 }
 
 USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
     this->Value=2048;
-    using namespace slua;
+    using namespace NS_SLUA;
     REG_EXTENSION_METHOD(USluaTestCase,"SetArrayStrEx",&USluaTestCase::SetArrayStrEx);
     REG_EXTENSION_METHOD_IMP(UObject,"IsA",{
         CheckUD(UObject,L,1);
@@ -274,6 +349,8 @@ USluaTestCase::USluaTestCase(const FObjectInitializer& ObjectInitializer)
 	info.ids = { 1,2,3,4 };
 
 	userInfo.Add(1, info);
+
+	weakptr = NewObject<UTestObject>(this,TEXT("TestUObject"));
 }
 
 void USluaTestCase::setupfoo(UObject* obj) {
@@ -314,76 +391,58 @@ TArray<FString> USluaTestCase::GetArrayStr() {
 
 void USluaTestCase::SetArrayStr(const TArray<FString>& array) {
     for(auto it:array) {
-        slua::Log::Log("output array = %s", TCHAR_TO_UTF8(*it));
+        NS_SLUA::Log::Log("output array = %s", TCHAR_TO_UTF8(*it));
     }
 }
 
 void USluaTestCase::SetArrayStrEx(const TArray<FString>& array) {
     for(auto it:array) {
-        slua::Log::Log("output array = %s", TCHAR_TO_UTF8(*it));
+        NS_SLUA::Log::Log("output array = %s", TCHAR_TO_UTF8(*it));
     }
 }
 
 FVector USluaTestCase::TestStruct(FVector v, ESlateVisibility e, FVector& v2, int i, int& i2, FString str) {
-	slua::Log::Log("v.X=%f, v.Y=%f, v.Z=%f", v.X, v.Y, v.Z);
-	slua::Log::Log("i = %d", i);
-	slua::Log::Log("s = %s", TCHAR_TO_UTF8(*str));
-	slua::Log::Log("e = %d", (int)e);
+	NS_SLUA::Log::Log("v.X=%f, v.Y=%f, v.Z=%f", v.X, v.Y, v.Z);
+	NS_SLUA::Log::Log("i = %d", i);
+	NS_SLUA::Log::Log("s = %s", TCHAR_TO_UTF8(*str));
+	NS_SLUA::Log::Log("e = %d", (int)e);
 	v2 = v * 2;
     i2 = i;
 	return v2 * 2;
 }
 
 int USluaTestCase::TestInt_int(int i) {
-	slua::Log::Log("TestInt_int i=%d", i);
+	NS_SLUA::Log::Log("TestInt_int i=%d", i);
 	return i * 2;
 }
 
 FString USluaTestCase::TestIntStr_Str(int i, FString s) {
-	slua::Log::Log("TestIntStr_Str i=%d, s=%s", i, TCHAR_TO_UTF8(*s));
+	NS_SLUA::Log::Log("TestIntStr_Str i=%d, s=%s", i, TCHAR_TO_UTF8(*s));
 	return FString(UTF8_TO_TCHAR("TestIntStr_Str"));
 }
 
 ESlateVisibility USluaTestCase::TestIntStrEnum_Enum(int i, FString s, ESlateVisibility e) {
-	slua::Log::Log("TestIntStrEnum_Enum i=%d, s=%s, e=%d", i, TCHAR_TO_UTF8(*s), (int)e);
+	NS_SLUA::Log::Log("TestIntStrEnum_Enum i=%d, s=%s, e=%d", i, TCHAR_TO_UTF8(*s), (int)e);
 	return ESlateVisibility((int)e + 1);
 }
 
 TArray<int> USluaTestCase::TestIntStrEnum_Arr(int i, FString s, ESlateVisibility e) {
-	slua::Log::Log("TestIntStrEnum_Arr i=%d, s=%s, e=%d", i, TCHAR_TO_UTF8(*s), (int)e);
+	NS_SLUA::Log::Log("TestIntStrEnum_Arr i=%d, s=%s, e=%d", i, TCHAR_TO_UTF8(*s), (int)e);
 	TArray<int> arr = { 123, 321 };
 	return arr;
 }
 
 void USluaTestCase::TestOIntOStrOEnum(int i, int& oi, FString s, FString& os, ESlateVisibility e, ESlateVisibility& oe) {
-	slua::Log::Log("TestOIntOStrOEnum i=%d, s=%s, e=%d", i, TCHAR_TO_UTF8(*s), (int)e);
-	slua::Log::Log("TestOIntOStrOEnum oi=%d, os=%s, oe=%d", oi, TCHAR_TO_UTF8(*os), (int)oe);
+	NS_SLUA::Log::Log("TestOIntOStrOEnum i=%d, s=%s, e=%d", i, TCHAR_TO_UTF8(*s), (int)e);
+	NS_SLUA::Log::Log("TestOIntOStrOEnum oi=%d, os=%s, oe=%d", oi, TCHAR_TO_UTF8(*os), (int)oe);
 }
 
 void USluaTestCase::TwoArgs(FString a,int b,float c,FString d,UObject* widget) {
-	slua::Log::Log("We get 5 args %s,%d,%f,%s,%p", TCHAR_TO_UTF8(*a),b,c,TCHAR_TO_UTF8(*d),widget);    
-}
-
-UUserWidget* USluaTestCase::GetWidget(FString ui) {
-    TArray<FStringFormatArg> Args;
-    Args.Add(ui);
-
-    // load blueprint widget from cpp, need add '_C' tail
-    auto cui = FString::Format(TEXT("Blueprint'{0}_C'"),Args);
-    TSubclassOf<UUserWidget> uclass = LoadClass<UUserWidget>(NULL, *cui);
-    if(uclass==nullptr)
-        return nullptr;
-    if(!ASluaTestActor::instance)
-        return nullptr;
-    UWorld* wld = ASluaTestActor::instance->GetWorld();
-    if(!wld)
-        return nullptr;
-    UUserWidget* widget = CreateWidget<UUserWidget>(wld,uclass);
-    return widget;
+	NS_SLUA::Log::Log("We get 5 args %s,%d,%f,%s,%p", TCHAR_TO_UTF8(*a),b,c,TCHAR_TO_UTF8(*d),widget);    
 }
 
 void USluaTestCase::SetButton(UUserWidget* widget) {
-    slua::Log::Log("Set Button %p",widget);
+    NS_SLUA::Log::Log("Set Button %p",widget);
 }
 
 FSlateBrush USluaTestCase::GetBrush() {
@@ -391,7 +450,7 @@ FSlateBrush USluaTestCase::GetBrush() {
 }
 
 void USluaTestCase::StaticFunc() {
-    slua::Log::Log("static function call");
+    NS_SLUA::Log::Log("static function call");
 }
 
 static USluaTestCase::FOnAssetClassLoaded s_onloaded;
@@ -420,5 +479,5 @@ int USluaTestCase::FuncWithStr(FString str) {
 void USluaTestCase::TestUnicastDelegate(FString str)
 {
     int32 retVal = OnTestGetCount.IsBound() ? OnTestGetCount.Execute(str) : -1;
-    slua::Log::Log("TestUnicastDelegate retVal=%d", retVal);
+    NS_SLUA::Log::Log("TestUnicastDelegate retVal=%d", retVal);
 }

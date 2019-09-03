@@ -53,8 +53,9 @@
 		luaL_error(L, "checkValue error, obj parent has been freed"); \
 	auto self = udptr->ud
 
+#define IsRealOutParam(propflag) ((propflag&CPF_OutParm) && !(propflag&CPF_ConstParm) && !(propflag&CPF_BlueprintReadOnly))
 
-namespace slua {
+namespace NS_SLUA {
 
     class LuaVar;
 
@@ -70,7 +71,7 @@ namespace slua {
         int top;
     };
 
-    struct LuaStruct : public FGCObject {
+    struct SLUA_UNREAL_API LuaStruct : public FGCObject {
         uint8* buf;
         uint32 size;
         UScriptStruct* uss;
@@ -90,54 +91,31 @@ namespace slua {
 
 		
 	#define UD_NOFLAG 0
-	#define UD_AUTOGC 1
-	#define UD_HADFREE 2
-	#define UD_REFERENCE 4
+	#define UD_AUTOGC 1 // flag userdata should call __gc and maintain by lua
+	#define UD_HADFREE 1<<2 // flag userdata had been freed
+	#define UD_SHAREDPTR 1<<3 // it's a TSharedPtr in userdata instead of raw pointer
+	#define UD_SHAREDREF 1<<4 // it's a TSharedRef in userdata instead of raw pointer
+	#define UD_THREADSAFEPTR 1<<5 // it's a TSharedptr with thread-safe mode in userdata instead of raw pointer
+	#define UD_UOBJECT 1<<6 // flag it's an UObject
+	#define UD_USTRUCT 1<<7 // flag it's an UStruct
+	#define UD_WEAKUPTR 1<<8 // flag it's a weak UObject ptr
+	#define UD_REFERENCE 1<<9
 
-#define DEF_USERDATA(T, NAME) \
-	struct NAME { \
-		T ud; \
-		uint32 flag; \
-		void* parent; \
-	}
-
-    template<class T>
-	DEF_USERDATA(T, UserData);
-	DEF_USERDATA(void*, GenericUserData);
-
-    template<typename T, bool isUObject = std::is_base_of<UObject,T>::value>
-    struct TypeName {
-		static const char* value();
-    };
-
-    template<typename T>
-    struct TypeName<T, true> {
-        static const char* value() {
-            return "UObject";
-        }
-    };
-
-	template<typename T>
-	struct TypeName<const T, false> {
-		static const char* value() {
-			return TypeName<T>::value();
-		}
+	struct UDBase {
+		uint32 flag;
+		void* parent;
 	};
 
-    template<typename T>
-    struct TypeName<const T*, false> {
-        static const char* value() {
-			return TypeName<T>::value();
-        }
-    };
+	// Memory layout of GenericUserData and UserData should be same
+	struct GenericUserData : public UDBase {
+		void* ud;
+	};
 
-    #define DefTypeName(T) \
-    template<> \
-    struct TypeName<T, false> { \
-        static const char* value() { \
-            return #T;\
-        }\
-    };\
+	template<class T>
+	struct UserData : public UDBase {
+		static_assert(sizeof(T) == sizeof(void*), "Userdata type should size equal to sizeof(void*)");
+		T ud; 
+	};
 
     DefTypeName(LuaArray);
     DefTypeName(LuaMap);
@@ -148,13 +126,53 @@ namespace slua {
         LuaOwnedPtr(T* p):ptr(p) {}
     };
 
-	FString getUObjName(UObject* obj);
+	template<typename T,ESPMode mode>
+	struct SharedRefUD {
+	private:
+		TSharedRef<T, mode> ref;
+	public:
+		typedef T type;
+		SharedRefUD(const TSharedRef<T, mode>& other) :ref(other) {}
+		
+		T* get(lua_State *L) {
+			return &ref.Get();
+		}
+	};
+
+	template<typename T, ESPMode mode>
+	struct SharedPtrUD {
+	private:
+		TSharedPtr<T, mode> ptr;
+	public:
+		typedef T type;
+		SharedPtrUD(const TSharedPtr<T, mode>& other) :ptr(other) {}
+
+		T* get(lua_State *L) {
+			return ptr.Get();
+		}
+	};
+
+	struct WeakUObjectUD {
+		FWeakObjectPtr ud;
+		WeakUObjectUD(FWeakObjectPtr ptr):ud(ptr) {
+
+		}
+
+		bool isValid() {
+			return ud.IsValid();
+		}
+
+		UObject* get() {
+			if(isValid()) return ud.Get();
+			else return nullptr;
+		}
+	};
 
     class SLUA_UNREAL_API LuaObject
     {
     private:
 
-#define CHECK_UD_VALID if (ptr && ptr->flag&UD_HADFREE) { \
+#define CHECK_UD_VALID(ptr) if (ptr && ptr->flag&UD_HADFREE) { \
 		if (checkfree) \
 			luaL_error(L, "arg %d had been freed(%p), can't be used", lua_absindex(L, p), ptr->ud); \
 		else \
@@ -174,10 +192,18 @@ namespace slua {
 
         // testudata, if T is base of uobject but isn't uobject, try to  cast it to T
         template<typename T>
-        static typename std::enable_if<std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p, bool checkfree=true) {
+        static typename std::enable_if<std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type 
+		testudata(lua_State* L,int p, bool checkfree=true) {
             UserData<UObject*>* ptr = (UserData<UObject*>*)luaL_testudata(L,p,"UObject");
-			CHECK_UD_VALID
-            T* t = ptr?Cast<T>(ptr->ud):nullptr;
+			CHECK_UD_VALID(ptr);
+			T* t = nullptr;
+			// if it's a weak UObject, rawget it
+			if (ptr && ptr->flag&UD_WEAKUPTR) {
+				auto wptr = (UserData<WeakUObjectUD*>*)ptr;
+				t = Cast<T>(wptr->ud->get());
+			}
+			else t = ptr?Cast<T>(ptr->ud):nullptr;
+
 			if (!t && lua_isuserdata(L, p)) {
 				luaL_getmetafield(L, p, "__name");
 				if (lua_isnil(L, -1)) {
@@ -186,7 +212,7 @@ namespace slua {
 				}
 				FString clsname(lua_tostring(L, -1));
 				lua_pop(L, 1);
-				// skip firat char may be 'U' or 'A'
+				// skip first char may be 'U' or 'A'
 				if (clsname.Find(T::StaticClass()->GetName()) == 1) {
 					UserData<T*>* tptr = (UserData<T*>*) lua_touserdata(L, p);
 					t = tptr ? tptr->ud : nullptr;
@@ -199,18 +225,65 @@ namespace slua {
 
         // testudata, if T is uobject
         template<typename T>
-        static typename std::enable_if<std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p, bool checkfree=true) {
+        static typename std::enable_if<std::is_same<UObject,T>::value, T*>::type 
+		testudata(lua_State* L,int p, bool checkfree=true) {
             auto ptr = (UserData<T*>*)luaL_testudata(L,p,"UObject");
-			CHECK_UD_VALID
+			CHECK_UD_VALID(ptr);
 			if (!ptr) return maybeAnUDTable<T>(L, p, checkfree);
-            return ptr?ptr->ud:nullptr;
+			// if it's a weak UObject ptr
+			if (ptr->flag&UD_WEAKUPTR) {
+				auto wptr = (UserData<WeakUObjectUD*>*)ptr;
+				return wptr->ud->get();
+			}
+			else
+				return ptr?ptr->ud:nullptr;
         }
+
+		template<class T>
+		static typename std::enable_if<!std::is_base_of<TSharedFromThis<T>,T>::value, T*>::type
+		unboxSharedUD(lua_State* L, UserData<T*>* ptr) {
+			// ptr may be a ThreadSafe sharedref or NotThreadSafe sharedref
+			// but we don't care about it, we just Get raw ptr from it
+			static_assert(sizeof(SharedPtrUD<T, ESPMode::NotThreadSafe>) == sizeof(SharedPtrUD<T, ESPMode::ThreadSafe>), "unexpected static assert");
+			auto sptr = (UserData<SharedPtrUD<T, ESPMode::NotThreadSafe>*>*)ptr;
+			// unbox shared ptr to rawptr
+			return sptr->ud->get(L);
+		}
+
+		template<class T>
+		static typename std::enable_if<std::is_base_of<TSharedFromThis<T>, T>::value, T*>::type
+		unboxSharedUD(lua_State* L, UserData<T*>* ptr) {
+			// never run here
+			ensureMsgf(false, TEXT("You cannot use a TSharedPtr of one mode with a type which inherits TSharedFromThis of another mode."));
+			return nullptr;
+		}
+
+		
+		template<class T>
+		static T* unboxSharedUDRef(lua_State* L, UserData<T*>* ptr) {
+			// ptr may be a ThreadSafe sharedref or NotThreadSafe sharedref
+			// but we don't care about it, we just Get raw ptr from it
+			static_assert(sizeof(SharedRefUD<T, ESPMode::NotThreadSafe>) == sizeof(SharedRefUD<T, ESPMode::ThreadSafe>), "unexpected static assert");
+			auto sptr = (UserData<SharedRefUD<T, ESPMode::NotThreadSafe>*>*)ptr;
+			// unbox shared ptr to rawptr
+			return sptr->ud->get(L);
+		}
 
         // testudata, if T isn't uobject
         template<typename T>
-        static typename std::enable_if<!std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type testudata(lua_State* L,int p,bool checkfree=true) {
-            auto ptr = (UserData<T*>*)luaL_testudata(L,p,TypeName<T>::value());
-			CHECK_UD_VALID
+        static typename std::enable_if<!std::is_base_of<UObject,T>::value && !std::is_same<UObject,T>::value, T*>::type 
+		testudata(lua_State* L,int p,bool checkfree=true) {
+            auto ptr = (UserData<T*>*)luaL_testudata(L,p,TypeName<T>::value().c_str());
+			CHECK_UD_VALID(ptr);
+			// ptr is boxed shared ptr?
+			if (ptr) {
+				if (ptr->flag&UD_SHAREDPTR) {
+					return unboxSharedUD<T>(L,ptr);
+				}
+				else if (ptr->flag&UD_SHAREDREF) {
+					return unboxSharedUDRef<T>(L,ptr);
+				}
+			}
 			if (!ptr) return maybeAnUDTable<T>(L, p, checkfree);
             return ptr?ptr->ud:nullptr;
         }
@@ -225,7 +298,7 @@ namespace slua {
         static CheckPropertyFunction getChecker(UProperty* cls);
         static PushPropertyFunction getPusher(UClass* cls);
 
-		static bool matchType(lua_State* L, int p, const char* tn);
+		static bool matchType(lua_State* L, int p, const char* tn, bool noprefix=false);
 
 		static int classIndex(lua_State* L);
 		static int classNewindex(lua_State* L);
@@ -281,10 +354,13 @@ namespace slua {
             if(checkfree && !typearg)
                 luaL_error(L,"expect userdata at %d",p);
 
-            if(LuaObject::isBaseTypeOf(L,typearg,TypeName<T>::value()))
-                return (T*) lua_touserdata(L,p);
+			if (LuaObject::isBaseTypeOf(L, typearg, TypeName<T>::value().c_str())) {
+				UserData<T*> *udptr = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, p));
+				CHECK_UD_VALID(udptr);
+				return udptr->ud;
+			}
             if(checkfree) 
-				luaL_error(L,"expect userdata %s, but got %s",TypeName<T>::value(),typearg);
+				luaL_error(L,"expect userdata %s, but got %s",TypeName<T>::value().c_str(),typearg);
             return nullptr;
         }
 
@@ -295,6 +371,43 @@ namespace slua {
 			} else {
 				return checkValue<T>(L, p);
 			}
+		}
+
+		template<class T>
+		static typename std::enable_if< std::is_pointer<T>::value,T >::type checkReturn(lua_State* L, int p) {
+			UserData<T> *udptr = reinterpret_cast<UserData<T>*>(lua_touserdata(L, p));
+			if (udptr->flag & UD_HADFREE)
+				luaL_error(L, "checkValue error, obj parent has been freed");
+			// if it's an UStruct, check struct type name is matched
+			if (udptr->flag & UD_USTRUCT) {
+				UserData<LuaStruct*> *structptr = reinterpret_cast<UserData<LuaStruct*>*>(udptr);
+				LuaStruct* ls = structptr->ud;
+				// skip first prefix like 'F','U','A'
+				if (sizeof(typename std::remove_pointer<T>::type) == ls->size && strcmp(TypeName<T>::value().c_str()+1, TCHAR_TO_UTF8(*ls->uss->GetName())) == 0)
+					return (T)(ls->buf);
+				else
+					luaL_error(L, "checkValue error, type dismatched, expect %s", TypeName<T>::value().c_str());
+			}
+			return udptr->ud;
+		}
+
+		// if T isn't pointer, we should assume UserData box a pointer and dereference it to return
+		template<class T>
+		static typename std::enable_if< !std::is_pointer<T>::value,T >::type checkReturn(lua_State* L, int p) {
+			UserData<T*> *udptr = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, p));
+			if (udptr->flag & UD_HADFREE)
+				luaL_error(L, "checkValue error, obj parent has been freed");
+			// if it's an UStruct, check struct type name is matched
+			if (udptr->flag & UD_USTRUCT) {
+				UserData<LuaStruct*> *structptr = reinterpret_cast<UserData<LuaStruct*>*>(udptr);
+				LuaStruct* ls = structptr->ud;
+				// skip first prefix like 'F','U','A'
+				if (sizeof(T) == ls->size && strcmp(TypeName<T>::value().c_str() + 1, TCHAR_TO_UTF8(*ls->uss->GetName())) == 0)
+					return *((T*)(ls->buf));
+				else
+					luaL_error(L, "checkValue error, type dismatched, expect %s", TypeName<T>::value().c_str());
+			}
+			return *(udptr->ud);
 		}
         
         template<class T>
@@ -312,11 +425,7 @@ namespace slua {
 			if (!lua_isuserdata(L, p))
 				luaL_error(L, "expect userdata at arg %d", p);
 
-			void* ud = lua_touserdata(L, p);
-			UserData<T> *udptr = reinterpret_cast<UserData<T>*>(ud);
-			if (udptr->flag & UD_HADFREE)
-				luaL_error(L, "checkValue error, obj parent has been freed");
-			return udptr->ud;
+			return checkReturn<T>(L, p);
 		}
 
 		template<class T>
@@ -369,9 +478,23 @@ namespace slua {
 		template<class T>
 		static int push(lua_State* L, const char* fn, const T* v, uint32 flag = UD_NOFLAG) {
             if(getFromCache(L,void_cast(v),fn)) return 1;
-			NewUD(T, v, flag);
             luaL_getmetatable(L,fn);
+			// if v is the UnrealType
+			UScriptStruct* uss = nullptr;
+			if (lua_isnil(L, -1) && isUnrealStruct(fn, &uss)) {
+				lua_pop(L, 1); // pop nil
+				uint32 size = uss->GetStructureSize() ? uss->GetStructureSize() : 1;
+				ensure(size == sizeof(T));
+				uint8* buf = (uint8*)FMemory::Malloc(size);
+				uss->InitializeStruct(buf);
+				uss->CopyScriptStruct(buf, v);
+				cacheObj(L, void_cast(v));
+				return push(L, new LuaStruct(buf, size, uss));
+			}
+			NewUD(T, v, flag);
+			lua_pushvalue(L, -2);
 			lua_setmetatable(L, -2);
+			lua_remove(L, -2); // remove metatable of fn
             cacheObj(L,void_cast(v));
             return 1;
 		}
@@ -392,7 +515,7 @@ namespace slua {
 
         typedef void SetupMetaTableFunc(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc);
 
-        template<class T>
+        template<class T, bool F = IsUObject<T>::value >
         static int pushType(lua_State* L,T cls,const char* tn,lua_CFunction setupmt=nullptr,lua_CFunction gc=nullptr) {
             if(!cls) {
                 lua_pushnil(L);
@@ -402,9 +525,73 @@ namespace slua {
 			ud->parent = nullptr;
             ud->ud = cls;
             ud->flag = gc!=nullptr?UD_AUTOGC:UD_NOFLAG;
+			if (F) ud->flag |= UD_UOBJECT;
             setupMetaTable(L,tn,setupmt,gc);
             return 1;
         }
+
+		// for weak UObject
+
+		static int gcWeakUObject(lua_State* L) {
+			luaL_checktype(L, 1, LUA_TUSERDATA);
+			UserData<WeakUObjectUD*>* ud = reinterpret_cast<UserData<WeakUObjectUD*>*>(lua_touserdata(L, 1));
+			ensure(ud->flag&UD_WEAKUPTR);
+			ud->flag |= UD_HADFREE;
+			SafeDelete(ud->ud);
+			return 0;
+		}
+
+		static int pushWeakType(lua_State* L, WeakUObjectUD* cls) {
+			UserData<WeakUObjectUD*>* ud = reinterpret_cast<UserData<WeakUObjectUD*>*>(lua_newuserdata(L, sizeof(UserData<WeakUObjectUD*>)));
+			ud->parent = nullptr;
+			ud->ud = cls;
+			ud->flag = UD_WEAKUPTR | UD_AUTOGC;
+			setupMetaTable(L, "UObject", setupInstanceMT, gcWeakUObject);
+			return 1;
+		}
+
+		// for TSharePtr version
+
+		template<class T, ESPMode mode>
+		static int gcSharedUD(lua_State* L) {
+			luaL_checktype(L, 1, LUA_TUSERDATA);
+			UserData<T*>* ud = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, 1));
+			ud->flag |= UD_HADFREE;
+			SafeDelete(ud->ud);
+			return 0;
+		}
+
+		template<class BOXPUD, ESPMode mode, bool F>
+		static int pushSharedType(lua_State* L, BOXPUD* cls, const char* tn, int flag) {
+			UserData<BOXPUD*>* ud = reinterpret_cast<UserData<BOXPUD*>*>(lua_newuserdata(L, sizeof(UserData<BOXPUD*>)));
+			ud->parent = nullptr;
+			ud->ud = cls;
+			ud->flag = UD_AUTOGC | flag;
+			if (F) ud->flag |= UD_UOBJECT;
+			if (mode == ESPMode::ThreadSafe) ud->flag |= UD_THREADSAFEPTR;
+			setupMetaTable(L, tn, gcSharedUD<BOXPUD, mode>);
+			return 1;
+		}
+
+		template<class T,ESPMode mode, bool F = IsUObject<T>::value>
+		static int pushType(lua_State* L, SharedPtrUD<T, mode>* cls, const char* tn) {
+			if (!cls) {
+				lua_pushnil(L);
+				return 1;
+			}
+			using BOXPUD = SharedPtrUD<T, mode>;
+			return pushSharedType<BOXPUD,mode,F>(L, cls, tn, UD_SHAREDPTR);
+		}
+
+		template<class T, ESPMode mode, bool F = IsUObject<T>::value>
+		static int pushType(lua_State* L, SharedRefUD<T, mode>* cls, const char* tn) {
+			if (!cls) {
+				lua_pushnil(L);
+				return 1;
+			}
+			using BOXPUD = SharedRefUD<T, mode>;
+			return pushSharedType<BOXPUD, mode,F>(L, cls, tn, UD_SHAREDREF);
+		}
 
         static void addRef(lua_State* L,UObject* obj, void* ud, bool ref);
         static void removeRef(lua_State* L,UObject* obj);
@@ -435,10 +622,12 @@ namespace slua {
         
         static int pushClass(lua_State* L,UClass* cls);
         static int pushStruct(lua_State* L,UScriptStruct* cls);
-		static int push(lua_State* L, UObject* obj, bool ref=true);
+		static int pushEnum(lua_State* L, UEnum* e);
+		static int push(lua_State* L, UObject* obj, bool rawpush=false, bool ref=true);
 		inline static int push(lua_State* L, const UObject* obj) {
 			return push(L, const_cast<UObject*>(obj));
 		}
+		static int push(lua_State* L, FWeakObjectPtr ptr);
 		static int push(lua_State* L, FScriptDelegate* obj);
 		static int push(lua_State* L, LuaStruct* ls);
 		static int push(lua_State* L, double v);
@@ -459,6 +648,7 @@ namespace slua {
 		static int push(lua_State* L, const char* str);
 		static int push(lua_State* L, const LuaVar& v);
         static int push(lua_State* L, UFunction* func, UClass* cls=nullptr);
+		static int push(lua_State* L, const LuaLString& lstr);
 		static int push(lua_State* L, UProperty* up, uint8* parms, bool ref=true);
 		static int push(lua_State* L, UProperty* up, UObject* obj, bool ref=true);
 
@@ -466,14 +656,54 @@ namespace slua {
         static bool isBaseTypeOf(lua_State* L,const char* tn,const char* base);
 
         template<typename T>
-        static int push(lua_State* L,T* ptr,typename std::enable_if<!std::is_base_of<UObject,T>::value>::type* = nullptr) {
-            return push(L,TypeName<T>::value(),ptr);
+        static int push(lua_State* L,T* ptr,typename std::enable_if<!std::is_base_of<UObject,T>::value && !Has_LUA_typename<T>::value>::type* = nullptr) {
+            return push(L, TypeName<T>::value().c_str(), ptr);
         }
+
+		// if T has a member function named LUA_typename,
+		// used this branch
+		template<typename T>
+		static int push(lua_State* L, T* ptr, typename std::enable_if<!std::is_base_of<UObject, T>::value && Has_LUA_typename<T>::value>::type* = nullptr) {
+			return push(L, ptr->LUA_typename().c_str(), ptr);
+		}
 
         template<typename T>
         static int push(lua_State* L,LuaOwnedPtr<T> ptr) {
-            return push(L,TypeName<T>::value(),ptr.ptr,UD_AUTOGC);
+            return push(L,TypeName<T>::value().c_str(),ptr.ptr,UD_AUTOGC);
         }
+
+		static int gcSharedPtr(lua_State *L) {
+			return 0;
+		}
+
+		template<typename T, ESPMode mode>
+		static int push(lua_State* L, const TSharedPtr<T, mode>& ptr) {
+			// get raw ptr from sharedptr
+			T* rawptr = ptr.Get();
+			// get typename 
+			auto tn = TypeName<T>::value();
+			if (getFromCache(L, rawptr, tn.c_str())) return 1;
+			int r = pushType<T>(L, new SharedPtrUD<T, mode>(ptr), tn.c_str());
+			if (r) cacheObj(L, rawptr);
+			return r;
+		}
+
+		template<typename T, ESPMode mode>
+		static int push(lua_State* L, const TSharedRef<T, mode>& ref) {
+			// get raw ptr from sharedptr
+			T& rawref = ref.Get();
+			// get typename 
+			auto tn = TypeName<T>::value();
+			if (getFromCache(L, &rawref, tn.c_str())) return 1;
+			int r = pushType<T>(L, new SharedRefUD<T, mode>(ref), tn.c_str());
+			if (r) cacheObj(L, &rawref);
+			return r;
+		}
+
+		// for TBaseDelegate
+		template<class R, class ...ARGS>
+		static int push(lua_State* L, TBaseDelegate<R, ARGS...>& delegate);
+		
 
         template<typename T>
         static int push(lua_State* L,T v,typename std::enable_if<std::is_enum<T>::value>::type* = nullptr) {
@@ -497,7 +727,8 @@ namespace slua {
             return 1;
         }
 
-        static void addExtensionMethod(UClass* cls,const char* n,lua_CFunction func,bool isStatic=false);
+		static void addExtensionMethod(UClass* cls, const char* n, lua_CFunction func, bool isStatic = false);
+		static void addExtensionProperty(UClass* cls, const char* n, lua_CFunction getter, lua_CFunction setter, bool isStatic = false);
 
         static UFunction* findCacheFunction(lua_State* L,UClass* cls,const char* fname);
         static void cacheFunction(lua_State* L, UClass* cls,const char* fame,UFunction* func);
@@ -505,6 +736,7 @@ namespace slua {
         static bool getFromCache(lua_State* L, void* obj, const char* tn, bool check = true);
 		static void cacheObj(lua_State* L, void* obj);
 		static void removeFromCache(lua_State* L, void* obj);
+		static void deleteFGCObject(lua_State* L,FGCObject* obj);
     private:
         static int setupClassMT(lua_State* L);
         static int setupInstanceMT(lua_State* L);
@@ -516,31 +748,11 @@ namespace slua {
         static int gcStructClass(lua_State* L);
 		static int gcStruct(lua_State* L);
         static int objectToString(lua_State* L);
-        static void setupMetaTable(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc) {
-            if(luaL_newmetatable(L, tn)) {
-                if(setupmt)
-                    setupmt(L);
-                if(gc) {
-                    lua_pushcfunction(L,gc);
-                    lua_setfield(L,-2,"__gc");
-                }
-            }
-            lua_setmetatable(L, -2);
-        }
+        static void setupMetaTable(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc);
+		static void setupMetaTable(lua_State* L, const char* tn, lua_CFunction setupmt, int gc);
+		static void setupMetaTable(lua_State* L, const char* tn, lua_CFunction gc);
 
-        static void setupMetaTable(lua_State* L,const char* tn,lua_CFunction setupmt,int gc) {
-            if(luaL_newmetatable(L, tn)) {
-                if(setupmt)
-                    setupmt(L);
-                if(gc) {
-                    lua_pushvalue(L,gc);
-                    lua_setfield(L,-2,"__gc");
-                }
-            }
-            lua_setmetatable(L, -2);
-        }
-
-        template<class T>
+        template<class T, bool F = IsUObject<T>::value>
         static int pushType(lua_State* L,T cls,const char* tn,lua_CFunction setupmt,int gc) {
             if(!cls) {
                 lua_pushnil(L);
@@ -550,8 +762,8 @@ namespace slua {
             UserData<T>* ud = reinterpret_cast< UserData<T>* >(lua_newuserdata(L, sizeof(UserData<T>)));
 			ud->parent = nullptr;
             ud->ud = cls;
-            ud->flag = UD_AUTOGC;
-            
+            ud->flag = F|UD_AUTOGC;
+			if (F) ud->flag |= UD_UOBJECT;
             setupMetaTable(L,tn,setupmt,gc);
             return 1;
         }
@@ -666,4 +878,20 @@ namespace slua {
         luaL_checktype(L,p,LUA_TLIGHTUSERDATA);
         return lua_touserdata(L,p);
     }
+
+	template<>
+	inline int LuaObject::pushType<LuaStruct*, false>(lua_State* L, LuaStruct* cls,
+		const char* tn, lua_CFunction setupmt, lua_CFunction gc) {
+		if (!cls) {
+			lua_pushnil(L);
+			return 1;
+		}
+		UserData<LuaStruct*>* ud = reinterpret_cast<UserData<LuaStruct*>*>(lua_newuserdata(L, sizeof(UserData<LuaStruct*>)));
+		ud->parent = nullptr;
+		ud->ud = cls;
+		ud->flag = gc != nullptr ? UD_AUTOGC : UD_NOFLAG;
+		ud->flag |= UD_USTRUCT;
+		setupMetaTable(L, tn, setupmt, gc);
+		return 1;
+	}
 }

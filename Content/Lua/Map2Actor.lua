@@ -1,6 +1,8 @@
 
 
 local actor={}
+
+local EPropertyClass = import"EPropertyClass"
 -- override event from blueprint
 function actor:ReceiveBeginPlay()
     self.bCanEverTick = true
@@ -13,7 +15,7 @@ function actor:ReceiveBeginPlay()
 
     self.basepos={}
     self.rot={}
-    self.ballarr = slua.Array(UEnums.EPropertyClass.Object,bpClass)
+    self.ballarr = slua.Array(EPropertyClass.Object,bpClass)
 
     for n=1,10 do
         local p = FVector(math.random(-100,100),math.random(-100,100),0)
@@ -24,6 +26,15 @@ function actor:ReceiveBeginPlay()
         actor.Name = 'ActorCreateFromLua_'..tostring(n)
     end
     self:Super()
+
+    -- test an issue
+    -- callLastMapActorMethod()
+end
+
+function callLastMapActorMethod()
+    for k,v in pairs(gactor.objs) do
+        print(k,v)
+    end
 end
 
 -- override event from blueprint

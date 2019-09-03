@@ -18,7 +18,7 @@
 #include <cstddef>
 #include <type_traits>
 
-namespace slua {
+namespace NS_SLUA {
 
     template<int ...>
     struct IntList {};
@@ -362,20 +362,20 @@ namespace slua {
 
     #define LuaClassBody() \
         public: \
-        virtual const char* LUA_typename() const { \
+        virtual SimpleString LUA_typename() const { \
             return TypeName<decltype(this)>::value(); \
         } \
 
     #define __DefTypeName(CLS) \
         template<> \
-        const char* TypeName<CLS>::value() { \
-            return #CLS; \
+        SimpleString TypeName<CLS>::value() { \
+            return SimpleString(#CLS); \
         } \
 
     #define __DefTypeNameExtern(MODULE_API,CLS) \
         template<> \
-        MODULE_API const char* TypeName<CLS>::value() { \
-            return #CLS; \
+        MODULE_API SimpleString TypeName<CLS>::value() { \
+            return SimpleString(#CLS); \
         } \
     
     #define __DefLuaClassTail(CLS) \
@@ -437,6 +437,12 @@ namespace slua {
 		LuaObject::addMethod(L, #NAME, BindType::LuaCFunction, !Static); \
     }
 
+	#define DefLuaProperty(NAME,GET,SET,INST) { \
+        lua_CFunction get=LuaCppBinding<decltype(GET),GET>::LuaCFunction; \
+        lua_CFunction set=LuaCppBinding<decltype(SET),SET>::LuaCFunction; \
+        LuaObject::addField(L,#NAME,get,set,INST); \
+    }
+
     #define DefGlobalMethod(NAME,M) { \
         lua_CFunction x=LuaCppBinding<decltype(M),M>::LuaCFunction; \
         LuaObject::addGlobalMethod(L, #NAME, x); \
@@ -491,6 +497,11 @@ namespace slua {
 		BindType::Func = &lambda; \
 		LuaObject::addExtensionMethod(U::StaticClass(), N, BindType::LuaCFunction, Static); \
 	}
-    
+
+	#define REG_EXTENSION_PROPERTY(U,N,GETTER,SETTER) { \
+		using GetType = LuaCppBinding<decltype(GETTER),GETTER>; \
+		using SetType = LuaCppBinding<decltype(SETTER),SETTER>; \
+        LuaObject::addExtensionProperty(U::StaticClass(),N,GetType::LuaCFunction,SetType::LuaCFunction,GetType::IsStatic); }
+
 }
 

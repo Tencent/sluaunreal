@@ -18,7 +18,7 @@
 #include "LuaState.h"
 #include "LuaReference.h"
 
-namespace slua {
+namespace NS_SLUA {
 
     DefTypeName(LuaArray::Enumerator); 
 
@@ -277,6 +277,8 @@ namespace slua {
 	int LuaArray::Pairs(lua_State* L) {
 		CheckUD(LuaArray, L, 1);
 		auto iter = new LuaArray::Enumerator();
+		// hold LuaArray
+		iter->holder = new LuaVar(L, 1);
 		iter->arr = UD;
 		iter->index = 0;
 		lua_pushcfunction(L, LuaArray::Enumerable);
@@ -319,7 +321,7 @@ namespace slua {
 
     int LuaArray::gc(lua_State* L) {
         CheckUD(LuaArray,L,1);
-        delete UD;
+		LuaObject::deleteFGCObject(L,UD);
         return 0;   
     }
 
@@ -327,6 +329,11 @@ namespace slua {
 		CheckUD(LuaArray::Enumerator, L, 1);
 		delete UD;
 		return 0;
+	}
+
+	LuaArray::Enumerator::~Enumerator()
+	{
+		SafeDelete(holder);
 	}
 
 }

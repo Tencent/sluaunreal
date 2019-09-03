@@ -1,30 +1,19 @@
+## What's slua-unreal?
+
+slua-unreal is unreal4 plugin, you can use lua language to develop game login and hot fix your lua code via this plugin, slua-unreal give you 3 way to wrap your c++ interface for lua, including reflection(by blueprint), c++ template and static code generation by a tool, meanwhile you can communicate with blueprint, call lua from blueprint, vice versa.
+
 # slua-unreal 是什么 
 
 slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射能力，结合libclang静态c++代码分析，自动化导出蓝图接口和静态c++接口，提供给lua语言，使得可以通过lua语言开发unreal游戏业务逻辑，方便游戏高效迭代开发，上线热更新，同时支持lua到c++双向，lua到蓝图双向调用，使用lua语言完美替代unreal的c++开发方式，修改业务逻辑不需要等待c++编译，大大提升开发速度。
 
-目前该项目作为潘多拉系统的一部分，用于部分腾讯游戏业务，构建这些业务的周边系统、运营系统，上线质量稳定。
+目前该项目作为腾讯PUBG手游和潘多拉系统，该系统用于腾讯UE4游戏业务，帮助游戏业务构建周边系统、运营系统，上线质量稳定。
 
 欢迎issue，pr，star，fork。
 
-## What's slua-unreal?
 
-slua-unreal is unreal4 plugin, you can use lua language to develop game login and hot fix your lua code via this plugin, slua-unreal give you 3 way to wrap your c++ interface fro lua, including reflection(by blueprint), c++ template and static code generation by a tool, meanwhile you can communicate with blueprint, call lua from blueprint, vice versa.
+## Showcases
 
-# slua-unreal 有什么功能
-
-* 通过蓝图反射机制，自动导出unreal 4的蓝图api到lua接口
-* 支持以lua function作为蓝图事件的回调函数
-* 支持普通c++函数和类 通过静态代码生成或者泛型代码展开导出到lua接口，同时支持与蓝图接口交互
-* 完整支持了unreal4的枚举，并导出了全部枚举值到lua
-* 支持FVector等非蓝图类，同时支持操作符重载
-* 支持扩展方法，将某些未标记为蓝图方法的函数，手动添加到蓝图类中，例如UUserWidget的GetWidgetFromName方法。
-* 支持从蓝图中调入lua，并接收lua返回值，支持任意参数类型和任意参数个数。
-* 支持蓝图out标记参数，支持c++非const引用作为out类型参数返回。
-* 自动检查脚本死循环，当代码运行超时自动报错。
-* 支持多luastate实例，用于创建不同运行环境的luastate。
-* lua代码支持cpu profile
-
-![1](profiler.png)
+![icon_logo](https://user-images.githubusercontent.com/6227270/59747641-db6e1b80-92ab-11e9-81b6-7ca7ebfd6c0e.png)![logo](https://user-images.githubusercontent.com/6227270/59747461-80d4bf80-92ab-11e9-989b-44809d5b780c.png)
 
 ## Feature
 
@@ -39,6 +28,27 @@ slua-unreal is unreal4 plugin, you can use lua language to develop game login an
 * detect dead loop code, report error if happen dead loop
 * support multi state for isolate lua runtime
 * cpu profile tool
+* multithread lua gc
+* profiler tools, supported in device
+
+# slua-unreal 有什么功能
+
+* 通过蓝图反射机制，自动导出unreal 4的蓝图api到lua接口
+* 支持以lua function作为蓝图事件的回调函数
+* 支持普通c++函数和类 通过静态代码生成或者泛型代码展开导出到lua接口，同时支持与蓝图接口交互
+* 完整支持了unreal4的枚举，并导出了全部枚举值到lua
+* 支持FVector等非蓝图类，同时支持操作符重载
+* 支持扩展方法，将某些未标记为蓝图方法的函数，手动添加到蓝图类中，例如UUserWidget的GetWidgetFromName方法。
+* 支持从蓝图中调入lua，并接收lua返回值，支持任意参数类型和任意参数个数。
+* 支持蓝图out标记参数，支持c++非const引用作为out类型参数返回。
+* 自动检查脚本死循环，当代码运行超时自动报错。
+* 支持多luastate实例，用于创建不同运行环境的luastate。
+* lua代码支持cpu profile
+* lua 多线程 GC
+* 性能分析工具，支持连接真机分析
+
+![1](profiler.png)
+
 
 # 使用方法简单范例
 

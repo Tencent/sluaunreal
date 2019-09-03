@@ -21,7 +21,7 @@
 
 #define LUA_WRAPPER_DEBUG
 
-namespace slua {
+namespace NS_SLUA {
 
 	struct LuaWrapper {
 

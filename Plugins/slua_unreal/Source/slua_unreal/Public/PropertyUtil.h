@@ -12,43 +12,47 @@
 // See the License for the specific language governing permissions and limitations under the License.
 #pragma once
 #include "CoreMinimal.h"
+#include "lua.hpp"
+#include "PropertyUtil.generated.h"
 
-namespace slua {
 
-	// copy code from UE, avoid be removed from version 4.22
-	enum class EPropertyClass
-	{
-		Byte,
-		Int8,
-		Int16,
-		Int,
-		Int64,
-		UInt16,
-		UInt32,
-		UInt64,
-		UnsizedInt,
-		UnsizedUInt,
-		Float,
-		Double,
-		Bool,
-		SoftClass,
-		WeakObject,
-		LazyObject,
-		SoftObject,
-		Class,
-		Object,
-		Interface,
-		Name,
-		Str,
-		Array,
-		Map,
-		Set,
-		Struct,
-		Delegate,
-		MulticastDelegate,
-		Text,
-		Enum,
-	};
+// copy code from UE, avoid be removed from version 4.22
+UENUM()
+enum class EPropertyClass
+{
+	Byte,
+	Int8,
+	Int16,
+	Int,
+	Int64,
+	UInt16,
+	UInt32,
+	UInt64,
+	UnsizedInt,
+	UnsizedUInt,
+	Float,
+	Double,
+	Bool,
+	SoftClass,
+	WeakObject,
+	LazyObject,
+	SoftObject,
+	Class,
+	Object,
+	Interface,
+	Name,
+	Str,
+	Array,
+	Map,
+	Set,
+	Struct,
+	Delegate,
+	MulticastDelegate,
+	Text,
+	Enum,
+};
+
+namespace NS_SLUA {
 
     template<typename T>
     struct DeduceType;

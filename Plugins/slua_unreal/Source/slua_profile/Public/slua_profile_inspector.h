@@ -26,6 +26,7 @@ struct FunctionProfileInfo;
 typedef TArray<TSharedPtr<FunctionProfileInfo>> SluaProfiler;
 class SProfilerWidget;
 const int cMaxSampleNum = 250;
+const int cMaxViewHeight = 200;
 
 class SLUA_PROFILE_API SProfilerInspector
 {
@@ -49,8 +50,8 @@ public:
 
 private:
 	const static int sampleNum = cMaxSampleNum;
-	const static int fixRowWidth = 400;
-	const static int refreshInterval = 1;
+	const static int fixRowWidth = 300;
+	const static int refreshInterval = 50;
 	const float perMilliSec = 1000.0f;
 
 	TSharedPtr<STreeView<TSharedPtr<FunctionProfileInfo>>> treeview;
@@ -129,8 +130,9 @@ private:
 	float m_widgetWidth;
 	const int32 m_cStdLeftPosition = 30;
 	float m_maxCostTime;
+	float m_maxPointHeight;
 	float m_pointInterval;
 	float m_toolTipVal;
 	FVector2D m_clickedPoint;
-	const float m_cStdHighVal = 200.0f;
+	const float m_cStdHighVal = cMaxViewHeight;
 };

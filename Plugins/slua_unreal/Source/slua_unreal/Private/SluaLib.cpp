@@ -32,10 +32,11 @@
 #include "Engine/GameEngine.h"
 #endif
 #include "LuaMemoryProfile.h"
+#include "Runtime/Launch/Resources/Version.h"
 #include "ArrayWriter.h"
 #include <chrono>
 
-namespace slua {
+namespace NS_SLUA {
 
     void SluaUtil::openLib(lua_State* L) {
         lua_newtable(L);
@@ -48,6 +49,8 @@ namespace slua {
 		RegMetaMethod(L, getMiliseconds);
 		RegMetaMethod(L, dumpUObjects);
 		RegMetaMethod(L, loadObject);
+		RegMetaMethod(L, threadGC);
+		RegMetaMethod(L, isValid);
         lua_setglobal(L,"slua");
     }
 
@@ -90,6 +93,21 @@ namespace slua {
 		UObject* outter = LuaObject::checkValueOpt<UObject*>(L, 2, nullptr);
 		return LuaObject::push(L, LoadObject<UObject>(outter, UTF8_TO_TCHAR(objname)));
 	}
+
+	int SluaUtil::threadGC(lua_State * L)
+	{
+		const char* flag = luaL_checkstring(L, 1);
+		auto state = LuaState::get(L);
+		if (strcmp(flag, "on") == 0) {
+			state->enableMultiThreadGC = true;
+			lua_gc(L, LUA_GCSTOP, 0);
+		}
+		else if (strcmp(flag, "off") == 0) {
+			state->enableMultiThreadGC = false;
+			lua_gc(L, LUA_GCRESTART, 0);
+		}
+		return 0;
+	}
     
     int SluaUtil::loadUI(lua_State* L) {
       
@@ -99,7 +117,7 @@ namespace slua {
         if(uclass==nullptr) luaL_error(L,"Can't find class named %s",cls);
         
 		UUserWidget* widget = nullptr;
-		// obj can be 5 type
+		// obj can be 5 types
 		if (obj) {
 			if (obj->IsA<UWorld>())
 				widget = CreateWidget<UUserWidget>(Cast<UWorld>(obj), uclass);
@@ -205,10 +223,34 @@ namespace slua {
 		return 1;
 	}
 
+	int SluaUtil::isValid(lua_State * L)
+	{
+		luaL_checktype(L, 1, LUA_TUSERDATA);
+		GenericUserData *gud = (GenericUserData*)lua_touserdata(L, 1);
+		bool isValid = !(gud->flag & UD_HADFREE);
+		if(!isValid)
+			return LuaObject::push(L, isValid);
+		// if this ud is boxed UObject
+		if (gud->flag & UD_UOBJECT) {
+			UObject* obj = LuaObject::checkUD<UObject>(L, 1);
+			isValid = IsValid(obj);
+		}
+		else if (gud->flag&UD_WEAKUPTR) {
+			UserData<WeakUObjectUD*>* wud = (UserData<WeakUObjectUD*>*)gud;
+			isValid = wud->ud->isValid();
+		}
+		return LuaObject::push(L, isValid);
+	}
+
 #if WITH_EDITOR
+#define CheckState(state) if(!state) { \
+	Log::Error("Not find any state is available"); \
+	return; \
+	} \
+
 	void dumpUObjects() {
 		auto state = LuaState::get();
-		if (!state) return;
+		CheckState(state);
 		auto& map = state->cacheSet();
 		for (auto& it : map) {
 			Log::Log("Pushed UObject %s", TCHAR_TO_UTF8(*getUObjName(it.Key)));
@@ -217,14 +259,23 @@ namespace slua {
 
 	void garbageCollect() {
 		auto state = LuaState::get();
+		CheckState(state);
 		lua_gc(state->getLuaState(), LUA_GCCOLLECT, 0);
 		Log::Log("Performed full lua gc");
 	}
 
 	void memUsed() {
 		auto state = LuaState::get();
+		CheckState(state);
 		int kb = lua_gc(state->getLuaState(), LUA_GCCOUNT, 0);
 		Log::Log("Lua use memory %d kb",kb);
+	}
+
+	void doString(const TArray<FString>& Args) {
+		auto state = LuaState::get();
+		CheckState(state);
+		FString script = FString::Join(Args, TEXT(" "));
+		state->doString(TCHAR_TO_UTF8(*script));
 	}
 
 	static FAutoConsoleCommand CVarDumpUObjects(
@@ -243,6 +294,12 @@ namespace slua {
 		TEXT("slua.Mem"),
 		TEXT("Print memory used"),
 		FConsoleCommandDelegate::CreateStatic(memUsed),
+		ECVF_Cheat);
+
+	static FAutoConsoleCommand CVarDo(
+		TEXT("slua.Do"),
+		TEXT("Run lua script"),
+		FConsoleCommandWithArgsDelegate::CreateStatic(doString),
 		ECVF_Cheat);
 #endif
 }

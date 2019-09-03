@@ -29,6 +29,8 @@ DEFINE_LOG_CATEGORY(LogSluaProfile)
 
 namespace {
 	static const FName slua_profileTabName(TEXT("slua_profile"));
+
+
 	static const FString CoroutineName(TEXT("coroutine"));
 	SluaProfiler curProfiler;
 	
@@ -298,4 +300,3 @@ void Fslua_profileModule::debug_hook_c(int event, double nanoseconds, int linede
 #undef LOCTEXT_NAMESPACE
 	
 IMPLEMENT_MODULE(Fslua_profileModule, slua_profile)
-

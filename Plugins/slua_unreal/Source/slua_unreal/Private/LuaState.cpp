@@ -24,7 +24,6 @@
 #include "lua/lua.hpp"
 #include <map>
 #include "LuaWrapper.h"
-#include "LuaEnums.h"
 #include "LuaArray.h"
 #include "LuaMap.h"
 #include "LuaSocketWrap.h"
@@ -33,7 +32,7 @@
 #include "GameDelegates.h"
 #include "LuaActor.h"
 
-namespace slua {
+namespace NS_SLUA {
 
 	const int MaxLuaExecTime = 5; // in second
 
@@ -41,15 +40,13 @@ namespace slua {
         const char* name = LuaObject::checkValue<const char*>(L,1);
         if(name) {
             UClass* uclass = FindObject<UClass>(ANY_PACKAGE, UTF8_TO_TCHAR(name));
-            if(uclass) {
-                LuaObject::pushClass(L,uclass);
-                return 1;
-            }
-            UScriptStruct* ustruct = FindObject<UScriptStruct>(ANY_PACKAGE, UTF8_TO_TCHAR(name));
-            if(ustruct) {
-                LuaObject::pushStruct(L,ustruct);
-                return 1;
-            }
+            if(uclass) return LuaObject::pushClass(L,uclass);
+            
+			UScriptStruct* ustruct = FindObject<UScriptStruct>(ANY_PACKAGE, UTF8_TO_TCHAR(name));
+            if(ustruct) return LuaObject::pushStruct(L,ustruct);
+
+			UEnum* uenum = FindObject<UEnum>(ANY_PACKAGE, UTF8_TO_TCHAR(name));
+			if (uenum) return LuaObject::pushEnum(L, uenum);
             
             luaL_error(L,"Can't find class named %s",name);
         }
@@ -69,14 +66,32 @@ namespace slua {
         return 0;
     }
 
+	int dofile(lua_State *L) {
+		auto fn = luaL_checkstring(L, 1);
+		auto ls = LuaState::get(L);
+		ensure(ls);
+		auto var = ls->doFile(fn);
+		if (var.isValid()) {
+			return var.push(L);
+		}
+		return 0;
+	}
+
     int error(lua_State* L) {
         const char* err = lua_tostring(L,1);
         luaL_traceback(L,L,err,1);
         err = lua_tostring(L,2);
-        Log::Error("%s",err);
         lua_pop(L,1);
+		auto ls = LuaState::get(L);
+		ls->onError(err);
         return 0;
     }
+
+	void LuaState::onError(const char* err) {
+		if (errorDelegate) errorDelegate(err);
+		else Log::Error("%s", err);
+	}
+
      #if WITH_EDITOR
      // used for debug
 	int LuaState::getStringFromMD5(lua_State* L) {
@@ -129,7 +144,8 @@ namespace slua {
     static int StateIndex = 0;
 
 	LuaState::LuaState(const char* name)
-		:loadFileDelegate(nullptr)
+		: loadFileDelegate(nullptr)
+		, errorDelegate(nullptr)
 		, L(nullptr)
 		, cacheObjRef(LUA_NOREF)
 		, stackCount(0)
@@ -160,12 +176,15 @@ namespace slua {
     }
 
     // check lua top , this function can omit
-    void LuaState::tick(float dtime) {
-        int top = lua_gettop(L);
-        if(top!=stackCount) {
-            stackCount = top;
-            Log::Error("Error: lua stack count should be zero , now is %d",top);
-        }
+    void LuaState::Tick(float dtime) {
+		ensure(IsInGameThread());
+		if (!L) return;
+
+		int top = lua_gettop(L);
+		if (top != stackCount) {
+			stackCount = top;
+			Log::Error("Error: lua stack count should be zero , now is %d", top);
+		}
 
 		if (stateTickFunc.isFunction())
 		{
@@ -192,7 +211,7 @@ namespace slua {
     }
 
 
-    bool LuaState::init() {
+    bool LuaState::init(bool gcFlag) {
 
         if(deadLoopCheck)
             return false;
@@ -200,6 +219,7 @@ namespace slua {
         if(!mainState) 
             mainState = this;
 
+		enableMultiThreadGC = gcFlag;
 		pgcHandler = FCoreUObjectDelegates::GetPostGarbageCollect().AddRaw(this, &LuaState::onEngineGC);
 		wcHandler = FWorldDelegates::OnWorldCleanup.AddRaw(this, &LuaState::onWorldCleanup);
 		GUObjectArray.AddUObjectDeleteListener(this);
@@ -243,6 +263,9 @@ namespace slua {
         lua_pushcfunction(L,print);
         lua_setglobal(L, "print");
 
+		lua_pushcfunction(L, dofile);
+		lua_setglobal(L, "dofile");
+
         #if WITH_EDITOR
         // used for debug
 		lua_pushcfunction(L, getStringFromMD5);
@@ -271,6 +294,11 @@ namespace slua {
         LuaClass::reg(L);
         LuaArray::reg(L);
         LuaMap::reg(L);
+		
+		onInitEvent.Broadcast();
+
+		// disable gc in main thread
+		if (enableMultiThreadGC) lua_gc(L, LUA_GCSTOP, 0);
 
         lua_settop(L,0);
 
@@ -334,9 +362,12 @@ namespace slua {
 		for (ClassFunctionCache::CacheMap::TIterator it(classMap.cacheMap); it; ++it)
 			if (!it.Key().IsValid())
 				it.RemoveCurrent();
-		Log::Log("Unreal engine GC, perform lua gc");
-		// do more gc step
-		lua_gc(L, LUA_GCSTEP, 1024);
+		// really delete FGCObject
+		for (auto ptr : deferDelete)
+			delete ptr;
+		deferDelete.Empty();
+
+		Log::Log("Unreal engine GC, lua used %d KB",lua_gc(L, LUA_GCCOUNT, 0));
 	}
 
 	void LuaState::onWorldCleanup(UWorld * World, bool bSessionEnded, bool bCleanupResources)
@@ -403,6 +434,11 @@ namespace slua {
 		}
 
 		GenericUserData* ud = *udptr;
+
+		// remove should put here avoid ud is invalid
+		// remove ref, Object must be an UObject in slua
+		objRefs.Remove(const_cast<UObject*>(Object));
+
 		// maybe ud is nullptr or had been freed
 		if (!ud) {
 			// remove should put here avoid ud is invalid
@@ -414,8 +450,6 @@ namespace slua {
 
 		// indicate ud had be free
 		ud->flag |= UD_HADFREE;
-		// remove ref, Object must be an UObject in slua
-		objRefs.Remove(const_cast<UObject*>(Object));
 		// remove cache
 		ensure(ud->ud == Object);
 		LuaObject::removeFromCache(L, ud->ud);
@@ -423,19 +457,21 @@ namespace slua {
 
 	void LuaState::AddReferencedObjects(FReferenceCollector & Collector)
 	{
-		// erase all null reference
-		// Collector.AddReferencedObjects will set inner item to nullptr
-		// so check and remove it
 		for (UObjectRefMap::TIterator it(objRefs); it; ++it)
 		{
 			UObject* item = it.Key();
 			GenericUserData* userData = it.Value();
-			if (userData && !(userData->flag | UD_REFERENCE))
+			if (userData && !(userData->flag & UD_REFERENCE))
 			{
 				continue;
 			}
 			Collector.AddReferencedObject(item);
 		}
+		// do more gc step in collecting thread
+		// lua_gc can be call async in bg thread in some isolate position
+		// but this position equivalent to main thread
+		// we just try and find some proper async position
+		if (enableMultiThreadGC && L) lua_gc(L, LUA_GCCOLLECT, 128);
 	}
 
 	int LuaState::pushErrorHandler(lua_State* L) {
@@ -443,6 +479,11 @@ namespace slua {
         ensure(ls!=nullptr);
         return ls->_pushErrorHandler(L);
     }
+
+	TStatId LuaState::GetStatId() const
+	{
+		RETURN_QUICK_DECLARE_CYCLE_STAT(LuaState, STATGROUP_Game);
+	}
 
 	int LuaState::_pushErrorHandler(lua_State* state) {
         lua_pushcfunction(state,error);
@@ -591,23 +632,28 @@ namespace slua {
 		stopCounter.Increment();
 	}
 
-	void FDeadLoopCheck::scriptEnter(ScriptTimeoutEvent* pEvent)
+	int FDeadLoopCheck::scriptEnter(ScriptTimeoutEvent* pEvent)
 	{
-		if (frameCounter.Increment() == 1) {
+		int ret = frameCounter.Increment();
+		if ( ret == 1) {
 			timeoutCounter.Set(0);
 			timeoutEvent.store(pEvent);
 		}
+		return ret;
 	}
 
-	void FDeadLoopCheck::scriptLeave()
+	int FDeadLoopCheck::scriptLeave()
 	{
-		frameCounter.Decrement();
+		return frameCounter.Decrement();
 	}
 
 	void FDeadLoopCheck::onScriptTimeout()
 	{
 		auto pEvent = timeoutEvent.load();
-		if (pEvent) pEvent->onTimeout();
+		if (pEvent) {
+			timeoutEvent.store(nullptr);
+			pEvent->onTimeout();
+		}
 	}
 
 	LuaScriptCallGuard::LuaScriptCallGuard(lua_State * L_)

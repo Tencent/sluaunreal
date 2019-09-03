@@ -5,11 +5,11 @@ local testcase={}
 local HitResult = import('HitResult');
 
 
-function testcase:test(uworld,actor)
+function testcase:test(uworld,uactor)
     print("=====Begin test blueprint")
     local bpClass = slua.loadClass("/Game/TestActor.TestActor")
     -- get out TArray for actors
-    local arr=GameplayStatics.GetAllActorsOfClass(actor,bpClass,nil)
+    local arr=GameplayStatics.GetAllActorsOfClass(uactor,bpClass,nil)
 
     for k,v in pairs(arr) do
         print("GetAllActorsOfClass",k,v)
@@ -33,6 +33,7 @@ function testcase:test(uworld,actor)
         self.balls[n]=actor
         self.basepos[n]=p
         self.rot[n]=math.random(-100,100)
+        uactor.objs:Add(actor)
         -- actor.Name = 'ActorCreateFromLua_'..tostring(n)
     end
     

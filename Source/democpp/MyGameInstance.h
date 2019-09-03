@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LuaState.h"
+#include "slua.h"
 #include "Engine/GameInstance.h"
 #include "MyGameInstance.generated.h"
 
@@ -23,6 +23,9 @@ public:
 	/** virtual function to allow custom GameInstances an opportunity to do cleanup when shutting down */
 	virtual void Shutdown() override;
 
+	UFUNCTION()
+	void LuaStateInitCallback();
+
 	// create global state, freed on app exit
-	slua::LuaState state;
+	NS_SLUA::LuaState state;
 };

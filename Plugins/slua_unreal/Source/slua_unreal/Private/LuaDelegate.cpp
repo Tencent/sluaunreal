@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 
-#include "LuaDelegate.h"
 #include "LuaObject.h"
 #include "LuaVar.h"
+#include "LuaDelegate.h"
 
 ULuaDelegate::ULuaDelegate(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -36,16 +36,16 @@ void ULuaDelegate::ProcessEvent( UFunction* f, void* Parms ) {
     luafunction->callByUFunction(ufunction,reinterpret_cast<uint8*>(Parms));
 }
 
-void ULuaDelegate::bindFunction(slua::lua_State* L,int p,UFunction* ufunc) {
+void ULuaDelegate::bindFunction(NS_SLUA::lua_State* L,int p,UFunction* ufunc) {
     luaL_checktype(L,p,LUA_TFUNCTION);
     ensure(ufunc);
-    luafunction = new slua::LuaVar(L,p,slua::LuaVar::LV_FUNCTION);
+    luafunction = new NS_SLUA::LuaVar(L,p,NS_SLUA::LuaVar::LV_FUNCTION);
     ufunction = ufunc;
 }
 
-void ULuaDelegate::bindFunction(slua::lua_State* L,int p) {
+void ULuaDelegate::bindFunction(NS_SLUA::lua_State* L,int p) {
     luaL_checktype(L,p,LUA_TFUNCTION);
-    luafunction = new slua::LuaVar(L,p,slua::LuaVar::LV_FUNCTION);
+    luafunction = new NS_SLUA::LuaVar(L,p,NS_SLUA::LuaVar::LV_FUNCTION);
 }
 
 void ULuaDelegate::bindFunction(UFunction *ufunc) {
@@ -58,7 +58,7 @@ void ULuaDelegate::dispose()
 	SafeDelete(luafunction);
 	ufunction = nullptr;
 }
-namespace slua {
+namespace NS_SLUA {
 
     struct LuaMultiDelegateWrap {
         FMulticastScriptDelegate* delegate;

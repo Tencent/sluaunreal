@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "LuaState.h"
+#include "slua.h"
 #include "SluaTestActor.generated.h"
 
 UCLASS()
@@ -26,8 +26,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     void SetFName(FName name);
-	
-	static ASluaTestActor* instance;
 
-	slua::LuaState& state();
+	UPROPERTY(BlueprintReadWrite)
+	TArray<UObject*> objs;
 };

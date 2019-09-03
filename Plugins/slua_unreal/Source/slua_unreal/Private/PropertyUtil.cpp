@@ -15,7 +15,7 @@
 #include "UObject/UObjectGlobals.h"
 #include "UObject/StrongObjectPtr.h"
 
-namespace slua {
+namespace NS_SLUA {
 
     UObject* getPropertyOutter() {
 		static TStrongObjectPtr<UStruct> propOuter;

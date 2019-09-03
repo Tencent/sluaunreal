@@ -26,7 +26,7 @@
 #define strdup _strdup
 #endif
 
-namespace slua {
+namespace NS_SLUA {
 
     class SLUA_UNREAL_API LuaVar {
     public:
@@ -38,7 +38,8 @@ namespace slua {
         LuaVar(int v);
         LuaVar(size_t v);
         LuaVar(lua_Number v);
-        LuaVar(const char* v);
+		LuaVar(const char* v);
+		LuaVar(const char* v, size_t len);
         LuaVar(bool v);
 
         LuaVar(lua_State* L,int p);
@@ -66,7 +67,8 @@ namespace slua {
         void set(lua_Integer v);
         void set(int v);
         void set(lua_Number v);
-        void set(const char* v);
+		void set(const char* v, size_t len);
+		void set(const LuaLString& lstr);
         void set(bool b);
 		void free();
 
@@ -91,7 +93,8 @@ namespace slua {
         int64 asInt64() const;
         float asFloat() const;
         double asDouble() const;
-        const char* asString() const;
+        const char* asString(size_t* outlen=nullptr) const;
+		LuaLString asLString() const;
         bool asBool() const;
         void* asLightUD() const;
         template<typename T>
@@ -119,6 +122,8 @@ namespace slua {
             lua_pop(L,1);
             return std::move(r);
         }
+
+
 		template<typename R>
 		inline void castTo(R& target) {
 			if (isValid())
@@ -187,7 +192,7 @@ namespace slua {
         // call luavar if it's funciton
         // args is arguments passed to lua
         template<class ...ARGS>
-        LuaVar call(ARGS&& ...args) {
+        LuaVar call(ARGS&& ...args) const {
             if(!isFunction()) {
                 Log::Error("LuaVar is not a function, can't be called");
                 return LuaVar();
@@ -205,7 +210,7 @@ namespace slua {
         }
 
         template<class RET,class ...ARGS>
-        RET call(ARGS&& ...args) {
+        RET call(ARGS&& ...args) const {
             LuaVar ret = call(std::forward<ARGS>(args)...);
             return ret.castTo<RET>();
         }
@@ -251,14 +256,21 @@ namespace slua {
         };
 
         struct RefStr : public Ref {
-            RefStr(const char* s)
-                :Ref()
-                ,str(strdup(s))
-            {}
+			RefStr(const char* s, size_t len)
+				:Ref()
+            {
+				if (len == 0) len = strlen(s);
+				// alloc extra space for '\0'
+				buf = (char*) FMemory::Malloc(len+1);
+				FMemory::Memcpy(buf, s, len);
+				buf[len] = 0;
+				length = len;
+			}
             virtual ~RefStr() {
-                ::free(str);
+                FMemory::Free(buf);
             }
-            char* str;
+            char* buf;
+			size_t length;
         };
 
         struct RefRef: public Ref {
@@ -292,13 +304,13 @@ namespace slua {
         size_t numOfVar;
     
         template<class F,class ...ARGS>
-        int pushArg(F f,ARGS&& ...args) {
+        int pushArg(F f,ARGS&& ...args) const {
             auto L = getState();
             LuaObject::push(L,f);
             return 1+pushArg(std::forward<ARGS>(args)...);
         }
 
-        int pushArg() {
+        int pushArg() const {
             return 0;
         }
 
@@ -312,7 +324,7 @@ namespace slua {
                 return LuaVar(L,(size_t) n);
         }
 
-        int docall(int argn);
+        int docall(int argn) const;
         int pushArgByParms(UProperty* prop,uint8* parms);
 
         void clone(const LuaVar& other);
@@ -325,5 +337,11 @@ namespace slua {
     inline LuaVar LuaObject::checkValue(lua_State* L, int p) {
         return LuaVar(L,p);
     }
+
+	template<>
+	inline void LuaVar::castTo()
+	{
+		return;
+	}
     
 }

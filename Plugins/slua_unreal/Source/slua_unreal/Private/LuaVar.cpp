@@ -24,10 +24,11 @@
 #include "Blueprint/WidgetTree.h"
 #include "LuaState.h"
 
-namespace slua {
+namespace NS_SLUA {
 
+	const int INVALID_INDEX = -1;
     LuaVar::LuaVar()
-        :stateIndex(-1)
+        :stateIndex(INVALID_INDEX)
     {
         vars = nullptr;
         numOfVar = 0;
@@ -66,8 +67,14 @@ namespace slua {
     LuaVar::LuaVar(const char* v)
         :LuaVar()
     {
-        set(v);
+        set(v,strlen(v));
     }
+
+	LuaVar::LuaVar(const char* v,size_t len)
+		: LuaVar()
+	{
+		set(v, len);
+	}
 
     LuaVar::LuaVar(lua_State* l,int p):LuaVar() {
         set(l,p);
@@ -141,9 +148,12 @@ namespace slua {
         case LV_NUMBER:
             set(lua_tonumber(l,p));
             break;
-        case LV_STRING:
-            set(lua_tostring(l,p));
-            break;
+		case LV_STRING: {
+			size_t len;
+			const char* buf = lua_tolstring(l, p, &len);
+			set(buf,len);
+			break;
+		}
         case LV_BOOL:
             set(!!lua_toboolean(l,p));
             break;
@@ -195,10 +205,13 @@ namespace slua {
                     }
                 }
                 break;
-            case LUA_TSTRING:
-                vars[i].luatype = LV_STRING;
-                vars[i].s = new RefStr(lua_tostring(l,p));
-                break;
+			case LUA_TSTRING: {
+				vars[i].luatype = LV_STRING;
+				size_t len;
+				const char* buf = lua_tolstring(l, p, &len);
+				vars[i].s = new RefStr(buf,len);
+				break;
+			}
             case LUA_TFUNCTION:
                 vars[i].luatype = LV_FUNCTION;
                 lua_pushvalue(l,p);
@@ -353,10 +366,17 @@ namespace slua {
         }
     }
 
-    const char* LuaVar::asString() const {
+    const char* LuaVar::asString(size_t* outlen) const {
         ensure(numOfVar==1 && vars[0].luatype==LV_STRING);
-        return vars[0].s->str;
+		if(outlen) *outlen = vars[0].s->length;
+        return vars[0].s->buf;
     }
+
+	LuaLString LuaVar::asLString() const
+	{
+		ensure(numOfVar == 1 && vars[0].luatype == LV_STRING);
+		return { vars[0].s->buf,vars[0].s->length };
+	}
 
     bool LuaVar::asBool() const {
         ensure(numOfVar==1 && vars[0].luatype==LV_BOOL);
@@ -409,12 +429,17 @@ namespace slua {
         vars[0].luatype = LV_NUMBER;
     }
 
-    void LuaVar::set(const char* v) {
+    void LuaVar::set(const char* v,size_t len) {
         free();
         alloc(1);
-        vars[0].s = new RefStr(v);
+        vars[0].s = new RefStr(v,len);
         vars[0].luatype = LV_STRING;
     }
+
+	void LuaVar::set(const LuaLString & lstr)
+	{
+		set(lstr.buf, lstr.len);
+	}
 
     void LuaVar::set(bool b) {
         free();
@@ -435,7 +460,7 @@ namespace slua {
             lua_pushboolean(l,ov.b);
             break;
         case LV_STRING:
-            lua_pushstring(l,ov.s->str);
+            lua_pushlstring(l,ov.s->buf,ov.s->length);
             break;
         case LV_FUNCTION:
         case LV_TABLE:
@@ -473,7 +498,7 @@ namespace slua {
     }
 
     bool LuaVar::isValid() const {
-        return stateIndex>0 && LuaState::isValid(stateIndex);
+        return numOfVar>0 && stateIndex>0 && LuaState::isValid(stateIndex);
     }
 
     bool LuaVar::isNil() const {
@@ -532,7 +557,7 @@ namespace slua {
             return LV_TUPLE;
     }
 
-    int LuaVar::docall(int argn) {
+    int LuaVar::docall(int argn) const {
         if(!isValid()) {
             Log::Error("State of lua function is invalid");
             return 0;
@@ -594,7 +619,7 @@ namespace slua {
         for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
             UProperty* prop = *it;
             uint64 propflag = prop->GetPropertyFlags();
-            if((propflag&CPF_ReturnParm) || (propflag&CPF_OutParm && !(propflag&CPF_ConstParm)))
+            if((propflag&CPF_ReturnParm) || IsRealOutParam(propflag))
                 continue;
 
             pushArgByParms(prop,parms+prop->GetOffset_ForInternal());
@@ -619,7 +644,7 @@ namespace slua {
 		for (TFieldIterator<UProperty> it(func); remain >0 && it && (it->PropertyFlags&CPF_Parm); ++it) {
 			UProperty* prop = *it;
 			uint64 propflag = prop->GetPropertyFlags();
-			if (propflag&CPF_OutParm && !(propflag&CPF_ConstParm))
+			if (IsRealOutParam(propflag))
 			{
 				auto checkder = prop ? LuaObject::getChecker(prop) : nullptr;
 				if (checkder) {

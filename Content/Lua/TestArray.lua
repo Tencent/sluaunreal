@@ -43,14 +43,14 @@ arr:Clear()
 assert(arr:Num()==0)
 
 -- create TArray<int>
-local arr = slua.Array(UEnums.EPropertyClass.Int)
+local arr = slua.Array(EPropertyClass.Int)
 arr:Add(1)
 arr:Add(2)
 arr:Add(3)
 assert(arr:Num()==3)
 
 -- create TArray<FString>
-local arr = slua.Array(UEnums.EPropertyClass.Str)
+local arr = slua.Array(EPropertyClass.Str)
 arr:Add("jamy")
 arr:Add("valen")
 arr:Add("kyo")

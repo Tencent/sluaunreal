@@ -14,7 +14,7 @@
 #include "LuaWrapper.h"
 #include "LuaObject.h"
 
-namespace slua {
+namespace NS_SLUA {
 
 	static UScriptStruct* FSlateFontInfoStruct = nullptr;
 	static UScriptStruct* FSlateBrushStruct = nullptr;

@@ -14,15 +14,26 @@
 
 #include "LuaUserWidget.h"
 
+#if (ENGINE_MINOR_VERSION>20) && (ENGINE_MAJOR_VERSION>=4)
+void ULuaUserWidget::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+	init(this, "LuaUserWidget", LuaStateName, LuaFilePath);
+}
+#endif
+
 void ULuaUserWidget::NativeConstruct()
 {
-	if (!init(this, "LuaUserWidget", LuaStateName, LuaFilePath)) return;
+	if (!LuaFilePath.IsEmpty() && !getSelfTable().isValid())
+		init(this, "LuaUserWidget", LuaStateName, LuaFilePath);
 	Super::NativeConstruct();
+	if (getSelfTable().isValid()) {
 #if (ENGINE_MINOR_VERSION==18)
-	bCanEverTick = postInit("bHasScriptImplementedTick", false);
+		bCanEverTick = postInit("bHasScriptImplementedTick", false);
 #else
-	bHasScriptImplementedTick = postInit("bHasScriptImplementedTick", false);
+		bHasScriptImplementedTick = postInit("bHasScriptImplementedTick", false);
 #endif
+	}
 }
 
 void ULuaUserWidget::NativeDestruct() {
@@ -32,9 +43,21 @@ void ULuaUserWidget::NativeDestruct() {
 
 void ULuaUserWidget::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)
 {
-	// store current tick parameter MyGeometry
-	currentGeometry = MyGeometry;
-	tick(InDeltaTime);
+#if (ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4)
+	if (ensureMsgf(GetDesiredTickFrequency() != EWidgetTickFrequency::Never, TEXT("SObjectWidget and UUserWidget have mismatching tick states or UUserWidget::NativeTick was called manually (Never do this)")))
+#endif
+	{
+		GInitRunaway();
+		TickActionsAndAnimation(MyGeometry, InDeltaTime);
+#if (ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4)
+		if (bHasScriptImplementedTick) {
+#else
+		if (bCanEverTick) {
+#endif
+			currentGeometry = MyGeometry;
+			tick(InDeltaTime);
+		}
+	}
 }
 
 void ULuaUserWidget::ProcessEvent(UFunction * func, void * params)
@@ -46,5 +69,5 @@ void ULuaUserWidget::ProcessEvent(UFunction * func, void * params)
 
 void ULuaUserWidget::superTick()
 {
-	Super::NativeTick(currentGeometry, deltaTime);
+	Super::Tick(currentGeometry, deltaTime);
 }

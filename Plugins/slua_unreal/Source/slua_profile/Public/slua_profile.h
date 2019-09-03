@@ -53,10 +53,10 @@ private:
 	TSharedPtr<SProfilerInspector> sluaProfilerInspector;
 	bool tabOpened = false;
 	TSharedPtr<class FUICommandList> PluginCommands;
-	slua::FProfileServer* ProfileServer;
 
 	// functions
 	void OnTabClosed(TSharedRef<SDockTab> tab);
+	slua::FProfileServer* ProfileServer;
 
 	TSharedRef<class SDockTab> OnSpawnPluginTab(const class FSpawnTabArgs& SpawnTabArgs);
 	bool Tick(float DeltaTime);
@@ -103,4 +103,3 @@ public:
 	static void BeginWatch(const FString& funcName, double nanoseconds);
 	static void EndWatch(const FString& funcName, double nanoseconds);
 };
-

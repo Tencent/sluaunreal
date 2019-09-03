@@ -28,7 +28,7 @@
 		return 0; \
 	}
 
-namespace slua {
+namespace NS_SLUA {
 
 	DefTypeName(LuaMap::Enumerator);
 
@@ -307,6 +307,8 @@ namespace slua {
 	int LuaMap::Pairs(lua_State* L) {
 		CheckUD(LuaMap, L, 1);
 		auto iter = new LuaMap::Enumerator();
+		// hold LuaMap
+		iter->holder = new LuaVar(L, 1);
 		iter->map = UD;
 		iter->index = 0;
 		iter->num = UD->helper.Num();
@@ -344,9 +346,14 @@ namespace slua {
 		return 0;
 	}
 
+	LuaMap::Enumerator::~Enumerator()
+	{
+		SafeDelete(holder);
+	}
+
 	int LuaMap::gc(lua_State* L) {
 		CheckUD(LuaMap, L, 1);
-		delete UD;
+		LuaObject::deleteFGCObject(L,UD);
 		return 0;
 	}
 

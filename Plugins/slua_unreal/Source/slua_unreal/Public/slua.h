@@ -12,15 +12,16 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #pragma once
+#include "lua/lua.hpp"
+#include "Log.h"
+#include "SLuaUtil.h"
 #include "LuaObject.h"
-
-namespace slua {
-
-	struct LuaEnums {
-
-		static void init(lua_State* L);
-
-	};
-
-}
-
+#include "LuaState.h"
+#include "LuaVar.h"
+#include "LuaArray.h"
+#include "LuaMap.h"
+#include "LuaBase.h"
+#include "LuaActor.h"
+#include "LuaDelegate.h"
+#include "LuaCppBinding.h"
+#include "LuaCppBindingPost.h"

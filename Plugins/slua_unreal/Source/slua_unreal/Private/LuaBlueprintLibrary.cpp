@@ -47,7 +47,7 @@ ULuaBlueprintLibrary::ULuaBlueprintLibrary(const FObjectInitializer& ObjectIniti
 }
 
 FLuaBPVar ULuaBlueprintLibrary::CallToLuaWithArgs(FString funcname,const TArray<FLuaBPVar>& args,FString StateName) {
-    using namespace slua;
+    using namespace NS_SLUA;
     // get main state
     auto ls = LuaState::get();
     if(StateName.Len()!=0) ls = LuaState::get(StateName);
@@ -65,7 +65,7 @@ FLuaBPVar ULuaBlueprintLibrary::CallToLuaWithArgs(FString funcname,const TArray<
 }
 
 FLuaBPVar ULuaBlueprintLibrary::CallToLua(FString funcname,FString StateName) {
-    using namespace slua;
+    using namespace NS_SLUA;
     // get main state
     auto ls = LuaState::get();
     if(StateName.Len()!=0) ls = LuaState::get(StateName);
@@ -87,7 +87,7 @@ FLuaBPVar ULuaBlueprintLibrary::CreateVarFromInt(int i) {
 
 FLuaBPVar ULuaBlueprintLibrary::CreateVarFromString(FString s) {
     FLuaBPVar v;
-    v.value.set(TCHAR_TO_UTF8(*s));
+    v.value.set(TCHAR_TO_UTF8(*s),0);
     return v;
 }
 
@@ -104,17 +104,17 @@ FLuaBPVar ULuaBlueprintLibrary::CreateVarFromBool(bool b) {
 }
 
 FLuaBPVar ULuaBlueprintLibrary::CreateVarFromObject(UObject* o) {
-    using namespace slua;
+    using namespace NS_SLUA;
     auto ls = LuaState::get();
     if(!ls) return FLuaBPVar();
-    LuaObject::push(*ls,o);
-    LuaVar ret(*ls,-1);
-    lua_pop(*ls,1);
+    LuaObject::push(ls->getLuaState(),o);
+    LuaVar ret(ls->getLuaState(),-1);
+    lua_pop(ls->getLuaState(),1);
     return FLuaBPVar(ret);
 }
 
 namespace {
-    using namespace slua;
+    using namespace NS_SLUA;
 
     bool getValue(const LuaVar& lv,int index,int& value) {
         if(index==1 && lv.count()>=index && lv.isInt()) {
@@ -183,7 +183,7 @@ namespace {
 
     template<class T>
     T getValueFromVar(const FLuaBPVar& Value,int Index) {
-        using namespace slua;
+        using namespace NS_SLUA;
         const LuaVar& lv = Value.value;
         if(Index<=lv.count()) {
             T v;

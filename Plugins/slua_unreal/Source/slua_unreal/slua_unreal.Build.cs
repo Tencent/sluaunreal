@@ -45,8 +45,9 @@ public class slua_unreal : ModuleRules
                 }
             case UnrealTargetPlatform.Android:
                 {
+                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/armeabi-arm64"));
                     PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/armeabi-v7a"));
-                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/x86"));
+                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/x86")); 
                     PublicAdditionalLibraries.Add("lua");
                     break;
                 }

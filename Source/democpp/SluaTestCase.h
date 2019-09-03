@@ -15,6 +15,7 @@
 
 #include "CoreMinimal.h"
 #include <string>
+#include "slua.h"
 #include "Styling/SlateBrush.h"
 #include "Blueprint/UserWidget.h"
 #include "SluaTestCase.generated.h"
@@ -58,12 +59,26 @@ public:
 	FUserInfo1 others;
 };
 
+namespace NS_SLUA {
+	DefTypeName(FUserInfo);
+	DefTypeName(FUserInfo1);
+	DefTypeName(FUserInfo2);
+}
+
+UCLASS()
+class UTestObject : public UObject {
+	GENERATED_UCLASS_BODY()
+};
+
 UCLASS()
 class USluaTestCase : public UObject {
     GENERATED_UCLASS_BODY()
 public:
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     static void StaticFunc();
+
+	UPROPERTY(BlueprintReadOnly)
+	TWeakObjectPtr<UObject> weakptr;
 
     UPROPERTY(BlueprintReadOnly)
     TArray<UObject*> foos;
@@ -101,10 +116,6 @@ public:
     // reg as extension method
     void SetArrayStrEx(const TArray<FString>& array);
     
-
-    UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
-    UUserWidget* GetWidget(FString name);
-
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     void TwoArgs(FString a,int b,float c,FString d,UObject* widget);   
 
@@ -176,5 +187,15 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Lua|TestCase")
     void TestUnicastDelegate(FString str);
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTestAAA, FString, str);
+	UPROPERTY(BlueprintAssignable)
+	FOnTestAAA OnTestAAA;
+
+	UFUNCTION(BlueprintCallable, Category = "Lua|TestCase")
+		void TestAAA(FString str)
+	{
+		OnTestAAA.Broadcast(str);
+	}
     
 };

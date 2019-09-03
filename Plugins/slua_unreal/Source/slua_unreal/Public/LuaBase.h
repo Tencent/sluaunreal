@@ -15,8 +15,9 @@
 #include "CoreMinimal.h"
 #include "LuaState.h"
 #include "LuaBlueprintLibrary.h"
+#include "LuaBase.generated.h"
 
-namespace slua {
+namespace NS_SLUA {
 
 // special tick function
 #define UFUNCTION_TICK ((UFunction*)-1)
@@ -64,9 +65,9 @@ namespace slua {
 
 			auto L = ls->getLuaState();
 			// setup __cppinst
+			// we use rawpush to bind objptr and SLUA_CPPINST
 			luaSelfTable.push(L);
-
-			LuaObject::push(L, ptrT);
+			LuaObject::push(L, ptrT, true);
 			lua_setfield(L, -2, SLUA_CPPINST);
 
 			lua_pushcfunction(L, &LuaBase::super<T>);
@@ -90,7 +91,7 @@ namespace slua {
 			return true;
 		}
 
-		// store UFunction ptr nad params for super call
+		// store UFunction ptr and params for super call
 		UFunction* currentFunc;
 		union {
 			void* currentParams;
@@ -114,3 +115,19 @@ namespace slua {
 		friend struct UFunctionParamScope;
 	};
 }
+
+UINTERFACE()
+class ULuaTableObjectInterface : public UInterface
+{
+	GENERATED_UINTERFACE_BODY()
+};
+
+class ILuaTableObjectInterface {
+	GENERATED_IINTERFACE_BODY()
+
+public:
+	static bool isValid(ILuaTableObjectInterface* luaTableObj);
+	static int push(NS_SLUA::lua_State* L, ILuaTableObjectInterface* luaTableObj);
+
+	virtual NS_SLUA::LuaVar getSelfTable() const = 0;
+};

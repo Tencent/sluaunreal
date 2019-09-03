@@ -11,10 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 
-#pragma once
 #include "LuaReference.h"
 
-namespace slua {
+namespace NS_SLUA {
 	namespace LuaReference {
 
 		void addRefByStruct(FReferenceCollector& collector, UStruct* us, void* base, bool container) {

@@ -10,5 +10,5 @@ public class democppTarget : TargetRules
 		Type = TargetType.Game;
 		bUsePCHFiles = false;
 		ExtraModuleNames.AddRange( new string[] { "democpp" } );
-	}
+    }
 }

@@ -24,7 +24,9 @@
 #define SLUA_LUACODE "[sluacode]"
 #define SLUA_CPPINST "__cppinst"
 
-namespace slua {
+DECLARE_MULTICAST_DELEGATE(FLuaStateInitEvent);
+
+namespace NS_SLUA {
 
 	struct ScriptTimeoutEvent {
 		virtual void onTimeout() = 0;
@@ -36,8 +38,8 @@ namespace slua {
 		FDeadLoopCheck();
 		~FDeadLoopCheck();
 
-		void scriptEnter(ScriptTimeoutEvent* pEvent);
-		void scriptLeave();
+		int scriptEnter(ScriptTimeoutEvent* pEvent);
+		int scriptLeave();
 
 	protected:
 		uint32 Run() override;
@@ -67,6 +69,7 @@ namespace slua {
     class SLUA_UNREAL_API LuaState 
 		: public FUObjectArray::FUObjectDeleteListener
 		, public FGCObject
+		, public FTickableGameObject
     {
     public:
         LuaState(const char* name=nullptr);
@@ -78,7 +81,8 @@ namespace slua {
          * if find fn and load successful, return buf of file content, otherwise return nullptr
          * you must delete[] buf returned by function for free memory.
          */
-        typedef uint8* (*LoadFileDelegate) (const char* fn, uint32& len, FString& filepath);
+		typedef uint8* (*LoadFileDelegate) (const char* fn, uint32& len, FString& filepath);
+		typedef void (*ErrorDelegate) (const char* err);
 
         inline static LuaState* get(lua_State* l=nullptr) {
             // if L is nullptr, return main state
@@ -100,9 +104,8 @@ namespace slua {
         int stateIndex() const { return si; }
         
         // init lua state
-        virtual bool init();
-        // tick function
-        virtual void tick(float dtime);
+        virtual bool init(bool enableMultiThreadGC=false);
+        
         // close lua state
         virtual void close();
 
@@ -131,6 +134,8 @@ namespace slua {
 
         // set load delegation function to load lua code
 		void setLoadFileDelegate(LoadFileDelegate func);
+		// set error delegation function to handle error
+		void setErrorDelegate(ErrorDelegate func);
 
 		lua_State* getLuaState() const
 		{
@@ -163,11 +168,23 @@ namespace slua {
 		// tell Engine which objs should be referenced
 		virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
         static int pushErrorHandler(lua_State* L);
+
+		// tickable object methods
+		virtual void Tick(float DeltaTime) override;
+		virtual TStatId GetStatId() const override;
+
+		// call this function on script error
+		void onError(const char* err);
     protected:
-        LoadFileDelegate loadFileDelegate;
+		LoadFileDelegate loadFileDelegate;
+		ErrorDelegate errorDelegate;
         uint8* loadFile(const char* fn,uint32& len,FString& filepath);
 		static int loader(lua_State* L);
 		static int getStringFromMD5(lua_State* L);
+
+	public:
+		FLuaStateInitEvent onInitEvent;
+
     private:
         friend class LuaObject;
         friend class SluaUtil;
@@ -208,10 +225,14 @@ namespace slua {
 
 		// hold UObjects pushed to lua
 		UObjectRefMap objRefs;
+		// hold FGcObject to defer delete
+		TArray<FGCObject*> deferDelete;
+
 
 		FDelegateHandle pgcHandler;
 		FDelegateHandle wcHandler;
 
+		bool enableMultiThreadGC;
 		LuaVar stateTickFunc;
 
         static LuaState* mainState;

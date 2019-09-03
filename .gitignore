@@ -4,10 +4,15 @@ Saved
 .DS_Store
 .vscode
 .vs
+.idea
 DerivedDataCache
-democpp.xcworkspace/xcuserdata/siney.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
-democpp.xcworkspace/xcuserdata/siney.xcuserdatad/UserInterfaceState.xcuserstate
+democpp.xcworkspace/xcuserdata/*.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
+democpp.xcworkspace/xcuserdata/*.xcuserdatad/UserInterfaceState.xcuserstate
 democpp.xcworkspace/contents.xcworkspacedata
+democpp.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+democpp.xcworkspace/xcuserdata/glossimar.xcuserdatad/UserInterfaceState.xcuserstate
+democpp.xcworkspace/xcuserdata/glossimar.xcuserdatad/WorkspaceSettings.xcsettings
+democpp.xcworkspace/xcuserdata/glossimar.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
 Build
 democpp.code-workspace
 Config

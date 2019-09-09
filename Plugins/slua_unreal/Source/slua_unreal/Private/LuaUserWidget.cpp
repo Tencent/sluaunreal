@@ -60,6 +60,15 @@ void ULuaUserWidget::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)
 	}
 }
 
+void ULuaUserWidget::tick(float dt) {
+	slua::UFunctionParamScope scope(this, UFUNCTION_TICK, dt);
+	if (!tickFunction.isValid()) {
+		superTick();
+		return;
+	}
+	tickFunction.call(luaSelfTable, &currentGeometry, dt);
+}
+
 void ULuaUserWidget::ProcessEvent(UFunction * func, void * params)
 {
 	if (luaImplemented(func, params))

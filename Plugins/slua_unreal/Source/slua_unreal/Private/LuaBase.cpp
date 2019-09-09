@@ -22,24 +22,6 @@ namespace NS_SLUA {
 
 	NS_SLUA::LuaVar LuaBase::metaTable;
 
-	struct UFunctionParamScope {
-		LuaBase* pBase;
-		UFunctionParamScope(LuaBase* lb,UFunction* func, void* params) {
-			pBase = lb;
-			pBase->currentFunc = func;
-			pBase->currentParams = params;
-		}
-		UFunctionParamScope(LuaBase* lb, UFunction* func, float dt) {
-			pBase = lb;
-			pBase->currentFunc = func;
-			pBase->deltaTime = dt;
-		}
-		~UFunctionParamScope() {
-			pBase->currentFunc = nullptr;
-			pBase->currentParams = nullptr;
-		}
-	};
-
 	bool LuaBase::luaImplemented(UFunction * func, void * params)
 	{
 		if (!func->HasAnyFunctionFlags(EFunctionFlags::FUNC_BlueprintEvent))
@@ -64,8 +46,6 @@ namespace NS_SLUA {
 			return;
 		}
 		tickFunction.call(luaSelfTable, DeltaTime);
-		// try lua gc
-		lua_gc(tickFunction.getState(), LUA_GCSTEP, 128);
 	}
 
 	int LuaBase::__index(NS_SLUA::lua_State * L)

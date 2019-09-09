@@ -190,6 +190,9 @@ namespace NS_SLUA {
 		{
 			stateTickFunc.call(dtime);
 		}
+
+		// try lua gc
+		if (!enableMultiThreadGC) lua_gc(L, LUA_GCSTEP, 128);
     }
 
     void LuaState::close() {

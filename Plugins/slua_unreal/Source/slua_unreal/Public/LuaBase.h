@@ -102,7 +102,7 @@ namespace NS_SLUA {
 		LuaVar callMember(FString name, const TArray<FLuaBPVar>& args);
 
 		bool postInit(const char* tickFlag,bool rawget=true);
-		void tick(float DeltaTime);
+		virtual void tick(float DeltaTime);
 		// should override this function to support super::tick
 		virtual void superTick() = 0;
 		static int __index(lua_State* L);
@@ -113,6 +113,25 @@ namespace NS_SLUA {
 		static LuaVar metaTable;
 
 		friend struct UFunctionParamScope;
+	};
+
+
+	struct UFunctionParamScope {
+		LuaBase* pBase;
+		UFunctionParamScope(LuaBase* lb, UFunction* func, void* params) {
+			pBase = lb;
+			pBase->currentFunc = func;
+			pBase->currentParams = params;
+		}
+		UFunctionParamScope(LuaBase* lb, UFunction* func, float dt) {
+			pBase = lb;
+			pBase->currentFunc = func;
+			pBase->deltaTime = dt;
+		}
+		~UFunctionParamScope() {
+			pBase->currentFunc = nullptr;
+			pBase->currentParams = nullptr;
+		}
 	};
 }
 

@@ -45,6 +45,7 @@ public:
 
 	virtual void ProcessEvent(UFunction* func, void* params) override;
 	void superTick() override;
+	void tick(float dt) override;
 
 	virtual NS_SLUA::LuaVar getSelfTable() const {
 		return luaSelfTable;

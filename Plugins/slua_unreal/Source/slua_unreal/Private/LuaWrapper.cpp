@@ -7665,7 +7665,7 @@ namespace NS_SLUA {
 			if (argc == 1) {
 				auto InJulianDay = LuaObject::checkValue<double>(L, 1);
 				auto ret = FDateTime::FromJulianDay(InJulianDay);
-				LuaObject::push(L, ret);
+				LuaObject::push(L, "FDateTime", new FDateTime(ret), UD_AUTOGC);
 				return 1;
 			}
 			luaL_error(L, "call FDateTime::FromJulianDay error, argc=%d", argc);
@@ -7677,7 +7677,7 @@ namespace NS_SLUA {
 			if (argc == 1) {
 				auto InUnixTime = LuaObject::checkValue<int64>(L, 1);
 				auto ret = FDateTime::FromUnixTimestamp(InUnixTime);
-				LuaObject::push(L, ret);
+				LuaObject::push(L, "FDateTime", new FDateTime(ret), UD_AUTOGC);
 				return 1;
 			}
 			luaL_error(L, "call FDateTime::FromUnixTimestamp error, argc=%d", argc);
@@ -7699,21 +7699,21 @@ namespace NS_SLUA {
 		static int MaxValue(lua_State* L) {
 			auto argc = lua_gettop(L);
 			auto ret = FDateTime::MaxValue();
-			LuaObject::push(L, ret);
+			LuaObject::push(L, "FDateTime", new FDateTime(ret), UD_AUTOGC);
 			return 1;
 		}
 
 		static int MinValue(lua_State* L) {
 			auto argc = lua_gettop(L);
 			auto ret = FDateTime::MinValue();
-			LuaObject::push(L, ret);
+			LuaObject::push(L, "FDateTime", new FDateTime(ret), UD_AUTOGC);
 			return 1;
 		}
 
 		static int Now(lua_State* L) {
 			auto argc = lua_gettop(L);
 			auto ret = FDateTime::Now();
-			LuaObject::push(L, ret);
+			LuaObject::push(L, "FDateTime", new FDateTime(ret), UD_AUTOGC);
 			return 1;
 		}
 
@@ -7725,7 +7725,7 @@ namespace NS_SLUA {
 				auto ret = FDateTime::Parse(InDateTimeString, outDateTime);
 				LuaObject::push(L, ret);
 				if (ret) {
-					LuaObject::push(L, outDateTime);
+					LuaObject::push(L, "FDateTime", new FDateTime(outDateTime), UD_AUTOGC);
 					return 2;
 				}
 				return 1;
@@ -7742,7 +7742,7 @@ namespace NS_SLUA {
 				auto ret = FDateTime::ParseHttpDate(InHttpDate, outDateTime);
 				LuaObject::push(L, ret);
 				if (ret) {
-					LuaObject::push(L, outDateTime);
+					LuaObject::push(L, "FDateTime", new FDateTime(outDateTime), UD_AUTOGC);
 					return 2;
 				}
 				return 1;
@@ -7754,14 +7754,14 @@ namespace NS_SLUA {
 		static int Today(lua_State* L) {
 			auto argc = lua_gettop(L);
 			auto ret = FDateTime::Today();
-			LuaObject::push(L, ret);
+			LuaObject::push(L, "FDateTime", new FDateTime(ret), UD_AUTOGC);
 			return 1;
 		}
 
 		static int UtcNow(lua_State* L) {
 			auto argc = lua_gettop(L);
 			auto ret = FDateTime::UtcNow();
-			LuaObject::push(L, ret);
+			LuaObject::push(L, "FDateTime", new FDateTime(ret), UD_AUTOGC);
 			return 1;
 		}
 

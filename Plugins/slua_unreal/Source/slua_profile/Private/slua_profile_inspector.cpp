@@ -407,6 +407,7 @@ TSharedRef<class SDockTab> SProfilerInspector::GetSDockTab()
 		.TabRole(ETabRole::NomadTab)
 		[
 			SNew(SScrollBox)
+			.ScrollBarAlwaysVisible(true)
 			+ SScrollBox::Slot()
 			[
 				SNew(SHorizontalBox)

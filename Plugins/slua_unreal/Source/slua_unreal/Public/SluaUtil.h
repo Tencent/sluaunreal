@@ -242,6 +242,7 @@ namespace NS_SLUA {
 	DefTypeName(FPrimaryAssetType);
 	DefTypeName(FPrimaryAssetId);
 	DefTypeName(FActorComponentTickFunction);
+	DefTypeName(FDateTime);
 	
 	template<typename T,ESPMode mode>
 	struct TypeName<TSharedPtr<T, mode>, false> {

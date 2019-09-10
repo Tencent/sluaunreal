@@ -200,8 +200,6 @@ protected:
 			return;
 		}
 		tickFunction.call(luaSelfTable, DeltaTime);
-		// try lua gc
-		lua_gc(tickFunction.getState(), LUA_GCSTEP, 128);
 	}
 public:
 	virtual void ProcessEvent(UFunction* func, void* params) override {

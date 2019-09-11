@@ -35,50 +35,41 @@ public class slua_unreal : ModuleRules
 			}
             );
 
-        switch (Target.Platform)
+        if (Target.Platform == UnrealTargetPlatform.IOS)
         {
-            case UnrealTargetPlatform.IOS:
-                {
-                    PublicLibraryPaths.Add(Path.Combine(externalLib, "iOS"));
-                    PublicAdditionalLibraries.Add("lua");
-                    break;
-                }
-            case UnrealTargetPlatform.Android:
-                {
-                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/armeabi-arm64"));
-                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/armeabi-v7a"));
-                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/x86")); 
-                    PublicAdditionalLibraries.Add("lua");
-                    break;
-                }
-            case UnrealTargetPlatform.Win32:
-                {
-                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Win32"));
-                    PublicAdditionalLibraries.Add("lua.lib");
-                    break;
-                }
-            case UnrealTargetPlatform.Win64:
-                {
-                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Win64"));
-                    PublicAdditionalLibraries.Add("lua.lib");
-                    break;
-                }
-            case UnrealTargetPlatform.Mac:
-                {
-					// Unreal ignores PublicLibraryPaths on Mac. But why? 
-                    // PublicLibraryPaths.Add(Path.Combine(externalLib, "Mac"));
-                    PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Mac/liblua.a"));
-                    break;
-                }
-            case UnrealTargetPlatform.Linux:
-                {
-                    PublicLibraryPaths.Add(Path.Combine(externalLib, "Linux"));
-                    PublicAdditionalLibraries.Add("lua");
-                    break;
-                }
+            PublicLibraryPaths.Add(Path.Combine(externalLib, "iOS"));
+            PublicAdditionalLibraries.Add("lua");
+        }
+        else if (Target.Platform == UnrealTargetPlatform.Android)
+        {
+            PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/armeabi-arm64"));
+            PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/armeabi-v7a"));
+            PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/x86"));
+            PublicAdditionalLibraries.Add("lua");
+        }
+        else if (Target.Platform == UnrealTargetPlatform.Win32 )
+        {
+            PublicLibraryPaths.Add(Path.Combine(externalLib, "Win32"));
+            PublicAdditionalLibraries.Add("lua.lib");
+        }
+        else if (Target.Platform == UnrealTargetPlatform.Win64)
+        {
+            PublicLibraryPaths.Add(Path.Combine(externalLib, "Win64"));
+            PublicAdditionalLibraries.Add("lua.lib");
+        }
+        else if (Target.Platform == UnrealTargetPlatform.Mac)
+        {
+            // Unreal ignores PublicLibraryPaths on Mac. But why? 
+            // PublicLibraryPaths.Add(Path.Combine(externalLib, "Mac"));
+            PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Mac/liblua.a"));
+        }
+        else if (Target.Platform == UnrealTargetPlatform.Linux)
+        {
+            PublicLibraryPaths.Add(Path.Combine(externalLib, "Linux"));
+            PublicAdditionalLibraries.Add("lua");
         }
 
-        PublicDependencyModuleNames.AddRange(
+    PublicDependencyModuleNames.AddRange(
             new string[]
             {
                 "Core",

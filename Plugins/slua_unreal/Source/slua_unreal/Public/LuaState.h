@@ -168,6 +168,9 @@ namespace NS_SLUA {
 		// tell Engine which objs should be referenced
 		virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
         static int pushErrorHandler(lua_State* L);
+#if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
+		virtual void OnUObjectArrayShutdown() override;
+#endif
 
 		// tickable object methods
 		virtual void Tick(float DeltaTime) override;

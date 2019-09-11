@@ -20,6 +20,7 @@
 #include <memory>
 #include <atomic>
 #include "HAL/Runnable.h"
+#include "Tickable.h"
 
 #define SLUA_LUACODE "[sluacode]"
 #define SLUA_CPPINST "__cppinst"

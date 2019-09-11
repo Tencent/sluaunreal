@@ -61,7 +61,7 @@ void ULuaUserWidget::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)
 }
 
 void ULuaUserWidget::tick(float dt) {
-	slua::UFunctionParamScope scope(this, UFUNCTION_TICK, dt);
+	NS_SLUA::UFunctionParamScope scope(this, UFUNCTION_TICK, dt);
 	if (!tickFunction.isValid()) {
 		superTick();
 		return;

@@ -12,14 +12,28 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #pragma once
-
+#include "CoreMinimal.h"
 #include "lua/lua.hpp"
 
 namespace NS_SLUA {
 
-    struct LuaProfiler {
-		static void init(lua_State *L);
+	class SLUA_UNREAL_API LuaProfiler
+	{
+	public:
+		LuaProfiler(const char* funcName);
+		~LuaProfiler();
+		
+		static void init(lua_State* L);
 		static void tick();
-    };
+	};
+
+#ifdef ENABLE_PROFILER
+	// for native function
+#define PROFILER_WATCHER(x)  NS_SLUA::LuaProfiler x(__FUNCTION__);
+#define PROFILER_WATCHER_X(x,name)  NS_SLUA::LuaProfiler x(name);
+#else
+#define PROFILER_WATCHER(x) 
+#define PROFILER_WATCHER_X(x,name)
+#endif
 
 }

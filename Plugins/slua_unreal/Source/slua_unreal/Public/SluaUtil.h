@@ -338,4 +338,7 @@ namespace NS_SLUA {
 
 	FString SLUA_UNREAL_API getUObjName(UObject* obj);
 	bool SLUA_UNREAL_API isUnrealStruct(const char* tn, UScriptStruct** out);
+
+
+	int64_t SLUA_UNREAL_API getTime();
 }

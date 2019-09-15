@@ -189,12 +189,15 @@ namespace NS_SLUA {
 
 		LuaProfiler::tick();
 
+		PROFILER_WATCHER(w1);
 		if (stateTickFunc.isFunction())
 		{
+			PROFILER_WATCHER_X(w2,"TickFunc");
 			stateTickFunc.call(dtime);
 		}
 
 		// try lua gc
+		PROFILER_WATCHER_X(w3, "LuaGC");
 		if (!enableMultiThreadGC) lua_gc(L, LUA_GCSTEP, 128);
     }
 

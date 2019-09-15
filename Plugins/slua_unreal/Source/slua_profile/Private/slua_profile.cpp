@@ -23,6 +23,8 @@
 #include "EditorStyle.h"
 #endif
 #include "slua_remote_profile.h"
+#include "SluaUtil.h"
+#include "LuaProfiler.h"
 
 DEFINE_LOG_CATEGORY(LogSluaProfile)
 #define LOCTEXT_NAMESPACE "Fslua_profileModule"
@@ -172,7 +174,7 @@ void Profiler::BeginWatch(const FString& funcName, double nanoseconds)
 	currentLayer++;
 }
 
-void Profiler::EndWatch(const FString& funcName, double nanoseconds)
+void Profiler::EndWatch(double nanoseconds)
 {
 	if (currentLayer <= 0)
 	{

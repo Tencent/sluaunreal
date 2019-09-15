@@ -15,7 +15,6 @@
 #include "Log.h"
 #include "LuaState.h"
 #include "ArrayWriter.h"
-#include <chrono>
 #include "luasocket/tcp.h"
 #include "luasocket/auxiliar.h"
 #include "luasocket/buffer.h"
@@ -41,6 +40,7 @@ namespace NS_SLUA {
 	bool openAttachMode = true;
 	p_tcp tcpSocket = nullptr;
 	const char* ChunkName = "[ProfilerScript]";
+	static FArrayWriter s_messageWriter;
 
 	namespace {
 
@@ -64,10 +64,6 @@ namespace NS_SLUA {
 			messageWriter.Seek(0);
 			packageSize = messageWriter.TotalSize() - sizeof(uint32);
 			messageWriter << packageSize;
-		}
-
-		int64_t getTime() {
-			return std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000;
 		}
 
 		// copy code from buffer.cpp in luasocket
@@ -97,6 +93,13 @@ namespace NS_SLUA {
 			}
 		}
 
+		void takeSample(int event,int line,const char* funcname,const char* shortsrc) {
+			// clear writer;
+			s_messageWriter.Seek(0);
+			makeProfilePackage(s_messageWriter, event, getTime(), line, funcname, shortsrc);
+			sendMessage(s_messageWriter);
+		}
+
 		void debug_hook(lua_State* L, lua_Debug* ar) {
 			if (ignoreHook) return;
 			
@@ -104,7 +107,7 @@ namespace NS_SLUA {
 				selfProfiler.callField("reConnect", selfProfiler);
 				return;
 			}
-			int64_t start = getTime();
+			
 			lua_getinfo(L, "nSl", ar);
 
 			// we don't care about LUA_HOOKLINE, LUA_HOOKCOUNT and LUA_HOOKTAILCALL
@@ -113,20 +116,13 @@ namespace NS_SLUA {
 			if (strstr(ar->short_src, ChunkName)) 
 				return;
 
-			static FArrayWriter messageWriter;
-			// clear writer;
-			messageWriter.Seek(0);
-			makeProfilePackage(messageWriter, ar->event, start - profileTotalCost,
-				ar->linedefined, ar->name ? ar->name : "", ar->short_src ? ar->short_src : "");
-			sendMessage(messageWriter);
-			profileTotalCost = profileTotalCost + (getTime() - start);
+			takeSample(ar->event,ar->linedefined, ar->name ? ar->name : "", ar->short_src ? ar->short_src : "");
 		}
 
 		int changeHookState(lua_State* L) {
 			HookState state = (HookState)lua_tointeger(L, 1);
 			currentHookState = state;
 			if (state == HookState::UNHOOK) {
-				profileTotalCost = 0;
 				if (openAttachMode)
 					lua_sethook(L, debug_hook, LUA_MASKRET, 1000000);
 				else
@@ -169,13 +165,19 @@ namespace NS_SLUA {
 		ignoreHook = true;
 		RunState currentRunState = (RunState)selfProfiler.getFromTable<int>("currentRunState");
 		if (currentRunState == RunState::CONNECTED) {
-			static FArrayWriter messageWriter;
-			// clear writer;
-			messageWriter.Seek(0);
-			makeProfilePackage(messageWriter, -1, getTime(), -1, "", "");
-			sendMessage(messageWriter);
+			takeSample(-1, -1, "", "");
 		}
 		ignoreHook = false;
+	}
+
+	LuaProfiler::LuaProfiler(const char* funcName)
+	{
+		takeSample(0, 0, funcName, "");
+	}
+
+	LuaProfiler::~LuaProfiler()
+	{
+		takeSample(1, 0, "", "");
 	}
 
 }

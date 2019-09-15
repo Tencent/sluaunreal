@@ -16,7 +16,7 @@
 #include "LuaObject.h"
 #include "LuaVar.h"
 #include "LuaDelegate.h"
-
+#include <chrono>
 
 namespace NS_SLUA {
 	FString getUObjName(UObject* obj) {
@@ -44,5 +44,9 @@ namespace NS_SLUA {
 			}
 		}
 		return false;
+	}
+
+	int64_t getTime() {
+		return std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000;
 	}
 }

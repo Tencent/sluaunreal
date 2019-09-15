@@ -96,6 +96,12 @@ public class slua_unreal : ModuleRules
 			}
             );
 
+#if UE_4_21_OR_LATER
+        PublicDefinitions.Add("ENABLE_PROFILER");
+#else
+        Definitions.Add("ENABLE_PROFILER");
+#endif
+
 
         DynamicallyLoadedModuleNames.AddRange(
             new string[]

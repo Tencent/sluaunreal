@@ -33,16 +33,16 @@ namespace NS_SLUA {
 		CONNECTED = 1,
 	};
 
-	LuaVar selfProfiler;
-	bool ignoreHook = false;
-	HookState currentHookState = HookState::UNHOOK;
-	int64_t profileTotalCost = 0;
-	bool openAttachMode = true;
-	p_tcp tcpSocket = nullptr;
-	const char* ChunkName = "[ProfilerScript]";
-	static FArrayWriter s_messageWriter;
-
 	namespace {
+
+		LuaVar selfProfiler;
+		bool ignoreHook = false;
+		HookState currentHookState = HookState::UNHOOK;
+		int64_t profileTotalCost = 0;
+		bool openAttachMode = true;
+		p_tcp tcpSocket = nullptr;
+		const char* ChunkName = "[ProfilerScript]";
+		static FArrayWriter s_messageWriter;
 
 		void makeProfilePackage(FArrayWriter& messageWriter,
 			int hookEvent, int64_t time,

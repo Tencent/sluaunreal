@@ -31,6 +31,7 @@
 #include "HAL/RunnableThread.h"
 #include "GameDelegates.h"
 #include "LuaActor.h"
+#include "LuaProfiler.h"
 
 namespace NS_SLUA {
 
@@ -186,6 +187,8 @@ namespace NS_SLUA {
 			Log::Error("Error: lua stack count should be zero , now is %d", top);
 		}
 
+		LuaProfiler::tick();
+
 		if (stateTickFunc.isFunction())
 		{
 			stateTickFunc.call(dtime);
@@ -297,6 +300,7 @@ namespace NS_SLUA {
         LuaClass::reg(L);
         LuaArray::reg(L);
         LuaMap::reg(L);
+		LuaProfiler::init(L);
 		
 		onInitEvent.Broadcast();
 

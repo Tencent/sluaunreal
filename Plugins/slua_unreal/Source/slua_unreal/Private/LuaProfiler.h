@@ -11,6 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 
-#include "LuaActor.h"
+#pragma once
 
-// nothing
+#include "lua/lua.hpp"
+
+namespace NS_SLUA {
+
+    struct LuaProfiler {
+		static void init(lua_State *L);
+		static void tick();
+    };
+
+}

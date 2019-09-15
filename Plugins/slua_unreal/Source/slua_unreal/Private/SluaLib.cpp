@@ -33,7 +33,6 @@
 #endif
 #include "LuaMemoryProfile.h"
 #include "Runtime/Launch/Resources/Version.h"
-#include "ArrayWriter.h"
 #include <chrono>
 
 namespace NS_SLUA {
@@ -44,7 +43,6 @@ namespace NS_SLUA {
         RegMetaMethod(L, createDelegate);
 		RegMetaMethod(L, loadClass);
 		RegMetaMethod(L, setTickFunction);
-		RegMetaMethod(L, makeProfilePackage);
 		RegMetaMethod(L, getNanoseconds);
 		RegMetaMethod(L, getMiliseconds);
 		RegMetaMethod(L, dumpUObjects);
@@ -169,31 +167,6 @@ namespace NS_SLUA {
 		LuaState* luaState = LuaState::get(L);
 		luaState->setTickFunction(func);
 		return 0;
-	}
-
-	int SluaUtil::makeProfilePackage(lua_State* L)
-	{
-		uint32 packageSize = 0;
-		int hookEvent = luaL_checknumber(L, 1);
-		int64_t time = luaL_checknumber(L, 2);
-		int lineDefined = luaL_checknumber(L, 3);
-		FString funcName(luaL_checkstring(L, 4));
-		FString shortSrc(luaL_checkstring(L, 5));
-
-		FArrayWriter messageWriter;
-		messageWriter << packageSize;
-		messageWriter << hookEvent;
-		messageWriter << time;
-		messageWriter << lineDefined;
-		messageWriter << funcName;
-		messageWriter << shortSrc;
-
-		messageWriter.Seek(0);
-		packageSize = messageWriter.Num() - sizeof(uint32);
-		messageWriter << packageSize;
-
-		lua_pushlstring(L, (const char*)(messageWriter.GetData()), messageWriter.Num());
-		return 1;
 	}
 
 	int SluaUtil::getNanoseconds(lua_State* L)

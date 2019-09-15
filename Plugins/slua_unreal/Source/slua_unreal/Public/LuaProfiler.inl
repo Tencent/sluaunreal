@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 
-const char* ProfilerScript = R"code(local ConsoleLogLevel = 2           --打印在控制台(print)的日志等级 0 : all/ 1: info/ 2: error.
+const char* ProfilerScript = R"code(
+local ConsoleLogLevel = 2           --打印在控制台(print)的日志等级 0 : all/ 1: info/ 2: error.
 local ConnectTimeoutSec = 0.005
-local OpenAttachMode = true         --打开自动附加模式，随时可以连接profile
 local AttachInterval = 1
 
 local this = {}
@@ -22,7 +22,6 @@ local sock -- tcp socket
 local connectHost
 local connectPort
 local stopConnectTime = 0
-local profileTotalCost = 0
 
 local ignoreHook = false
 
@@ -35,11 +34,6 @@ local HookState = {
     UNHOOK = 0,               --断开连接
     HOOK = 1,                 --全局无断点
 };
-
-local EventID = {
-    ["call"] = 0,
-    ["return"] = 1,
-}
 
 function this.start(host, port)
     host = tostring(host or "127.0.0.1")
@@ -139,4 +133,5 @@ function this.disconnect()
     this.reGetSock()
 end
 
-return this)code";
+return this
+)code";

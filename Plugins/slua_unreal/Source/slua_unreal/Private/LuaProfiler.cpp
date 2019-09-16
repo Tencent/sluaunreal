@@ -95,6 +95,7 @@ namespace NS_SLUA {
 		void takeSample(int event,int line,const char* funcname,const char* shortsrc) {
 			// clear writer;
 			static FArrayWriter s_messageWriter;
+			s_messageWriter.Empty();
 			s_messageWriter.Seek(0);
 			makeProfilePackage(s_messageWriter, event, getTime(), line, funcname, shortsrc);
 			sendMessage(s_messageWriter);

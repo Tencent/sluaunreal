@@ -187,7 +187,9 @@ namespace NS_SLUA {
 			Log::Error("Error: lua stack count should be zero , now is %d", top);
 		}
 
+#ifdef ENABLE_PROFILER
 		LuaProfiler::tick();
+#endif
 
 		PROFILER_WATCHER(w1);
 		if (stateTickFunc.isFunction())
@@ -303,7 +305,9 @@ namespace NS_SLUA {
         LuaClass::reg(L);
         LuaArray::reg(L);
         LuaMap::reg(L);
+#ifdef ENABLE_PROFILER
 		LuaProfiler::init(L);
+#endif
 		
 		onInitEvent.Broadcast();
 

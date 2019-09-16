@@ -26,7 +26,7 @@ static uint8* ReadFile(IPlatformFile& PlatformFile, FString path, uint32& len) {
 	return nullptr;
 }
 
-UMyGameInstance::UMyGameInstance() :state("main") {
+UMyGameInstance::UMyGameInstance() :state("main",this) {
 
 }
 

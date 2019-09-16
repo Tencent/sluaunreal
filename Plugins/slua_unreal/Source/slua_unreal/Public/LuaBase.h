@@ -50,12 +50,13 @@ namespace NS_SLUA {
 		}
 
 		template<typename T>
-		bool init(T* ptrT, const char* typeName, const FString& stateName, const FString& luaPath)
+		bool init(T* ptrT, UGameInstance* pGI, const char* typeName, const FString& stateName, const FString& luaPath)
 		{
+			ensure(pGI);
 			if (luaPath.IsEmpty())
 				return false;
 
-			auto ls = LuaState::get();
+			auto ls = LuaState::get(pGI);
 			if (stateName.Len() != 0) ls = LuaState::get(stateName);
 			if (!ls) return false;
 

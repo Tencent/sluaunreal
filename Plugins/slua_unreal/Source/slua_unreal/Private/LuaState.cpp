@@ -144,7 +144,7 @@ namespace NS_SLUA {
     TMap<int,LuaState*> stateMapFromIndex;
     static int StateIndex = 0;
 
-	LuaState::LuaState(const char* name)
+	LuaState::LuaState(const char* name, UGameInstance* gameInstance)
 		: loadFileDelegate(nullptr)
 		, errorDelegate(nullptr)
 		, L(nullptr)
@@ -154,6 +154,7 @@ namespace NS_SLUA {
 		, deadLoopCheck(nullptr)
     {
         if(name) stateName=UTF8_TO_TCHAR(name);
+		this->pGI = gameInstance;
     }
 
     LuaState::~LuaState()
@@ -175,6 +176,15 @@ namespace NS_SLUA {
         }
         return nullptr;
     }
+
+	LuaState* LuaState::get(UGameInstance* pGI) {
+		for (auto& pair : stateMapFromIndex) {
+			auto state = pair.Value;
+			if (state->pGI && state->pGI == pGI)
+				return state;
+		}
+		return nullptr;
+	}
 
     // check lua top , this function can omit
     void LuaState::Tick(float dtime) {

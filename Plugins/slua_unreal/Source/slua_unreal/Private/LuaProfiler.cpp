@@ -42,7 +42,6 @@ namespace NS_SLUA {
 		bool openAttachMode = true;
 		p_tcp tcpSocket = nullptr;
 		const char* ChunkName = "[ProfilerScript]";
-		static FArrayWriter s_messageWriter;
 
 		void makeProfilePackage(FArrayWriter& messageWriter,
 			int hookEvent, int64_t time,
@@ -95,6 +94,7 @@ namespace NS_SLUA {
 
 		void takeSample(int event,int line,const char* funcname,const char* shortsrc) {
 			// clear writer;
+			static FArrayWriter s_messageWriter;
 			s_messageWriter.Seek(0);
 			makeProfilePackage(s_messageWriter, event, getTime(), line, funcname, shortsrc);
 			sendMessage(s_messageWriter);

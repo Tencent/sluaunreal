@@ -49,14 +49,26 @@ namespace NS_SLUA {
 			return 0;
 		}
 
+		inline UGameInstance* getGameInstance(AActor* self) {
+			return self->GetGameInstance();
+		}
+
+		inline UGameInstance* getGameInstance(UActorComponent* self) {
+			return self->GetOwner()->GetGameInstance();
+		}
+
+		inline UGameInstance* getGameInstance(UUserWidget* self) {
+			return self->GetGameInstance();
+		}
+
 		template<typename T>
-		bool init(T* ptrT, UGameInstance* pGI, const char* typeName, const FString& stateName, const FString& luaPath)
+		bool init(T* ptrT, const char* typeName, const FString& stateName, const FString& luaPath)
 		{
-			ensure(pGI);
 			if (luaPath.IsEmpty())
 				return false;
-
-			auto ls = LuaState::get(pGI);
+			
+			ensure(ptrT);
+			auto ls = LuaState::get(getGameInstance(ptrT));
 			if (stateName.Len() != 0) ls = LuaState::get(stateName);
 			if (!ls) return false;
 

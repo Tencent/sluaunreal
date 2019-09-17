@@ -18,14 +18,14 @@
 void ULuaUserWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
-	init(this, this->GetGameInstance(), "LuaUserWidget", LuaStateName, LuaFilePath);
+	init(this, "LuaUserWidget", LuaStateName, LuaFilePath);
 }
 #endif
 
 void ULuaUserWidget::NativeConstruct()
 {
 	if (!LuaFilePath.IsEmpty() && !getSelfTable().isValid())
-		init(this, this->GetGameInstance(), "LuaUserWidget", LuaStateName, LuaFilePath);
+		init(this,"LuaUserWidget", LuaStateName, LuaFilePath);
 	Super::NativeConstruct();
 	if (getSelfTable().isValid()) {
 #if (ENGINE_MINOR_VERSION==18)

@@ -27,7 +27,7 @@
 #define LUABASE_BODY(NAME) \
 protected: \
 	virtual void BeginPlay() override { \
-	if (!init(this, this->GetGameInstance(), #NAME, LuaStateName, LuaFilePath)) return; \
+	if (!init(this, #NAME, LuaStateName, LuaFilePath)) return; \
 		Super::BeginPlay(); \
 		PrimaryActorTick.SetTickFunctionEnable(postInit("bCanEverTick")); \
 	} \
@@ -180,7 +180,7 @@ class SLUA_UNREAL_API ULuaActorComponent : public UActorComponent, public slua_L
 	};
 protected:
 	virtual void BeginPlay() override {
-		if (!init(this, this->GetOwner()->GetGameInstance(), "LuaActorComponent", LuaStateName, LuaFilePath)) return;
+		if (!init(this, "LuaActorComponent", LuaStateName, LuaFilePath)) return;
 		Super::BeginPlay();
 		if (!GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
 			ReceiveBeginPlay();

@@ -19,9 +19,9 @@ namespace NS_SLUA {
 
 #if WITH_EDITOR
 	struct LuaMemInfo {
-		FString hint;
-		size_t size;
-		void* ptr;
+        FString hint;
+        size_t size;
+        void* ptr;
 
 		int push(lua_State* L) const;
 	};

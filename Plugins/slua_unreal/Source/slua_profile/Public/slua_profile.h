@@ -50,6 +50,7 @@ private:
 	// fields
 	FTickerDelegate TickDelegate;
 	FDelegateHandle TickDelegateHandle;
+    TSharedPtr<SProfilerTabWidget> SProfilerTabWidget;
 	TSharedPtr<SProfilerInspector> sluaProfilerInspector;
 	bool tabOpened = false;
 	TSharedPtr<class FUICommandList> PluginCommands;

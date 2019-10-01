@@ -386,6 +386,7 @@ namespace NS_SLUA {
 	// engine will call this function on post gc
 	void LuaState::onEngineGC()
 	{
+		PROFILER_WATCHER(w1);
 		// find freed uclass
 		for (ClassFunctionCache::CacheMap::TIterator it(classMap.cacheMap); it; ++it)
 			if (!it.Key().IsValid())
@@ -400,6 +401,7 @@ namespace NS_SLUA {
 
 	void LuaState::onWorldCleanup(UWorld * World, bool bSessionEnded, bool bCleanupResources)
 	{
+		PROFILER_WATCHER(w1);
 		unlinkUObject(World);
 	}
 
@@ -449,6 +451,7 @@ namespace NS_SLUA {
 
 	void LuaState::NotifyUObjectDeleted(const UObjectBase * Object, int32 Index)
 	{
+		PROFILER_WATCHER(w1);
 		unlinkUObject((const UObject*)Object);
 	}
 

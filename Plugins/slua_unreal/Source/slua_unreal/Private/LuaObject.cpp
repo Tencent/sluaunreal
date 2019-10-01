@@ -993,12 +993,9 @@ namespace NS_SLUA {
 
 	void LuaObject::deleteFGCObject(lua_State* L, FGCObject * obj)
 	{
-		if (!IsGarbageCollecting())
-			delete obj;
-		else {
-			auto ls = LuaState::get(L);
-			ls->deferDelete.Add(obj);
-		}
+		auto ls = LuaState::get(L);
+		ensure(ls);
+		ls->deferDelete.Add(obj);
 	}
 
 	void LuaObject::createTable(lua_State* L, const char * tn)

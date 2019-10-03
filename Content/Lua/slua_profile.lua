@@ -45,7 +45,7 @@ local EventID = {
 }
 
 local function getTime()
-    return slua.getNanoseconds()
+    return slua.getMicroseconds()
 end
 
 function this.start(host, port)

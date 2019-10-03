@@ -30,7 +30,7 @@ namespace NS_SLUA {
 		// remote profile
 		static int setTickFunction(lua_State* L);
 		static int makeProfilePackage(lua_State* L);
-		static int getNanoseconds(lua_State* L);
+		static int getMicroseconds(lua_State* L);
 		static int getMiliseconds(lua_State* L);
 		static int loadObject(lua_State* L);
 		static int threadGC(lua_State* L);

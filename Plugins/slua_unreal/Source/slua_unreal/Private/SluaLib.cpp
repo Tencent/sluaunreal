@@ -45,7 +45,7 @@ namespace NS_SLUA {
 		RegMetaMethod(L, loadClass);
 		RegMetaMethod(L, setTickFunction);
 		RegMetaMethod(L, makeProfilePackage);
-		RegMetaMethod(L, getNanoseconds);
+		RegMetaMethod(L, getMicroseconds);
 		RegMetaMethod(L, getMiliseconds);
 		RegMetaMethod(L, dumpUObjects);
 		RegMetaMethod(L, loadObject);
@@ -196,7 +196,7 @@ namespace NS_SLUA {
 		return 1;
 	}
 
-	int SluaUtil::getNanoseconds(lua_State* L)
+	int SluaUtil::getMicroseconds(lua_State* L)
 	{
 		int64_t nanoSeconds = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000;
 		lua_pushnumber(L, nanoSeconds);

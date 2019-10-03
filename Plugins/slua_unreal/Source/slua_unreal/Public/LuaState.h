@@ -20,6 +20,7 @@
 #include <memory>
 #include <atomic>
 #include "HAL/Runnable.h"
+#include "Tickable.h"
 
 #define SLUA_LUACODE "[sluacode]"
 #define SLUA_CPPINST "__cppinst"
@@ -172,6 +173,9 @@ namespace NS_SLUA {
 		// tickable object methods
 		virtual void Tick(float DeltaTime) override;
 		virtual TStatId GetStatId() const override;
+#if !((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))
+		virtual bool IsTickable() const override { return true; }
+#endif
 
 		// call this function on script error
 		void onError(const char* err);
@@ -209,16 +213,25 @@ namespace NS_SLUA {
         int si;
         FString stateName;
 
-		// cache ufunction ptr if index by lua
-		struct ClassFunctionCache {
-			typedef TMap<FString, TWeakObjectPtr<UFunction>> CacheItem;
-			typedef TMap<TWeakObjectPtr<UClass>, CacheItem> CacheMap;
-			CacheMap cacheMap;
-			UFunction* find(UClass* uclass, const char* fname);
-			void cache(UClass* uclass, const char* fname, UFunction* func);
+		// cache ufunction/uproperty ptr if index by lua
+		struct ClassCache {
+			typedef TMap<FString, TWeakObjectPtr<UFunction>> CacheFuncItem;
+			typedef TMap<TWeakObjectPtr<UClass>, CacheFuncItem> CacheFuncMap;
+
+			typedef TMap<FString, TWeakObjectPtr<UProperty>> CachePropItem;
+			typedef TMap<TWeakObjectPtr<UClass>, CachePropItem> CachePropMap;
+			
+			UFunction* findFunc(UClass* uclass, const char* fname);
+			UProperty* findProp(UClass* uclass, const char* pname);
+			void cacheFunc(UClass* uclass, const char* fname, UFunction* func);
+			void cacheProp(UClass* uclass, const char* pname, UProperty* prop);
 			void clear() {
-				cacheMap.Empty();
+				cacheFuncMap.Empty();
+				cachePropMap.Empty();
 			}
+
+			CacheFuncMap cacheFuncMap;
+			CachePropMap cachePropMap;
 		} classMap;
 
 		FDeadLoopCheck* deadLoopCheck;

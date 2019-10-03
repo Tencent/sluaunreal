@@ -359,9 +359,14 @@ namespace NS_SLUA {
 	void LuaState::onEngineGC()
 	{
 		// find freed uclass
-		for (ClassFunctionCache::CacheMap::TIterator it(classMap.cacheMap); it; ++it)
+		for (ClassCache::CacheFuncMap::TIterator it(classMap.cacheFuncMap); it; ++it)
 			if (!it.Key().IsValid())
 				it.RemoveCurrent();
+		
+		for (ClassCache::CachePropMap::TIterator it(classMap.cachePropMap); it; ++it)
+			if (!it.Key().IsValid())
+				it.RemoveCurrent();		
+		
 		// really delete FGCObject
 		for (auto ptr : deferDelete)
 			delete ptr;
@@ -686,9 +691,9 @@ namespace NS_SLUA {
 		luaL_error(L, "script exec timeout");
 	}
 
-	UFunction* LuaState::ClassFunctionCache::find(UClass* uclass, const char* fname)
+	UFunction* LuaState::ClassCache::findFunc(UClass* uclass, const char* fname)
 	{
-		auto item = cacheMap.Find(uclass);
+		auto item = cacheFuncMap.Find(uclass);
 		if (!item) return nullptr;
 		auto func = item->Find(UTF8_TO_TCHAR(fname));
 		if(func!=nullptr)
@@ -696,9 +701,25 @@ namespace NS_SLUA {
 		return nullptr;
 	}
 
-	void LuaState::ClassFunctionCache::cache(UClass* uclass, const char* fname, UFunction* func)
+	UProperty* LuaState::ClassCache::findProp(UClass* uclass, const char* pname)
 	{
-		auto& item = cacheMap.FindOrAdd(uclass);
+		auto item = cachePropMap.Find(uclass);
+		if (!item) return nullptr;
+		auto prop = item->Find(UTF8_TO_TCHAR(pname));
+		if (prop != nullptr)
+			return prop->IsValid() ? prop->Get() : nullptr;
+		return nullptr;
+	}
+
+	void LuaState::ClassCache::cacheFunc(UClass* uclass, const char* fname, UFunction* func)
+	{
+		auto& item = cacheFuncMap.FindOrAdd(uclass);
 		item.Add(UTF8_TO_TCHAR(fname), func);
+	}
+
+	void LuaState::ClassCache::cacheProp(UClass* uclass, const char* pname, UProperty* prop)
+	{
+		auto& item = cachePropMap.FindOrAdd(uclass);
+		item.Add(UTF8_TO_TCHAR(pname), prop);
 	}
 }

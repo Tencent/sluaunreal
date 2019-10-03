@@ -543,34 +543,64 @@ namespace NS_SLUA {
     // find ufunction from cache
     UFunction* LuaObject::findCacheFunction(lua_State* L, UClass* cls,const char* fname) {
         auto state = LuaState::get(L);
-		return state->classMap.find(cls, fname);
+		return state->classMap.findFunc(cls, fname);
     }
 
     // cache ufunction for reuse
     void LuaObject::cacheFunction(lua_State* L,UClass* cls,const char* fname,UFunction* func) {
         auto state = LuaState::get(L);
-        state->classMap.cache(cls,fname,func);
+        state->classMap.cacheFunc(cls,fname,func);
     }
 
-    
+    UProperty* LuaObject::findCacheProperty(lua_State* L, UClass* cls, const char* pname)
+    {
+		auto state = LuaState::get(L);
+		return state->classMap.findProp(cls, pname);
+    }
+
+    void LuaObject::cacheProperty(lua_State* L, UClass* cls, const char* pname, UProperty* property)
+    {
+		auto state = LuaState::get(L);
+		state->classMap.cacheProp(cls, pname, property);
+    }
+
+	// cache class property's
+	void cachePropertys(lua_State* L, UClass* cls) {
+		auto PropertyLink = cls->PropertyLink;
+		for (UProperty* Property = PropertyLink; Property != NULL; Property = Property->PropertyLinkNext) {
+			LuaObject::cacheProperty(L, cls, TCHAR_TO_UTF8(*(Property->GetName())), Property);
+		}
+	}
     int instanceIndex(lua_State* L) {
         UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
         const char* name = LuaObject::checkValue<const char*>(L, 2);
 
-        UFunction* func = LuaObject::findCacheFunction(L,obj->GetClass(),name);
-        if(func) return LuaObject::push(L,func);
+		UClass* cls = obj->GetClass();
+        UProperty* up = LuaObject::findCacheProperty(L, cls, name);
+        if (up)
+        {
+            return LuaObject::push(L, up, obj, false);
+        }
+
+        UFunction* func = LuaObject::findCacheFunction(L, cls, name);
+        if (func)
+        {
+            return LuaObject::push(L, func);
+        }
 
         // get blueprint member
-        UClass* cls = obj->GetClass();
 		FName wname(UTF8_TO_TCHAR(name));
         func = cls->FindFunctionByName(wname);
         if(!func) {
-            UProperty* up = cls->FindPropertyByName(wname);
-            if(!up) {
-                // search extension method
-                return searchExtensionMethod(L,obj,name);
+			cachePropertys(L, cls);
+
+			up = LuaObject::findCacheProperty(L, cls, name);
+            if (up) {
+                return LuaObject::push(L, up, obj, false);
             }
-            return LuaObject::push(L,up,obj,false);
+            
+            // search extension method
+            return searchExtensionMethod(L, obj, name);
         }
         else {   
 			LuaObject::cacheFunction(L, cls, name, func);
@@ -582,7 +612,12 @@ namespace NS_SLUA {
         UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
         const char* name = LuaObject::checkValue<const char*>(L, 2);
         UClass* cls = obj->GetClass();
-        UProperty* up = cls->FindPropertyByName(UTF8_TO_TCHAR(name));
+		UProperty* up = LuaObject::findCacheProperty(L, cls, name);
+		if (!up)
+		{
+			cachePropertys(L, cls);
+			up = LuaObject::findCacheProperty(L, cls, name);
+		}
 		if (!up) luaL_error(L, "Property %s not found", name);
         if(up->GetPropertyFlags() & CPF_BlueprintReadOnly)
             luaL_error(L,"Property %s is readonly",name);

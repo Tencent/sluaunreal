@@ -733,6 +733,9 @@ namespace NS_SLUA {
         static UFunction* findCacheFunction(lua_State* L,UClass* cls,const char* fname);
         static void cacheFunction(lua_State* L, UClass* cls,const char* fame,UFunction* func);
 
+        static UProperty* findCacheProperty(lua_State* L, UClass* cls, const char* pname);
+        static void cacheProperty(lua_State* L, UClass* cls, const char* pname, UProperty* property);
+
         static bool getFromCache(lua_State* L, void* obj, const char* tn, bool check = true);
 		static void cacheObj(lua_State* L, void* obj);
 		static void removeFromCache(lua_State* L, void* obj);

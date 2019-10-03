@@ -32,6 +32,7 @@
 #include "GameDelegates.h"
 #include "LatentDelegate.h"
 #include "LuaActor.h"
+#include "LuaProfiler.h"
 #include "Stats.h"
 
 namespace NS_SLUA {
@@ -145,7 +146,7 @@ namespace NS_SLUA {
     TMap<int,LuaState*> stateMapFromIndex;
     static int StateIndex = 0;
 
-	LuaState::LuaState(const char* name)
+	LuaState::LuaState(const char* name, UGameInstance* gameInstance)
 		: loadFileDelegate(nullptr)
 		, errorDelegate(nullptr)
 		, L(nullptr)
@@ -155,6 +156,7 @@ namespace NS_SLUA {
 		, deadLoopCheck(nullptr)
     {
         if(name) stateName=UTF8_TO_TCHAR(name);
+		this->pGI = gameInstance;
     }
 
     LuaState::~LuaState()
@@ -177,6 +179,15 @@ namespace NS_SLUA {
         return nullptr;
     }
 
+	LuaState* LuaState::get(UGameInstance* pGI) {
+		for (auto& pair : stateMapFromIndex) {
+			auto state = pair.Value;
+			if (state->pGI && state->pGI == pGI)
+				return state;
+		}
+		return nullptr;
+	}
+
     // check lua top , this function can omit
     void LuaState::Tick(float dtime) {
 		ensure(IsInGameThread());
@@ -188,10 +199,20 @@ namespace NS_SLUA {
 			Log::Error("Error: lua stack count should be zero , now is %d", top);
 		}
 
+#ifdef ENABLE_PROFILER
+		LuaProfiler::tick();
+#endif
+
+		PROFILER_WATCHER(w1);
 		if (stateTickFunc.isFunction())
 		{
+			PROFILER_WATCHER_X(w2,"TickFunc");
 			stateTickFunc.call(dtime);
 		}
+
+		// try lua gc
+		PROFILER_WATCHER_X(w3, "LuaGC");
+		if (!enableMultiThreadGC) lua_gc(L, LUA_GCSTEP, 128);
     }
 
     void LuaState::close() {
@@ -304,6 +325,9 @@ namespace NS_SLUA {
         LuaClass::reg(L);
         LuaArray::reg(L);
         LuaMap::reg(L);
+#ifdef ENABLE_PROFILER
+		LuaProfiler::init(L);
+#endif
 		
 		onInitEvent.Broadcast();
 
@@ -323,6 +347,10 @@ namespace NS_SLUA {
 
 	void LuaState::setLoadFileDelegate(LoadFileDelegate func) {
 		loadFileDelegate = func;
+	}
+
+	void LuaState::setErrorDelegate(ErrorDelegate func) {
+		errorDelegate = func;
 	}
 
 	static void* findParent(GenericUserData* parent) {
@@ -368,6 +396,7 @@ namespace NS_SLUA {
 	// engine will call this function on post gc
 	void LuaState::onEngineGC()
 	{
+		PROFILER_WATCHER(w1);
 		// find freed uclass
 		for (ClassCache::CacheFuncMap::TIterator it(classMap.cacheFuncMap); it; ++it)
 			if (!it.Key().IsValid())
@@ -387,6 +416,7 @@ namespace NS_SLUA {
 
 	void LuaState::onWorldCleanup(UWorld * World, bool bSessionEnded, bool bCleanupResources)
 	{
+		PROFILER_WATCHER(w1);
 		unlinkUObject(World);
 	}
 
@@ -436,6 +466,7 @@ namespace NS_SLUA {
 
 	void LuaState::NotifyUObjectDeleted(const UObjectBase * Object, int32 Index)
 	{
+		PROFILER_WATCHER(w1);
 		unlinkUObject((const UObject*)Object);
 	}
 
@@ -488,6 +519,11 @@ namespace NS_SLUA {
 		// we just try and find some proper async position
 		if (enableMultiThreadGC && L) lua_gc(L, LUA_GCCOLLECT, 128);
 	}
+#if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
+	void LuaState::OnUObjectArrayShutdown() {
+		// nothing todo, we don't add any listener to FUObjectDeleteListener
+	}
+#endif
 
 	int LuaState::pushErrorHandler(lua_State* L) {
         auto ls = get(L);

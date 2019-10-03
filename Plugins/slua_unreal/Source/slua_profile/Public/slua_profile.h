@@ -26,7 +26,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogSluaProfile, Log, All);
 
 #ifdef ENABLE_PROFILER
 #define PROFILER_BEGIN_WATCHER_WITH_FUNC_NAME(functionName, nanoseconds)  Profiler::BeginWatch(functionName, nanoseconds);
-#define PROFILER_END_WATCHER(functionName, nanoseconds)  Profiler::EndWatch(functionName, nanoseconds);
+#define PROFILER_END_WATCHER(functionName, nanoseconds)  Profiler::EndWatch(nanoseconds);
 #else
 #define PROFILER_BEGIN_WATCHER_WITH_FUNC_NAME(functionName)
 #define PROFILER_END_WATCHER(functionName)
@@ -101,5 +101,5 @@ class SLUA_PROFILE_API Profiler
 {
 public:
 	static void BeginWatch(const FString& funcName, double nanoseconds);
-	static void EndWatch(const FString& funcName, double nanoseconds);
+	static void EndWatch(double nanoseconds);
 };

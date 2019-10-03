@@ -4,7 +4,7 @@
 #include "SluaTestActor.h"
 #include "SluaTestCase.h"
 #include "Engine/Engine.h"
-#include "slua_profile.h"
+#include "LuaProfiler.h"
 
 
 // Sets default values
@@ -17,8 +17,9 @@ ASluaTestActor::ASluaTestActor()
 // Called when the game starts or when spawned
 void ASluaTestActor::BeginPlay()
 {
+	auto gi = this->GetGameInstance();
 	Super::BeginPlay();
-	NS_SLUA::LuaState* ls = NS_SLUA::LuaState::get();
+	NS_SLUA::LuaState* ls = NS_SLUA::LuaState::get(GetGameInstance());
 	ls->set("some.field.x", 101);
 	ls->set("somefield", 102);
 	ls->doFile("Test");
@@ -29,10 +30,13 @@ void ASluaTestActor::BeginPlay()
 // Called every frame
 void ASluaTestActor::Tick(float DeltaTime)
 {
+	PROFILER_WATCHER(w1);
 	Super::Tick(DeltaTime);
 
-	NS_SLUA::LuaState* ls = NS_SLUA::LuaState::get();
+	NS_SLUA::LuaState* ls = NS_SLUA::LuaState::get(GetGameInstance());
 	ls->call("update",DeltaTime);
+
+	PROFILER_WATCHER_X(w2,"UE ForceGarbageCollection");
 	GEngine->ForceGarbageCollection(true);
 	USluaTestCase::callback();
 }

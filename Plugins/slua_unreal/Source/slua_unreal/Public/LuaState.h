@@ -75,7 +75,7 @@ namespace NS_SLUA {
 		, public FTickableGameObject
     {
     public:
-        LuaState(const char* name=nullptr);
+        LuaState(const char* name=nullptr,UGameInstance* pGI=nullptr);
         virtual ~LuaState();
 
         /*
@@ -94,6 +94,9 @@ namespace NS_SLUA {
         }
         // get LuaState from state index
         static LuaState* get(int index);
+		// get LuaState from UGameInstance, you should create LuaState with an UGameInstance pointer at first
+		// if multi LuaState have same UGameInstance, we will return first one
+		static LuaState* get(UGameInstance* pGI);
 
         // get LuaState from name
         static LuaState* get(const FString& name);
@@ -108,6 +111,9 @@ namespace NS_SLUA {
         
         // init lua state
         virtual bool init(bool enableMultiThreadGC=false);
+		// attach this luaState to UGameInstance
+		// this function just store UGameInstance pointer for search future
+		void attach(UGameInstance* pGI);
         
         // close lua state
         virtual void close();
@@ -171,6 +177,9 @@ namespace NS_SLUA {
 		// tell Engine which objs should be referenced
 		virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
         static int pushErrorHandler(lua_State* L);
+#if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
+		virtual void OnUObjectArrayShutdown() override;
+#endif
 
 		// tickable object methods
 		virtual void Tick(float DeltaTime) override;
@@ -248,6 +257,9 @@ namespace NS_SLUA {
 		UObjectRefMap objRefs;
 		// hold FGcObject to defer delete
 		TArray<FGCObject*> deferDelete;
+		// store UGameInstance ptr to search LuaState
+		// we don't hold referrence
+		UGameInstance* pGI;
 
 
 		FDelegateHandle pgcHandler;

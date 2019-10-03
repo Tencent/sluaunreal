@@ -25,7 +25,7 @@ void ULuaUserWidget::NativeOnInitialized()
 void ULuaUserWidget::NativeConstruct()
 {
 	if (!LuaFilePath.IsEmpty() && !getSelfTable().isValid())
-		init(this, "LuaUserWidget", LuaStateName, LuaFilePath);
+		init(this,"LuaUserWidget", LuaStateName, LuaFilePath);
 	Super::NativeConstruct();
 	if (getSelfTable().isValid()) {
 #if (ENGINE_MINOR_VERSION==18)
@@ -58,6 +58,15 @@ void ULuaUserWidget::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)
 			tick(InDeltaTime);
 		}
 	}
+}
+
+void ULuaUserWidget::tick(float dt) {
+	NS_SLUA::UFunctionParamScope scope(this, UFUNCTION_TICK, dt);
+	if (!tickFunction.isValid()) {
+		superTick();
+		return;
+	}
+	tickFunction.call(luaSelfTable, &currentGeometry, dt);
 }
 
 void ULuaUserWidget::ProcessEvent(UFunction * func, void * params)

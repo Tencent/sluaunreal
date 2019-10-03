@@ -126,6 +126,9 @@ namespace NS_SLUA {
     struct LuaOwnedPtr {
         T* ptr;
         LuaOwnedPtr(T* p):ptr(p) {}
+		T* operator->() const {
+			return ptr;
+		}
     };
 
 	template<typename T,ESPMode mode>
@@ -669,10 +672,15 @@ namespace NS_SLUA {
 			return push(L, ptr->LUA_typename().c_str(), ptr);
 		}
 
-        template<typename T>
-        static int push(lua_State* L,LuaOwnedPtr<T> ptr) {
-            return push(L,TypeName<T>::value().c_str(),ptr.ptr,UD_AUTOGC);
-        }
+		template<typename T>
+		static int push(lua_State* L, LuaOwnedPtr<T> ptr, typename std::enable_if<!std::is_base_of<UObject, T>::value && Has_LUA_typename<T>::value>::type* = nullptr) {
+			return push(L, ptr->LUA_typename().c_str(), ptr.ptr, UD_AUTOGC);
+		}
+
+		template<typename T>
+		static int push(lua_State* L, LuaOwnedPtr<T> ptr, typename std::enable_if<!std::is_base_of<UObject, T>::value && !Has_LUA_typename<T>::value>::type* = nullptr) {
+			return push(L, TypeName<T>::value().c_str(), ptr.ptr, UD_AUTOGC);
+		}
 
 		static int gcSharedPtr(lua_State *L) {
 			return 0;

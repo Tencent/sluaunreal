@@ -215,6 +215,20 @@ namespace NS_SLUA {
             return ret.castTo<RET>();
         }
 
+		template<class ...ARGS>
+		LuaVar callField(const char* field, ARGS&& ...args) const {
+			if (!isTable()) {
+				Log::Error("LuaVar is not a table, can't call field");
+				return LuaVar();
+			}
+			if (!isValid()) {
+				Log::Error("State of lua function is invalid");
+				return LuaVar();
+			}
+			LuaVar ret = getFromTable<LuaVar>(field);
+			return ret.call(std::forward<ARGS>(args)...);
+		}
+
         // call function with pre-pushed n args
         inline LuaVar callWithNArg(int n) {
             auto L = getState();

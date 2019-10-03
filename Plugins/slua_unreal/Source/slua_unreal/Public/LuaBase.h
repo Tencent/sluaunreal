@@ -15,6 +15,9 @@
 #include "CoreMinimal.h"
 #include "LuaState.h"
 #include "LuaBlueprintLibrary.h"
+#if !((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))
+#include "Kismet/GameplayStatics.h"
+#endif
 #include "LuaBase.generated.h"
 
 namespace NS_SLUA {
@@ -49,13 +52,30 @@ namespace NS_SLUA {
 			return 0;
 		}
 
+		inline UGameInstance* getGameInstance(AActor* self) {
+			return self->GetGameInstance();
+		}
+
+		inline UGameInstance* getGameInstance(UActorComponent* self) {
+			return self->GetOwner()->GetGameInstance();
+		}
+
+		inline UGameInstance* getGameInstance(UUserWidget* self) {
+#if (ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4)
+			return self->GetGameInstance();
+#else
+			return UGameplayStatics::GetGameInstance(self);
+#endif
+		}
+
 		template<typename T>
 		bool init(T* ptrT, const char* typeName, const FString& stateName, const FString& luaPath)
 		{
 			if (luaPath.IsEmpty())
 				return false;
-
-			auto ls = LuaState::get();
+			
+			ensure(ptrT);
+			auto ls = LuaState::get(getGameInstance(ptrT));
 			if (stateName.Len() != 0) ls = LuaState::get(stateName);
 			if (!ls) return false;
 
@@ -102,7 +122,7 @@ namespace NS_SLUA {
 		LuaVar callMember(FString name, const TArray<FLuaBPVar>& args);
 
 		bool postInit(const char* tickFlag,bool rawget=true);
-		void tick(float DeltaTime);
+		virtual void tick(float DeltaTime);
 		// should override this function to support super::tick
 		virtual void superTick() = 0;
 		static int __index(lua_State* L);
@@ -113,6 +133,25 @@ namespace NS_SLUA {
 		static LuaVar metaTable;
 
 		friend struct UFunctionParamScope;
+	};
+
+
+	struct UFunctionParamScope {
+		LuaBase* pBase;
+		UFunctionParamScope(LuaBase* lb, UFunction* func, void* params) {
+			pBase = lb;
+			pBase->currentFunc = func;
+			pBase->currentParams = params;
+		}
+		UFunctionParamScope(LuaBase* lb, UFunction* func, float dt) {
+			pBase = lb;
+			pBase->currentFunc = func;
+			pBase->deltaTime = dt;
+		}
+		~UFunctionParamScope() {
+			pBase->currentFunc = nullptr;
+			pBase->currentParams = nullptr;
+		}
 	};
 }
 

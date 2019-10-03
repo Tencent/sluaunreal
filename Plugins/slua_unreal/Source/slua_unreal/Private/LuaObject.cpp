@@ -859,10 +859,23 @@ namespace NS_SLUA {
 
     int pushUMulticastDelegateProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
         auto p = Cast<UMulticastDelegateProperty>(prop);
-        ensure(p);   
+        ensure(p);
+#if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
+		FMulticastScriptDelegate* delegate = const_cast<FMulticastScriptDelegate*>(p->GetMulticastDelegate(parms));
+#else
         FMulticastScriptDelegate* delegate = p->GetPropertyValuePtr(parms);
+#endif
 		return LuaMultiDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
     }
+
+#if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
+	int pushUMulticastInlineDelegateProperty(lua_State* L, UProperty* prop, uint8* parms, bool ref) {
+		auto p = Cast<UMulticastInlineDelegateProperty>(prop);
+		ensure(p);
+		FMulticastScriptDelegate* delegate = const_cast<FMulticastScriptDelegate*>(p->GetMulticastDelegate(parms));
+		return LuaMultiDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
+	}
+#endif
 
     int checkUDelegateProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UDelegateProperty>(prop);
@@ -1037,12 +1050,9 @@ namespace NS_SLUA {
 
 	void LuaObject::deleteFGCObject(lua_State* L, FGCObject * obj)
 	{
-		if (!IsGarbageCollecting())
-			delete obj;
-		else {
-			auto ls = LuaState::get(L);
-			ls->deferDelete.Add(obj);
-		}
+		auto ls = LuaState::get(L);
+		ensure(ls);
+		ls->deferDelete.Add(obj);
 	}
 	
 	ULatentDelegate* LuaObject::getLatentDelegate(lua_State* L)
@@ -1164,6 +1174,9 @@ namespace NS_SLUA {
 		
 		regPusher(UDelegateProperty::StaticClass(), pushUDelegateProperty);
         regPusher(UMulticastDelegateProperty::StaticClass(),pushUMulticastDelegateProperty);
+#if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
+		regPusher(UMulticastInlineDelegateProperty::StaticClass(), pushUMulticastInlineDelegateProperty);
+#endif
         regPusher(UObjectProperty::StaticClass(),pushUObjectProperty);
         regPusher(UArrayProperty::StaticClass(),pushUArrayProperty);
         regPusher(UMapProperty::StaticClass(),pushUMapProperty);

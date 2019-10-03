@@ -19,6 +19,7 @@
 #include "LuaObject.h"
 #include "LuaVar.h"
 #include "LuaDelegate.h"
+#include "LatentDelegate.h"
 #include "UObject/StructOnScope.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
@@ -35,6 +36,7 @@
 #include "LuaBase.h"
 
 namespace NS_SLUA { 
+	static const FName NAME_LatentInfo = TEXT("LatentInfo");
 
 	TMap<UClass*,LuaObject::PushPropertyFunction> pusherMap;
 	TMap<UClass*,LuaObject::CheckPropertyFunction> checkerMap;
@@ -471,8 +473,20 @@ namespace NS_SLUA {
 			else if (IsRealOutParam(propflag))
 				continue;
 
-            fillParamFromState(L,prop,params+prop->GetOffset_ForInternal(),i);
-            i++;
+			if (prop->GetFName() == NAME_LatentInfo) {
+				// bind a callback to the latent function
+				lua_State *mainThread = G(L)->mainthread;
+
+				ULatentDelegate *obj = LuaObject::getLatentDelegate(mainThread);
+				int threadRef = obj->getThreadRef(L);
+				FLatentActionInfo LatentActionInfo(threadRef, GetTypeHash(FGuid::NewGuid()), *ULatentDelegate::NAME_LatentCallback, obj);
+
+				prop->CopySingleValue(prop->ContainerPtrToValuePtr<void>(params), &LatentActionInfo);
+			}
+			else {
+				fillParamFromState(L, prop, params + prop->GetOffset_ForInternal(), i);
+				i++;
+			}
         }
     }
 
@@ -489,6 +503,7 @@ namespace NS_SLUA {
             ret += LuaObject::push(L,p,params+p->GetOffset_ForInternal());
         }
 
+		bool isLatentFunction = false;
         // push out parms
         for(TFieldIterator<UProperty> it(func);it;++it) {
             UProperty* p = *it;
@@ -497,12 +512,19 @@ namespace NS_SLUA {
             if(propflag&CPF_ReturnParm)
                 continue;
 
-			// out params should be not const and not readonly
-            if(IsRealOutParam(propflag))
+			if (p->GetFName() == NAME_LatentInfo) {
+				isLatentFunction = true;
+			}
+            else if(IsRealOutParam(propflag)) // out params should be not const and not readonly
                 ret += LuaObject::push(L,p,params+p->GetOffset_ForInternal());
         }
         
-        return ret;
+		if (isLatentFunction) {
+			return lua_yield(L, ret);
+		}
+		else {
+			return ret;
+		}
     }
    
     int ufuncClosure(lua_State* L) {
@@ -1021,6 +1043,12 @@ namespace NS_SLUA {
 			auto ls = LuaState::get(L);
 			ls->deferDelete.Add(obj);
 		}
+	}
+	
+	ULatentDelegate* LuaObject::getLatentDelegate(lua_State* L)
+	{
+		LuaState* ls = LuaState::get(L);
+		return ls->getLatentDelegate();
 	}
 
 	void LuaObject::createTable(lua_State* L, const char * tn)

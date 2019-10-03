@@ -30,7 +30,9 @@
 #include "LuaMemoryProfile.h"
 #include "HAL/RunnableThread.h"
 #include "GameDelegates.h"
+#include "LatentDelegate.h"
 #include "LuaActor.h"
+#include "Stats.h"
 
 namespace NS_SLUA {
 
@@ -195,7 +197,11 @@ namespace NS_SLUA {
     void LuaState::close() {
         if(mainState==this) mainState = nullptr;
 
+		latentDelegate = nullptr;
+
 		releaseAllLink();
+
+		cleanupThreads();
         
         if(L) {
             lua_close(L);
@@ -223,6 +229,10 @@ namespace NS_SLUA {
 		pgcHandler = FCoreUObjectDelegates::GetPostGarbageCollect().AddRaw(this, &LuaState::onEngineGC);
 		wcHandler = FWorldDelegates::OnWorldCleanup.AddRaw(this, &LuaState::onWorldCleanup);
 		GUObjectArray.AddUObjectDeleteListener(this);
+
+		latentDelegate = NewObject<ULatentDelegate>((UObject*)GetTransientPackage(), ULatentDelegate::StaticClass());
+		latentDelegate->bindLuaState(this);
+
         stackCount = 0;
         si = ++StateIndex;
 
@@ -484,10 +494,118 @@ namespace NS_SLUA {
         ensure(ls!=nullptr);
         return ls->_pushErrorHandler(L);
     }
-
+	
 	TStatId LuaState::GetStatId() const
 	{
 		RETURN_QUICK_DECLARE_CYCLE_STAT(LuaState, STATGROUP_Game);
+	}
+
+	int LuaState::addThread(lua_State *thread)
+	{
+		int isMainThread = lua_pushthread(thread);
+		if (isMainThread == 1)
+		{
+			lua_pop(thread, 1);
+
+			luaL_error(thread, "Can't call latent action in main lua thread!");
+			return LUA_REFNIL;
+		}
+
+		lua_xmove(thread, L, 1);
+		lua_pop(thread, 1);
+
+		ensure(lua_isthread(L, -1));
+
+		int threadRef = luaL_ref(L, LUA_REGISTRYINDEX);
+		threadToRef.Add(thread, threadRef);
+		refToThread.Add(threadRef, thread);
+
+		return threadRef;
+	}
+
+	void LuaState::resumeThread(int threadRef)
+	{
+		QUICK_SCOPE_CYCLE_COUNTER(Lua_LatentCallback);
+
+		lua_State **threadPtr = refToThread.Find(threadRef);
+		if (threadPtr)
+		{
+			lua_State *thread = *threadPtr;
+			bool threadIsDead = false;
+
+			if (lua_status(thread) == LUA_OK && lua_gettop(thread) == 0)
+			{
+				Log::Error("cannot resume dead coroutine");
+				threadIsDead = true;
+			}
+			else
+			{
+				int status = lua_resume(thread, L, 0);
+				if (status == LUA_OK || status == LUA_YIELD)
+				{
+					int nres = lua_gettop(thread);
+					if (!lua_checkstack(L, nres + 1))
+					{
+						lua_pop(thread, nres);  /* remove results anyway */
+						Log::Error("too many results to resume");
+						threadIsDead = true;
+					}
+					else
+					{
+						lua_xmove(thread, L, nres);  /* move yielded values */
+
+						if (status == LUA_OK)
+						{
+							threadIsDead = true;
+						}
+					}
+				}
+				else
+				{
+					lua_xmove(thread, L, 1);  /* move error message */
+					const char* err = lua_tostring(L, -1);
+					luaL_traceback(L, thread, err, 0);
+					err = lua_tostring(L, -1);
+					Log::Error("%s", err);
+					lua_pop(L, 1);
+
+					threadIsDead = true;
+				}
+			}
+
+			if (threadIsDead)
+			{
+				threadToRef.Remove(thread);
+				refToThread.Remove(threadRef);
+				luaL_unref(L, LUA_REGISTRYINDEX, threadRef);
+			}
+		}
+	}
+
+	int LuaState::findThread(lua_State *thread)
+	{
+		int32 *threadRefPtr = threadToRef.Find(thread);
+		return threadRefPtr ? *threadRefPtr : LUA_REFNIL;
+	}
+
+	void LuaState::cleanupThreads()
+	{
+		for (TMap<lua_State*, int32>::TIterator It(threadToRef); It; ++It)
+		{
+			lua_State *thread = It.Key();
+			int32 threadRef = It.Value();
+			if (threadRef != LUA_REFNIL)
+			{
+				luaL_unref(L, LUA_REGISTRYINDEX, threadRef);
+			}
+		}
+		threadToRef.Empty();
+		refToThread.Empty();
+	}
+
+	ULatentDelegate* LuaState::getLatentDelegate() const
+	{
+		return latentDelegate;
 	}
 
 	int LuaState::_pushErrorHandler(lua_State* state) {

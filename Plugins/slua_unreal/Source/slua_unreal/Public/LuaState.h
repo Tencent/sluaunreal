@@ -27,6 +27,8 @@
 
 DECLARE_MULTICAST_DELEGATE(FLuaStateInitEvent);
 
+class ULatentDelegate;
+
 namespace NS_SLUA {
 
 	struct ScriptTimeoutEvent {
@@ -177,6 +179,12 @@ namespace NS_SLUA {
 		virtual bool IsTickable() const override { return true; }
 #endif
 
+		int addThread(lua_State *thread);
+		void resumeThread(int threadRef);
+		int findThread(lua_State *thread);
+		void cleanupThreads();
+		ULatentDelegate* getLatentDelegate() const;
+
 		// call this function on script error
 		void onError(const char* err);
     protected:
@@ -254,5 +262,10 @@ namespace NS_SLUA {
         // used for debug
 		TMap<FString, FString> debugStringMap;
         #endif
+
+		TMap<lua_State*, int> threadToRef;                                // coroutine -> ref
+		TMap<int, lua_State*> refToThread;                                // coroutine -> ref
+		ULatentDelegate* latentDelegate;
+
     };
 }

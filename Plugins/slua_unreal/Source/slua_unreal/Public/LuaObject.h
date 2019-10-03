@@ -55,6 +55,8 @@
 
 #define IsRealOutParam(propflag) ((propflag&CPF_OutParm) && !(propflag&CPF_ConstParm) && !(propflag&CPF_BlueprintReadOnly))
 
+class ULatentDelegate;
+
 namespace NS_SLUA {
 
     class LuaVar;
@@ -739,6 +741,7 @@ namespace NS_SLUA {
         static bool getFromCache(lua_State* L, void* obj, const char* tn, bool check = true);
 		static void cacheObj(lua_State* L, void* obj);
 		static void removeFromCache(lua_State* L, void* obj);
+		static ULatentDelegate* getLatentDelegate(lua_State* L);
 		static void deleteFGCObject(lua_State* L,FGCObject* obj);
     private:
         static int setupClassMT(lua_State* L);

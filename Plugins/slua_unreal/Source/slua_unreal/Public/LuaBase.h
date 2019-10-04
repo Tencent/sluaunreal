@@ -15,6 +15,9 @@
 #include "CoreMinimal.h"
 #include "LuaState.h"
 #include "LuaBlueprintLibrary.h"
+#if !((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))
+#include "Kismet/GameplayStatics.h"
+#endif
 #include "LuaBase.generated.h"
 
 namespace NS_SLUA {
@@ -58,7 +61,11 @@ namespace NS_SLUA {
 		}
 
 		inline UGameInstance* getGameInstance(UUserWidget* self) {
+#if (ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4)
 			return self->GetGameInstance();
+#else
+			return UGameplayStatics::GetGameInstance(self);
+#endif
 		}
 
 		template<typename T>

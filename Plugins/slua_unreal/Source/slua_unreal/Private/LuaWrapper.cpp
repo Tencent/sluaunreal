@@ -13,6 +13,7 @@
 
 #include "LuaWrapper.h"
 #include "LuaObject.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 namespace NS_SLUA {
 
@@ -7959,10 +7960,12 @@ namespace NS_SLUA {
 		_checkStructMap.Add(FPrimaryAssetIdStruct, __checkFPrimaryAssetId);
 		FPrimaryAssetIdWrapper::bind(L);
 
+#if (ENGINE_MINOR_VERSION>=21) && (ENGINE_MAJOR_VERSION>=4)
 		FDateTimeStruct = TBaseStructure<FDateTime>::Get();
 		_pushStructMap.Add(FDateTimeStruct, __pushFDateTime);
 		_checkStructMap.Add(FDateTimeStruct, __checkFDateTime);
 		FDateTimeWrapper::bind(L);
+#endif
 	}
 
 }

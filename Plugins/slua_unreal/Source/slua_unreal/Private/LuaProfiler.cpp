@@ -168,19 +168,19 @@ namespace NS_SLUA {
 		ignoreHook = true;
 		RunState currentRunState = (RunState)selfProfiler.getFromTable<int>("currentRunState");
 		if (currentRunState == RunState::CONNECTED) {
-			takeSample(-1, -1, "", "");
+			takeSample(NS_SLUA::ProfilerHookEvent::PHE_TICK, -1, "", "");
 		}
 		ignoreHook = false;
 	}
 
 	LuaProfiler::LuaProfiler(const char* funcName)
 	{
-		takeSample(0, 0, funcName, "");
+		takeSample(ProfilerHookEvent::PHE_CALL, 0, funcName, "");
 	}
 
 	LuaProfiler::~LuaProfiler()
 	{
-		takeSample(1, 0, "", "");
+		takeSample(ProfilerHookEvent::PHE_RETURN, 0, "", "");
 	}
 
 }

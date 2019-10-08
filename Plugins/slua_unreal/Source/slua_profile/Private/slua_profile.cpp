@@ -40,15 +40,6 @@ namespace {
 	TQueue<TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe>, EQueueMode::Mpsc> profilerArrayQueue;
 
 	uint32_t currentLayer = 0;
-
-	enum slua_profiler_hook_event
-	{
-		Tick = -1,
-		CALL = 0,
-		RETURN = 1,
-		LINE = 2,
-		TAILRET = 4
-	};
 }
 
 void Fslua_profileModule::StartupModule()
@@ -265,7 +256,7 @@ void Fslua_profileModule::OnTabClosed(TSharedRef<SDockTab>)
 
 void Fslua_profileModule::debug_hook_c(int event, double nanoseconds, int linedefined, const FString& name, const FString& short_src)
 {
-	if (event == slua_profiler_hook_event::CALL)
+	if (event == NS_SLUA::ProfilerHookEvent::PHE_CALL)
 	{
 		if (linedefined == -1 && name.IsEmpty())
 		{
@@ -278,7 +269,7 @@ void Fslua_profileModule::debug_hook_c(int event, double nanoseconds, int linede
 		functionName += name;
 		PROFILER_BEGIN_WATCHER_WITH_FUNC_NAME(functionName, nanoseconds)
 	}
-	else if (event == slua_profiler_hook_event::RETURN)
+	else if (event == NS_SLUA::ProfilerHookEvent::PHE_RETURN)
 	{
 		if (linedefined == -1 && name.IsEmpty())
 		{
@@ -291,7 +282,7 @@ void Fslua_profileModule::debug_hook_c(int event, double nanoseconds, int linede
 		functionName += name;
 		PROFILER_END_WATCHER(functionName, nanoseconds)
 	}
-	else if (event == slua_profiler_hook_event::Tick)
+	else if (event == NS_SLUA::ProfilerHookEvent::PHE_TICK)
 	{
 		profilerArrayQueue.Enqueue(curProfilersArray);
 

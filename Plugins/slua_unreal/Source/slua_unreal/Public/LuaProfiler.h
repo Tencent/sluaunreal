@@ -17,6 +17,15 @@
 
 namespace NS_SLUA {
 
+	enum ProfilerHookEvent
+	{
+		PHE_TICK = -1,
+		PHE_CALL = 0,
+		PHE_RETURN = 1,
+		PHE_LINE = 2,
+		PHE_TAILRET = 4
+	};
+
 	class SLUA_UNREAL_API LuaProfiler
 	{
 	public:

@@ -89,7 +89,7 @@ namespace NS_SLUA {
 			if (!tcpSocket) return;
 			size_t sent;
 			int err = sendraw(&tcpSocket->buf, (const char*)msg.GetData(), msg.Num(), &sent);
-			if (err == IO_CLOSED) {
+			if (err != IO_DONE) {
 				selfProfiler.callField("disconnect");
 			}
 		}
@@ -105,11 +105,6 @@ namespace NS_SLUA {
 
 		void debug_hook(lua_State* L, lua_Debug* ar) {
 			if (ignoreHook) return;
-			
-			if (currentHookState == HookState::UNHOOK) {
-				selfProfiler.callField("reConnect", selfProfiler);
-				return;
-			}
 			
 			lua_getinfo(L, "nSl", ar);
 
@@ -140,8 +135,12 @@ namespace NS_SLUA {
 		}
 
 		int setSocket(lua_State* L) {
+			if (lua_isnil(L, 1)) {
+				tcpSocket = nullptr;
+				return 0;
+			}
 			tcpSocket = (p_tcp)auxiliar_checkclass(L, "tcp{client}", 1);
-			if (!tcpSocket) luaL_error(L, "Can't set nil socket");
+			if (!tcpSocket) luaL_error(L, "Set invalid socket");
 			return 0;
 		}
 	}
@@ -166,6 +165,11 @@ namespace NS_SLUA {
 	void LuaProfiler::tick()
 	{
 		ignoreHook = true;
+		if (currentHookState == HookState::UNHOOK) {
+			selfProfiler.callField("reConnect", selfProfiler);
+			ignoreHook = false;
+			return;
+		}
 		RunState currentRunState = (RunState)selfProfiler.getFromTable<int>("currentRunState");
 		if (currentRunState == RunState::CONNECTED) {
 			takeSample(NS_SLUA::ProfilerHookEvent::PHE_TICK, -1, "", "");

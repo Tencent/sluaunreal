@@ -23,8 +23,6 @@ local connectHost
 local connectPort
 local stopConnectTime = 0
 
-local ignoreHook = false
-
 local RunState = {
     DISCONNECT = 0,
     CONNECTED = 1,
@@ -52,6 +50,7 @@ function this.start(host, port)
     local sockSuccess = sock and sock:connect(connectHost, connectPort)
     if sockSuccess ~= nil then
         this.printToConsole("first connect success!")
+		this.setSocket(sock)
         this.connectSuccess()
     else
         this.printToConsole("first connect failed!")
@@ -126,6 +125,8 @@ function this.disconnect()
     this.changeHookState( HookState.UNHOOK )
     stopConnectTime = os.time()
     this.changeRunState(RunState.DISCONNECT)
+
+	this.setSocket(nil)
 
     if sock ~= nil then
         sock:close()

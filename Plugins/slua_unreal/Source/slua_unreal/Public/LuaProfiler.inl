@@ -91,8 +91,11 @@ local function startsWith(source, start)
 end
 
 
--- 定时(以函数return为时机) 进行attach连接
+-- 定时进行attach连接
 function this.reConnect()
+    
+    if not connectHost then return end
+
     if os.time() - stopConnectTime < AttachInterval then
         this.printToConsole("Reconnect time less than 1s")
         this.printToConsole("os.time:".. os.time() .. " | stopConnectTime:" ..stopConnectTime)

@@ -15,10 +15,13 @@
 #include "Log.h"
 #include "LuaState.h"
 #include "ArrayWriter.h"
-#include "luasocket/tcp.h"
 #include "luasocket/auxiliar.h"
 #include "luasocket/buffer.h"
 
+#ifdef TEXT
+#undef TEXT
+#include "luasocket/tcp.h"
+#endif
 
 #ifdef ENABLE_PROFILER
 namespace NS_SLUA {

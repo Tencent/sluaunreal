@@ -34,6 +34,7 @@
 #include "SluaUtil.h"
 #include "LuaReference.h"
 #include "LuaBase.h"
+#include "Engine/UserDefinedEnum.h"
 
 namespace NS_SLUA { 
 	static const FName NAME_LatentInfo = TEXT("LatentInfo");
@@ -1088,11 +1089,17 @@ namespace NS_SLUA {
 
 	int LuaObject::pushEnum(lua_State * L, UEnum * e)
 	{
+		bool isbpEnum = Cast<UUserDefinedEnum>(e) != nullptr;
 		// return a enum as table
 		lua_newtable(L);
 		int num = e->NumEnums();
 		for (int i = 0; i < num; i++) {
-			FString name = e->GetNameStringByIndex(i);
+			FString name;
+			// if is bp enum, can't get name as key
+			if(isbpEnum)
+				name = e->GetDisplayNameTextByIndex(i).ToString();
+			else
+				name = e->GetNameStringByIndex(i);
 			int64 value = e->GetValueByIndex(i);
 			lua_pushinteger(L, value);
 			lua_setfield(L, -2, TCHAR_TO_UTF8(*name));

@@ -20,8 +20,8 @@
 
 #ifdef TEXT
 #undef TEXT
-#include "luasocket/tcp.h"
 #endif
+#include "luasocket/tcp.h"
 
 #ifdef ENABLE_PROFILER
 namespace NS_SLUA {

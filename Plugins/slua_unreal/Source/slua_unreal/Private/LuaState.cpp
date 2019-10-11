@@ -220,6 +220,8 @@ namespace NS_SLUA {
 
 		latentDelegate = nullptr;
 
+		freeDeferObject();
+
 		releaseAllLink();
 
 		cleanupThreads();

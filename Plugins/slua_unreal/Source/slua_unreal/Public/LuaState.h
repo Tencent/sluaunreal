@@ -223,6 +223,7 @@ namespace NS_SLUA {
 		void onEngineGC();
 		// on world cleanup
 		void onWorldCleanup(UWorld* World, bool bSessionEnded, bool bCleanupResources);
+		void freeDeferObject();
 
 
 		TMap<void*, TArray<void*>> propLinks;

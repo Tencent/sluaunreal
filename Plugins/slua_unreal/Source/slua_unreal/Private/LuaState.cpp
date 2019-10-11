@@ -220,6 +220,8 @@ namespace NS_SLUA {
 
 		latentDelegate = nullptr;
 
+		freeDeferObject();
+
 		releaseAllLink();
 
 		cleanupThreads();
@@ -406,10 +408,7 @@ namespace NS_SLUA {
 			if (!it.Key().IsValid())
 				it.RemoveCurrent();		
 		
-		// really delete FGCObject
-		for (auto ptr : deferDelete)
-			delete ptr;
-		deferDelete.Empty();
+		freeDeferObject();
 
 		Log::Log("Unreal engine GC, lua used %d KB",lua_gc(L, LUA_GCCOUNT, 0));
 	}
@@ -420,7 +419,15 @@ namespace NS_SLUA {
 		unlinkUObject(World);
 	}
 
-    LuaVar LuaState::doBuffer(const uint8* buf,uint32 len, const char* chunk, LuaVar* pEnv) {
+	void LuaState::freeDeferObject()
+	{
+		// really delete FGCObject
+		for (auto ptr : deferDelete)
+			delete ptr;
+		deferDelete.Empty();
+	}
+
+	LuaVar LuaState::doBuffer(const uint8* buf, uint32 len, const char* chunk, LuaVar* pEnv) {
         AutoStack g(L);
         int errfunc = pushErrorHandler(L);
 

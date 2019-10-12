@@ -60,7 +60,7 @@ public:
     SProfilerInspector();
     ~SProfilerInspector();
     
-    void Refresh(TArray<SluaProfiler>& curProfilersArray);
+    void Refresh(TArray<SluaProfiler>& curProfilersArray, TArray<slua::LuaMemInfo> memoryInfoList);
     TSharedRef<class SDockTab> GetSDockTab();
     TSharedRef<ITableRow> OnGenerateMemRowForList(TSharedPtr<FileMemInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
     TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FunctionProfileInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
@@ -139,7 +139,7 @@ private:
     void InitProfilerBar(int barIdx, TSharedPtr<SHorizontalBox>& horBox);
     void OnClearBtnClicked();
     void SortProfiler(SluaProfiler &shownRootProfiler);
-    void CollectMemoryNode();
+    void CollectMemoryNode(TArray<slua::LuaMemInfo> memoryInfoList);
     void CombineSameFileInfo(MemFileInfoList& infoList);
     int ContainsFile(FString& fileName);
     FString ChooseMemoryUnit(float memorySize);

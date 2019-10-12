@@ -20,11 +20,20 @@ namespace NS_SLUA {
 #if WITH_EDITOR
 	struct LuaMemInfo {
         FString hint;
-        size_t size;
+        int size;
         void* ptr;
 
 		int push(lua_State* L) const;
 	};
+    
+    // << used to binary for LuaMemInfo data
+    FORCEINLINE FArchive& operator<<(FArchive &Ar, LuaMemInfo& Info)
+    {
+        Ar << Info.hint;
+        Ar << Info.size;
+        
+        return Ar;
+    }
 
 	typedef TMap<void*, LuaMemInfo> MemoryDetail;
 #endif

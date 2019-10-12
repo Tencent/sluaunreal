@@ -36,6 +36,7 @@ namespace {
 	static const FString CoroutineName(TEXT("coroutine"));
 	SluaProfiler curProfiler;
 	
+    TArray<slua::LuaMemInfo> memoryInfo;
 	TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe> curProfilersArray = MakeShareable(new TArray<SluaProfiler>());
 	TQueue<TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe>, EQueueMode::Mpsc> profilerArrayQueue;
 
@@ -105,7 +106,7 @@ bool Fslua_profileModule::Tick(float DeltaTime)
 	{
 		TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe> profilesArray;
 		profilerArrayQueue.Dequeue(profilesArray);
-		sluaProfilerInspector->Refresh(*profilesArray.Get());
+		sluaProfilerInspector->Refresh(*profilesArray.Get(), memoryInfo);
 	}
 
 	return true;
@@ -122,7 +123,7 @@ TSharedRef<class SDockTab> Fslua_profileModule::OnSpawnPluginTab(const FSpawnTab
 
 		ProfileServer = new slua::FProfileServer();
 		ProfileServer->OnProfileMessageRecv().BindLambda([this](slua::FProfileMessagePtr Message) {
-			this->debug_hook_c(Message->Event, Message->Time, Message->Linedefined, Message->Name, Message->ShortSrc);
+			this->debug_hook_c(Message->Event, Message->Time, Message->Linedefined, Message->Name, Message->ShortSrc,  Message->memoryInfoList);
 		});
 
 		tabOpened = true;
@@ -254,7 +255,7 @@ void Fslua_profileModule::OnTabClosed(TSharedRef<SDockTab>)
 	tabOpened = false;
 }
 
-void Fslua_profileModule::debug_hook_c(int event, double nanoseconds, int linedefined, const FString& name, const FString& short_src)
+void Fslua_profileModule::debug_hook_c(int event, double nanoseconds, int linedefined, const FString& name, const FString& short_src, TArray<slua::LuaMemInfo> memoryInfoList)
 {
 	if (event == NS_SLUA::ProfilerHookEvent::PHE_CALL)
 	{
@@ -288,6 +289,9 @@ void Fslua_profileModule::debug_hook_c(int event, double nanoseconds, int linede
 
 		ClearCurProfiler();
 	}
+    else if (event == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK) {
+        memoryInfo = memoryInfoList;
+    }
 }
 
 #undef LOCTEXT_NAMESPACE

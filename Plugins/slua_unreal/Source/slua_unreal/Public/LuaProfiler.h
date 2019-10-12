@@ -19,6 +19,7 @@ namespace NS_SLUA {
 
 	enum ProfilerHookEvent
 	{
+        PHE_MEMORY_TICK = -2,
 		PHE_TICK = -1,
 		PHE_CALL = 0,
 		PHE_RETURN = 1,

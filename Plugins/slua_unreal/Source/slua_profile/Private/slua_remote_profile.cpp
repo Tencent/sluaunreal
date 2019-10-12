@@ -279,18 +279,18 @@ namespace slua
 				}
 
 				FArrayReader MessagesizeData = FArrayReader(true);
-				MessagesizeData.SetNumUninitialized(sizeof(uint32));
+                MessagesizeData.SetNumUninitialized(sizeof(uint32));
 
 				// read message size from the stream
-				BytesRead = 0;
-				if (!Socket->Recv(MessagesizeData.GetData(), sizeof(uint32), BytesRead))
-				{
-					UE_LOG(LogSluaProfile, Verbose, TEXT("In progress read failed with code %d"), (int32)SocketSubsystem->GetLastErrorCode());
-					return false;
-				}
+                BytesRead = 0;
+                if (!Socket->Recv(MessagesizeData.GetData(), sizeof(uint32), BytesRead))
+                {
+                    UE_LOG(LogSluaProfile, Verbose, TEXT("In progress read failed with code %d"), (int32)SocketSubsystem->GetLastErrorCode());
+                    return false;
+                }
 
-				check(BytesRead == sizeof(uint32));
-				TotalBytesReceived += BytesRead;
+                check(BytesRead == sizeof(uint32));
+                TotalBytesReceived += BytesRead;
 
 				// Setup variables to receive the message
 				MessagesizeData << RecvMessageDataRemaining;
@@ -314,11 +314,11 @@ namespace slua
 				RecvMessageDataRemaining -= BytesRead;
 				if (RecvMessageDataRemaining == 0)
 				{
-					FProfileMessage* DeserializedMessage = new FProfileMessage();
-					if (DeserializedMessage->Deserialize(RecvMessageData))
-					{
-						Inbox.Enqueue(MakeShareable(DeserializedMessage));
-					}
+                    FProfileMessage* DeserializedMessage = new FProfileMessage();
+                    if (DeserializedMessage->Deserialize(RecvMessageData))
+                    {
+                        Inbox.Enqueue(MakeShareable(DeserializedMessage));
+                    }
 					RecvMessageData.Reset();
 				}
 			}
@@ -336,7 +336,7 @@ namespace slua
 		: Linedefined(-1)
 		, Name()
 		, ShortSrc()
-	{
+    {
 
 	}
 
@@ -350,12 +350,26 @@ namespace slua
 		FArrayReader& MessageReader = Message.ToSharedRef().Get();
 
 		MessageReader << Event;
+        
+        // PHE_MEMORY_TICK = -2
+        if(Event == -2)
+        {
+            MessageReader << memoryInfoList;
+            
+            Time = -1;
+            Name = "";
+            ShortSrc = "";
+            
+            return true;
+        }
+        
 		MessageReader << Time;
 		MessageReader << Linedefined;
 		MessageReader << Name;
 		MessageReader << ShortSrc;
-
+        
+        memoryInfoList.Empty();
+        
 		return true;
 	}
-
 }

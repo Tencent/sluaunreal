@@ -113,14 +113,14 @@ void  SProfilerInspector::CopyFunctionNode(TSharedPtr<FunctionProfileInfo>& oldF
 	newFuncNode->mergeIdxArray = oldFuncNode->mergeIdxArray;
 }
 
-void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray)
+void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray, TArray<slua::LuaMemInfo> memoryInfoList)
 {
 	if (stopChartRolling == true || profilersArray.Num() == 0)
 	{
 		return;
 	}
 
-	CollectMemoryNode();
+	CollectMemoryNode(memoryInfoList);
 	AssignProfiler(profilersArray, tmpRootProfiler, tmpProfiler);
 
 	tmpProfilersArraySamples[arrayOffset] = profilersArray;
@@ -1065,20 +1065,20 @@ void SProfilerInspector::SearchSiblingNode(SluaProfiler& profiler, int curIdx, i
 	}
 }
 
-void SProfilerInspector::CollectMemoryNode() {
+void SProfilerInspector::CollectMemoryNode(TArray<slua::LuaMemInfo> memoryInfoList) {
 	luaTotalMemSize = 0;
 	ProflierMemNode *memNode = new ProflierMemNode();
-	for(auto& memFileInfo : slua::LuaMemoryProfile::memDetail())
+	for(auto& memFileInfo : memoryInfoList)
 	{
-		FString fileName = SplitFlieName(memFileInfo.Value.hint);
-		if(fileName.Contains(TEXT("slua_profile.lua"), ESearchCase::CaseSensitive, ESearchDir::FromEnd))
+		FString fileName = SplitFlieName(memFileInfo.hint);
+		if(fileName.Contains(TEXT("ProfilerScript"), ESearchCase::CaseSensitive, ESearchDir::FromEnd))
 		{
-			luaTotalMemSize -= memFileInfo.Value.size;
+			luaTotalMemSize -= memFileInfo.size;
 			continue;
 		}
 		 FileMemInfo *fileInfo = new FileMemInfo();
-		 fileInfo->hint = SplitFlieName(memFileInfo.Value.hint);
-		 fileInfo->size = memFileInfo.Value.size;
+		 fileInfo->hint = SplitFlieName(memFileInfo.hint);
+		 fileInfo->size = memFileInfo.size;
 		 memNode->infoList.Add((fileInfo));
 	}
 	luaTotalMemSize += luaMemoryProfile.total();
@@ -1128,6 +1128,7 @@ FString SProfilerInspector::ChooseMemoryUnit(float memorySize)
 
 FString SProfilerInspector::SplitFlieName(FString filePath)
 {
+    if(filePath == NULL) return "";
 	TArray<FString> stringArray;
 
 	filePath.ParseIntoArray(stringArray, TEXT("/"), false);

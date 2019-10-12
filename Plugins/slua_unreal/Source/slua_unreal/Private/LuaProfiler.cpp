@@ -15,6 +15,7 @@
 #include "Log.h"
 #include "LuaState.h"
 #include "ArrayWriter.h"
+#include "LuaMemoryProfile.h"
 #include "luasocket/tcp.h"
 #include "luasocket/auxiliar.h"
 #include "luasocket/buffer.h"
@@ -54,9 +55,10 @@ namespace NS_SLUA {
 
 			FString fname = FString(funcName);
 			FString fsrc = FString(shortSrc);
-
+            
+            //first hookEvent used to distinguish the message belong to Memory or CPU
 			messageWriter << packageSize;
-			messageWriter << hookEvent;
+            messageWriter << hookEvent;
 			messageWriter << time;
 			messageWriter << lineDefined;
 			messageWriter << fname;
@@ -66,6 +68,22 @@ namespace NS_SLUA {
 			packageSize = messageWriter.TotalSize() - sizeof(uint32);
 			messageWriter << packageSize;
 		}
+        
+        void makeMemoryProfilePackage(FArrayWriter& messageWriter,
+                                int hookEvent, TArray<LuaMemInfo> memInfoList)
+        {
+            uint32 packageSize = 0;
+            
+            //first hookEvent used to distinguish the message belong to Memory or CPU
+            messageWriter << packageSize;
+            messageWriter << hookEvent;
+            messageWriter << memInfoList;
+            
+            messageWriter.Seek(0);
+            packageSize = messageWriter.TotalSize() - sizeof(uint32);
+            messageWriter << packageSize;
+            UE_LOG(LogTemp, Warning, TEXT("packageSize reveieve: %d"), packageSize);
+        }
 
 		// copy code from buffer.cpp in luasocket
 		#define STEPSIZE 8192
@@ -102,6 +120,16 @@ namespace NS_SLUA {
 			makeProfilePackage(s_messageWriter, event, getTime(), line, funcname, shortsrc);
 			sendMessage(s_messageWriter);
 		}
+        
+        void takeMemorySample(int event, TArray<LuaMemInfo> memoryInfoList) {
+            // clear writer;
+            static FArrayWriter s_memoryMessageWriter;
+            s_memoryMessageWriter.Empty();
+            s_memoryMessageWriter.Seek(0);
+            makeMemoryProfilePackage(s_memoryMessageWriter, event, memoryInfoList);
+            sendMessage(s_memoryMessageWriter);
+        }
+
 
 		void debug_hook(lua_State* L, lua_Debug* ar) {
 			if (ignoreHook) return;
@@ -172,6 +200,11 @@ namespace NS_SLUA {
 		}
 		RunState currentRunState = (RunState)selfProfiler.getFromTable<int>("currentRunState");
 		if (currentRunState == RunState::CONNECTED) {
+            TArray<LuaMemInfo> memoryInfoList;
+            for(auto& memInfo : slua::LuaMemoryProfile::memDetail()) {
+                memoryInfoList.Add(memInfo.Value);
+            }
+            takeMemorySample(NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK, memoryInfoList);
 			takeSample(NS_SLUA::ProfilerHookEvent::PHE_TICK, -1, "", "");
 		}
 		ignoreHook = false;

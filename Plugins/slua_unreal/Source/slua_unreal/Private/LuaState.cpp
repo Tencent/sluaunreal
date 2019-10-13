@@ -341,6 +341,10 @@ namespace NS_SLUA {
         return true;
     }
 
+	void LuaState::attach(UGameInstance* GI) {
+		this->pGI = GI;
+	}
+
     int LuaState::_atPanic(lua_State* L) {
         const char* err = lua_tostring(L,-1);
         Log::Error("Fatal error: %s",err);

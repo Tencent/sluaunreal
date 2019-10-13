@@ -900,7 +900,7 @@ namespace NS_SLUA {
         if(auto tr=Cast<UWidgetTree>(o))
             return LuaWidgetTree::push(L,tr);
         else
-            return LuaObject::push(L,o,ref);
+            return LuaObject::push(L,o,false,ref);
     }
 
     template<typename T>

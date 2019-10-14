@@ -1073,9 +1073,9 @@ void SProfilerInspector::CollectMemoryNode(TArray<slua::LuaMemInfo> memoryInfoLi
 		FString fileName = SplitFlieName(memFileInfo.hint);
 		if(fileName.Contains(TEXT("ProfilerScript"), ESearchCase::CaseSensitive, ESearchDir::FromEnd))
 		{
-			luaTotalMemSize -= memFileInfo.size;
 			continue;
 		}
+        luaTotalMemSize += memFileInfo.size;
 		 FileMemInfo *fileInfo = new FileMemInfo();
 		 fileInfo->hint = SplitFlieName(memFileInfo.hint);
 		 fileInfo->size = memFileInfo.size;

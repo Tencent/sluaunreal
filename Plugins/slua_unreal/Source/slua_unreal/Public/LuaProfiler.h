@@ -16,7 +16,7 @@
 #include "lua/lua.hpp"
 
 namespace NS_SLUA {
-
+    
 	enum ProfilerHookEvent
 	{
         PHE_MEMORY_TICK = -2,

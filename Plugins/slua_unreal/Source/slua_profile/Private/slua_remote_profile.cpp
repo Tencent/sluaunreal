@@ -356,10 +356,6 @@ namespace slua
         {
             MessageReader << memoryInfoList;
             
-            Time = -1;
-            Name = "";
-            ShortSrc = "";
-            
             return true;
         }
         
@@ -367,8 +363,6 @@ namespace slua
 		MessageReader << Linedefined;
 		MessageReader << Name;
 		MessageReader << ShortSrc;
-        
-        memoryInfoList.Empty();
         
 		return true;
 	}

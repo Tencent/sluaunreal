@@ -117,7 +117,6 @@ private:
     SluaProfiler tmpRootProfiler;
     SluaProfiler tmpProfiler;
     slua::LuaMemoryProfile luaMemoryProfile;
-    slua::MemoryDetail memoryRecord;
     MemNodeInfoList luaMemNodeList;
     MemNodeInfoList luaMemNodeChartList;
     

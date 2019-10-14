@@ -900,7 +900,7 @@ namespace NS_SLUA {
         if(auto tr=Cast<UWidgetTree>(o))
             return LuaWidgetTree::push(L,tr);
         else
-            return LuaObject::push(L,o,ref);
+            return LuaObject::push(L,o,false,ref);
     }
 
     template<typename T>
@@ -1138,7 +1138,14 @@ namespace NS_SLUA {
 				return ILuaTableObjectInterface::push(L, it);
 			}
 		}
-		return pushGCObject<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject,ref);
+		if (auto e = Cast<UEnum>(obj))
+			return pushEnum(L, e);
+		else if (auto c = Cast<UClass>(obj))
+			return pushClass(L, c);
+		else if (auto s = Cast<UScriptStruct>(obj))
+			return pushStruct(L, s);
+		else
+			return pushGCObject<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject,ref);
     }
 
 	int LuaObject::push(lua_State* L, FWeakObjectPtr ptr) {

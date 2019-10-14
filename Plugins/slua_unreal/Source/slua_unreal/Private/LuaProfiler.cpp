@@ -20,6 +20,10 @@
 #include "luasocket/auxiliar.h"
 #include "luasocket/buffer.h"
 
+// #ifdef TEXT
+// #undef TEXT
+// #endif
+#include "luasocket/tcp.h"
 
 #ifdef ENABLE_PROFILER
 namespace NS_SLUA {
@@ -41,13 +45,13 @@ namespace NS_SLUA {
 		LuaVar selfProfiler;
 		bool ignoreHook = false;
 		HookState currentHookState = HookState::UNHOOK;
-		int64_t profileTotalCost = 0;
+		int64 profileTotalCost = 0;
 		bool openAttachMode = true;
 		p_tcp tcpSocket = nullptr;
 		const char* ChunkName = "[ProfilerScript]";
 
 		void makeProfilePackage(FArrayWriter& messageWriter,
-			int hookEvent, int64_t time,
+			int hookEvent, int64 time,
 			int lineDefined, const char* funcName,
 			const char* shortSrc)
 		{
@@ -55,10 +59,9 @@ namespace NS_SLUA {
 
 			FString fname = FString(funcName);
 			FString fsrc = FString(shortSrc);
-            
-            //first hookEvent used to distinguish the message belong to Memory or CPU
+
 			messageWriter << packageSize;
-            messageWriter << hookEvent;
+			messageWriter << hookEvent;
 			messageWriter << time;
 			messageWriter << lineDefined;
 			messageWriter << fname;
@@ -68,17 +71,17 @@ namespace NS_SLUA {
 			packageSize = messageWriter.TotalSize() - sizeof(uint32);
 			messageWriter << packageSize;
 		}
-        
+
         void makeMemoryProfilePackage(FArrayWriter& messageWriter,
                                 int hookEvent, TArray<LuaMemInfo> memInfoList)
         {
             uint32 packageSize = 0;
-            
+
             //first hookEvent used to distinguish the message belong to Memory or CPU
             messageWriter << packageSize;
             messageWriter << hookEvent;
             messageWriter << memInfoList;
-            
+
             messageWriter.Seek(0);
             packageSize = messageWriter.TotalSize() - sizeof(uint32);
             messageWriter << packageSize;
@@ -120,7 +123,7 @@ namespace NS_SLUA {
 			makeProfilePackage(s_messageWriter, event, getTime(), line, funcname, shortsrc);
 			sendMessage(s_messageWriter);
 		}
-        
+
         void takeMemorySample(int event, TArray<LuaMemInfo> memoryInfoList) {
             // clear writer;
             static FArrayWriter s_memoryMessageWriter;
@@ -129,7 +132,6 @@ namespace NS_SLUA {
             makeMemoryProfilePackage(s_memoryMessageWriter, event, memoryInfoList);
             sendMessage(s_memoryMessageWriter);
         }
-
 
 		void debug_hook(lua_State* L, lua_Debug* ar) {
 			if (ignoreHook) return;

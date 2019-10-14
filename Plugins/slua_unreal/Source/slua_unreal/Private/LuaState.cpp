@@ -220,6 +220,8 @@ namespace NS_SLUA {
 
 		latentDelegate = nullptr;
 
+		freeDeferObject();
+
 		releaseAllLink();
 
 		cleanupThreads();
@@ -232,7 +234,7 @@ namespace NS_SLUA {
             stateMapFromIndex.Remove(si);
             L=nullptr;
         }
-
+		freeDeferObject();
 		objRefs.Empty();
 		SafeDelete(deadLoopCheck);
     }
@@ -339,6 +341,10 @@ namespace NS_SLUA {
         return true;
     }
 
+	void LuaState::attach(UGameInstance* GI) {
+		this->pGI = GI;
+	}
+
     int LuaState::_atPanic(lua_State* L) {
         const char* err = lua_tostring(L,-1);
         Log::Error("Fatal error: %s",err);
@@ -406,10 +412,7 @@ namespace NS_SLUA {
 			if (!it.Key().IsValid())
 				it.RemoveCurrent();		
 		
-		// really delete FGCObject
-		for (auto ptr : deferDelete)
-			delete ptr;
-		deferDelete.Empty();
+		freeDeferObject();
 
 		Log::Log("Unreal engine GC, lua used %d KB",lua_gc(L, LUA_GCCOUNT, 0));
 	}
@@ -420,7 +423,15 @@ namespace NS_SLUA {
 		unlinkUObject(World);
 	}
 
-    LuaVar LuaState::doBuffer(const uint8* buf,uint32 len, const char* chunk, LuaVar* pEnv) {
+	void LuaState::freeDeferObject()
+	{
+		// really delete FGCObject
+		for (auto ptr : deferDelete)
+			delete ptr;
+		deferDelete.Empty();
+	}
+
+	LuaVar LuaState::doBuffer(const uint8* buf, uint32 len, const char* chunk, LuaVar* pEnv) {
         AutoStack g(L);
         int errfunc = pushErrorHandler(L);
 

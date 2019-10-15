@@ -22,7 +22,6 @@ namespace NS_SLUA {
 	// not include alloc from lua vm
 	size_t totalMemory;
 	
-#if WITH_EDITOR
 	bool memTrack = false;
 	MemoryDetail memoryRecord;
 
@@ -62,25 +61,18 @@ namespace NS_SLUA {
 			totalMemory -= osize;
 		}
 	}
-#endif
 
     void* LuaMemoryProfile::alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
         LuaState* ls = (LuaState*)ud;
         if (nsize == 0) {
-#if WITH_EDITOR
             removeRecord(ls, ptr, osize);
-#endif
             FMemory::Free(ptr);
             return NULL;
         }
         else {
-#if WITH_EDITOR
 			if(ptr) removeRecord(ls, ptr, osize);
-#endif
             ptr = FMemory::Realloc(ptr,nsize);
-#if WITH_EDITOR
             addRecord(ls,ptr,nsize);
-#endif
             return ptr;
         }
     }
@@ -89,8 +81,6 @@ namespace NS_SLUA {
 	{
 		return totalMemory;
 	}
-
-#if WITH_EDITOR
 
 	void LuaMemoryProfile::start()
 	{
@@ -129,8 +119,7 @@ namespace NS_SLUA {
 		return false;
     }
 
-
-
+#if WITH_EDITOR
 	void dumpMemoryDetail()
 	{
 		Log::Log("Total memory alloc %d bytes", totalMemory);

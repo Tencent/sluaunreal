@@ -41,10 +41,9 @@ SProfilerInspector::SProfilerInspector()
 	avgProfileSamplesCostTime = 0.0f;
 	hasCleared = false;
 	needProfilerCleared = false;
-	initLuaMemNodeList();
+	initLuaMemChartList();
 	chartValArray.SetNumUninitialized(sampleNum);
 	memChartValArray.SetNumUninitialized(sampleNum);
-	luaMemNodeList.SetNumUninitialized(sampleNum);
 	luaMemNodeChartList.SetNumUninitialized(sampleNum);
 	luaMemoryProfile.start();
 }
@@ -56,7 +55,6 @@ SProfilerInspector::~SProfilerInspector()
 	tmpRootProfiler.Empty();
 	tmpProfiler.Empty();
 	luaMemoryProfile.stop();
-	luaMemNodeList.Empty();
 	luaMemNodeChartList.Empty();
 }
 
@@ -83,18 +81,18 @@ FString SProfilerInspector::GenBrevFuncName(FString &functionName)
 	return brevName;
 }
 
-void SProfilerInspector::initLuaMemNodeList()
+void SProfilerInspector::initLuaMemChartList()
 {
 	for(int32 i = 0; i < cMaxSampleNum; i++)
 	{
-		ProflierMemNode *memNode = new ProflierMemNode();
-		memNode->totalSize = -1.0f;
-		luaMemNodeList.Add(memNode);
+		ProflierMemNode memNode;
+        memNode.totalSize = -1.0f;
+		luaMemNodeChartList.Add(memNode);
 	}
 
-	ProflierMemNode *memNode = new ProflierMemNode();
-	memNode->totalSize = 0.0f;
-	luaMemNodeList.Add(memNode);
+	ProflierMemNode memNode;
+	memNode.totalSize = 0.0f;
+	luaMemNodeChartList.Add(memNode);
 }
 
 void  SProfilerInspector::CopyFunctionNode(TSharedPtr<FunctionProfileInfo>& oldFuncNode, TSharedPtr<FunctionProfileInfo>& newFuncNode)
@@ -159,15 +157,10 @@ void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray, TArray<sl
 		{
 			profilersArraySamples[sampleIdx] = tmpProfilersArraySamples[sampleIdx];
 
-			int memArraySize = luaMemNodeList.Num();
-			float memorySize = luaMemNodeList[memArraySize - (sampleNum - sampleIdx)]->totalSize;
+			int memArraySize = luaMemNodeChartList.Num();
+			float memorySize = luaMemNodeChartList[memArraySize - (sampleNum - sampleIdx)].totalSize;
 			memChartValArray[sampleIdx] = memorySize;
-
-			luaMemNodeChartList.RemoveAt(0);
-			luaMemNodeChartList.Add(luaMemNodeList[memArraySize - (sampleNum - sampleIdx)]);
-
-			if(luaMemNodeList.Num() >= 800) luaMemNodeList.RemoveAt(0);
-		}
+        }
 
 		RefreshBarValue();
 		listview->RequestListRefresh();
@@ -215,7 +208,7 @@ void SProfilerInspector::RefreshBarValue()
 		}
 		sampleIdx = (sampleIdx == (sampleNum - 1)) ? 0 : (sampleIdx + 1);
 
-		memorySize = luaMemNodeChartList[idx]->totalSize;
+		memorySize = luaMemNodeChartList[idx].totalSize;
 		if(memorySize >= 0)
 		{
 			totalMemory += memorySize;
@@ -231,7 +224,7 @@ void SProfilerInspector::RefreshBarValue()
 	if(totalMemory >= 0 && nodeSize > 0) avgLuaMemory = totalMemory / nodeSize;
 	memProfilerWidget->SetArrayValue(memChartValArray, maxProfileSamplesCostTime);
 
-	CombineSameFileInfo(luaMemNodeChartList[luaMemNodeChartList.Num() - 1]->infoList);
+	CombineSameFileInfo(luaMemNodeChartList[luaMemNodeChartList.Num() - 1].infoList);
 }
 
 void SProfilerInspector::AssignProfiler(TArray<SluaProfiler> &profilerArray, SluaProfiler& rootProfilers, SluaProfiler& profilers)
@@ -348,9 +341,9 @@ void SProfilerInspector::OnClearBtnClicked()
 	memProfilerWidget->SetToolTipVal(-1);
 	memProfilerWidget->ClearClickedPoint();
 	
-	luaMemNodeList.Empty();
+	luaMemNodeChartList.Empty();
 	shownFileInfo.Empty();
-	initLuaMemNodeList();
+	initLuaMemChartList();
 	
 	for (int sampleIdx = 0; sampleIdx<sampleNum; sampleIdx++)
 	{
@@ -489,8 +482,8 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 
 		if (sampleIdx >= 0 && sampleIdx < cMaxSampleNum)
 		{
-			CombineSameFileInfo(luaMemNodeChartList[sampleIdx]->infoList);
-			luaTotalMemSize = luaMemNodeChartList[sampleIdx]->totalSize;
+			CombineSameFileInfo(luaMemNodeChartList[sampleIdx].infoList);
+			luaTotalMemSize = luaMemNodeChartList[sampleIdx].totalSize;
 			listview->RequestListRefresh();
 		}
 
@@ -508,10 +501,10 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 		int sampleIdx = memProfilerWidget->CalcHoverSampleIdx(cursorPos);
 		static float lastToolTipVal = 0.0f;
 
-		if (sampleIdx >= 0 && lastToolTipVal != luaMemNodeChartList[sampleIdx]->totalSize)
+		if (sampleIdx >= 0 && lastToolTipVal != luaMemNodeChartList[sampleIdx].totalSize)
 		{
-			memProfilerWidget->SetToolTipVal(luaMemNodeChartList[sampleIdx]->totalSize);
-			lastToolTipVal = luaMemNodeChartList[sampleIdx]->totalSize;
+			memProfilerWidget->SetToolTipVal(luaMemNodeChartList[sampleIdx].totalSize);
+			lastToolTipVal = luaMemNodeChartList[sampleIdx].totalSize;
 		}
 		else if (sampleIdx < 0)
 		{
@@ -524,8 +517,8 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 			sampleIdx = memProfilerWidget->CalcClickSampleIdx(cursorPos);
 			if (sampleIdx >= 0 && sampleIdx < cMaxSampleNum)
 			{
-				CombineSameFileInfo(luaMemNodeChartList[sampleIdx]->infoList);
-				luaTotalMemSize = luaMemNodeChartList[sampleIdx]->totalSize;
+				CombineSameFileInfo(luaMemNodeChartList[sampleIdx].infoList);
+				luaTotalMemSize = luaMemNodeChartList[sampleIdx].totalSize;
 				listview->RequestListRefresh();
 			}
 		}
@@ -938,16 +931,17 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateRowForList(TSharedPtr<Functi
 
 TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<FileMemInfo> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
+    for (auto& info : shownFileInfo) UE_LOG(LogTemp, Warning, TEXT("file path : %s"), *(info->hint))
 	return
 	SNew(STableRow<TSharedPtr<FString>>, OwnerTable)
 	.Padding(2.0f)
 	[
 	 SNew(SHeaderRow)
 	 + SHeaderRow::Column("Overview").DefaultLabel(TAttribute<FText>::Create([=]() {
-		if (Item->hint != nil)
-		{
+        if (!Item->hint.IsEmpty())
+        {
 			return FText::FromString(Item->hint);
-		}
+        }
 		return FText::FromString("");
 	}))
 	 .FixedWidth(fixRowWidth)
@@ -1067,7 +1061,7 @@ void SProfilerInspector::SearchSiblingNode(SluaProfiler& profiler, int curIdx, i
 
 void SProfilerInspector::CollectMemoryNode(TArray<slua::LuaMemInfo> memoryInfoList) {
 	luaTotalMemSize = 0;
-	ProflierMemNode *memNode = new ProflierMemNode();
+	ProflierMemNode memNode;
 	for(auto& memFileInfo : memoryInfoList)
 	{
 		FString fileName = SplitFlieName(memFileInfo.hint);
@@ -1076,35 +1070,36 @@ void SProfilerInspector::CollectMemoryNode(TArray<slua::LuaMemInfo> memoryInfoLi
 			continue;
 		}
         luaTotalMemSize += memFileInfo.size;
-		 FileMemInfo *fileInfo = new FileMemInfo();
-		 fileInfo->hint = SplitFlieName(memFileInfo.hint);
-		 fileInfo->size = memFileInfo.size;
-		 memNode->infoList.Add((fileInfo));
+        FileMemInfo fileInfo;
+        fileInfo.hint = SplitFlieName(memFileInfo.hint);
+        fileInfo.size = memFileInfo.size;
+        memNode.infoList.Add(fileInfo);
 	}
-	luaTotalMemSize += luaMemoryProfile.total();
+    
 	luaTotalMemSize /= 2048.0f;
-	memNode->totalSize = luaTotalMemSize;
-	luaMemNodeList.Add(memNode);
+	memNode.totalSize = luaTotalMemSize;
+	luaMemNodeChartList.Add(memNode);
+    luaMemNodeChartList.RemoveAt(0);
 }
 
 void SProfilerInspector::CombineSameFileInfo(MemFileInfoList& infoList)
 {
 	shownFileInfo.Empty();
 
-	for(auto& fileInfo : infoList)
-	{
-		int index = ContainsFile(fileInfo->hint);
-		if(index >= 0) {
-			float lineMemSize= shownFileInfo[index]->size;
-			lineMemSize = shownFileInfo[index]->size + fileInfo->size;
-			shownFileInfo[index]->size = lineMemSize;
-		} else {
-			FileMemInfo *info = new FileMemInfo();
-			info->hint = fileInfo->hint;
-			info->size = fileInfo->size;
-			shownFileInfo.Add(MakeShareable(info));
-		}
-	}
+    for(auto& fileInfo : infoList)
+    {
+        int index = ContainsFile(fileInfo.hint);
+        if(index >= 0) {
+            float lineMemSize= shownFileInfo[index]->size;
+            lineMemSize = shownFileInfo[index]->size + fileInfo.size;
+            shownFileInfo[index]->size = lineMemSize;
+        } else {
+            FileMemInfo *info = new FileMemInfo();
+            info->hint = fileInfo.hint;
+            info->size = fileInfo.size;
+            shownFileInfo.Add(MakeShareable(info));
+        }
+    }
 }
 
 int SProfilerInspector::ContainsFile(FString& fileName)
@@ -1128,10 +1123,10 @@ FString SProfilerInspector::ChooseMemoryUnit(float memorySize)
 
 FString SProfilerInspector::SplitFlieName(FString filePath)
 {
-    if(filePath == NULL) return "";
-	TArray<FString> stringArray;
-
+    TArray<FString> stringArray;
 	filePath.ParseIntoArray(stringArray, TEXT("/"), false);
+    
+    if(stringArray.Num() - 1 == -1) return "";
 	return stringArray[stringArray.Num()-1];
 }
 

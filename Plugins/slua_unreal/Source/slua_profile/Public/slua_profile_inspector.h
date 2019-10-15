@@ -33,9 +33,8 @@ struct FileMemInfo;
 struct ProflierMemNode;
 
 typedef TArray<TSharedPtr<FunctionProfileInfo>> SluaProfiler;
-typedef FString LuaMemInfo;
-typedef TArray<FileMemInfo*> MemFileInfoList;
-typedef TArray<ProflierMemNode*> MemNodeInfoList;
+typedef TArray<FileMemInfo> MemFileInfoList;
+typedef TArray<ProflierMemNode> MemNodeInfoList;
 
 //slua::ProflierMemInfo
 class SProfilerWidget;
@@ -77,6 +76,8 @@ public:
     }
     
 private:
+    int indexx = 0;
+    int ptrIndex = 0;
     const static int sampleNum = cMaxSampleNum;
     const static int fixRowWidth = 300;
     const static int refreshInterval = 50;
@@ -117,10 +118,11 @@ private:
     SluaProfiler tmpRootProfiler;
     SluaProfiler tmpProfiler;
     slua::LuaMemoryProfile luaMemoryProfile;
-    MemNodeInfoList luaMemNodeList;
+    /* holding all of the memory node which are showed on Profiler chart */
+    /*  */
     MemNodeInfoList luaMemNodeChartList;
     
-    void initLuaMemNodeList();
+    void initLuaMemChartList();
     bool NeedReBuildInspector();
     void RefreshBarValue();
     void AddProfilerBarOnMouseMoveEvent();

@@ -16,6 +16,7 @@
 #include "SharedPointer.h"
 #include "SocketSubsystem.h"
 #include "SluaUtil.h"
+#include "slua_unreal/Public/Log.h"
 #include "slua_profile.h"
 
 namespace slua

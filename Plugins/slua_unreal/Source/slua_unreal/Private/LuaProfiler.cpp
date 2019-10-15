@@ -13,6 +13,7 @@
 
 #include "LuaProfiler.h"
 #include "Log.h"
+#include <iostream>
 #include "LuaState.h"
 #include "ArrayWriter.h"
 #include "LuaMemoryProfile.h"
@@ -70,7 +71,7 @@ namespace NS_SLUA {
 			messageWriter.Seek(0);
 			packageSize = messageWriter.TotalSize() - sizeof(uint32);
 			messageWriter << packageSize;
-		}
+        }
 
         void makeMemoryProfilePackage(FArrayWriter& messageWriter,
                                 int hookEvent, TArray<LuaMemInfo> memInfoList)
@@ -85,7 +86,7 @@ namespace NS_SLUA {
             messageWriter.Seek(0);
             packageSize = messageWriter.TotalSize() - sizeof(uint32);
             messageWriter << packageSize;
-            UE_LOG(LogTemp, Warning, TEXT("packageSize reveieve: %d"), packageSize);
+            
         }
 
 		// copy code from buffer.cpp in luasocket
@@ -197,9 +198,10 @@ namespace NS_SLUA {
 		ignoreHook = true;
 		if (currentHookState == HookState::UNHOOK) {
 			selfProfiler.callField("reConnect", selfProfiler);
-			ignoreHook = false;
+            ignoreHook = false;
 			return;
 		}
+        
 		RunState currentRunState = (RunState)selfProfiler.getFromTable<int>("currentRunState");
 		if (currentRunState == RunState::CONNECTED) {
             TArray<LuaMemInfo> memoryInfoList;
@@ -214,7 +216,7 @@ namespace NS_SLUA {
 
 	LuaProfiler::LuaProfiler(const char* funcName)
 	{
-		takeSample(ProfilerHookEvent::PHE_CALL, 0, funcName, "");
+        takeSample(ProfilerHookEvent::PHE_CALL, 0, funcName, "");
 	}
 
 	LuaProfiler::~LuaProfiler()

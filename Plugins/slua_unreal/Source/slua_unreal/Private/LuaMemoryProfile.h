@@ -41,7 +41,7 @@ namespace NS_SLUA {
     class LuaMemoryProfile {
     public:
         static void* alloc (void *ud, void *ptr, size_t osize, size_t nsize);
-		static SLUA_UNREAL_API size_t total();
+		static size_t total();
 //#if WITH_EDITOR
 		static SLUA_UNREAL_API void start();
 		static SLUA_UNREAL_API void stop();

@@ -16,8 +16,7 @@
 #include "SharedPointer.h"
 #include "SocketSubsystem.h"
 #include "SluaUtil.h"
-#include "slua_unreal/Public/Log.h"
-#include "Log.h"
+#include "LuaProfiler.h"
 #include "slua_profile.h"
 
 namespace slua
@@ -353,8 +352,7 @@ namespace slua
 
 		MessageReader << Event;
         
-        // PHE_MEMORY_TICK = -2
-        if(Event == -2)
+        if(Event == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK)
         {
             MessageReader << memoryInfoList;
             return true;

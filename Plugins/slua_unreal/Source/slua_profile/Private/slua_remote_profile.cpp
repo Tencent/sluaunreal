@@ -17,6 +17,7 @@
 #include "SocketSubsystem.h"
 #include "SluaUtil.h"
 #include "slua_unreal/Public/Log.h"
+#include "Log.h"
 #include "slua_profile.h"
 
 namespace slua
@@ -356,7 +357,6 @@ namespace slua
         if(Event == -2)
         {
             MessageReader << memoryInfoList;
-            
             return true;
         }
         

@@ -65,7 +65,7 @@ private:
 	void ClearCurProfiler();
 	void AddMenuExtension(FMenuBuilder& Builder);
 	
-    void debug_hook_c(int event, double nanoseconds, int linedefined, const FString& name, const FString& short_src, TArray<slua::LuaMemInfo> memoryInfoList);
+    void debug_hook_c(int event, double nanoseconds, int linedefined, const FString& name, const FString& short_src, TArray<NS_SLUA::LuaMemInfo> memoryInfoList);
 };
 
 struct SLUA_PROFILE_API FunctionProfileInfo

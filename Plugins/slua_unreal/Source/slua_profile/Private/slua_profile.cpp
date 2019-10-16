@@ -37,7 +37,7 @@ namespace {
 	static const FString CoroutineName(TEXT("coroutine"));
 	SluaProfiler curProfiler;
 	
-    TArray<slua::LuaMemInfo> memoryInfo;
+    TArray<NS_SLUA::LuaMemInfo> memoryInfo;
 	TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe> curProfilersArray = MakeShareable(new TArray<SluaProfiler>());
 	TQueue<TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe>, EQueueMode::Mpsc> profilerArrayQueue;
 
@@ -256,7 +256,7 @@ void Fslua_profileModule::OnTabClosed(TSharedRef<SDockTab>)
 	tabOpened = false;
 }
 
-void Fslua_profileModule::debug_hook_c(int event, double nanoseconds, int linedefined, const FString& name, const FString& short_src, TArray<slua::LuaMemInfo> memoryInfoList)
+void Fslua_profileModule::debug_hook_c(int event, double nanoseconds, int linedefined, const FString& name, const FString& short_src, TArray<NS_SLUA::LuaMemInfo> memoryInfoList)
 {
 	if (event == NS_SLUA::ProfilerHookEvent::PHE_CALL)
 	{

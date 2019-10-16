@@ -36,7 +36,6 @@ typedef TArray<TSharedPtr<FunctionProfileInfo>> SluaProfiler;
 typedef TArray<FileMemInfo> MemFileInfoList;
 typedef TArray<ProflierMemNode> MemNodeInfoList;
 
-//slua::ProflierMemInfo
 class SProfilerWidget;
 class SProfilerTabWidget;
 
@@ -59,7 +58,7 @@ public:
     SProfilerInspector();
     ~SProfilerInspector();
     
-    void Refresh(TArray<SluaProfiler>& curProfilersArray, TArray<slua::LuaMemInfo> memoryInfoList);
+    void Refresh(TArray<SluaProfiler>& curProfilersArray, TArray<NS_SLUA::LuaMemInfo> memoryInfoList);
     TSharedRef<class SDockTab> GetSDockTab();
     TSharedRef<ITableRow> OnGenerateMemRowForList(TSharedPtr<FileMemInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
     TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FunctionProfileInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
@@ -138,7 +137,7 @@ private:
     void InitProfilerBar(int barIdx, TSharedPtr<SHorizontalBox>& horBox);
     void OnClearBtnClicked();
     void SortProfiler(SluaProfiler &shownRootProfiler);
-    void CollectMemoryNode(TArray<slua::LuaMemInfo> memoryInfoList);
+    void CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInfoList);
     void CombineSameFileInfo(MemFileInfoList& infoList);
     int ContainsFile(FString& fileName);
     FString ChooseMemoryUnit(float memorySize);

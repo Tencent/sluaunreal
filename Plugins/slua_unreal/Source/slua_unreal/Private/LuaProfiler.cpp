@@ -205,9 +205,10 @@ namespace NS_SLUA {
 		RunState currentRunState = (RunState)selfProfiler.getFromTable<int>("currentRunState");
 		if (currentRunState == RunState::CONNECTED) {
             TArray<LuaMemInfo> memoryInfoList;
-            for(auto& memInfo : slua::LuaMemoryProfile::memDetail()) {
+            for(auto& memInfo : NS_SLUA::LuaMemoryProfile::memDetail()) {
                 memoryInfoList.Add(memInfo.Value);
             }
+
             takeMemorySample(NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK, memoryInfoList);
 			takeSample(NS_SLUA::ProfilerHookEvent::PHE_TICK, -1, "", "");
 		}

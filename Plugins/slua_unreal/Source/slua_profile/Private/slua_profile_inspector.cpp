@@ -45,7 +45,7 @@ SProfilerInspector::SProfilerInspector()
 	chartValArray.SetNumUninitialized(sampleNum);
 	memChartValArray.SetNumUninitialized(sampleNum);
 	luaMemNodeChartList.SetNumUninitialized(sampleNum);
-    slua::LuaMemoryProfile::start();
+    NS_SLUA::LuaMemoryProfile::start();
 }
 
 SProfilerInspector::~SProfilerInspector()
@@ -55,7 +55,7 @@ SProfilerInspector::~SProfilerInspector()
 	tmpRootProfiler.Empty();
 	tmpProfiler.Empty();
 	luaMemNodeChartList.Empty();
-    slua::LuaMemoryProfile::stop();
+    NS_SLUA::LuaMemoryProfile::stop();
 }
 
 void SProfilerInspector::StartChartRolling()
@@ -111,7 +111,7 @@ void  SProfilerInspector::CopyFunctionNode(TSharedPtr<FunctionProfileInfo>& oldF
 	newFuncNode->mergeIdxArray = oldFuncNode->mergeIdxArray;
 }
 
-void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray, TArray<slua::LuaMemInfo> memoryInfoList)
+void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray, TArray<NS_SLUA::LuaMemInfo> memoryInfoList)
 {
 	if (stopChartRolling == true || profilersArray.Num() == 0)
 	{
@@ -948,7 +948,7 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<Fil
 	 + SHeaderRow::Column("Memory Size").DefaultLabel(TAttribute<FText>::Create([=]() {
 		if (Item->size >= 0)
 		{
-			return FText::FromString(ChooseMemoryUnit(Item->size / 2048.0));
+			return FText::FromString(ChooseMemoryUnit(Item->size / 1024.0));
 		}
 		return FText::FromString("");
 	}))
@@ -1058,7 +1058,7 @@ void SProfilerInspector::SearchSiblingNode(SluaProfiler& profiler, int curIdx, i
 	}
 }
 
-void SProfilerInspector::CollectMemoryNode(TArray<slua::LuaMemInfo> memoryInfoList) {
+void SProfilerInspector::CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInfoList) {
 	luaTotalMemSize = 0;
 	ProflierMemNode memNode;
 	for(auto& memFileInfo : memoryInfoList)
@@ -1075,7 +1075,7 @@ void SProfilerInspector::CollectMemoryNode(TArray<slua::LuaMemInfo> memoryInfoLi
         memNode.infoList.Add(fileInfo);
 	}
     
-	luaTotalMemSize /= 2048.0f;
+	luaTotalMemSize /= 1024.0f;
 	memNode.totalSize = luaTotalMemSize;
 	luaMemNodeChartList.Add(memNode);
     luaMemNodeChartList.RemoveAt(0);
@@ -1234,7 +1234,7 @@ void SProfilerWidget::Tick(const FGeometry& AllottedGeometry, const double InCur
 
 			if (m_maxCostTime != 0.0f)
 			{
-				yValue = cMaxViewHeight * (m_arrayVal[i] / 1024);
+				yValue = cMaxViewHeight * (m_arrayVal[i] / 512);
 			}
 			if (yValue > cMaxViewHeight)
 			{

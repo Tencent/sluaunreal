@@ -150,6 +150,6 @@ namespace slua {
 		FString ShortSrc;
         
         //Memory infomation
-        TArray<slua::LuaMemInfo> memoryInfoList;
+        TArray<NS_SLUA::LuaMemInfo> memoryInfoList;
 	};
 }

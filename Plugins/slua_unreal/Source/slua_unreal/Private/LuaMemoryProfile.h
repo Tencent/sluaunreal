@@ -43,8 +43,8 @@ namespace NS_SLUA {
         static void* alloc (void *ud, void *ptr, size_t osize, size_t nsize);
 		static size_t total();
 //#if WITH_EDITOR
-		static void start();
-		static void stop();
+		static SLUA_UNREAL_API void start();
+		static SLUA_UNREAL_API void stop();
 		static const MemoryDetail& memDetail();       
 //#endif
     };

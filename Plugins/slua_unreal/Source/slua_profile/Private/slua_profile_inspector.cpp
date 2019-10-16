@@ -45,7 +45,7 @@ SProfilerInspector::SProfilerInspector()
 	chartValArray.SetNumUninitialized(sampleNum);
 	memChartValArray.SetNumUninitialized(sampleNum);
 	luaMemNodeChartList.SetNumUninitialized(sampleNum);
-	luaMemoryProfile.start();
+    slua::LuaMemoryProfile::start();
 }
 
 SProfilerInspector::~SProfilerInspector()
@@ -54,8 +54,8 @@ SProfilerInspector::~SProfilerInspector()
 	shownRootProfiler.Empty();
 	tmpRootProfiler.Empty();
 	tmpProfiler.Empty();
-	luaMemoryProfile.stop();
 	luaMemNodeChartList.Empty();
+    slua::LuaMemoryProfile::stop();
 }
 
 void SProfilerInspector::StartChartRolling()
@@ -931,7 +931,6 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateRowForList(TSharedPtr<Functi
 
 TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<FileMemInfo> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
-    for (auto& info : shownFileInfo) UE_LOG(LogTemp, Warning, TEXT("file path : %s"), *(info->hint))
 	return
 	SNew(STableRow<TSharedPtr<FString>>, OwnerTable)
 	.Padding(2.0f)
@@ -1125,9 +1124,8 @@ FString SProfilerInspector::SplitFlieName(FString filePath)
 {
     TArray<FString> stringArray;
 	filePath.ParseIntoArray(stringArray, TEXT("/"), false);
-    
-    if(stringArray.Num() - 1 == -1) return "";
-	return stringArray[stringArray.Num()-1];
+
+    return stringArray.Num() == 0 ? "" : stringArray[stringArray.Num()-1];
 }
 
 ////////////////////////////// SProfilerWidget //////////////////////////////

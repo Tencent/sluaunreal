@@ -117,9 +117,7 @@ private:
     SluaProfiler shownProfiler;
     SluaProfiler tmpRootProfiler;
     SluaProfiler tmpProfiler;
-    slua::LuaMemoryProfile luaMemoryProfile;
     /* holding all of the memory node which are showed on Profiler chart */
-    /*  */
     MemNodeInfoList luaMemNodeChartList;
     
     void initLuaMemChartList();

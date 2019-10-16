@@ -93,7 +93,7 @@ namespace NS_SLUA {
 			{
 				void* value = container?p->ContainerPtrToValuePtr<void>(base, n):base;
 				UObject* obj = p->GetObjectPropertyValue(value);
-				if (obj)
+				if (obj && obj->IsValidLowLevel())
 				{
 					UObject* newobj = obj;
 					collector.AddReferencedObject(newobj);

@@ -49,7 +49,6 @@ namespace NS_SLUA {
 		if (getMemInfo(L, ptr, size, memInfo)) {
 			// Log::Log("alloc memory %d from %s",size,TCHAR_TO_UTF8(*memInfo.hint));
 			memoryRecord.Add(ptr, memInfo);
-            Log::Log("Lua State : memroy Record %d size", memoryRecord.Num());
 			totalMemory += size;
 		}
 	}
@@ -95,7 +94,6 @@ namespace NS_SLUA {
 
 	const MemoryDetail& LuaMemoryProfile::memDetail()
 	{
-        Log::Log("Lua State : memDetail %d size", memoryRecord.Num());
 		return memoryRecord;
 	}
 

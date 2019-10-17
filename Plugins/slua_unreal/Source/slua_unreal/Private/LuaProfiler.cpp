@@ -18,8 +18,10 @@
 #include "luasocket/auxiliar.h"
 #include "luasocket/buffer.h"
 
+#if PLATFORM_WINDOWS
 #ifdef TEXT
 #undef TEXT
+#endif
 #endif
 #include "luasocket/tcp.h"
 

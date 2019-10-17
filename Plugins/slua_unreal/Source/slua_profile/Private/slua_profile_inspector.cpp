@@ -27,6 +27,7 @@
 #include "slua_profile.h"
 
 static const FName slua_profileTabNameInspector("slua_profile");
+void SortMemInfo(ShownMemInfoList list, int beginIndex, int endIndex);
 ///////////////////////////////////////////////////////////////////////////
 SProfilerInspector::SProfilerInspector()
 {
@@ -45,7 +46,7 @@ SProfilerInspector::SProfilerInspector()
 	chartValArray.SetNumUninitialized(sampleNum);
 	memChartValArray.SetNumUninitialized(sampleNum);
 	luaMemNodeChartList.SetNumUninitialized(sampleNum);
-    NS_SLUA::LuaMemoryProfile::start();
+//    NS_SLUA::LuaMemoryProfile::start();
 }
 
 SProfilerInspector::~SProfilerInspector()
@@ -55,7 +56,7 @@ SProfilerInspector::~SProfilerInspector()
 	tmpRootProfiler.Empty();
 	tmpProfiler.Empty();
 	luaMemNodeChartList.Empty();
-    NS_SLUA::LuaMemoryProfile::stop();
+//    NS_SLUA::LuaMemoryProfile::stop();
 }
 
 void SProfilerInspector::StartChartRolling()
@@ -1096,6 +1097,34 @@ void SProfilerInspector::CombineSameFileInfo(MemFileInfoList& infoList)
             shownFileInfo.Add(MakeShareable(info));
         }
     }
+    
+    SortShownInfo();
+}
+
+void SortMemInfo(ShownMemInfoList list, int beginIndex, int endIndex) {
+    if (beginIndex < endIndex)
+    {
+        int key = list[beginIndex]->size;
+        int left = beginIndex, right = endIndex;
+        while (left < right)
+        {
+            while (list[right]->size < key && right > left)
+                right--;
+            if (left < right)
+                list[left++]->size = list[right]->size;
+            while (list[left]->size > key && left < right)
+                left++;
+            if (left < right)
+                list[right--]->size = list[left]->size;
+        }
+        list[left]->size = key;
+        SortMemInfo(list, beginIndex, left - 1);
+        SortMemInfo(list, left + 1, endIndex);
+    }
+}
+
+void SProfilerInspector::SortShownInfo() {
+    SortMemInfo(shownFileInfo, 0, shownFileInfo.Num()-1);
 }
 
 int SProfilerInspector::ContainsFile(FString& fileName)

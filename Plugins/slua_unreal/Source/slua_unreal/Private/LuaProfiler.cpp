@@ -155,12 +155,14 @@ namespace NS_SLUA {
 			HookState state = (HookState)lua_tointeger(L, 1);
 			currentHookState = state;
 			if (state == HookState::UNHOOK) {
+                 LuaMemoryProfile::stop();
 				if (openAttachMode)
 					lua_sethook(L, debug_hook, LUA_MASKRET, 1000000);
 				else
 					lua_sethook(L, nullptr, 0, 0);
 			}
 			else if (state == HookState::HOOKED) {
+                 LuaMemoryProfile::start();
 				lua_sethook(L, debug_hook, LUA_MASKRET | LUA_MASKCALL, 0);
 			}
 			else
@@ -211,7 +213,7 @@ namespace NS_SLUA {
             for(auto& memInfo : NS_SLUA::LuaMemoryProfile::memDetail()) {
                 memoryInfoList.Add(memInfo.Value);
             }
-
+            
             takeMemorySample(NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK, memoryInfoList);
 			takeSample(NS_SLUA::ProfilerHookEvent::PHE_TICK, -1, "", "");
 		}

@@ -22,7 +22,7 @@ namespace NS_SLUA {
 	// not include alloc from lua vm
 	size_t totalMemory;
 	
-	bool memTrack = false;
+    bool memTrack = false;
 	MemoryDetail memoryRecord;
 
 	int LuaMemInfo::push(lua_State * L) const
@@ -84,7 +84,7 @@ namespace NS_SLUA {
 
 	void LuaMemoryProfile::start()
 	{
-		memTrack = true;
+        memTrack = true;
 	}
 
 	void LuaMemoryProfile::stop()
@@ -102,11 +102,12 @@ namespace NS_SLUA {
 		for (int i = 0;;i++) {
 			if (lua_getstack(L, i, &ar) && lua_getinfo(L, "nSl", &ar)) {
 				CallInfo* ci = (CallInfo*)ar.i_ci;
-				if (!isLua(ci))
+                if (!isLua(ci))
 					continue;
-				if (strcmp(ar.source, SLUA_LUACODE) == 0)
-					continue;
-
+    
+                if (strcmp(ar.source, SLUA_LUACODE) == 0)
+                    continue;
+                
 				if (strcmp(ar.what, "Lua") == 0 || strcmp(ar.what, "main") == 0) {
 					info.ptr = ptr;
 					info.size = size;
@@ -114,7 +115,8 @@ namespace NS_SLUA {
 					return true;
 				}
 			}
-			else break;
+            else
+                break; 
 		}
 		return false;
     }

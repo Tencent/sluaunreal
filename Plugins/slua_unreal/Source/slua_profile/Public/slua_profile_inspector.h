@@ -35,6 +35,7 @@ struct ProflierMemNode;
 typedef TArray<TSharedPtr<FunctionProfileInfo>> SluaProfiler;
 typedef TArray<FileMemInfo> MemFileInfoList;
 typedef TArray<ProflierMemNode> MemNodeInfoList;
+typedef TArray<TSharedPtr<FileMemInfo>> ShownMemInfoList;
 
 class SProfilerWidget;
 class SProfilerTabWidget;
@@ -109,7 +110,6 @@ private:
     bool hasCleared;
     bool needProfilerCleared;
     
-    TArray<TSharedPtr<FileMemInfo>> shownFileInfo;
     TArray<SluaProfiler> tmpProfilersArraySamples[sampleNum];
     TArray<SluaProfiler> profilersArraySamples[sampleNum];
     SluaProfiler shownRootProfiler;
@@ -118,6 +118,7 @@ private:
     SluaProfiler tmpProfiler;
     /* holding all of the memory node which are showed on Profiler chart */
     MemNodeInfoList luaMemNodeChartList;
+    ShownMemInfoList shownFileInfo;
     
     void initLuaMemChartList();
     bool NeedReBuildInspector();
@@ -137,6 +138,7 @@ private:
     void InitProfilerBar(int barIdx, TSharedPtr<SHorizontalBox>& horBox);
     void OnClearBtnClicked();
     void SortProfiler(SluaProfiler &shownRootProfiler);
+    void SortShownInfo();
     void CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInfoList);
     void CombineSameFileInfo(MemFileInfoList& infoList);
     int ContainsFile(FString& fileName);

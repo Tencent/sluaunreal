@@ -115,8 +115,7 @@ namespace NS_SLUA {
 					return true;
 				}
 			}
-            else
-                break; 
+            else break;
 		}
 		return false;
     }

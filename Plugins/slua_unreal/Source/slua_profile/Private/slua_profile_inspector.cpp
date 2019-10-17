@@ -46,7 +46,6 @@ SProfilerInspector::SProfilerInspector()
 	chartValArray.SetNumUninitialized(sampleNum);
 	memChartValArray.SetNumUninitialized(sampleNum);
 	luaMemNodeChartList.SetNumUninitialized(sampleNum);
-//    NS_SLUA::LuaMemoryProfile::start();
 }
 
 SProfilerInspector::~SProfilerInspector()
@@ -56,7 +55,6 @@ SProfilerInspector::~SProfilerInspector()
 	tmpRootProfiler.Empty();
 	tmpProfiler.Empty();
 	luaMemNodeChartList.Empty();
-//    NS_SLUA::LuaMemoryProfile::stop();
 }
 
 void SProfilerInspector::StartChartRolling()

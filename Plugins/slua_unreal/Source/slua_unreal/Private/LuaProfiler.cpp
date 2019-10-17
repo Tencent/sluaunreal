@@ -21,9 +21,12 @@
 #include "luasocket/auxiliar.h"
 #include "luasocket/buffer.h"
 
-// #ifdef TEXT
-// #undef TEXT
-// #endif
+#if PLATFORM_WINDOWS
+#ifdef TEXT
+#undef TEXT
+#endif
+#endif
+
 #include "luasocket/tcp.h"
 
 #ifdef ENABLE_PROFILER

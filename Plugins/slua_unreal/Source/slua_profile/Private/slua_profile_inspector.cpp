@@ -1074,7 +1074,7 @@ void SProfilerInspector::CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInf
         fileInfo.size = memFileInfo.size;
         memNode.infoList.Add(fileInfo);
 	}
-    
+    //luaTotalMemSize change from byte to KB
 	luaTotalMemSize /= 1024.0f;
 	memNode.totalSize = luaTotalMemSize;
 	luaMemNodeChartList.Add(memNode);
@@ -1084,14 +1084,11 @@ void SProfilerInspector::CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInf
 void SProfilerInspector::CombineSameFileInfo(MemFileInfoList& infoList)
 {
 	shownFileInfo.Empty();
-
     for(auto& fileInfo : infoList)
     {
         int index = ContainsFile(fileInfo.hint);
         if(index >= 0) {
-            float lineMemSize= shownFileInfo[index]->size;
-            lineMemSize = shownFileInfo[index]->size + fileInfo.size;
-            shownFileInfo[index]->size = lineMemSize;
+            shownFileInfo[index]->size += fileInfo.size;
         } else {
             FileMemInfo *info = new FileMemInfo();
             info->hint = fileInfo.hint;
@@ -1234,7 +1231,7 @@ void SProfilerWidget::Tick(const FGeometry& AllottedGeometry, const double InCur
 
 			if (m_maxCostTime != 0.0f)
 			{
-				yValue = cMaxViewHeight * (m_arrayVal[i] / 512);
+				yValue = cMaxViewHeight * (m_arrayVal[i] / 1024);
 			}
 			if (yValue > cMaxViewHeight)
 			{
@@ -1515,7 +1512,7 @@ void SProfilerTabWidget::Construct(const FArguments& InArgs)
 					.Padding(15.0f, 15.0f)
 					[
 						SNew(STextBlock)
-						.Font(FSlateFontInfo("Veranda", 13))
+						.Font(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Bold.ttf"), 13))
 						.ColorAndOpacity(FLinearColor(1, 1, 1, 0.5))
 						.Text(InArgs._TabName)
 					]

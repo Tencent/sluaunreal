@@ -13,11 +13,9 @@
 
 #include "LuaProfiler.h"
 #include "Log.h"
-#include <iostream>
 #include "LuaState.h"
 #include "ArrayWriter.h"
 #include "LuaMemoryProfile.h"
-#include "luasocket/tcp.h"
 #include "luasocket/auxiliar.h"
 #include "luasocket/buffer.h"
 
@@ -26,7 +24,6 @@
 #undef TEXT
 #endif
 #endif
-
 #include "luasocket/tcp.h"
 
 #ifdef ENABLE_PROFILER

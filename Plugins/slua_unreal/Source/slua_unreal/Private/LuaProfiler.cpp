@@ -47,7 +47,6 @@ namespace NS_SLUA {
 		bool ignoreHook = false;
 		HookState currentHookState = HookState::UNHOOK;
 		int64 profileTotalCost = 0;
-		bool openAttachMode = true;
 		p_tcp tcpSocket = nullptr;
 		const char* ChunkName = "[ProfilerScript]";
 
@@ -152,14 +151,11 @@ namespace NS_SLUA {
 			HookState state = (HookState)lua_tointeger(L, 1);
 			currentHookState = state;
 			if (state == HookState::UNHOOK) {
-                 LuaMemoryProfile::stop();
-				if (openAttachMode)
-					lua_sethook(L, debug_hook, LUA_MASKRET, 1000000);
-				else
-					lua_sethook(L, nullptr, 0, 0);
+                LuaMemoryProfile::stop();
+				lua_sethook(L, nullptr, 0, 0);
 			}
 			else if (state == HookState::HOOKED) {
-                 LuaMemoryProfile::start();
+                LuaMemoryProfile::start();
 				lua_sethook(L, debug_hook, LUA_MASKRET | LUA_MASKCALL, 0);
 			}
 			else

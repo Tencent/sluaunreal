@@ -76,8 +76,6 @@ public:
     }
     
 private:
-    int indexx = 0;
-    int ptrIndex = 0;
     const static int sampleNum = cMaxSampleNum;
     const static int fixRowWidth = 300;
     const static int refreshInterval = 50;
@@ -160,8 +158,7 @@ public:
     
     /** Constructs this widget with InArgs */
     void Construct(const FArguments& InArgs);
-    void SetArrayValue(TArray<float> &chartValArray, float maxCostTime);
-    void SetArrayValue(MemNodeInfoList& chartValArray, float maxCostTime);
+    void SetArrayValue(TArray<float> &chartValArray, float maxCostTime, float maxMemSize);
     int CalcClickSampleIdx(const FVector2D cursorPos);
     int CalcHoverSampleIdx(const FVector2D cursorPos);
     void SetToolTipVal(float val);
@@ -178,21 +175,25 @@ private:
     void DrawStdLine(const FGeometry& AllottedGeometry, FSlateWindowElementList& OutDrawElements, int32 LayerId, float positionY, FString stdStr) const;
     void AddStdLine(float &maxPointValue, float &stdLineValue, FString &stdLineName);
     void CalcStdLine(float &maxCostTime);
+    void CalcMemStdText(float &maxMemorySize);
     
     TArray<FVector2D> m_arraylinePath;
     TArray<float> m_arrayVal;
 
     TArray<float> m_stdPositionY;
     TArray<FString> m_stdStr;
+    TArray<FString> m_stdMemStr;
     TAttribute<EVisibility> m_stdLineVisibility;
     const int32 m_cSliceCount = cMaxSampleNum;
     const float m_cStdWidth = 1300;
     float m_widgetWidth;
     const int32 m_cStdLeftPosition = 30;
     float m_maxCostTime;
+    float m_maxMemSize;
     float m_maxPointHeight;
     float m_pointInterval;
     float m_toolTipVal;
+    int32 m_memStdScale;
     FVector2D m_clickedPoint;
     const float m_cStdHighVal = cMaxViewHeight;
 };

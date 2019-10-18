@@ -156,9 +156,7 @@ void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray, TArray<NS
 		{
 			profilersArraySamples[sampleIdx] = tmpProfilersArraySamples[sampleIdx];
 
-			int memArraySize = luaMemNodeChartList.Num();
-			float memorySize = luaMemNodeChartList[memArraySize - (sampleNum - sampleIdx)].totalSize;
-			memChartValArray[sampleIdx] = memorySize;
+			memChartValArray[sampleIdx] = luaMemNodeChartList[sampleIdx].totalSize;
         }
 
 		RefreshBarValue();
@@ -217,11 +215,11 @@ void SProfilerInspector::RefreshBarValue()
 
 	}
 	avgProfileSamplesCostTime = totalSampleValue / sampleNum;
-	cpuProfilerWidget->SetArrayValue(chartValArray, maxProfileSamplesCostTime);
+	cpuProfilerWidget->SetArrayValue(chartValArray, maxProfileSamplesCostTime, maxLuaMemory);
 
 	// Add memory total size into the array;
 	if(totalMemory >= 0 && nodeSize > 0) avgLuaMemory = totalMemory / nodeSize;
-	memProfilerWidget->SetArrayValue(memChartValArray, maxProfileSamplesCostTime);
+	memProfilerWidget->SetArrayValue(memChartValArray, maxProfileSamplesCostTime, maxLuaMemory);
 
 	CombineSameFileInfo(luaMemNodeChartList[luaMemNodeChartList.Num() - 1].infoList);
 }
@@ -332,11 +330,11 @@ void SProfilerInspector::OnClearBtnClicked()
 	}
 	
 	TArray<float> emptyArray;
-	cpuProfilerWidget->SetArrayValue(emptyArray, 0);
+	cpuProfilerWidget->SetArrayValue(emptyArray, 0, 0);
 	cpuProfilerWidget->SetToolTipVal(-1);
 	cpuProfilerWidget->ClearClickedPoint();
 	
-	memProfilerWidget->SetArrayValue(emptyArray, 0);
+	memProfilerWidget->SetArrayValue(emptyArray, 0, 0);
 	memProfilerWidget->SetToolTipVal(-1);
 	memProfilerWidget->ClearClickedPoint();
 	
@@ -1073,9 +1071,9 @@ void SProfilerInspector::CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInf
         fileInfo.size = memFileInfo.size;
         memNode.infoList.Add(fileInfo);
 	}
-    //luaTotalMemSize change from byte to KB
+    //luaTotalMemSize unit changed from byte to KB
 	luaTotalMemSize /= 1024.0f;
-	memNode.totalSize = luaTotalMemSize;
+    memNode.totalSize = luaTotalMemSize;
 	luaMemNodeChartList.Add(memNode);
     luaMemNodeChartList.RemoveAt(0);
 }
@@ -1154,7 +1152,7 @@ FString SProfilerInspector::SplitFlieName(FString filePath)
 
 ////////////////////////////// SProfilerWidget //////////////////////////////
 
-void SProfilerWidget::SetArrayValue(TArray<float>& chartValArray, float maxCostTime)
+void SProfilerWidget::SetArrayValue(TArray<float>& chartValArray, float maxCostTime, float maxMemSize)
 {
 	m_arrayVal = chartValArray;
 	if (m_arrayVal.Num() == 0)
@@ -1166,11 +1164,14 @@ void SProfilerWidget::SetArrayValue(TArray<float>& chartValArray, float maxCostT
 		}
 	}
 	m_maxCostTime = maxCostTime;
+    m_maxMemSize = maxMemSize;
 }
 
 void SProfilerWidget::Construct(const FArguments& InArgs)
 {
 	m_arraylinePath.SetNumUninitialized(m_cSliceCount);
+    m_memStdScale = 1;
+    m_maxMemSize = 0.0f;
 	m_maxCostTime = 0.0f;
 	m_pointInterval = 0.0f;
 	m_clickedPoint.X = -1.0f;
@@ -1178,17 +1179,16 @@ void SProfilerWidget::Construct(const FArguments& InArgs)
 	m_widgetWidth = 0.0f;
 	m_stdLineVisibility = InArgs._StdLineVisibility;
 
-	if(m_stdLineVisibility.Get() == EVisibility::Visible)
-	{
-		float maxPointValue = 40 * 1000.f; // set max value as 40ms
-		float stdLineValue = 16 * 1000.f;
-		FString stdLineName = "16ms(60FPS)";
-		AddStdLine(maxPointValue, stdLineValue, stdLineName);
+    float maxPointValue = 40 * 1000.f; // set max value as 40ms
+    float stdLineValue = 16 * 1000.f;
+    FString stdLineName = "16ms(60FPS)";
+    AddStdLine(maxPointValue, stdLineValue, stdLineName);
 
-		stdLineValue = 33 * 1000.f;
-		stdLineName = "33ms(30FPS)";
-		AddStdLine(maxPointValue, stdLineValue, stdLineName);
-	}
+    stdLineValue = 33 * 1000.f;
+    stdLineName = "33ms(30FPS)";
+    AddStdLine(maxPointValue, stdLineValue, stdLineName);
+    
+    CalcMemStdText(m_maxMemSize);
 
 	SetToolTipText(TAttribute<FText>::Create([=]() {
 		if (m_toolTipVal < 0)
@@ -1224,7 +1224,11 @@ void SProfilerWidget::Tick(const FGeometry& AllottedGeometry, const double InCur
 	if (m_maxCostTime > 0 && m_stdLineVisibility.Get() == EVisibility::Visible)
 	{
 		CalcStdLine(m_maxCostTime);
-	}
+    }
+    else if (m_maxMemSize > 0 && m_stdLineVisibility.Get() != EVisibility::Visible)
+    {
+        CalcMemStdText(m_maxMemSize);
+    }
 
 	for (int32 i = 0; i < m_cSliceCount; i++)
 	{
@@ -1258,7 +1262,7 @@ void SProfilerWidget::Tick(const FGeometry& AllottedGeometry, const double InCur
 
 			if (m_maxCostTime != 0.0f)
 			{
-				yValue = cMaxViewHeight * (m_arrayVal[i] / 1024);
+				yValue = cMaxViewHeight * (m_arrayVal[i] / (1024 * m_memStdScale));
 			}
 			if (yValue > cMaxViewHeight)
 			{
@@ -1312,6 +1316,42 @@ int SProfilerWidget::CalcClickSampleIdx(const FVector2D cursorPos)
 	}
 
 	return -1;
+}
+
+void SProfilerWidget::CalcMemStdText(float &maxMemorySize)
+{
+    m_stdMemStr.Empty();
+    
+    if(maxMemorySize < 1024)
+    {
+        m_memStdScale = 1;
+        m_stdMemStr.Add("512 KB");
+        m_stdMemStr.Add("1  MB");
+    }
+    else if (maxMemorySize < (1024 * 2))
+    {
+        m_memStdScale = 2;
+        m_stdMemStr.Add("1 MB");
+        m_stdMemStr.Add("2 MB");
+    }
+    else if (maxMemorySize < (1024 * 10))
+    {
+        m_memStdScale = 10;
+        m_stdMemStr.Add("5 MB");
+        m_stdMemStr.Add("10 MB");
+    }
+    else if (maxMemorySize < (1024 * 100))
+    {
+        m_memStdScale = 100;
+        m_stdMemStr.Add("50 MB");
+        m_stdMemStr.Add("100 MB");
+    }
+    else if (maxMemorySize < (1024 * 1024))
+    {
+        m_memStdScale = 1024;
+        m_stdMemStr.Add("512 MB");
+        m_stdMemStr.Add("1  GB");
+    }
 }
 
 void SProfilerWidget::DrawStdLine(const FGeometry& AllottedGeometry, FSlateWindowElementList& OutDrawElements, int32 LayerId, float positionY, FString stdStr) const
@@ -1440,29 +1480,31 @@ int32 SProfilerWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		{
 			DrawStdLine(AllottedGeometry, OutDrawElements, LayerId, m_stdPositionY[i], m_stdStr[i]);
 		}
-	} else {
-		FSlateFontInfo FontInfo = FCoreStyle::Get().GetFontStyle("NormalFont");
-		FontInfo.Size = 9.0f;
-
-		FSlateDrawElement::MakeText(
-						OutDrawElements,
-						LayerId,
-						AllottedGeometry.ToPaintGeometry(FVector2D(0, 95.0f), AllottedGeometry.Size),
-						TEXT("512 KB  —"),
-						FontInfo,
-						ESlateDrawEffect::None,
-						FLinearColor::White
-						);
-
-		FSlateDrawElement::MakeText(
-						OutDrawElements,
-						LayerId,
-						AllottedGeometry.ToPaintGeometry(FVector2D(0, 0), AllottedGeometry.Size),
-						TEXT(" 1  MB  —"),
-						FontInfo,
-						ESlateDrawEffect::None,
-						FLinearColor::White
-						);
+	}
+    else
+    {
+        FSlateFontInfo FontInfo = FCoreStyle::Get().GetFontStyle("NormalFont");
+        FontInfo.Size = 9.0f;
+        
+        FSlateDrawElement::MakeText(
+                                    OutDrawElements,
+                                    LayerId,
+                                    AllottedGeometry.ToPaintGeometry(FVector2D(0, 95.0f), AllottedGeometry.Size),
+                                    m_stdMemStr[0] + TEXT(" —"),
+                                    FontInfo,
+                                    ESlateDrawEffect::None,
+                                    FLinearColor::White
+                                    );
+        
+        FSlateDrawElement::MakeText(
+                                    OutDrawElements,
+                                    LayerId,
+                                    AllottedGeometry.ToPaintGeometry(FVector2D(0, 0), AllottedGeometry.Size),
+                                    m_stdMemStr[1],
+                                    FontInfo,
+                                    ESlateDrawEffect::None,
+                                    FLinearColor::White
+                                    );
 	}
 
 	if (m_arrayVal.Num() == 0)

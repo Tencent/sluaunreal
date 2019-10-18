@@ -48,7 +48,7 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 * 性能分析工具，支持连接真机分析
 
 ![1](profiler.png)
-
+![2](profiler_2.png)
 
 # 使用方法简单范例
 

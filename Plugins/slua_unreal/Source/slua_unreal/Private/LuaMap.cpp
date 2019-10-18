@@ -57,9 +57,11 @@ namespace NS_SLUA {
 		FScriptMapHelper dstHelper = FScriptMapHelper::CreateHelperFormInnerProperties(keyProp,valueProp, dest);
 		FScriptMapHelper srcHelper = FScriptMapHelper::CreateHelperFormInnerProperties(keyProp,valueProp, src);
 		for (auto n = 0; n < srcHelper.Num(); n++) {
-			auto keyPtr = srcHelper.GetKeyPtr(n);
-			auto valuePtr = srcHelper.GetValuePtr(n);
-			dstHelper.AddPair(keyPtr, valuePtr);
+			if (srcHelper.IsValidIndex(n)) {
+				auto keyPtr = srcHelper.GetKeyPtr(n);
+				auto valuePtr = srcHelper.GetValuePtr(n);
+				dstHelper.AddPair(keyPtr, valuePtr);
+			}
 		}
 	}
 

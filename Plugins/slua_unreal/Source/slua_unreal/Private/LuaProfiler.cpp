@@ -92,6 +92,7 @@ namespace NS_SLUA {
 		#define STEPSIZE 8192
 		int sendraw(p_buffer buf, const char* data, size_t count, size_t * sent) {
 			p_io io = buf->io;
+			if (!io) return IO_CLOSED;
 			p_timeout tm = buf->tm;
 			size_t total = 0;
 			int err = IO_DONE;

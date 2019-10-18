@@ -22,8 +22,7 @@ namespace NS_SLUA {
 	// not include alloc from lua vm
 	size_t totalMemory;
 	
-#if WITH_EDITOR
-	bool memTrack = false;
+    bool memTrack = false;
 	MemoryDetail memoryRecord;
 
 	int LuaMemInfo::push(lua_State * L) const
@@ -62,25 +61,18 @@ namespace NS_SLUA {
 			totalMemory -= osize;
 		}
 	}
-#endif
 
     void* LuaMemoryProfile::alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
         LuaState* ls = (LuaState*)ud;
         if (nsize == 0) {
-#if WITH_EDITOR
             removeRecord(ls, ptr, osize);
-#endif
             FMemory::Free(ptr);
             return NULL;
         }
         else {
-#if WITH_EDITOR
 			if(ptr) removeRecord(ls, ptr, osize);
-#endif
             ptr = FMemory::Realloc(ptr,nsize);
-#if WITH_EDITOR
             addRecord(ls,ptr,nsize);
-#endif
             return ptr;
         }
     }
@@ -90,11 +82,9 @@ namespace NS_SLUA {
 		return totalMemory;
 	}
 
-#if WITH_EDITOR
-
 	void LuaMemoryProfile::start()
 	{
-		memTrack = true;
+        memTrack = true;
 	}
 
 	void LuaMemoryProfile::stop()
@@ -112,11 +102,12 @@ namespace NS_SLUA {
 		for (int i = 0;;i++) {
 			if (lua_getstack(L, i, &ar) && lua_getinfo(L, "nSl", &ar)) {
 				CallInfo* ci = (CallInfo*)ar.i_ci;
-				if (!isLua(ci))
+                if (!isLua(ci))
 					continue;
-				if (strcmp(ar.source, SLUA_LUACODE) == 0)
-					continue;
-
+    
+                if (strcmp(ar.source, SLUA_LUACODE) == 0)
+                    continue;
+                
 				if (strcmp(ar.what, "Lua") == 0 || strcmp(ar.what, "main") == 0) {
 					info.ptr = ptr;
 					info.size = size;
@@ -124,13 +115,12 @@ namespace NS_SLUA {
 					return true;
 				}
 			}
-			else break;
+            else break;
 		}
 		return false;
     }
 
-
-
+#if WITH_EDITOR
 	void dumpMemoryDetail()
 	{
 		Log::Log("Total memory alloc %d bytes", totalMemory);

@@ -17,6 +17,7 @@
 #include "HAL/Runnable.h"
 #include "Containers/Queue.h"
 #include "Interfaces/IPv4/IPv4Endpoint.h"
+#include "slua_unreal/Private/LuaMemoryProfile.h"
 #include "SharedPointer.h"
 #include "ArrayReader.h"
 #include "DelegateCombinations.h"
@@ -124,6 +125,8 @@ namespace slua {
 		TSharedPtr<FArrayReader, ESPMode::ThreadSafe> RecvMessageData;
 
 		int32 RecvMessageDataRemaining;
+        
+        int hookEvent;
 
 		EConnectionState ConnectionState;
 
@@ -145,5 +148,8 @@ namespace slua {
 		int Linedefined;
 		FString Name;
 		FString ShortSrc;
+        
+        //Memory infomation
+        TArray<NS_SLUA::LuaMemInfo> memoryInfoList;
 	};
 }

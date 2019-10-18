@@ -19,6 +19,7 @@
 #include "ModuleManager.h"
 #include "Commands.h"
 #include "slua_profile_inspector.h"
+#include "slua_unreal/Private/LuaMemoryProfile.h"
 #include "Framework/Commands/Commands.h"
 
 /** Declares a log category for this module. */
@@ -50,7 +51,8 @@ private:
 	// fields
 	FTickerDelegate TickDelegate;
 	FDelegateHandle TickDelegateHandle;
-	TSharedPtr<SProfilerInspector> sluaProfilerInspector;
+
+    TSharedPtr<SProfilerInspector> sluaProfilerInspector;
 	bool tabOpened = false;
 	TSharedPtr<class FUICommandList> PluginCommands;
 
@@ -63,7 +65,7 @@ private:
 	void ClearCurProfiler();
 	void AddMenuExtension(FMenuBuilder& Builder);
 	
-	void debug_hook_c(int event, double nanoseconds, int linedefined, const FString& name, const FString& short_src);
+    void debug_hook_c(int event, double nanoseconds, int linedefined, const FString& name, const FString& short_src, TArray<NS_SLUA::LuaMemInfo> memoryInfoList);
 };
 
 struct SLUA_PROFILE_API FunctionProfileInfo

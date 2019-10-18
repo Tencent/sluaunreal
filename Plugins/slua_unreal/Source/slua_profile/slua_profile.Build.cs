@@ -58,6 +58,7 @@ public class slua_profile : ModuleRules
                 "Slate",
                 "SlateCore",
                 "UMG",
+                "EditorStyle",
                 "InputCore",
                 "Networking",
                 "Sockets",

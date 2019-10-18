@@ -15,6 +15,7 @@
 #include "Log.h"
 #include "LuaState.h"
 #include "ArrayWriter.h"
+#include "LuaMemoryProfile.h"
 #include "luasocket/auxiliar.h"
 #include "luasocket/buffer.h"
 
@@ -46,7 +47,6 @@ namespace NS_SLUA {
 		bool ignoreHook = false;
 		HookState currentHookState = HookState::UNHOOK;
 		int64 profileTotalCost = 0;
-		bool openAttachMode = true;
 		p_tcp tcpSocket = nullptr;
 		const char* ChunkName = "[ProfilerScript]";
 
@@ -70,7 +70,23 @@ namespace NS_SLUA {
 			messageWriter.Seek(0);
 			packageSize = messageWriter.TotalSize() - sizeof(uint32);
 			messageWriter << packageSize;
-		}
+        }
+
+        void makeMemoryProfilePackage(FArrayWriter& messageWriter,
+                                int hookEvent, TArray<LuaMemInfo> memInfoList)
+        {
+            uint32 packageSize = 0;
+
+            //first hookEvent used to distinguish the message belong to Memory or CPU
+            messageWriter << packageSize;
+            messageWriter << hookEvent;
+            messageWriter << memInfoList;
+
+            messageWriter.Seek(0);
+            packageSize = messageWriter.TotalSize() - sizeof(uint32);
+            messageWriter << packageSize;
+            
+        }
 
 		// copy code from buffer.cpp in luasocket
 		#define STEPSIZE 8192
@@ -108,6 +124,15 @@ namespace NS_SLUA {
 			sendMessage(s_messageWriter);
 		}
 
+        void takeMemorySample(int event, TArray<LuaMemInfo> memoryInfoList) {
+            // clear writer;
+            static FArrayWriter s_memoryMessageWriter;
+            s_memoryMessageWriter.Empty();
+            s_memoryMessageWriter.Seek(0);
+            makeMemoryProfilePackage(s_memoryMessageWriter, event, memoryInfoList);
+            sendMessage(s_memoryMessageWriter);
+        }
+
 		void debug_hook(lua_State* L, lua_Debug* ar) {
 			if (ignoreHook) return;
 			
@@ -126,12 +151,11 @@ namespace NS_SLUA {
 			HookState state = (HookState)lua_tointeger(L, 1);
 			currentHookState = state;
 			if (state == HookState::UNHOOK) {
-				if (openAttachMode)
-					lua_sethook(L, debug_hook, LUA_MASKRET, 1000000);
-				else
-					lua_sethook(L, nullptr, 0, 0);
+                LuaMemoryProfile::stop();
+				lua_sethook(L, nullptr, 0, 0);
 			}
 			else if (state == HookState::HOOKED) {
+                LuaMemoryProfile::start();
 				lua_sethook(L, debug_hook, LUA_MASKRET | LUA_MASKCALL, 0);
 			}
 			else
@@ -172,11 +196,18 @@ namespace NS_SLUA {
 		ignoreHook = true;
 		if (currentHookState == HookState::UNHOOK) {
 			selfProfiler.callField("reConnect", selfProfiler);
-			ignoreHook = false;
+            ignoreHook = false;
 			return;
 		}
+        
 		RunState currentRunState = (RunState)selfProfiler.getFromTable<int>("currentRunState");
 		if (currentRunState == RunState::CONNECTED) {
+            TArray<LuaMemInfo> memoryInfoList;
+            for(auto& memInfo : NS_SLUA::LuaMemoryProfile::memDetail()) {
+                memoryInfoList.Add(memInfo.Value);
+            }
+            
+            takeMemorySample(NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK, memoryInfoList);
 			takeSample(NS_SLUA::ProfilerHookEvent::PHE_TICK, -1, "", "");
 		}
 		ignoreHook = false;
@@ -184,7 +215,7 @@ namespace NS_SLUA {
 
 	LuaProfiler::LuaProfiler(const char* funcName)
 	{
-		takeSample(ProfilerHookEvent::PHE_CALL, 0, funcName, "");
+        takeSample(ProfilerHookEvent::PHE_CALL, 0, funcName, "");
 	}
 
 	LuaProfiler::~LuaProfiler()

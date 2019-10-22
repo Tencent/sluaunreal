@@ -43,8 +43,7 @@ SProfilerInspector::SProfilerInspector()
 	luaTotalMemSize = 0.0f;
 	maxProfileSamplesCostTime = 0.0f;
 	avgProfileSamplesCostTime = 0.0f;
-    isMemClickLineMoved = false;
-    isMemMouseButtonDown = false;
+    isMemMouseButtonUp = false;
 	hasCleared = false;
 	needProfilerCleared = false;
     mouseUpPoint = FVector2D(-1.0f, 0.0f);
@@ -67,6 +66,7 @@ SProfilerInspector::~SProfilerInspector()
 void SProfilerInspector::StartChartRolling()
 {
 	stopChartRolling = false;
+    isMemMouseButtonUp = false;
 }
 
 FString SProfilerInspector::GenBrevFuncName(FString &functionName)
@@ -318,6 +318,7 @@ void SProfilerInspector::CheckBoxChanged(ECheckBoxState newState)
 	if (newState == ECheckBoxState::Checked)
 	{
 		stopChartRolling = false;
+        isMemMouseButtonUp = false;
 		memProfilerCheckBox->SetIsChecked(ECheckBoxState::Checked);
 		profilerCheckBox->SetIsChecked(ECheckBoxState::Checked);
 		memProfilerWidget->ClearClickedPoint();
@@ -393,7 +394,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 	SAssignNew(memProfilerWidget, SProfilerWidget);
 
 	static bool isMouseButtonDown = false;
-	isMemMouseButtonDown = false;
+	static bool isMemMouseButtonDown = false;
 	cpuProfilerWidget->SetOnMouseButtonDown(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
 		// stop scorlling and show the profiler info which we click
 		isMouseButtonDown = true;
@@ -481,7 +482,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 	memProfilerWidget->SetOnMouseButtonDown(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
 		// stop scorlling and show the profiler info which we click
 		isMemMouseButtonDown = true;
-        isMemClickLineMoved = false;
+        isMemMouseButtonUp = false;
 		stopChartRolling = true;
 		memProfilerCheckBox->SetIsChecked(ECheckBoxState::Unchecked);
 		profilerCheckBox->SetIsChecked(ECheckBoxState::Unchecked);
@@ -536,7 +537,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 
 
 	memProfilerWidget->SetOnMouseButtonUp(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
-        isMemClickLineMoved = true;
+        isMemMouseButtonUp = true;
         
         if (mouseUpPoint.X != mouseDownPoint.X) {
             int arrayIndex = memProfilerWidget->CalcClickSampleIdx(mouseUpPoint);
@@ -552,7 +553,6 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 
 	memProfilerWidget->SetOnMouseLeave(FSimpleNoReplyPointerEventHandler::CreateLambda([=](const FPointerEvent&) {
 		isMemMouseButtonDown = false;
-        isMemClickLineMoved = false;
 	}));
 
 	// init tree view
@@ -977,7 +977,7 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<Fil
 	 .FixedWidth(fixRowWidth)
      
      + SHeaderRow::Column("Compare Two Point").DefaultLabel(TAttribute<FText>::Create([=]() {
-        if (isMemClickLineMoved && mouseUpPoint.X != mouseDownPoint.X)
+        if (isMemMouseButtonUp && mouseUpPoint.X != mouseDownPoint.X)
         {
             return FText::FromString(ChooseMemoryUnit(Item->difference / 1024.0));
         }

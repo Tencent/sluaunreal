@@ -109,8 +109,7 @@ private:
     float avgProfileSamplesCostTime;
     bool hasCleared;
     bool needProfilerCleared;
-    bool isMemClickLineMoved;
-    bool isMemMouseButtonDown;
+    bool isMemMouseButtonUp;
     FVector2D mouseUpPoint;
     FVector2D mouseDownPoint;
     

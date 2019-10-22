@@ -46,6 +46,8 @@ const int cMaxViewHeight = 200;
 struct FileMemInfo {
     FString hint;
     float size;
+    // one line memory difference between two point
+    float difference;
 };
 
 struct ProflierMemNode {
@@ -107,6 +109,8 @@ private:
     float avgProfileSamplesCostTime;
     bool hasCleared;
     bool needProfilerCleared;
+    bool isMemLineMoved;
+    FVector2D mouseDownPoint;
     
     TArray<SluaProfiler> tmpProfilersArraySamples[sampleNum];
     TArray<SluaProfiler> profilersArraySamples[sampleNum];
@@ -158,6 +162,7 @@ public:
     
     /** Constructs this widget with InArgs */
     void Construct(const FArguments& InArgs);
+    void SetMouseMovePoint(FVector2D mouseDownPoint);
     void SetArrayValue(TArray<float> &chartValArray, float maxCostTime, float maxMemSize);
     int CalcClickSampleIdx(const FVector2D cursorPos);
     int CalcHoverSampleIdx(const FVector2D cursorPos);
@@ -195,6 +200,7 @@ private:
     float m_toolTipVal;
     int32 m_memStdScale;
     FVector2D m_clickedPoint;
+    FVector2D m_mouseDownPoint;
     const float m_cStdHighVal = cMaxViewHeight;
 };
 

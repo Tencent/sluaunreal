@@ -22,6 +22,9 @@
 #include "Templates/SharedPointer.h"
 #include "Fonts/SlateFontInfo.h"
 #include "Math/Color.h"
+#include "GenericPlatform/GenericPlatformMath.h"
+#include "Delegates/IDelegateInstance.h"
+#include "LuaState.h"
 #include "Internationalization/Regex.h"
 #include "slua_profile_inspector.h"
 #include "slua_profile.h"
@@ -40,8 +43,10 @@ SProfilerInspector::SProfilerInspector()
 	luaTotalMemSize = 0.0f;
 	maxProfileSamplesCostTime = 0.0f;
 	avgProfileSamplesCostTime = 0.0f;
+    isMemLineMoved = false;
 	hasCleared = false;
 	needProfilerCleared = false;
+    mouseDownPoint = FVector2D(-1.0f, 0.0f);
 	initLuaMemChartList();
 	chartValArray.SetNumUninitialized(sampleNum);
 	memChartValArray.SetNumUninitialized(sampleNum);
@@ -476,18 +481,22 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 		// calc sampleIdx
 		FVector2D cursorPos = inventoryGeometry.AbsoluteToLocal(mouseEvent.GetScreenSpacePosition());
 		int sampleIdx = memProfilerWidget->CalcClickSampleIdx(cursorPos);
-
 		if (sampleIdx >= 0 && sampleIdx < cMaxSampleNum)
 		{
+            mouseDownPoint = cursorPos;
 			CombineSameFileInfo(luaMemNodeChartList[sampleIdx].infoList);
 			luaTotalMemSize = luaMemNodeChartList[sampleIdx].totalSize;
 			listview->RequestListRefresh();
 		}
+        
+        memProfilerWidget->SetMouseMovePoint(mouseDownPoint);
 
 		return FReply::Handled();
 	}));
 
-	memProfilerWidget->SetOnMouseButtonUp(FPointerEventHandler::CreateLambda([=](const FGeometry&, const FPointerEvent&) -> FReply {
+	memProfilerWidget->SetOnMouseButtonUp(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
+        if(isMemLineMoved) memProfilerWidget->SetMouseMovePoint(mouseDownPoint);
+        
 		isMemMouseButtonDown = false;
 		return FReply::Handled();
 	}));
@@ -520,6 +529,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 			}
 		}
 
+        isMemLineMoved = true;
 		return FReply::Handled();
 	}));
 
@@ -556,6 +566,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 	 SNew(SHeaderRow)
 	 + SHeaderRow::Column("Overview").DefaultLabel(FText::FromName("Overview")).FixedWidth(fixRowWidth)
 	 + SHeaderRow::Column("Memory Size").DefaultLabel(FText::FromName("Memory Size")).FixedWidth(fixRowWidth)
+     + SHeaderRow::Column("Compare Two Point").DefaultLabel(FText::FromName("Compare Two Point")).FixedWidth(fixRowWidth)
 	 );
 
 	memProfilerWidget->SetStdLineVisibility(EVisibility::Collapsed);
@@ -714,16 +725,16 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 							}))	
 						]
 					
-						// + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth()
-						// [
-						// SNew(SButton)
-						// .Text(FText::FromName("Forced GC"))
-						// .ContentPadding(FMargin(2.0, 2.0))
-						// .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-
-						// 	return FReply::Handled();
-						// }))
-						// ]
+                         + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth()
+                         [
+                             SNew(SButton)
+                             .Text(FText::FromName("Forced GC"))
+                             .ContentPadding(FMargin(2.0, 2.0))
+                             .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+        
+                                 return FReply::Handled();
+                             }))
+                         ]
 					]
 
 					+ SScrollBox::Slot()
@@ -950,6 +961,15 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<Fil
 		return FText::FromString("");
 	}))
 	 .FixedWidth(fixRowWidth)
+     
+     + SHeaderRow::Column("Compare Two Point").DefaultLabel(TAttribute<FText>::Create([=]() {
+        if (isMemLineMoved)
+        {
+            return FText::FromString(ChooseMemoryUnit(Item->difference / 1024.0));
+        }
+        return FText::FromString("");
+    }))
+     .FixedWidth(fixRowWidth)
 	 ];
 }
 
@@ -1167,6 +1187,10 @@ void SProfilerWidget::SetArrayValue(TArray<float>& chartValArray, float maxCostT
     m_maxMemSize = maxMemSize;
 }
 
+void SProfilerWidget::SetMouseMovePoint(FVector2D mouseDownPoint) {
+    m_mouseDownPoint = mouseDownPoint;
+}
+
 void SProfilerWidget::Construct(const FArguments& InArgs)
 {
 	m_arraylinePath.SetNumUninitialized(m_cSliceCount);
@@ -1177,6 +1201,7 @@ void SProfilerWidget::Construct(const FArguments& InArgs)
 	m_clickedPoint.X = -1.0f;
 	m_toolTipVal = -1.0f;
 	m_widgetWidth = 0.0f;
+    m_mouseDownPoint = FVector2D(-1.0f, 0.0f);
 	m_stdLineVisibility = InArgs._StdLineVisibility;
 
     float maxPointValue = 40 * 1000.f; // set max value as 40ms
@@ -1472,7 +1497,6 @@ int32 SProfilerWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 						);
 	}
 
-
 	// draw std value line
 	if (m_stdLineVisibility.Get() == EVisibility::Visible)
 	{
@@ -1505,6 +1529,47 @@ int32 SProfilerWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
                                     ESlateDrawEffect::None,
                                     FLinearColor::White
                                     );
+        
+        if(m_clickedPoint.X != -1.0f && m_mouseDownPoint.X != -1.0f && m_mouseDownPoint.X != m_clickedPoint.X)
+        {
+            // draw the selected area between the position from mouse up and down
+            FLinearColor boxColor;
+            FVector2D boxBeginPoint;
+            TArray<FVector2D> clickedPointArray;
+            
+            FSlateColorBrush stBrushWhite_1 = FSlateColorBrush(FColorList::White);
+            float length = FGenericPlatformMath::Abs(m_clickedPoint.X - m_mouseDownPoint.X);
+            
+            boxColor.R = 0.0f;
+            boxColor.G = 0.0f;
+            boxColor.B = 1.0f;
+            boxColor.A = 0.2f;
+            
+            clickedPointArray.Add(FVector2D(m_mouseDownPoint.X, 0));
+            clickedPointArray.Add(FVector2D(m_mouseDownPoint.X, cMaxViewHeight));
+            
+            boxBeginPoint = FVector2D(FGenericPlatformMath::Min(m_mouseDownPoint.X, m_clickedPoint.X), 0.0f);
+            
+            FSlateDrawElement::MakeBox(
+                                       OutDrawElements,
+                                       LayerId,
+                                       AllottedGeometry.ToPaintGeometry(boxBeginPoint, FVector2D(length, cMaxViewHeight)),
+                                       &stBrushWhite_1,
+                                       ESlateDrawEffect::None,
+                                       boxColor
+                                       );
+            
+            FSlateDrawElement::MakeLines(
+                                         OutDrawElements,
+                                         LayerId,
+                                         AllottedGeometry.ToPaintGeometry(),
+                                         clickedPointArray,
+                                         ESlateDrawEffect::None,
+                                         FLinearColor::White,
+                                         true,
+                                         6.0f
+                                         );
+        }
 	}
 
 	if (m_arrayVal.Num() == 0)

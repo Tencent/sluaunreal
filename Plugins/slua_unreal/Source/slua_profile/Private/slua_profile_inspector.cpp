@@ -43,9 +43,11 @@ SProfilerInspector::SProfilerInspector()
 	luaTotalMemSize = 0.0f;
 	maxProfileSamplesCostTime = 0.0f;
 	avgProfileSamplesCostTime = 0.0f;
-    isMemLineMoved = false;
+    isMemClickLineMoved = false;
+    isMemMouseButtonDown = false;
 	hasCleared = false;
 	needProfilerCleared = false;
+    mouseUpPoint = FVector2D(-1.0f, 0.0f);
     mouseDownPoint = FVector2D(-1.0f, 0.0f);
 	initLuaMemChartList();
 	chartValArray.SetNumUninitialized(sampleNum);
@@ -391,7 +393,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 	SAssignNew(memProfilerWidget, SProfilerWidget);
 
 	static bool isMouseButtonDown = false;
-	static bool isMemMouseButtonDown = false;
+	isMemMouseButtonDown = false;
 	cpuProfilerWidget->SetOnMouseButtonDown(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
 		// stop scorlling and show the profiler info which we click
 		isMouseButtonDown = true;
@@ -470,10 +472,16 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 
 		return FReply::Handled();
 	}));
+    
+    cpuProfilerWidget->SetOnMouseLeave(FSimpleNoReplyPointerEventHandler::CreateLambda([=](const FPointerEvent&) {
+        isMouseButtonDown = false;
+    }));
+
 
 	memProfilerWidget->SetOnMouseButtonDown(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
 		// stop scorlling and show the profiler info which we click
 		isMemMouseButtonDown = true;
+        isMemClickLineMoved = false;
 		stopChartRolling = true;
 		memProfilerCheckBox->SetIsChecked(ECheckBoxState::Unchecked);
 		profilerCheckBox->SetIsChecked(ECheckBoxState::Unchecked);
@@ -493,52 +501,58 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 
 		return FReply::Handled();
 	}));
+    
+    memProfilerWidget->SetOnMouseMove(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
+        // calc sampleIdx
+        FVector2D cursorPos = inventoryGeometry.AbsoluteToLocal(mouseEvent.GetScreenSpacePosition());
+        int sampleIdx = memProfilerWidget->CalcHoverSampleIdx(cursorPos);
+        static float lastToolTipVal = 0.0f;
+        
+        if (sampleIdx >= 0 && lastToolTipVal != luaMemNodeChartList[sampleIdx].totalSize)
+        {
+            memProfilerWidget->SetToolTipVal(luaMemNodeChartList[sampleIdx].totalSize);
+            lastToolTipVal = luaMemNodeChartList[sampleIdx].totalSize;
+        }
+        else if (sampleIdx < 0)
+        {
+            memProfilerWidget->SetToolTipVal(-1.0f);
+        }
+        
+        if (isMemMouseButtonDown == true)
+        {
+            // calc sampleIdx
+            sampleIdx = memProfilerWidget->CalcClickSampleIdx(cursorPos);
+            if (sampleIdx >= 0 && sampleIdx < cMaxSampleNum)
+            {
+                mouseUpPoint = cursorPos;
+                CombineSameFileInfo(luaMemNodeChartList[sampleIdx].infoList);
+                luaTotalMemSize = luaMemNodeChartList[sampleIdx].totalSize;
+                listview->RequestListRefresh();
+            }
+        }
+        
+        return FReply::Handled();
+    }));
+
 
 	memProfilerWidget->SetOnMouseButtonUp(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
-        if(isMemLineMoved) memProfilerWidget->SetMouseMovePoint(mouseDownPoint);
+        isMemClickLineMoved = true;
+        
+        if (mouseUpPoint.X != mouseDownPoint.X) {
+            int arrayIndex = memProfilerWidget->CalcClickSampleIdx(mouseUpPoint);
+            
+            memProfilerWidget->SetMouseMovePoint(mouseDownPoint);
+            CalcPointMemdiff(arrayIndex);
+            listview->RequestListRefresh();
+        }
         
 		isMemMouseButtonDown = false;
 		return FReply::Handled();
 	}));
 
-	memProfilerWidget->SetOnMouseMove(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
-		// calc sampleIdx
-		FVector2D cursorPos = inventoryGeometry.AbsoluteToLocal(mouseEvent.GetScreenSpacePosition());
-		int sampleIdx = memProfilerWidget->CalcHoverSampleIdx(cursorPos);
-		static float lastToolTipVal = 0.0f;
-
-		if (sampleIdx >= 0 && lastToolTipVal != luaMemNodeChartList[sampleIdx].totalSize)
-		{
-			memProfilerWidget->SetToolTipVal(luaMemNodeChartList[sampleIdx].totalSize);
-			lastToolTipVal = luaMemNodeChartList[sampleIdx].totalSize;
-		}
-		else if (sampleIdx < 0)
-		{
-			memProfilerWidget->SetToolTipVal(-1.0f);
-		}
-
-		if (isMemMouseButtonDown == true)
-		{
-			// calc sampleIdx
-			sampleIdx = memProfilerWidget->CalcClickSampleIdx(cursorPos);
-			if (sampleIdx >= 0 && sampleIdx < cMaxSampleNum)
-			{
-				CombineSameFileInfo(luaMemNodeChartList[sampleIdx].infoList);
-				luaTotalMemSize = luaMemNodeChartList[sampleIdx].totalSize;
-				listview->RequestListRefresh();
-			}
-		}
-
-        isMemLineMoved = true;
-		return FReply::Handled();
-	}));
-
-	cpuProfilerWidget->SetOnMouseLeave(FSimpleNoReplyPointerEventHandler::CreateLambda([=](const FPointerEvent&) {
-		isMouseButtonDown = false;
-	}));
-
 	memProfilerWidget->SetOnMouseLeave(FSimpleNoReplyPointerEventHandler::CreateLambda([=](const FPointerEvent&) {
 		isMemMouseButtonDown = false;
+        isMemClickLineMoved = false;
 	}));
 
 	// init tree view
@@ -963,7 +977,7 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<Fil
 	 .FixedWidth(fixRowWidth)
      
      + SHeaderRow::Column("Compare Two Point").DefaultLabel(TAttribute<FText>::Create([=]() {
-        if (isMemLineMoved)
+        if (isMemClickLineMoved && mouseUpPoint.X != mouseDownPoint.X)
         {
             return FText::FromString(ChooseMemoryUnit(Item->difference / 1024.0));
         }
@@ -1101,6 +1115,7 @@ void SProfilerInspector::CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInf
 void SProfilerInspector::CombineSameFileInfo(MemFileInfoList& infoList)
 {
 	shownFileInfo.Empty();
+    UE_LOG(LogTemp, Warning, TEXT("size : %d"), shownFileInfo.Num());
     for(auto& fileInfo : infoList)
     {
         int index = ContainsFile(fileInfo.hint);
@@ -1114,26 +1129,39 @@ void SProfilerInspector::CombineSameFileInfo(MemFileInfoList& infoList)
         }
     }
     
+    for(auto &item : shownFileInfo) UE_LOG(LogTemp, Warning, TEXT("%s : %.3f"), *item.Get()->hint, item.Get()->size/1024.0f);
+    
     SortShownInfo();
 }
 
 void SortMemInfo(ShownMemInfoList list, int beginIndex, int endIndex) {
     if (beginIndex < endIndex)
     {
-        int key = list[beginIndex]->size;
+        int key = list[beginIndex].Get()->size;
         int left = beginIndex, right = endIndex;
         while (left < right)
         {
-            while (list[right]->size < key && right > left)
+            while (list[right].Get()->size < key && right > left)
                 right--;
+            
             if (left < right)
-                list[left++]->size = list[right]->size;
-            while (list[left]->size > key && left < right)
+            {
+                list[left].Get()->size = list[right].Get()->size;
+                list[left++].Get()->hint = list[right].Get()->hint;
+            }
+            
+            while (list[left].Get()->size > key && left < right)
                 left++;
+            
             if (left < right)
-                list[right--]->size = list[left]->size;
+            {
+                list[right].Get()->size = list[left].Get()->size;
+                list[right--].Get()->hint = list[left].Get()->hint;
+            }
         }
-        list[left]->size = key;
+        
+        list[left].Get()->size = key;
+        list[left].Get()->hint = list[beginIndex].Get()->hint;
         SortMemInfo(list, beginIndex, left - 1);
         SortMemInfo(list, left + 1, endIndex);
     }
@@ -1141,6 +1169,29 @@ void SortMemInfo(ShownMemInfoList list, int beginIndex, int endIndex) {
 
 void SProfilerInspector::SortShownInfo() {
     SortMemInfo(shownFileInfo, 0, shownFileInfo.Num()-1);
+}
+
+void SProfilerInspector::CalcPointMemdiff(int arrayIndex)
+{
+    // initialize the difference in shownFileInfo to avoid the consequence that the item did not have the file record but the difference is 0
+    for(auto &info : shownFileInfo) info.Get()->difference = info.Get()->size;
+    
+    for(auto &info : luaMemNodeChartList[arrayIndex].infoList)
+    {
+        int index = ContainsFile(info.hint);
+        if(index >= 0)
+        {
+            shownFileInfo[index].Get()->difference -= info.size;
+        }
+        else
+        {
+            FileMemInfo *newInfo = new FileMemInfo();
+            newInfo->hint = info.hint;
+            newInfo->size = 0.0f;
+            newInfo->difference -= info.size;
+            shownFileInfo.Add(MakeShareable(newInfo));
+        }
+    }
 }
 
 int SProfilerInspector::ContainsFile(FString& fileName)
@@ -1493,7 +1544,7 @@ int32 SProfilerWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 						 ESlateDrawEffect::None,
 						 FLinearColor::White,
 						 true,
-						 6.0f
+						 2.0f
 						);
 	}
 
@@ -1567,7 +1618,7 @@ int32 SProfilerWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
                                          ESlateDrawEffect::None,
                                          FLinearColor::White,
                                          true,
-                                         6.0f
+                                         2.0f
                                          );
         }
 	}

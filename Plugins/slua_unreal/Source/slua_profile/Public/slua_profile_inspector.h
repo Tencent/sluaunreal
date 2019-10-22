@@ -109,7 +109,9 @@ private:
     float avgProfileSamplesCostTime;
     bool hasCleared;
     bool needProfilerCleared;
-    bool isMemLineMoved;
+    bool isMemClickLineMoved;
+    bool isMemMouseButtonDown;
+    FVector2D mouseUpPoint;
     FVector2D mouseDownPoint;
     
     TArray<SluaProfiler> tmpProfilersArraySamples[sampleNum];
@@ -141,6 +143,7 @@ private:
     void OnClearBtnClicked();
     void SortProfiler(SluaProfiler &shownRootProfiler);
     void SortShownInfo();
+    void CalcPointMemdiff(int arrayIndex);
     void CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInfoList);
     void CombineSameFileInfo(MemFileInfoList& infoList);
     int ContainsFile(FString& fileName);

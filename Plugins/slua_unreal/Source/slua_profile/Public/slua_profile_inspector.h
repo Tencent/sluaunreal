@@ -45,6 +45,7 @@ const int cMaxViewHeight = 200;
 
 struct FileMemInfo {
     FString hint;
+    FString lineNumber;
     float size;
     // one line memory difference between two point
     float difference;
@@ -65,7 +66,7 @@ public:
     TSharedRef<class SDockTab> GetSDockTab();
     TSharedRef<ITableRow> OnGenerateMemRowForList(TSharedPtr<FileMemInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
     TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FunctionProfileInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
-    void OnGetMemChildrenForTree(FileMemInfo Item, TArray<FileMemInfo>& OutChildren);
+    void OnGetMemChildrenForTree(TSharedPtr<FileMemInfo> Parent, TArray<TSharedPtr<FileMemInfo>>& OutChildren);
     void OnGetChildrenForTree(TSharedPtr<FunctionProfileInfo> Parent, TArray<TSharedPtr<FunctionProfileInfo>>& OutChildren);
     void StartChartRolling();
     bool GetNeedProfilerCleared() const
@@ -85,6 +86,7 @@ private:
     
     TSharedPtr<STreeView<TSharedPtr<FunctionProfileInfo>>> treeview;
     TSharedPtr<SListView<TSharedPtr<FileMemInfo>>> listview;
+    TSharedPtr<STreeView<TSharedPtr<FileMemInfo>>> memTreeView;
     TSharedPtr<SCheckBox> profilerCheckBox;
     TSharedPtr<SCheckBox> memProfilerCheckBox;
     TSharedPtr<SProgressBar> profilerBarArray[sampleNum];
@@ -122,6 +124,7 @@ private:
     /* holding all of the memory node which are showed on Profiler chart */
     MemNodeInfoList luaMemNodeChartList;
     ShownMemInfoList shownFileInfo;
+    ShownMemInfoList shownParentFileInfo;
     
     void initLuaMemChartList();
     bool NeedReBuildInspector();
@@ -145,9 +148,9 @@ private:
     void CalcPointMemdiff(int arrayIndex);
     void CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInfoList);
     void CombineSameFileInfo(MemFileInfoList& infoList);
-    int ContainsFile(FString& fileName);
+    int ContainsFile(FString& fileName, ShownMemInfoList &list);
     FString ChooseMemoryUnit(float memorySize);
-    FString SplitFlieName(FString filePath);
+    TArray<FString> SplitFlieName(FString filePath);
     
 };
 

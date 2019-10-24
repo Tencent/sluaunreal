@@ -124,7 +124,8 @@ private:
     /* holding all of the memory node which are showed on Profiler chart */
     MemNodeInfoList luaMemNodeChartList;
     ShownMemInfoList shownFileInfo;
-    ShownMemInfoList shownParentFileInfo;
+    /* store the file name as the parent item in memory treeview */
+    ShownMemInfoList shownParentFileName;
     
     void initLuaMemChartList();
     bool NeedReBuildInspector();

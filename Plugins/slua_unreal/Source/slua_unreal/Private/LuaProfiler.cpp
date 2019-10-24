@@ -152,7 +152,7 @@ namespace NS_SLUA {
 			HookState state = (HookState)lua_tointeger(L, 1);
 			currentHookState = state;
 			if (state == HookState::UNHOOK) {
-//                LuaMemoryProfile::stop();
+                LuaMemoryProfile::stop();
 				lua_sethook(L, nullptr, 0, 0);
 			}
 			else if (state == HookState::HOOKED) {

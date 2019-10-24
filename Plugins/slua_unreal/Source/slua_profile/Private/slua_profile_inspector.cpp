@@ -31,6 +31,7 @@
 
 static const FName slua_profileTabNameInspector("slua_profile");
 void SortMemInfo(ShownMemInfoList& list, int beginIndex, int endIndex);
+void ExchangeMemInfoNode(ShownMemInfoList& list, int originIndx, int newIndex);
 ///////////////////////////////////////////////////////////////////////////
 SProfilerInspector::SProfilerInspector()
 {
@@ -541,7 +542,8 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 	memProfilerWidget->SetOnMouseButtonUp(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
         isMemMouseButtonUp = true;
         
-        if (mouseUpPoint.X != mouseDownPoint.X) {
+        if (mouseUpPoint.X != mouseDownPoint.X)
+        {
             memProfilerWidget->SetMouseMovePoint(mouseDownPoint);
             CalcPointMemdiff(mouseDownMemIdx);
             memTreeView->RequestTreeRefresh();
@@ -1112,7 +1114,8 @@ void SProfilerInspector::SearchSiblingNode(SluaProfiler& profiler, int curIdx, i
 	}
 }
 
-void SProfilerInspector::CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInfoList) {
+void SProfilerInspector::CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInfoList)
+{
 	luaTotalMemSize = 0;
 	ProflierMemNode memNode;
 	for(auto& memFileInfo : memoryInfoList)
@@ -1147,9 +1150,12 @@ void SProfilerInspector::CombineSameFileInfo(MemFileInfoList& infoList)
     {
         FString fileHint = fileInfo.hint;
         int index = ContainsFile(fileHint.Append(fileInfo.lineNumber), shownFileInfo);
-        if(index >= 0) {
+        if(index >= 0)
+        {
             shownFileInfo[index]->size += fileInfo.size;
-        } else {
+        }
+        else
+        {
             FileMemInfo *info = new FileMemInfo();
             info->hint = fileInfo.hint;
             info->lineNumber = fileInfo.lineNumber;
@@ -1171,34 +1177,42 @@ void SProfilerInspector::CombineSameFileInfo(MemFileInfoList& infoList)
     SortShownInfo();
 }
 
-void SortMemInfo(ShownMemInfoList& list, int beginIndex, int endIndex) {
+void ExchangeMemInfoNode(ShownMemInfoList& list, int originIndx, int newIndex)
+{
+    list[originIndx]->size = list[newIndex]->size;
+    list[originIndx]->hint = list[newIndex]->hint;
+    list[originIndx]->lineNumber = list[newIndex]->lineNumber;
+}
+
+void SortMemInfo(ShownMemInfoList& list, int beginIndex, int endIndex)
+{
     if (beginIndex < endIndex)
     {
         int left = beginIndex,right = endIndex;
         if(left >= right) return ;
         int key = list[left]->size;
-        FString hint = list[left]->hint;
-        FString lineNumber = list[left]->lineNumber;
-        while(left<right){
+        FString keyHint = list[left]->hint;
+        FString keyLineNumber = list[left]->lineNumber;
+        
+        while(left<right)
+        {
             while(list[right]->size<=key && left<right) right--;
-            list[left]->size = list[right]->size;
-            list[left]->hint = list[right]->hint;
-            list[left]->lineNumber = list[right]->lineNumber;
+            ExchangeMemInfoNode(list, left, right);
+            
             while(list[left]->size>=key && left<right) left++;
-            list[right]->size = list[left]->size;
-            list[right]->hint = list[left]->hint;
-            list[right]->lineNumber = list[left]->lineNumber;
+            ExchangeMemInfoNode(list, right, left);
         }
         list[left]->size = key;
-        list[left]->hint = hint;
-        list[left]->lineNumber = lineNumber;
+        list[left]->hint = keyHint;
+        list[left]->lineNumber = keyLineNumber;
         
         SortMemInfo(list, beginIndex, left - 1);
         SortMemInfo(list, left + 1, endIndex);
     }
 }
 
-void SProfilerInspector::SortShownInfo() {
+void SProfilerInspector::SortShownInfo()
+{
     SortMemInfo(shownFileInfo, 0, shownFileInfo.Num()-1);
 }
 
@@ -1287,7 +1301,8 @@ void SProfilerWidget::SetArrayValue(TArray<float>& chartValArray, float maxCostT
     m_maxMemSize = maxMemSize;
 }
 
-void SProfilerWidget::SetMouseMovePoint(FVector2D mouseDownPoint) {
+void SProfilerWidget::SetMouseMovePoint(FVector2D mouseDownPoint)
+{
     m_mouseDownPoint = mouseDownPoint;
 }
 

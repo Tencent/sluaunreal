@@ -1663,7 +1663,7 @@ int32 SProfilerWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
             clickedPointArray.Add(FVector2D(m_mouseDownPoint.X, 0));
             clickedPointArray.Add(FVector2D(m_mouseDownPoint.X, cMaxViewHeight));
             
-            boxBeginPoint = FVector2D(FGenericPlatformMath::Min(m_mouseDownPoint.X, m_clickedPoint.X), 0.0f);
+            boxBeginPoint = FVector2D(FGenericPlatformMath::Abs(FGenericPlatformMath::Min(m_mouseDownPoint.X, m_clickedPoint.X)), 0.0f);
             
             FSlateDrawElement::MakeBox(
                                        OutDrawElements,

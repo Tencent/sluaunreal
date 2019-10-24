@@ -61,7 +61,6 @@ void ULuaUserWidget::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)
 }
 
 void ULuaUserWidget::tick(float dt) {
-	NS_SLUA::UFunctionParamScope scope(this, UFUNCTION_TICK, dt);
 	if (!tickFunction.isValid()) {
 		superTick();
 		return;
@@ -79,4 +78,11 @@ void ULuaUserWidget::ProcessEvent(UFunction * func, void * params)
 void ULuaUserWidget::superTick()
 {
 	Super::Tick(currentGeometry, deltaTime);
+}
+
+void ULuaUserWidget::superTick(NS_SLUA::lua_State* L)
+{
+	currentGeometry = NS_SLUA::LuaObject::checkValue<FGeometry>(L, 2);
+	deltaTime = luaL_checknumber(L, 3);
+	superTick();
 }

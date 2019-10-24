@@ -462,7 +462,7 @@ namespace NS_SLUA {
         
     }
 
-    void fillParam(lua_State* L,int i,UFunction* func,uint8* params) {
+    void LuaObject::fillParam(lua_State* L,int i,UFunction* func,uint8* params) {
 		auto funcFlag = func->FunctionFlags;
         for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
             UProperty* prop = *it;
@@ -492,7 +492,7 @@ namespace NS_SLUA {
     }
 
     // handle return value and out params
-    int returnValue(lua_State* L,UFunction* func,uint8* params) {
+    int LuaObject::returnValue(lua_State* L,UFunction* func,uint8* params) {
 
         // check is function has return value
 		const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
@@ -553,14 +553,13 @@ namespace NS_SLUA {
         UFunction* func = reinterpret_cast<UFunction*>(ud);
         
 		FStructOnScope params(func);
-		fillParam(L, offset, func, params.GetStructMemory());
+		LuaObject::fillParam(L, offset, func, params.GetStructMemory());
 		{
-			// FEditorScriptExecutionGuard scriptGuard;
 			// call function with params
 			obj->ProcessEvent(func, params.GetStructMemory());
 		}
 		// return value to push lua stack
-		return returnValue(L, func, params.GetStructMemory());
+		return LuaObject::returnValue(L, func, params.GetStructMemory());
     }
 
     // find ufunction from cache

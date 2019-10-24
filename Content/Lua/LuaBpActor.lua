@@ -8,18 +8,22 @@ function actor:ReceiveBeginPlay()
     self.bCanBeDamaged = false
     print("bpactor:ReceiveBeginPlay")
     -- call super ReceiveBeginPlay
-    self:Super()
+    self.Super:ReceiveBeginPlay()
 end
 
 -- override event from blueprint
 function actor:ReceiveEndPlay(reason)
     print("bpactor:ReceiveEndPlay")
     -- call super ReceiveEndPlay
-    self:Super()
+    self.Super:ReceiveEndPlay(reason)
 end
 
 function actor:ReceiveTick(dt)
     print("bpactor:ReceiveTick",self,dt)
+    local x = self.Val
+    for k,v in pairs(x) do
+        print("over",k,v)
+    end
 end
 
 function actor:bpcall(value)

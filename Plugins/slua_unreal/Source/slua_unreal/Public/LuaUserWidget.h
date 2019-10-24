@@ -44,6 +44,7 @@ public:
 	}
 
 	virtual void ProcessEvent(UFunction* func, void* params) override;
+	void superTick(NS_SLUA::lua_State* L) override;
 	void superTick() override;
 	void tick(float dt) override;
 

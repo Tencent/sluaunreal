@@ -17,6 +17,14 @@ function panel:Construct()
         name="girl",
         }
     }
+
+    self:MyFunc()
+    self:MyOverride()
+end
+
+function panel:MyOverride()
+    print"MyOverride lua"
+    self.Super:MyOverride()
 end
 
 function panel:Destruct()
@@ -24,14 +32,20 @@ function panel:Destruct()
     self.imgs = nil
 end
 
-function panel:Tick()
+function panel:Tick(geom,dt)
     print("panel:tick")
     -- call parent super
-    self:Super()
+    self.Super:Tick(geom,dt)
     local item = self.imgs[math.random(1,2)]
     local texture = slua.loadObject(item.src)
     self.Item.Image_42:SetBrushFromTexture( texture,false )
     self.Item.TextBlock_43:SetText(item.name)
+
+    local m = self.ValMap
+    print("over",m:Num())
+    for k,v in pairs(m) do
+        print("over",k,v)
+    end
 end
 
 function panel:OnKeyDown(Geometry,Event)

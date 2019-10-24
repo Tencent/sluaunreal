@@ -8,7 +8,7 @@ function role:ReceiveBeginPlay()
         print("Trigger onfire",value,name)
     end)
 
-    self:Super()
+    self.Super:ReceiveBeginPlay()
     print("role:ReceiveBeginPlay")
     
     print("setupfire")

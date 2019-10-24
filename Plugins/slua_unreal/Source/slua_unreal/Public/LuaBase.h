@@ -25,33 +25,16 @@ namespace NS_SLUA {
 // special tick function
 #define UFUNCTION_TICK ((UFunction*)-1)
 
+	struct LuaSuper {
+		class LuaBase* base;
+	};
+
 	class SLUA_UNREAL_API LuaBase {
 	public:
 		virtual bool luaImplemented(UFunction* func, void* params);
 		virtual ~LuaBase() {}
 	protected:
-		template<typename T>
-		static int super(lua_State* L) {
-			// ud should be a luabase ptr
-			T* ud = LuaObject::checkUD<T>(L, 1);
-			if(!ud) luaL_error(L, "expect LuaBase table at arg 1");
-
-			if (!ud->currentFunc)
-				luaL_error(L, "can't call super here");
-			// tick function is a special function
-			// bpclass should override ReceiveTick
-			// c++ class should override Tick
-			// we hope lua user don't care about it
-			if (ud->currentFunc == UFUNCTION_TICK)
-				ud->superTick();
-			else {
-				using Super = typename T::Super;
-				ud->Super::ProcessEvent(ud->currentFunc, ud->currentParams);
-			}
-
-			return 0;
-		}
-
+		
 		inline UGameInstance* getGameInstance(AActor* self) {
 			return self->GetGameInstance();
 		}
@@ -83,6 +66,7 @@ namespace NS_SLUA {
 			if (!luaSelfTable.isTable())
 				return false;
 
+			context = ptrT;
 			auto L = ls->getLuaState();
 			// setup __cppinst
 			// we use rawpush to bind objptr and SLUA_CPPINST
@@ -90,8 +74,9 @@ namespace NS_SLUA {
 			LuaObject::push(L, ptrT, true);
 			lua_setfield(L, -2, SLUA_CPPINST);
 
-			lua_pushcfunction(L, &LuaBase::super<T>);
+			LuaObject::pushType(L, newSuper(this), "LuaSuper", supermt, supergc);
 			lua_setfield(L, -2, "Super");
+			bindOverrideFunc(ptrT);
 
 			// setup metatable
 			if (!metaTable.isValid()) {
@@ -110,13 +95,18 @@ namespace NS_SLUA {
 			lua_pop(L, 1);
 			return true;
 		}
+		
+		static void hookBpScript(UFunction* func, FNativeFuncPtr hookfunc);
+		void bindOverrideFunc(UObject* obj);
+		DECLARE_FUNCTION(luaOverrideFunc);
 
-		// store UFunction ptr and params for super call
-		UFunction* currentFunc;
-		union {
-			void* currentParams;
-			float deltaTime;
-		};
+		static LuaSuper* newSuper(LuaBase* obj);
+		static int supermt(lua_State* L);
+		static int supergc(lua_State* L);
+
+
+		// store deltaTime for super call
+		float deltaTime;
 
 		// call member function in luaSelfTable
 		LuaVar callMember(FString name, const TArray<FLuaBPVar>& args);
@@ -124,35 +114,23 @@ namespace NS_SLUA {
 		bool postInit(const char* tickFlag,bool rawget=true);
 		virtual void tick(float DeltaTime);
 		// should override this function to support super::tick
+		virtual void superTick(lua_State* L);
 		virtual void superTick() = 0;
+		virtual int superCall(lua_State* L, UFunction* func);
 		static int __index(lua_State* L);
 		static int __newindex(lua_State* L);
+		static int __superIndex(lua_State* L);
+		static int __superTick(lua_State* L);
+		static int __superCall(lua_State* L);
 
 		LuaVar luaSelfTable;
 		LuaVar tickFunction;
+		FWeakObjectPtr context;
 		static LuaVar metaTable;
-
-		friend struct UFunctionParamScope;
+		bool isOverride = false;
 	};
 
-
-	struct UFunctionParamScope {
-		LuaBase* pBase;
-		UFunctionParamScope(LuaBase* lb, UFunction* func, void* params) {
-			pBase = lb;
-			pBase->currentFunc = func;
-			pBase->currentParams = params;
-		}
-		UFunctionParamScope(LuaBase* lb, UFunction* func, float dt) {
-			pBase = lb;
-			pBase->currentFunc = func;
-			pBase->deltaTime = dt;
-		}
-		~UFunctionParamScope() {
-			pBase->currentFunc = nullptr;
-			pBase->currentParams = nullptr;
-		}
-	};
+	DefTypeName(LuaSuper);
 }
 
 UINTERFACE()

@@ -1656,7 +1656,7 @@ int32 SProfilerWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
             float length = FGenericPlatformMath::Abs(m_clickedPoint.X - m_mouseDownPoint.X);
             
             boxColor.R = 0.0f;
-            boxColor.G = 0.0f;
+            boxColor.G = 1.0f;
             boxColor.B = 1.0f;
             boxColor.A = 0.2f;
             

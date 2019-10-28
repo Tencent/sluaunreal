@@ -117,6 +117,7 @@ namespace NS_SLUA {
 		UObject* propObj;
 		FScriptMapHelper helper;
 		bool createdByBp;
+		bool shouldFree;
 
 		static int setupMT(lua_State* L);
 		static int gc(lua_State* L);

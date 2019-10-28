@@ -77,8 +77,11 @@ namespace NS_SLUA {
 		if (buf) {
 			clone(map,kp,vp,buf);
 			createdByBp = frombp;
+			// if map is cloned data, set a flag to free later
+			shouldFree = true;
 		} else {
 			createdByBp = false;
+			shouldFree = false;
 		}
 	} 
 
@@ -88,16 +91,17 @@ namespace NS_SLUA {
 		valueProp(p->ValueProp) ,
 		prop(p),
 		propObj(obj),
-		helper(prop, map) ,
-		createdByBp(false)
+		helper(prop, map),
+		createdByBp(false),
+		shouldFree(false)
 	{
 	} 
 
 	LuaMap::~LuaMap() {
-		if (!propObj)
-		{
+		if (shouldFree) {
 			clear();
-			if (!prop) SafeDelete(map);
+			ensure(map);
+			SafeDelete(map);
 		}
 		keyProp = valueProp = nullptr;
 		prop = nullptr;

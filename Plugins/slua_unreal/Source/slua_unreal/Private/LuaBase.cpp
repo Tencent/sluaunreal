@@ -147,7 +147,7 @@ namespace NS_SLUA {
 		ensure(lb);
 
 		if (lb->isOverride) {
-			*(bool*)Z_Param__Result = false;
+			*(bool*)RESULT_PARAM = false;
 			return;
 		}
 
@@ -158,7 +158,7 @@ namespace NS_SLUA {
 		if (lfunc.isValid()) {
 			lfunc.callByUFunction(func, (uint8*)params, &luaSelfTable, Stack.OutParms);
 		}
-		*(bool*)Z_Param__Result = true;
+		*(bool*)RESULT_PARAM = true;
 	}
 
 	void LuaBase::bindOverrideFunc(UObject* obj)

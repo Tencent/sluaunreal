@@ -40,7 +40,7 @@ end
 -- override event from blueprint
 function actor:ReceiveEndPlay(reason)
     print("actor:ReceiveEndPlay")
-    self.Super:ReceiveEndPlay()
+    self.Super:ReceiveEndPlay(reason)
 
 end
 
@@ -57,7 +57,7 @@ function actor:Tick(dt)
         local offset = FVector(0,math.cos(tt)*rot,0)
         local ok,h=actor:K2_SetActorLocation(p+v+offset,true,h,true)
     end
-    self.Super:Tick()
+    self.Super:Tick(dt)
 end
 
 return actor

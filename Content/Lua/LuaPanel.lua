@@ -19,12 +19,14 @@ function panel:Construct()
     }
 
     self:MyFunc()
-    self:MyOverride()
+    local ok,str = self:MyOverride()
+    print("over ret",ok,str)
 end
 
 function panel:MyOverride()
     print"MyOverride lua"
     self.Super:MyOverride()
+    return false,"return from lua"
 end
 
 function panel:Destruct()

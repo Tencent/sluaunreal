@@ -19,6 +19,7 @@
 #include "Interfaces/IPv4/IPv4Endpoint.h"
 #include "slua_unreal/Private/LuaMemoryProfile.h"
 #include "SharedPointer.h"
+#include "ArrayWriter.h"
 #include "ArrayReader.h"
 #include "DelegateCombinations.h"
 
@@ -28,18 +29,20 @@ class FTcpListener;
 namespace slua {
 	class FProfileConnection;
 	class FProfileMessage;
-
+    
 	typedef TSharedPtr<FProfileMessage, ESPMode::ThreadSafe> FProfileMessagePtr;
 	DECLARE_DELEGATE_OneParam(FOnProfileMessageDelegate, FProfileMessagePtr);
 
 	class FProfileServer : public FRunnable
 	{
 	public:
-		FProfileServer();
+		FProfileServer(int port);
 		~FProfileServer();
 
 		FOnProfileMessageDelegate& OnProfileMessageRecv();
 
+        TArray<TSharedPtr<FProfileConnection>> GetConnections();
+        
 	protected:
 		bool Init() override;
 		uint32 Run() override;
@@ -62,10 +65,12 @@ namespace slua {
 
 		/** Holds a queue of pending connections. */
 		TQueue<TSharedPtr<FProfileConnection>, EQueueMode::Mpsc> PendingConnections;
-
-		FOnProfileMessageDelegate OnProfileMessageDelegate;
+        
+        FOnProfileMessageDelegate OnProfileMessageDelegate;
 
 		bool bStop;
+    
+        int Port;
 	};
 
 	/**
@@ -93,8 +98,10 @@ namespace slua {
 
 		EConnectionState GetConnectionState() const;
 
+        FSocket* GetSocket();
+        
 		bool ReceiveData(TSharedPtr<FProfileMessage, ESPMode::ThreadSafe>& OutMessage);
-
+        
 		void Close();
 
 	private:

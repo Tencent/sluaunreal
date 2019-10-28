@@ -200,7 +200,7 @@ namespace NS_SLUA {
 		}
 
 #ifdef ENABLE_PROFILER
-		LuaProfiler::tick();
+		LuaProfiler::tick(L);
 #endif
 
 		PROFILER_WATCHER(w1);
@@ -745,16 +745,6 @@ namespace NS_SLUA {
 		lua_pop(L, 1);
 		return ret;
 	}
-    
-    void LuaState::luaForcedGC()
-    {
-        if (enableMultiThreadGC && L) {
-            lua_gc(L, LUA_GCCOLLECT, 128);
-            Log::Log("GC success");
-        } else {
-           Log::Log("GC error");
-        }
-    }
 
 	void LuaState::setTickFunction(LuaVar func)
 	{

@@ -15,9 +15,12 @@
 #include "Log.h"
 #include "LuaState.h"
 #include "ArrayWriter.h"
+#include "ArrayReader.h"
 #include "LuaMemoryProfile.h"
 #include "luasocket/auxiliar.h"
 #include "luasocket/buffer.h"
+#include "lua/lua.hpp"
+#include <sys/socket.h>
 
 #if PLATFORM_WINDOWS
 #ifdef TEXT
@@ -45,11 +48,81 @@ namespace NS_SLUA {
 
 		LuaVar selfProfiler;
 		bool ignoreHook = false;
+        bool bReceieve = false;
 		HookState currentHookState = HookState::UNHOOK;
 		int64 profileTotalCost = 0;
 		p_tcp tcpSocket = nullptr;
 		const char* ChunkName = "[ProfilerScript]";
+        
+        // copy code from buffer.cpp in luasocket
+        int buffer_get(p_buffer buf, char **data, size_t *count) {
+            int err = IO_DONE;
+            p_io io = buf->io;
+            p_timeout tm = buf->tm;
+            if (buffer_isempty(buf)) {
+                size_t got;
+                err = io->recv(io->ctx, buf->data, BUF_SIZE, &got, tm);
+                buf->first = 0;
+                buf->last = got;
+            }
+            *count = buf->last - buf->first;
+            *data = buf->data + buf->first;
+            return err;
+        }
+        
+        // copy code from buffer.cpp in luasocket
+        void buffer_skip(p_buffer buf, size_t count) {
+            buf->received += count;
+            buf->first += count;
+            if (buffer_isempty(buf))
+                buf->first = buf->last = 0;
+        }
+        
+        // copy code from buffer.cpp in luasocket
+        int recvraw(p_buffer buf, size_t wanted, char* data) {
+            int err = IO_DONE;
+            size_t total = 0;
+            while (err == IO_DONE) {
+                size_t count;
+                err = buffer_get(buf, &data, &count);
+                count = MIN(count, wanted - total);
+                buffer_skip(buf, count);
+                total += count;
+                if(err == IO_DONE)
+                if (total >= wanted) break;
+            }
+            return err;
+        }
+        
+        bool receieveMessage(uint8 *data, size_t wanted) {
+            if(!tcpSocket) return false;
+            int err = recvraw(&tcpSocket->buf, wanted, (char*)data);
+            if(err != IO_DONE) {
+                return false;
+            }
+            return true;
+        }
+        
+        void memoryGC(lua_State* L) {
+            if(!tcpSocket) return;
+            
+            int event;
+            int wantedSize = 4;
+            
+            FArrayReader messageReader = FArrayReader(true);
+            messageReader.SetNumUninitialized(sizeof(int));
+            
+            if(L && receieveMessage(messageReader.GetData(), wantedSize)) {
+                int nowMemSize;
+                int originMemSize = lua_gc(L, LUA_GCCOUNT, 0);
+                
+                lua_gc(L, LUA_GCCOLLECT, 128);
+                nowMemSize = lua_gc(L, LUA_GCCOUNT, 0);
+                UE_LOG(LogTemp, Warning, TEXT("After GC , lua free %d KB"), nowMemSize - originMemSize);
+            }
+        }
 
+        
 		void makeProfilePackage(FArrayWriter& messageWriter,
 			int hookEvent, int64 time,
 			int lineDefined, const char* funcName,
@@ -87,25 +160,25 @@ namespace NS_SLUA {
             messageWriter << packageSize;
             
         }
-
-		// copy code from buffer.cpp in luasocket
-		#define STEPSIZE 8192
-		int sendraw(p_buffer buf, const char* data, size_t count, size_t * sent) {
-			p_io io = buf->io;
-			if (!io) return IO_CLOSED;
-			p_timeout tm = buf->tm;
-			size_t total = 0;
-			int err = IO_DONE;
-			while (total < count && err == IO_DONE) {
-				size_t done = 0;
-				size_t step = (count - total <= STEPSIZE) ? count - total : STEPSIZE;
-				err = io->send(io->ctx, data + total, step, &done, tm);
-				total += done;
-			}
-			*sent = total;
-			buf->sent += total;
-			return err;
-		}
+        
+        // copy code from buffer.cpp in luasocket
+        #define STEPSIZE 8192
+        int sendraw(p_buffer buf, const char* data, size_t count, size_t * sent) {
+            p_io io = buf->io;
+            if (!io) return IO_CLOSED;
+            p_timeout tm = buf->tm;
+            size_t total = 0;
+            int err = IO_DONE;
+            while (total < count && err == IO_DONE) {
+                size_t done = 0;
+                size_t step = (count - total <= STEPSIZE) ? count - total : STEPSIZE;
+                err = io->send(io->ctx, data + total, step, &done, tm);
+                total += done;
+            }
+            *sent = total;
+            buf->sent += total;
+            return err;
+        }
 
 		void sendMessage(FArrayWriter& msg) {
 			if (!tcpSocket) return;
@@ -145,14 +218,13 @@ namespace NS_SLUA {
 			if (strstr(ar->short_src, ChunkName)) 
 				return;
 
-			takeSample(ar->event,ar->linedefined, ar->name ? ar->name : "", ar->short_src);
+            takeSample(ar->event,ar->linedefined, ar->name ? ar->name : "", ar->short_src);
 		}
 
 		int changeHookState(lua_State* L) {
 			HookState state = (HookState)lua_tointeger(L, 1);
 			currentHookState = state;
 			if (state == HookState::UNHOOK) {
-                //when the State is unhook, profiler still record memory
 //                LuaMemoryProfile::stop();
 				lua_sethook(L, nullptr, 0, 0);
 			}
@@ -193,7 +265,7 @@ namespace NS_SLUA {
 		ensure(lua_gettop(L) == 0);
 	}
 
-	void LuaProfiler::tick()
+	void LuaProfiler::tick(lua_State* L)
 	{
 		ignoreHook = true;
 		if (currentHookState == HookState::UNHOOK) {
@@ -208,12 +280,16 @@ namespace NS_SLUA {
             for(auto& memInfo : NS_SLUA::LuaMemoryProfile::memDetail()) {
                 memoryInfoList.Add(memInfo.Value);
             }
-            
+
             takeMemorySample(NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK, memoryInfoList);
-			takeSample(NS_SLUA::ProfilerHookEvent::PHE_TICK, -1, "", "");
+            takeSample(NS_SLUA::ProfilerHookEvent::PHE_TICK, -1, "", "");
+            
+            memoryGC(L);
+            
 		}
 		ignoreHook = false;
 	}
+    
 
 	LuaProfiler::LuaProfiler(const char* funcName)
 	{
@@ -222,7 +298,7 @@ namespace NS_SLUA {
 
 	LuaProfiler::~LuaProfiler()
 	{
-		takeSample(ProfilerHookEvent::PHE_RETURN, 0, "", "");
+        takeSample(ProfilerHookEvent::PHE_RETURN, 0, "", "");
 	}
 
 }

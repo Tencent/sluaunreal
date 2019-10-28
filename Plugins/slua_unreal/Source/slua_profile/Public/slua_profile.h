@@ -46,6 +46,7 @@ public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
+    
 	void PluginButtonClicked();
 private:
 	// fields
@@ -58,7 +59,9 @@ private:
 
 	// functions
 	void OnTabClosed(TSharedRef<SDockTab> tab);
-	slua::FProfileServer* ProfileServer;
+	
+    
+    slua::FProfileServer* MemoryGCServer;
 
 	TSharedRef<class SDockTab> OnSpawnPluginTab(const class FSpawnTabArgs& SpawnTabArgs);
 	bool Tick(float DeltaTime);

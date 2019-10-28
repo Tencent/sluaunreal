@@ -24,10 +24,12 @@
 #include "Math/Color.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "Delegates/IDelegateInstance.h"
-#include "LuaState.h"
 #include "Internationalization/Regex.h"
-#include "slua_profile_inspector.h"
+#include "Sockets.h"
+#include "LuaState.h"
+#include "LuaProfiler.h"
 #include "slua_profile.h"
+#include "slua_profile_inspector.h"
 
 static const FName slua_profileTabNameInspector("slua_profile");
 void SortMemInfo(ShownMemInfoList& list, int beginIndex, int endIndex);
@@ -748,7 +750,22 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                              .Text(FText::FromName("Forced GC"))
                              .ContentPadding(FMargin(2.0, 2.0))
                              .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-        
+                                 FArrayWriter messageWriter;
+                                 int bytesSend = 0;
+                                 int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_MEMORY_GC;
+                                 int connectionsSize = ProfileServer->GetConnections().Num();
+                                 
+                                 messageWriter.Empty();
+                                 messageWriter.Seek(0);
+                                 messageWriter << hookEvent;
+                                 
+                                 if(connectionsSize > 0)
+                                 {
+                                     FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
+                                     if (socket && socket->GetConnectionState() == SCS_Connected)
+                                         socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
+                                 }
+                             
                                  return FReply::Handled();
                              }))
                          ]

@@ -23,6 +23,7 @@
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Notifications/SProgressBar.h"
 #include "Widgets/Views/STreeView.h"
+#include "slua_remote_profile.h"
 #include "slua_unreal/Private/LuaMemoryProfile.h"
 #include "Input/Reply.h"
 
@@ -77,6 +78,8 @@ public:
     {
         needProfilerCleared = needClear;
     }
+    
+    TSharedPtr<slua::FProfileServer> ProfileServer;
     
 private:
     const static int sampleNum = cMaxSampleNum;

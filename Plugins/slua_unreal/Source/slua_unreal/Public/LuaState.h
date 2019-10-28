@@ -164,8 +164,6 @@ namespace NS_SLUA {
 			return objRefs;
 		}
         
-        void luaForcedGC();
-
 		void setTickFunction(LuaVar func);
 
 		// add obj to ref, tell Engine don't collect this obj

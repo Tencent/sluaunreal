@@ -163,6 +163,8 @@ namespace NS_SLUA {
 		const UObjectRefMap& cacheSet() const {
 			return objRefs;
 		}
+        
+        void luaForcedGC();
 
 		void setTickFunction(LuaVar func);
 

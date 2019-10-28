@@ -51,6 +51,7 @@ namespace NS_SLUA {
     {
 		array = new FScriptArray();
 		clone(array, p, buf);
+		shouldFree = true;
     }
 
 	LuaArray::LuaArray(UArrayProperty* p, UObject* obj)
@@ -59,14 +60,16 @@ namespace NS_SLUA {
 		, propObj(obj)
 	{
 		array = prop->ContainerPtrToValuePtr<FScriptArray>(obj);
+		shouldFree = false;
 	}
 
     LuaArray::~LuaArray() {
-		if (!propObj)
+		if (shouldFree)
 		{
 			// should destroy inner property value
 			clear();
-			if (!prop) SafeDelete(array);
+			ensure(array);
+			SafeDelete(array);
 		}
 		
 		inner = nullptr;

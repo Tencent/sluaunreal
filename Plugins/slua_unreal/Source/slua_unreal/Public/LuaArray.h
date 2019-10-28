@@ -77,6 +77,7 @@ namespace NS_SLUA {
         FScriptArray* array;
 		UArrayProperty* prop;
 		UObject* propObj;
+		bool shouldFree;
 
         void clear();
         uint8* getRawPtr(int index) const;

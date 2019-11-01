@@ -122,16 +122,11 @@ TSharedRef<class SDockTab> Fslua_profileModule::OnSpawnPluginTab(const FSpawnTab
 		 
 		tab->SetOnTabClosed(SDockTab::FOnTabClosedCallback::CreateRaw(this, &Fslua_profileModule::OnTabClosed));
 
-        sluaProfilerInspector->ProfileServer = MakeShareable(new slua::FProfileServer(8081));
+        sluaProfilerInspector->ProfileServer = MakeShareable(new slua::FProfileServer());
 		sluaProfilerInspector->ProfileServer->OnProfileMessageRecv().BindLambda([this](slua::FProfileMessagePtr Message) {
 			this->debug_hook_c(Message->Event, Message->Time, Message->Linedefined, Message->Name, Message->ShortSrc,  Message->memoryInfoList);
 		});
         
-//        MemoryGCServer = new slua::FProfileServer(8082);
-//        MemoryGCServer->OnProfileMessageRecv().BindLambda([this](slua::FProfileMessagePtr Message) {
-//            this->debug_hook_c(Message->Event, Message->Time, Message->Linedefined, Message->Name, Message->ShortSrc,  Message->memoryInfoList);
-//        });
-
 		tabOpened = true;
 		return tab;
 	}

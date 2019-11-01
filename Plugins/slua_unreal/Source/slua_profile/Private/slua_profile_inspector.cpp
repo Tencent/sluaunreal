@@ -26,7 +26,6 @@
 #include "Delegates/IDelegateInstance.h"
 #include "Internationalization/Regex.h"
 #include "Sockets.h"
-#include "LuaState.h"
 #include "LuaProfiler.h"
 #include "slua_profile.h"
 #include "slua_profile_inspector.h"

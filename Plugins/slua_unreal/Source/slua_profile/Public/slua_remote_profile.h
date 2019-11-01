@@ -36,7 +36,7 @@ namespace slua {
 	class FProfileServer : public FRunnable
 	{
 	public:
-		FProfileServer(int port);
+		FProfileServer();
 		~FProfileServer();
 
 		FOnProfileMessageDelegate& OnProfileMessageRecv();
@@ -69,8 +69,6 @@ namespace slua {
         FOnProfileMessageDelegate OnProfileMessageDelegate;
 
 		bool bStop;
-    
-        int Port;
 	};
 
 	/**

@@ -21,10 +21,9 @@
 
 namespace slua
 {
-	FProfileServer::FProfileServer(int port)
+	FProfileServer::FProfileServer()
 		: Thread(nullptr)
 		, bStop(true)
-        , Port(port)
 	{
 		Thread = FRunnableThread::Create(this, TEXT("FProfileServer"), 0, TPri_Normal);
 	}
@@ -47,7 +46,7 @@ namespace slua
 		bStop = false;
 
 		ListenEndpoint.Address = FIPv4Address(0, 0, 0, 0);
-		ListenEndpoint.Port = Port;
+		ListenEndpoint.Port = 8081;
 		Listener = new FTcpListener(ListenEndpoint);
 		Listener->OnConnectionAccepted().BindRaw(this, &FProfileServer::HandleConnectionAccepted);
 		return true;

@@ -52,17 +52,13 @@ private:
 	// fields
 	FTickerDelegate TickDelegate;
 	FDelegateHandle TickDelegateHandle;
-
     TSharedPtr<SProfilerInspector> sluaProfilerInspector;
 	bool tabOpened = false;
 	TSharedPtr<class FUICommandList> PluginCommands;
 
 	// functions
 	void OnTabClosed(TSharedRef<SDockTab> tab);
-	
     
-    slua::FProfileServer* MemoryGCServer;
-
 	TSharedRef<class SDockTab> OnSpawnPluginTab(const class FSpawnTabArgs& SpawnTabArgs);
 	bool Tick(float DeltaTime);
 	void ClearCurProfiler();

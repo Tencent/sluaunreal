@@ -130,7 +130,7 @@ namespace NS_SLUA {
 				// if key auto null, we remove pair
 				if (keyChanged || keyChanged) {
 					removeAt(index);
-					if (keyChanged) rehash = true;
+					rehash = true;
 				}
 			}
 		}

@@ -431,8 +431,8 @@ namespace NS_SLUA {
 				LuaObject::push(L, ret);
 				return 1;
 			}
-			luaL_error(L, "FSlateFontInfo operator__eq error, arg=%d", lua_typename(L, 2));
-			return 0;
+			LuaObject::push(L, false);
+			return 1;
 		}
 
 		static int get_Size(lua_State* L) {
@@ -520,8 +520,8 @@ namespace NS_SLUA {
 				LuaObject::push(L, ret);
 				return 1;
 			}
-			luaL_error(L, "FSlateBrush operator__eq error, arg=%d", lua_typename(L, 2));
-			return 0;
+			LuaObject::push(L, false);
+			return 1;
 		}
 
 		static int get_ImageSize(lua_State* L) {
@@ -750,8 +750,8 @@ namespace NS_SLUA {
 				LuaObject::push(L, ret);
 				return 1;
 			}
-			luaL_error(L, "FMargin operator__eq error, arg=%d", lua_typename(L, 2));
-			return 0;
+			LuaObject::push(L, false);
+			return 1;
 		}
 
 		static int get_Left(lua_State* L) {
@@ -889,8 +889,8 @@ namespace NS_SLUA {
 				LuaObject::push(L, ret);
 				return 1;
 			}
-			luaL_error(L, "FGeometry operator__eq error, arg=%d", lua_typename(L, 2));
-			return 0;
+			LuaObject::push(L, false);
+			return 1;
 		}
 
 		static int get_Size(lua_State* L) {
@@ -1166,8 +1166,8 @@ namespace NS_SLUA {
 				LuaObject::push(L, ret);
 				return 1;
 			}
-			luaL_error(L, "FSlateColor operator__eq error, arg=%d", lua_typename(L, 2));
-			return 0;
+			LuaObject::push(L, false);
+			return 1;
 		}
 
 		static int GetSpecifiedColor(lua_State* L) {
@@ -1316,8 +1316,8 @@ namespace NS_SLUA {
 				LuaObject::push(L, ret);
 				return 1;
 			}
-			luaL_error(L, "FRotator operator__eq error, arg=%d", lua_typename(L, 2));
-			return 0;
+			LuaObject::push(L, false);
+			return 1;
 		}
 
 		static int get_Pitch(lua_State* L) {
@@ -2942,8 +2942,8 @@ namespace NS_SLUA {
 				LuaObject::push(L, ret);
 				return 1;
 			}
-			luaL_error(L, "FLinearColor operator__eq error, arg=%d", lua_typename(L, 2));
-			return 0;
+			LuaObject::push(L, false);
+			return 1;
 		}
 
 		static int get_R(lua_State* L) {
@@ -3499,8 +3499,8 @@ namespace NS_SLUA {
 				LuaObject::push(L, ret);
 				return 1;
 			}
-			luaL_error(L, "FColor operator__eq error, arg=%d", lua_typename(L, 2));
-			return 0;
+			LuaObject::push(L, false);
+			return 1;
 		}
 
 		static int get_White(lua_State* L) {
@@ -3949,8 +3949,8 @@ namespace NS_SLUA {
 				LuaObject::push(L, ret);
 				return 1;
 			}
-			luaL_error(L, "FVector operator__eq error, arg=%d", lua_typename(L, 2));
-			return 0;
+			LuaObject::push(L, false);
+			return 1;
 		}
 
 		static int get_X(lua_State* L) {
@@ -5349,8 +5349,8 @@ namespace NS_SLUA {
 				LuaObject::push(L, ret);
 				return 1;
 			}
-			luaL_error(L, "FVector2D operator__eq error, arg=%d", lua_typename(L, 2));
-			return 0;
+			LuaObject::push(L, false);
+			return 1;
 		}
 
 		static int get_X(lua_State* L) {
@@ -6281,8 +6281,8 @@ namespace NS_SLUA {
 				LuaObject::push(L, ret);
 				return 1;
 			}
-			luaL_error(L, "FBox2D operator__eq error, arg=%d", lua_typename(L, 2));
-			return 0;
+			LuaObject::push(L, false);
+			return 1;
 		}
 
 		static int __add(lua_State* L) {
@@ -7172,8 +7172,8 @@ namespace NS_SLUA {
 				LuaObject::push(L, ret);
 				return 1;
 			}
-			luaL_error(L, "FPrimaryAssetType operator__eq error, arg=%d", lua_typename(L, 2));
-			return 0;
+			LuaObject::push(L, false);
+			return 1;
 		}
 
 		static int IsValid(lua_State* L) {
@@ -7246,8 +7246,8 @@ namespace NS_SLUA {
 				LuaObject::push(L, ret);
 				return 1;
 			}
-			luaL_error(L, "FPrimaryAssetId operator__eq error, arg=%d", lua_typename(L, 2));
-			return 0;
+			LuaObject::push(L, false);
+			return 1;
 		}
 
 		static int get_PrimaryAssetType(lua_State* L) {
@@ -7363,8 +7363,8 @@ namespace NS_SLUA {
 				LuaObject::push(L, ret);
 				return 1;
 			}
-			luaL_error(L, "FDateTime operator__eq error, arg=%d", lua_typename(L, 2));
-			return 0;
+			LuaObject::push(L, false);
+			return 1;
 		}
 
 		static int __lt(lua_State* L) {

@@ -25,8 +25,9 @@
 #include "Math/Vector2D.h"
 #include "Math/Color.h"
 #include "EditorStyleSet.h"
-#include "Sockets.h"
 #include "LuaProfiler.h"
+#include "Sockets.h"
+#include "Log.h"
 #include "slua_profile.h"
 #include "slua_profile_inspector.h"
 
@@ -166,7 +167,6 @@ void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray, TArray<NS
 			profilersArraySamples[sampleIdx] = tmpProfilersArraySamples[sampleIdx];
 
 			memChartValArray[sampleIdx] = luaMemNodeChartList[sampleIdx].totalSize;
-            UE_LOG(LogTemp, Warning, TEXT("memChartValArray id : %d data : %.3f"), sampleIdx, luaMemNodeChartList[sampleIdx].totalSize);
         }
 
 		RefreshBarValue();
@@ -505,6 +505,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 			memTreeView->RequestTreeRefresh();
 		}
 
+        memProfilerWidget->SetMouseMovePoint(mouseDownPoint);
 		return FReply::Handled();
 	}));
     
@@ -641,8 +642,8 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 			.WidgetIndex(0)
 			+SWidgetSwitcher::Slot()
 			[
-				SNew(SScrollBox)
-				+SScrollBox::Slot()
+				SNew(SVerticalBox)
+				+SVerticalBox::Slot().AutoHeight()
 				[
 					SNew(SHorizontalBox)
 					+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth().Padding(5.0f, 3.0f, 0, 0)
@@ -672,7 +673,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 					]
 				]
 
-				+ SScrollBox::Slot()
+				+ SVerticalBox::Slot().AutoHeight()
 				[
 					SNew(SHorizontalBox)
 					+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Fill)
@@ -681,20 +682,25 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 					]
 				]
 
-				+ SScrollBox::Slot()
+				+ SVerticalBox::Slot()
 				[
-					SNew(SVerticalBox)
-					+ SVerticalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Center)
-					[
-						SNew(STextBlock).Text_Lambda([=]() {
-						FString titleStr = FString::Printf(TEXT("============================ CPU profiler Max(%.3f ms), Avg(%.3f ms) ============================"),
-													   maxProfileSamplesCostTime / perMilliSec, avgProfileSamplesCostTime / perMilliSec);
-						return FText::FromString(titleStr); })
-					]
-					+ SVerticalBox::Slot().AutoHeight()
-					[
-						treeview.ToSharedRef()
-					]
+                    SNew(SScrollBox)
+                    +SScrollBox::Slot()
+                    [
+                        SNew(SVerticalBox)
+                        + SVerticalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Center)
+                        [
+                            SNew(STextBlock).Text_Lambda([=]() {
+                                FString titleStr = FString::Printf(TEXT("============================ CPU profiler Max(%.3f ms), Avg(%.3f ms) ============================"),
+                                                               maxProfileSamplesCostTime / perMilliSec, avgProfileSamplesCostTime / perMilliSec);
+                                return FText::FromString(titleStr); })
+                        ]
+                    ]
+
+                    +SScrollBox::Slot()
+                    [
+                        treeview.ToSharedRef()
+                    ]
 				]
 			]
 
@@ -705,8 +711,8 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 				.WidgetIndex(0)
 				+SWidgetSwitcher::Slot()
 				[
-					SNew(SScrollBox)
-					+SScrollBox::Slot()
+					SNew(SVerticalBox)
+					+SVerticalBox::Slot().AutoHeight()
 					[
 						SNew(SHorizontalBox)
 						+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth().Padding(5.0f, 3.0f, 0, 0)
@@ -771,7 +777,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                          ]
 					]
 
-					+ SScrollBox::Slot()
+					+ SVerticalBox::Slot().AutoHeight()
 					[
 						SNew(SHorizontalBox)
 						+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Fill)
@@ -780,7 +786,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 						]
 					]
 
-					+ SScrollBox::Slot()
+					+ SVerticalBox::Slot().AutoHeight()
 					[
 						SNew(SVerticalBox)
 						+SVerticalBox::Slot()
@@ -793,29 +799,33 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 						]
 					]
 
-					+ SScrollBox::Slot()
-					[
-						SNew(SVerticalBox)
-						+ SVerticalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Center).Padding(0, 10.0f)
-						[
-							SNew(STextBlock).Text_Lambda([=]() {
-							FString titleStr = TEXT("============================ Memory profiler Max("
-												 + ChooseMemoryUnit(maxLuaMemory)
-												 +"), Avg("
-												 + ChooseMemoryUnit(avgLuaMemory)
-												 +") ============================");
-							return FText::FromString(titleStr);
-							})
-						]
+					+ SVerticalBox::Slot()
+                    [
+                        SNew(SScrollBox)
+                        +SScrollBox::Slot()
+                        [
+                            SNew(SVerticalBox)
+                            + SVerticalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Center).Padding(0, 10.0f)
+                            [
+                                SNew(STextBlock).Text_Lambda([=]() {
+                                FString titleStr = TEXT("============================ Memory profiler Max("
+                                                 + ChooseMemoryUnit(maxLuaMemory)
+                                                 +"), Avg("
+                                                 + ChooseMemoryUnit(avgLuaMemory)
+                                                 +") ============================");
+                                return FText::FromString(titleStr);
+                                })
+                            ]
+                        ]
 
-						+ SVerticalBox::Slot().AutoHeight()
-						[
-							memTreeView.ToSharedRef()
-						]
-					]
-				]
-			]
-		]
+                        + SScrollBox::Slot()
+                        [
+                            memTreeView.ToSharedRef()
+                        ]
+                    ]
+                ]
+            ]
+        ]
 	];
 }
 
@@ -1238,7 +1248,7 @@ void SProfilerInspector::CalcPointMemdiff(int arrayIndex)
     // initialize the difference in shownFileInfo to avoid the consequence that the item did not have the file record but the difference is 0
     for(auto &info : shownFileInfo) info->difference = info->size;
 
-    for(auto &info : luaMemNodeChartList[arrayIndex].infoList)
+    for(auto &info : tempLuaMemNodeChartList[arrayIndex].infoList)
     {
         FString fileHint = info.hint;
 
@@ -1257,6 +1267,10 @@ void SProfilerInspector::CalcPointMemdiff(int arrayIndex)
             shownFileInfo.Add(MakeShareable(newInfo));
         }
     }
+    
+    float diff = 0.0f;
+    for(auto &info : shownFileInfo) diff += info->difference;
+    NS_SLUA::Log::Log("The difference between two Point is %.3f KB", diff/1024.0f);
 }
 
 int SProfilerInspector::ContainsFile(FString& fileName, ShownMemInfoList &list)
@@ -1458,6 +1472,7 @@ int SProfilerWidget::CalcHoverSampleIdx(const FVector2D cursorPos)
 void SProfilerWidget::ClearClickedPoint()
 {
 	m_clickedPoint.X = -1.0f;
+    m_mouseDownPoint.X = -1.0f;
 }
 
 int SProfilerWidget::CalcClickSampleIdx(const FVector2D cursorPos)
@@ -1465,7 +1480,6 @@ int SProfilerWidget::CalcClickSampleIdx(const FVector2D cursorPos)
 	for (int32 i = 0; i< m_cSliceCount; i++)
 	{
 		int interval = m_arraylinePath[i].X - cursorPos.X;
-        UE_LOG(LogTemp, Warning, TEXT("memChartValArray m_arrayVal id : %d data : %.3f"), i, m_arrayVal[i]);
 		if (interval > (-m_pointInterval / 2) && interval < (m_pointInterval / 2))
 		{
 			m_clickedPoint = m_arraylinePath[i];
@@ -1528,15 +1542,15 @@ void SProfilerWidget::DrawStdLine(const FGeometry& AllottedGeometry, FSlateWindo
 					 1.0f
 					);
 
-	FSlateColorBrush stBrushWhite_1 = FSlateColorBrush(FColorList::White);
-	FSlateDrawElement::MakeBox(
-					OutDrawElements,
-					LayerId,
-					AllottedGeometry.ToPaintGeometry(FVector2D(0, positionY - 10), FVector2D(80, 15)),
-					&stBrushWhite_1,
-					ESlateDrawEffect::None,
-					FLinearColor::Black
-					);
+//    FSlateColorBrush stBrushWhite_1 = FSlateColorBrush(FColorList::White);
+//    FSlateDrawElement::MakeBox(
+//                    OutDrawElements,
+//                    LayerId,
+//                    AllottedGeometry.ToPaintGeometry(FVector2D(0, positionY - 10), FVector2D(80, 15)),
+//                    &stBrushWhite_1,
+//                    ESlateDrawEffect::None,
+//                    FLinearColor::Black
+//                    );
 
 	FSlateFontInfo FontInfo = FCoreStyle::Get().GetFontStyle("NormalFont");
 	FontInfo.Size = 10.0f;

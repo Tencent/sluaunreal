@@ -60,7 +60,7 @@ namespace NS_SLUA {
 		const char* ChunkName = "[ProfilerScript]";
         
         // copy code from buffer.cpp in luasocket
-        int buffer_get(p_buffer buf, char **data, size_t *count) {
+        int buffer_get(p_buffer buf, size_t *count, FArrayReader& messageReader) {
             int err = IO_DONE;
             p_io io = buf->io;
             p_timeout tm = buf->tm;
@@ -71,7 +71,8 @@ namespace NS_SLUA {
                 buf->last = got;
             }
             *count = buf->last - buf->first;
-            *data = buf->data + buf->first;
+            
+            for(int i = 0; i < *count; i++) messageReader.Insert((uint8)(buf->data[i] + buf->first) , i);
             return err;
         }
         
@@ -84,12 +85,12 @@ namespace NS_SLUA {
         }
         
         // copy code from buffer.cpp in luasocket
-        int recvraw(p_buffer buf, size_t wanted, char* data) {
+        int recvraw(p_buffer buf, size_t wanted, FArrayReader& messageReader) {
             int err = IO_DONE;
             size_t total = 0;
             while (err == IO_DONE) {
                 size_t count;
-                err = buffer_get(buf, &data, &count);
+                err = buffer_get(buf, &count, messageReader);
 				#if PLATFORM_WINDOWS
 				count = min(count, wanted - total);
 				#else
@@ -103,29 +104,27 @@ namespace NS_SLUA {
             return err;
         }
         
-        bool receieveMessage(uint8 *data, size_t wanted) {
+        bool receieveGCMessage(size_t wanted) {
             if(!tcpSocket) return false;
-            int err = recvraw(&tcpSocket->buf, wanted, (char*)data);
+            
+            int event = 0;
+            FArrayReader messageReader = FArrayReader(true);
+            messageReader.SetNumUninitialized(sizeof(int));
+            
+            int err = recvraw(&tcpSocket->buf, wanted, messageReader);
             if(err != IO_DONE) {
                 return false;
             }
-            return true;
+            
+            messageReader << event;
+            return event == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_GC;
         }
         
         void memoryGC(lua_State* L) {
             if(!tcpSocket) return;
             
-            int event = 0;
             int wantedSize = 4;
-            
-            FArrayReader messageReader = FArrayReader(true);
-            messageReader.SetNumUninitialized(sizeof(int));
-            
-//            messageReader << event;
-            
-//            if(L && receieveMessage(messageReader.GetData(), wantedSize
-//                                    && event == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_GC))
-            if(L && receieveMessage(messageReader.GetData(), wantedSize)) {
+            if(L && receieveGCMessage(wantedSize)) {
                 int nowMemSize;
                 int originMemSize = lua_gc(L, LUA_GCCOUNT, 0);
                 
@@ -140,11 +139,11 @@ namespace NS_SLUA {
 		u_long nread = 0;
 		t_socket fd = tcpSocket->sock;
 		
-#	if PLATFORM_WINDOWS
+        #if PLATFORM_WINDOWS
 		result = ioctlsocket(fd, FIONREAD, &nread);
-#else
+        #else
 		result = ioctl(fd, FIONREAD, &nread);
-#endif
+        #endif
         
         return result == 0 && nread > 0;
     }

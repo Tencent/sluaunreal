@@ -130,7 +130,7 @@ namespace NS_SLUA {
                 
                 lua_gc(L, LUA_GCCOLLECT, 128);
                 nowMemSize = lua_gc(L, LUA_GCCOUNT, 0);
-                UE_LOG(LogTemp, Warning, TEXT("After GC , lua free %d KB"), originMemSize - nowMemSize);
+                Log::Log(("After GC , lua free %d KB"), originMemSize - nowMemSize);
             }
         }
     
@@ -306,11 +306,10 @@ namespace NS_SLUA {
             for(auto& memInfo : NS_SLUA::LuaMemoryProfile::memDetail()) {
                 memoryInfoList.Add(memInfo.Value);
             }
-
-            takeMemorySample(NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK, memoryInfoList);
-            takeSample(NS_SLUA::ProfilerHookEvent::PHE_TICK, -1, "", "");
             
             if(checkSocketRead()) memoryGC(L);
+            takeMemorySample(NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK, memoryInfoList);
+            takeSample(NS_SLUA::ProfilerHookEvent::PHE_TICK, -1, "", "");
 		}
 		ignoreHook = false;
 	}

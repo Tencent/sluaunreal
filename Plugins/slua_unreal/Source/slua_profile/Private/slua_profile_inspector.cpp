@@ -166,6 +166,7 @@ void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray, TArray<NS
 			profilersArraySamples[sampleIdx] = tmpProfilersArraySamples[sampleIdx];
 
 			memChartValArray[sampleIdx] = luaMemNodeChartList[sampleIdx].totalSize;
+            UE_LOG(LogTemp, Warning, TEXT("memChartValArray id : %d data : %.3f"), sampleIdx, luaMemNodeChartList[sampleIdx].totalSize);
         }
 
 		RefreshBarValue();
@@ -223,6 +224,8 @@ void SProfilerInspector::RefreshBarValue()
 		if (memorySize > maxLuaMemory) maxLuaMemory = memorySize;
 
 	}
+    tempLuaMemNodeChartList.Empty();
+    tempLuaMemNodeChartList = luaMemNodeChartList;
 	avgProfileSamplesCostTime = totalSampleValue / sampleNum;
 	cpuProfilerWidget->SetArrayValue(chartValArray, maxProfileSamplesCostTime, maxLuaMemory);
 
@@ -493,16 +496,14 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 
 		// calc sampleIdx
 		FVector2D cursorPos = inventoryGeometry.AbsoluteToLocal(mouseEvent.GetScreenSpacePosition());
-		mouseDownMemIdx = memProfilerWidget->CalcClickSampleIdx(cursorPos);
+        mouseDownMemIdx = memProfilerWidget->CalcClickSampleIdx(cursorPos);
 		if (mouseDownMemIdx >= 0 && mouseDownMemIdx < cMaxSampleNum)
 		{
             mouseDownPoint = cursorPos;
-			CombineSameFileInfo(luaMemNodeChartList[mouseDownMemIdx].infoList);
-			luaTotalMemSize = luaMemNodeChartList[mouseDownMemIdx].totalSize;
+			CombineSameFileInfo(tempLuaMemNodeChartList[mouseDownMemIdx].infoList);
+			luaTotalMemSize = tempLuaMemNodeChartList[mouseDownMemIdx].totalSize;
 			memTreeView->RequestTreeRefresh();
 		}
-        
-        memProfilerWidget->SetMouseMovePoint(mouseDownPoint);
 
 		return FReply::Handled();
 	}));
@@ -513,10 +514,10 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
         int sampleIdx = memProfilerWidget->CalcHoverSampleIdx(cursorPos);
         static float lastToolTipVal = 0.0f;
         
-        if (sampleIdx >= 0 && lastToolTipVal != luaMemNodeChartList[sampleIdx].totalSize)
+        if (sampleIdx >= 0 && lastToolTipVal != tempLuaMemNodeChartList[sampleIdx].totalSize)
         {
-            memProfilerWidget->SetToolTipVal(luaMemNodeChartList[sampleIdx].totalSize);
-            lastToolTipVal = luaMemNodeChartList[sampleIdx].totalSize;
+            memProfilerWidget->SetToolTipVal(tempLuaMemNodeChartList[sampleIdx].totalSize);
+            lastToolTipVal = tempLuaMemNodeChartList[sampleIdx].totalSize;
         }
         else if (sampleIdx < 0)
         {
@@ -530,8 +531,8 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
             if (sampleIdx >= 0 && sampleIdx < cMaxSampleNum)
             {
                 mouseUpPoint = cursorPos;
-                CombineSameFileInfo(luaMemNodeChartList[sampleIdx].infoList);
-                luaTotalMemSize = luaMemNodeChartList[sampleIdx].totalSize;
+                CombineSameFileInfo(tempLuaMemNodeChartList[sampleIdx].infoList);
+                luaTotalMemSize = tempLuaMemNodeChartList[sampleIdx].totalSize;
                 memTreeView->RequestTreeRefresh();
             }
         }
@@ -1464,6 +1465,7 @@ int SProfilerWidget::CalcClickSampleIdx(const FVector2D cursorPos)
 	for (int32 i = 0; i< m_cSliceCount; i++)
 	{
 		int interval = m_arraylinePath[i].X - cursorPos.X;
+        UE_LOG(LogTemp, Warning, TEXT("memChartValArray m_arrayVal id : %d data : %.3f"), i, m_arrayVal[i]);
 		if (interval > (-m_pointInterval / 2) && interval < (m_pointInterval / 2))
 		{
 			m_clickedPoint = m_arraylinePath[i];

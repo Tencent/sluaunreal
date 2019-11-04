@@ -126,6 +126,8 @@ private:
     SluaProfiler tmpProfiler;
     /* holding all of the memory node which are showed on Profiler chart */
     MemNodeInfoList luaMemNodeChartList;
+    /* refresh with the chart line, when mouse clicks down, it'll get point from this array */
+    MemNodeInfoList tempLuaMemNodeChartList;
     ShownMemInfoList shownFileInfo;
     /* store the file name as the parent item in memory treeview */
     ShownMemInfoList shownParentFileName;

@@ -17,10 +17,10 @@
 #include "ArrayWriter.h"
 #include "ArrayReader.h"
 #include "LuaMemoryProfile.h"
+#include "GenericPlatform/GenericPlatformMath.h"
 #include "luasocket/auxiliar.h"
 #include "luasocket/buffer.h"
 #include "lua/lua.hpp"
-#include <sys/ioctl.h>
 
 #if PLATFORM_WINDOWS
 #ifdef TEXT
@@ -28,6 +28,12 @@
 #endif
 #endif
 #include "luasocket/tcp.h"
+
+#if PLATFORM_WINDOWS
+#include <winsock2.h>
+#else
+#include <sys/ioctl.h>
+#endif
 
 #ifdef ENABLE_PROFILER
 namespace NS_SLUA {
@@ -84,7 +90,11 @@ namespace NS_SLUA {
             while (err == IO_DONE) {
                 size_t count;
                 err = buffer_get(buf, &data, &count);
+				#if PLATFORM_WINDOWS
+				count = min(count, wanted - total);
+				#else
                 count = MIN(count, wanted - total);
+				#endif
                 buffer_skip(buf, count);
                 total += count;
                 if(err == IO_DONE)
@@ -105,7 +115,7 @@ namespace NS_SLUA {
         void memoryGC(lua_State* L) {
             if(!tcpSocket) return;
             
-            int event;
+            int event = 0;
             int wantedSize = 4;
             
             FArrayReader messageReader = FArrayReader(true);
@@ -126,23 +136,17 @@ namespace NS_SLUA {
         }
     
     bool checkSocketRead() {
-        int nread = 0;
-        int result = ioctl(0, FIONREAD, &nread);
+		int result;
+		u_long nread = 0;
+		t_socket fd = tcpSocket->sock;
+		
+#	if PLATFORM_WINDOWS
+		result = ioctlsocket(fd, FIONREAD, &nread);
+#else
+		result = ioctl(fd, FIONREAD, &nread);
+#endif
         
         return result == 0 && nread > 0;
-        
-        if(result == 0 && nread > 0)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("After send message gc success %d, %d"), result, nread);
-            return true;
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("After send message gc no msg %d, %d"), result, nread);
-        }
-        
-        return false;
-        
     }
 
         
@@ -307,11 +311,7 @@ namespace NS_SLUA {
             takeMemorySample(NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK, memoryInfoList);
             takeSample(NS_SLUA::ProfilerHookEvent::PHE_TICK, -1, "", "");
             
-            if(checkSocketRead()) {
-                 memoryGC(L);
-            }
-            
-//            memoryGC(L);
+            if(checkSocketRead()) memoryGC(L);
 		}
 		ignoreHook = false;
 	}

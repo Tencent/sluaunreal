@@ -406,6 +406,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 	SAssignNew(memProfilerWidget, SProfilerWidget);
 
     static int mouseDownMemIdx = -1;
+    static int mouseUpMemIdx = -1;
 	static bool isMouseButtonDown = false;
 	static bool isMemMouseButtonDown = false;
 	cpuProfilerWidget->SetOnMouseButtonDown(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
@@ -538,6 +539,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
             if (sampleIdx >= 0 && sampleIdx < cMaxSampleNum)
             {
                 mouseUpPoint = cursorPos;
+                mouseUpMemIdx = sampleIdx;
                 CombineSameFileInfo(tempLuaMemNodeChartList[sampleIdx].infoList);
                 luaTotalMemSize = tempLuaMemNodeChartList[sampleIdx].totalSize;
                 memTreeView->RequestTreeRefresh();
@@ -555,7 +557,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
             && mouseDownMemIdx >= 0 && mouseDownMemIdx < cMaxSampleNum)
         {
             memProfilerWidget->SetMouseMovePoint(mouseDownPoint);
-            CalcPointMemdiff(mouseDownMemIdx);
+            CalcPointMemdiff(mouseDownMemIdx, mouseUpMemIdx);
             memTreeView->RequestTreeRefresh();
         }
         
@@ -1250,12 +1252,21 @@ void SProfilerInspector::SortShownInfo()
     SortMemInfo(shownFileInfo, 0, shownFileInfo.Num()-1);
 }
 
-void SProfilerInspector::CalcPointMemdiff(int arrayIndex)
+void SProfilerInspector::CalcPointMemdiff(int beginIndex, int endIndex)
 {
+    // Always use new record of memory as the compareing data;
+    if(beginIndex > endIndex) {
+        int temp = beginIndex;
+        beginIndex = endIndex;
+        endIndex = temp;
+        
+        CombineSameFileInfo(tempLuaMemNodeChartList[endIndex].infoList);
+    }
+    
     // initialize the difference in shownFileInfo to avoid the consequence that the item did not have the file record but the difference is 0
     for(auto &info : shownFileInfo) info->difference = info->size;
 
-    for(auto &info : tempLuaMemNodeChartList[arrayIndex].infoList)
+    for(auto &info : tempLuaMemNodeChartList[beginIndex].infoList)
     {
         FString fileHint = info.hint;
 

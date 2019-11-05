@@ -151,7 +151,7 @@ private:
     void OnClearBtnClicked();
     void SortProfiler(SluaProfiler &shownRootProfiler);
     void SortShownInfo();
-    void CalcPointMemdiff(int arrayIndex);
+    void CalcPointMemdiff(int beginIndex, int endIndex);
     void CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInfoList);
     void CombineSameFileInfo(MemFileInfoList& infoList);
     int ContainsFile(FString& fileName, ShownMemInfoList &list);

@@ -127,7 +127,7 @@ namespace NS_SLUA {
                 int nowMemSize;
                 int originMemSize = lua_gc(L, LUA_GCCOUNT, 0);
                 
-                lua_gc(L, LUA_GCCOLLECT, 128);
+                lua_gc(L, LUA_GCCOLLECT, 0);
                 nowMemSize = lua_gc(L, LUA_GCCOUNT, 0);
                 Log::Log(("After GC , lua free %d KB"), originMemSize - nowMemSize);
             }

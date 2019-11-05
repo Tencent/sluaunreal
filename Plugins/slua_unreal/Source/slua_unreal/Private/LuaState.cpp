@@ -528,7 +528,7 @@ namespace NS_SLUA {
 		// lua_gc can be call async in bg thread in some isolate position
 		// but this position equivalent to main thread
 		// we just try and find some proper async position
-		if (enableMultiThreadGC && L) lua_gc(L, LUA_GCCOLLECT, 128);
+		if (enableMultiThreadGC && L) lua_gc(L, LUA_GCSTEP, 128);
 	}
 #if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
 	void LuaState::OnUObjectArrayShutdown() {

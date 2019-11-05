@@ -71,8 +71,7 @@ namespace NS_SLUA {
                 buf->last = got;
             }
             *count = buf->last - buf->first;
-            
-            for(int i = 0; i < *count; i++) messageReader.Insert((uint8)(buf->data[i] + buf->first) , i);
+            messageReader.Insert((uint8 *)(buf->data + buf->first), *count, buf->first);
             return err;
         }
         

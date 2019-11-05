@@ -64,6 +64,7 @@ SProfilerInspector::~SProfilerInspector()
 	tmpRootProfiler.Empty();
 	tmpProfiler.Empty();
 	luaMemNodeChartList.Empty();
+    tempLuaMemNodeChartList.Empty();
 }
 
 void SProfilerInspector::StartChartRolling()
@@ -352,9 +353,14 @@ void SProfilerInspector::OnClearBtnClicked()
 	memProfilerWidget->ClearClickedPoint();
 	
 	luaMemNodeChartList.Empty();
+    tempLuaMemNodeChartList.Empty();
 	shownFileInfo.Empty();
     shownParentFileName.Empty();
 	initLuaMemChartList();
+    
+    luaTotalMemSize = 0.0f;
+    maxLuaMemory = 0.0f;
+    avgLuaMemory = 0.0f;
 	
 	for (int sampleIdx = 0; sampleIdx<sampleNum; sampleIdx++)
 	{
@@ -545,7 +551,8 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 	memProfilerWidget->SetOnMouseButtonUp(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
         isMemMouseButtonUp = true;
         
-        if (mouseUpPoint.X != mouseDownPoint.X)
+        if (mouseUpPoint.X != mouseDownPoint.X
+            && mouseDownMemIdx >= 0 && mouseDownMemIdx < cMaxSampleNum)
         {
             memProfilerWidget->SetMouseMovePoint(mouseDownPoint);
             CalcPointMemdiff(mouseDownMemIdx);
@@ -1677,7 +1684,10 @@ int32 SProfilerWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
                                     FLinearColor::White
                                     );
         
-        if(m_clickedPoint.X != -1.0f && m_mouseDownPoint.X != -1.0f && m_mouseDownPoint.X != m_clickedPoint.X)
+        float chartMaxPosition = (m_arraylinePath.Num() * 5 + m_cStdLeftPosition) * (m_widgetWidth / m_cStdWidth);
+        if(m_mouseDownPoint.X != m_clickedPoint.X
+           &&m_clickedPoint.X != -1.0f && m_mouseDownPoint.X != -1.0f
+           && m_clickedPoint.X <= chartMaxPosition && m_mouseDownPoint.X <= chartMaxPosition)
         {
             // draw the selected area between the position from mouse up and down
             FLinearColor boxColor;

@@ -996,49 +996,61 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateRowForList(TSharedPtr<Functi
 
 TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<FileMemInfo> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
+    FText difference;
+    FLinearColor linearColor;
+    
+    if(Item->lineNumber.Equals("-1", ESearchCase::CaseSensitive))
+        difference = FText::FromString("");
+    else
+        difference = FText::FromString(ChooseMemoryUnit(Item->difference / 1024.0));
+    
+    if (Item->difference > 0) {
+        linearColor = FLinearColor(1, 0, 0, 1);
+    } else if (Item->difference < 0) {
+        linearColor = FLinearColor(0, 1, 0, 1);
+    } else {
+        linearColor = FLinearColor(1, 1, 1, 1);
+    }
+    
 	return
 	SNew(STableRow<TSharedPtr<FString>>, OwnerTable)
 	.Padding(2.0f)
 	[
-	 SNew(SHeaderRow)
-	 + SHeaderRow::Column("Overview").DefaultLabel(TAttribute<FText>::Create([=]() {
-        if (!Item->hint.IsEmpty())
-        {
-            FString fileNameInfo;
-            
-            if(Item->lineNumber.Equals("-1", ESearchCase::CaseSensitive))
-                fileNameInfo = Item->hint;
-            else
-                fileNameInfo = Item->hint + ":" + Item->lineNumber;
-			return FText::FromString(fileNameInfo);
-        }
-		return FText::FromString("");
-	}))
-	 .FixedWidth(fixRowWidth)
+         SNew(SHeaderRow)
+         + SHeaderRow::Column("Overview").DefaultLabel(TAttribute<FText>::Create([=]() {
+            if (!Item->hint.IsEmpty())
+            {
+                FString fileNameInfo;
+                
+                if(Item->lineNumber.Equals("-1", ESearchCase::CaseSensitive))
+                    fileNameInfo = Item->hint;
+                else
+                    fileNameInfo = Item->hint + ":" + Item->lineNumber;
+                return FText::FromString(fileNameInfo);
+            }
+            return FText::FromString("");
+        }))
+         .FixedWidth(fixRowWidth)
 
-	 + SHeaderRow::Column("Memory Size").DefaultLabel(TAttribute<FText>::Create([=]() {
-		if (Item->size >= 0)
-		{
-            if(Item->lineNumber.Equals("-1", ESearchCase::CaseSensitive))
-                return FText::FromString("");
-            else
-                return FText::FromString(ChooseMemoryUnit(Item->size / 1024.0));
-		}
-		return FText::FromString("");
-	}))
-	 .FixedWidth(fixRowWidth)
+         + SHeaderRow::Column("Memory Size").DefaultLabel(TAttribute<FText>::Create([=]() {
+            if (Item->size >= 0)
+            {
+                if(Item->lineNumber.Equals("-1", ESearchCase::CaseSensitive))
+                    return FText::FromString("");
+                else
+                    return FText::FromString(ChooseMemoryUnit(Item->size / 1024.0));
+            }
+            return FText::FromString("");
+        }))
+         .FixedWidth(fixRowWidth)
      
-     + SHeaderRow::Column("Compare Two Point").DefaultLabel(TAttribute<FText>::Create([=]() {
-        if (isMemMouseButtonUp && mouseUpPoint.X != mouseDownPoint.X)
-        {
-            if(Item->lineNumber.Equals("-1", ESearchCase::CaseSensitive))
-                return FText::FromString("");
-            else
-                return FText::FromString(ChooseMemoryUnit(Item->difference / 1024.0));
-        }
-        return FText::FromString("");
-    }))
-     .FixedWidth(fixRowWidth)
+         + SHeaderRow::Column("Compare Two Point")
+         .FixedWidth(fixRowWidth)
+         [
+              SNew(STextBlock)
+              .Text(difference)
+              .ColorAndOpacity(linearColor)
+         ]
 	 ];
 }
 
@@ -1517,13 +1529,13 @@ int SProfilerWidget::CalcClickSampleIdx(FVector2D &cursorPos)
 		}
 	}
 
-    // check if the point is behind the chart
+    // check if the point is in front of the chart
     if(m_pathArrayNum != 0 && m_arraylinePath[m_arraylinePath.Num() - m_pathArrayNum].X > cursorPos.X)
     {
         cursorPos = m_arraylinePath[m_arraylinePath.Num() - m_pathArrayNum];
         return m_arraylinePath.Num() - m_pathArrayNum;
     }
-    // check if the point is after the chart
+    // check if the point is behind the chart
     else if(m_pathArrayNum != 0 && m_arraylinePath[m_arraylinePath.Num() - 1].X < cursorPos.X){
         cursorPos = m_arraylinePath[m_arraylinePath.Num() - 1];
         return m_arraylinePath.Num() - 1;
@@ -1763,8 +1775,6 @@ int32 SProfilerWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
                                          true,
                                          2.0f
                                          );
-        } else {
-            UE_LOG(LogTemp, Warning, TEXT(""));
         }
 	}
 

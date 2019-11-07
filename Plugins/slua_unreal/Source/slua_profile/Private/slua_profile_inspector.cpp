@@ -419,6 +419,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 		// calc sampleIdx
 		FVector2D cursorPos = inventoryGeometry.AbsoluteToLocal(mouseEvent.GetScreenSpacePosition());
 		int sampleIdx = cpuProfilerWidget->CalcClickSampleIdx(cursorPos);
+        cpuProfilerWidget->SetMouseClickPoint(cursorPos);
 		sampleIdx = lastArrayOffset + sampleIdx;
 		if (sampleIdx >= cMaxSampleNum)
 		{
@@ -466,6 +467,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 		{
 			// calc sampleIdx
 			sampleIdx = cpuProfilerWidget->CalcClickSampleIdx(cursorPos);
+            cpuProfilerWidget->SetMouseClickPoint(cursorPos);
 			sampleIdx = lastArrayOffset + sampleIdx;
 			if (sampleIdx >= cMaxSampleNum)
 			{
@@ -504,6 +506,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 		// calc sampleIdx
 		FVector2D cursorPos = inventoryGeometry.AbsoluteToLocal(mouseEvent.GetScreenSpacePosition());
         mouseDownMemIdx = memProfilerWidget->CalcClickSampleIdx(cursorPos);
+        memProfilerWidget->SetMouseClickPoint(cursorPos);
 		if (mouseDownMemIdx >= 0 && mouseDownMemIdx < cMaxSampleNum)
 		{
             mouseDownPoint = cursorPos;
@@ -538,8 +541,9 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
             sampleIdx = memProfilerWidget->CalcClickSampleIdx(cursorPos);
             if (sampleIdx >= 0 && sampleIdx < cMaxSampleNum)
             {
-                mouseUpPoint = cursorPos;
                 mouseUpMemIdx = sampleIdx;
+                mouseUpPoint = cursorPos;
+                memProfilerWidget->SetMouseMovePoint(mouseUpPoint);
                 CombineSameFileInfo(tempLuaMemNodeChartList[sampleIdx].infoList);
                 luaTotalMemSize = tempLuaMemNodeChartList[sampleIdx].totalSize;
                 memTreeView->RequestTreeRefresh();
@@ -556,7 +560,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
         if (mouseUpPoint.X != mouseDownPoint.X
             && mouseDownMemIdx >= 0 && mouseDownMemIdx < cMaxSampleNum)
         {
-            memProfilerWidget->SetMouseMovePoint(mouseDownPoint);
+            memProfilerWidget->SetMouseMovePoint(mouseUpPoint);
             CalcPointMemdiff(mouseDownMemIdx, mouseUpMemIdx);
             memTreeView->RequestTreeRefresh();
         }
@@ -1355,10 +1359,16 @@ void SProfilerWidget::SetMouseMovePoint(FVector2D mouseDownPoint)
     m_mouseDownPoint = mouseDownPoint;
 }
 
+void SProfilerWidget::SetMouseClickPoint(FVector2D mouseClickPoint)
+{
+    m_clickedPoint = mouseClickPoint;
+}
+
 void SProfilerWidget::Construct(const FArguments& InArgs)
 {
 	m_arraylinePath.SetNumUninitialized(m_cSliceCount);
     m_memStdScale = 1;
+    m_pathArrayNum = 0;
     m_maxMemSize = 0.0f;
 	m_maxCostTime = 0.0f;
 	m_pointInterval = 0.0f;
@@ -1400,6 +1410,7 @@ FVector2D SProfilerWidget::ComputeDesiredSize(float size) const
 void SProfilerWidget::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
 {
 	m_widgetWidth = AllottedGeometry.Size.X;
+    m_pathArrayNum = 0;
 
 	if (m_arrayVal.Num() == 0)
 	{
@@ -1448,7 +1459,7 @@ void SProfilerWidget::Tick(const FGeometry& AllottedGeometry, const double InCur
 		else if(m_stdLineVisibility.Get() != EVisibility::Visible)
 		{
 			float yValue = 0;
-
+            
 			if (m_maxCostTime != 0.0f)
 			{
 				yValue = cMaxViewHeight * (m_arrayVal[i] / (1024 * m_memStdScale));
@@ -1460,6 +1471,7 @@ void SProfilerWidget::Tick(const FGeometry& AllottedGeometry, const double InCur
 			}
 			else
 			{
+                if(m_pathArrayNum < m_cSliceCount && cMaxViewHeight - yValue != -1.0f)m_pathArrayNum ++;
 				FVector2D NewPoint((5 * i + m_cStdLeftPosition) * (m_widgetWidth / m_cStdWidth), cMaxViewHeight - yValue);
 				m_arraylinePath[i] = NewPoint;
 			}
@@ -1493,19 +1505,33 @@ void SProfilerWidget::ClearClickedPoint()
     m_mouseDownPoint.X = -1.0f;
 }
 
-int SProfilerWidget::CalcClickSampleIdx(const FVector2D cursorPos)
+int SProfilerWidget::CalcClickSampleIdx(FVector2D &cursorPos)
 {
 	for (int32 i = 0; i< m_cSliceCount; i++)
 	{
 		int interval = m_arraylinePath[i].X - cursorPos.X;
 		if (interval > (-m_pointInterval / 2) && interval < (m_pointInterval / 2))
 		{
-			m_clickedPoint = m_arraylinePath[i];
+			cursorPos = m_arraylinePath[i];
 			return i;
 		}
 	}
 
-	return -1;
+    // check if the point is behind the chart
+    if(m_pathArrayNum != 0 && m_arraylinePath[m_arraylinePath.Num() - m_pathArrayNum].X > cursorPos.X)
+    {
+        cursorPos = m_arraylinePath[m_arraylinePath.Num() - m_pathArrayNum];
+        return m_arraylinePath.Num() - m_pathArrayNum;
+    }
+    // check if the point is after the chart
+    else if(m_pathArrayNum != 0 && m_arraylinePath[m_arraylinePath.Num() - 1].X < cursorPos.X){
+        cursorPos = m_arraylinePath[m_arraylinePath.Num() - 1];
+        return m_arraylinePath.Num() - 1;
+    }
+    // no chart in the profiler
+    cursorPos.X = -1.0f;
+    cursorPos.Y = -1.0f;
+    return -1;
 }
 
 void SProfilerWidget::CalcMemStdText(float &maxMemorySize)
@@ -1737,6 +1763,8 @@ int32 SProfilerWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
                                          true,
                                          2.0f
                                          );
+        } else {
+            UE_LOG(LogTemp, Warning, TEXT(""));
         }
 	}
 

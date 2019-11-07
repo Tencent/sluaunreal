@@ -174,8 +174,9 @@ public:
     /** Constructs this widget with InArgs */
     void Construct(const FArguments& InArgs);
     void SetMouseMovePoint(FVector2D mouseDownPoint);
+    void SetMouseClickPoint(FVector2D mouseClickPoint);
     void SetArrayValue(TArray<float> &chartValArray, float maxCostTime, float maxMemSize);
-    int CalcClickSampleIdx(const FVector2D cursorPos);
+    int CalcClickSampleIdx(FVector2D &cursorPos);
     int CalcHoverSampleIdx(const FVector2D cursorPos);
     void SetToolTipVal(float val);
     void ClearClickedPoint();
@@ -210,6 +211,7 @@ private:
     float m_pointInterval;
     float m_toolTipVal;
     int32 m_memStdScale;
+    int32 m_pathArrayNum;
     FVector2D m_clickedPoint;
     FVector2D m_mouseDownPoint;
     const float m_cStdHighVal = cMaxViewHeight;

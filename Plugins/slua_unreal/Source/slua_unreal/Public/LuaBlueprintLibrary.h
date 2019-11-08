@@ -30,6 +30,8 @@ public:
 	FLuaBPVar() {}
 
 	NS_SLUA::LuaVar value;
+
+	static int checkValue(NS_SLUA::lua_State* L, UStructProperty* p, uint8* params, int i);
 };
 
 UCLASS()

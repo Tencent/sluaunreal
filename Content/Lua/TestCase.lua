@@ -7,6 +7,8 @@ local han = t.OnTestAAA:Add(function(s)
     RemoveAAA()
 end)
 
+t:TestLuaCallback(function() print("callback bpvar") end)
+
 function RemoveAAA()
     print("AAAAAAAAAAAAAAAAA")
     t.OnTestAAA:Remove(han)

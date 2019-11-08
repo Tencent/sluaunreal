@@ -197,5 +197,11 @@ public:
 	{
 		OnTestAAA.Broadcast(str);
 	}
+
+	UFUNCTION()
+	void TestLuaCallback(FLuaBPVar callback) {
+		if (callback.value.isFunction())
+			callback.value.call();
+	}
     
 };

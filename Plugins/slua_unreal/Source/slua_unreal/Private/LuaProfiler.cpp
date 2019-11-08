@@ -15,9 +15,12 @@
 #include "Log.h"
 #include "LuaState.h"
 #include "ArrayWriter.h"
+#include "ArrayReader.h"
 #include "LuaMemoryProfile.h"
+#include "GenericPlatform/GenericPlatformMath.h"
 #include "luasocket/auxiliar.h"
 #include "luasocket/buffer.h"
+#include "lua/lua.hpp"
 
 #if PLATFORM_WINDOWS
 #ifdef TEXT
@@ -25,6 +28,12 @@
 #endif
 #endif
 #include "luasocket/tcp.h"
+
+#if PLATFORM_WINDOWS
+#include <winsock2.h>
+#else
+#include <sys/ioctl.h>
+#endif
 
 #ifdef ENABLE_PROFILER
 namespace NS_SLUA {
@@ -49,7 +58,96 @@ namespace NS_SLUA {
 		int64 profileTotalCost = 0;
 		p_tcp tcpSocket = nullptr;
 		const char* ChunkName = "[ProfilerScript]";
+        
+        // copy code from buffer.cpp in luasocket
+        int buffer_get(p_buffer buf, size_t *count, FArrayReader& messageReader) {
+            int err = IO_DONE;
+            p_io io = buf->io;
+            p_timeout tm = buf->tm;
+            if (buffer_isempty(buf)) {
+                size_t got;
+                err = io->recv(io->ctx, buf->data, BUF_SIZE, &got, tm);
+                buf->first = 0;
+                buf->last = got;
+            }
+            *count = buf->last - buf->first;
+            messageReader.Insert((uint8 *)(buf->data + buf->first), *count, buf->first);
+            return err;
+        }
+        
+        // copy code from buffer.cpp in luasocket
+        void buffer_skip(p_buffer buf, size_t count) {
+            buf->received += count;
+            buf->first += count;
+            if (buffer_isempty(buf))
+                buf->first = buf->last = 0;
+        }
+        
+        // copy code from buffer.cpp in luasocket
+        int recvraw(p_buffer buf, size_t wanted, FArrayReader& messageReader) {
+            int err = IO_DONE;
+            size_t total = 0;
+            while (err == IO_DONE) {
+                size_t count;
+                err = buffer_get(buf, &count, messageReader);
+				#if PLATFORM_WINDOWS
+				count = min(count, wanted - total);
+				#else
+                count = MIN(count, wanted - total);
+				#endif
+                buffer_skip(buf, count);
+                total += count;
+                if(err == IO_DONE)
+                if (total >= wanted) break;
+            }
+            return err;
+        }
+        
+        bool receieveGCMessage(size_t wanted) {
+            if(!tcpSocket) return false;
+            
+            int event = 0;
+            FArrayReader messageReader = FArrayReader(true);
+            messageReader.SetNumUninitialized(sizeof(int));
+            
+            int err = recvraw(&tcpSocket->buf, wanted, messageReader);
+            if(err != IO_DONE) {
+                return false;
+            }
+            
+            messageReader << event;
+            return event == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_GC;
+        }
+        
+        void memoryGC(lua_State* L) {
+            if(!tcpSocket) return;
+            
+            int wantedSize = 4;
+            if(L && receieveGCMessage(wantedSize)) {
+                int nowMemSize;
+                int originMemSize = lua_gc(L, LUA_GCCOUNT, 0);
+                
+                lua_gc(L, LUA_GCCOLLECT, 0);
+                nowMemSize = lua_gc(L, LUA_GCCOUNT, 0);
+                Log::Log(("After GC , lua free %d KB"), originMemSize - nowMemSize);
+            }
+        }
+    
+    bool checkSocketRead() {
+		int result;
+		u_long nread = 0;
+		t_socket fd = tcpSocket->sock;
+		
+        #if PLATFORM_WINDOWS
+		result = ioctlsocket(fd, FIONREAD, &nread);
+        #else
+		result = ioctl(fd, FIONREAD, &nread);
+        #endif
+        
+        return result == 0 && nread > 0;
+    }
 
+        
 		void makeProfilePackage(FArrayWriter& messageWriter,
 			int hookEvent, int64 time,
 			int lineDefined, const char* funcName,
@@ -87,25 +185,25 @@ namespace NS_SLUA {
             messageWriter << packageSize;
             
         }
-
-		// copy code from buffer.cpp in luasocket
-		#define STEPSIZE 8192
-		int sendraw(p_buffer buf, const char* data, size_t count, size_t * sent) {
-			p_io io = buf->io;
-			if (!io) return IO_CLOSED;
-			p_timeout tm = buf->tm;
-			size_t total = 0;
-			int err = IO_DONE;
-			while (total < count && err == IO_DONE) {
-				size_t done = 0;
-				size_t step = (count - total <= STEPSIZE) ? count - total : STEPSIZE;
-				err = io->send(io->ctx, data + total, step, &done, tm);
-				total += done;
-			}
-			*sent = total;
-			buf->sent += total;
-			return err;
-		}
+        
+        // copy code from buffer.cpp in luasocket
+        #define STEPSIZE 8192
+        int sendraw(p_buffer buf, const char* data, size_t count, size_t * sent) {
+            p_io io = buf->io;
+            if (!io) return IO_CLOSED;
+            p_timeout tm = buf->tm;
+            size_t total = 0;
+            int err = IO_DONE;
+            while (total < count && err == IO_DONE) {
+                size_t done = 0;
+                size_t step = (count - total <= STEPSIZE) ? count - total : STEPSIZE;
+                err = io->send(io->ctx, data + total, step, &done, tm);
+                total += done;
+            }
+            *sent = total;
+            buf->sent += total;
+            return err;
+        }
 
 		void sendMessage(FArrayWriter& msg) {
 			if (!tcpSocket) return;
@@ -145,14 +243,14 @@ namespace NS_SLUA {
 			if (strstr(ar->short_src, ChunkName)) 
 				return;
 
-			takeSample(ar->event,ar->linedefined, ar->name ? ar->name : "", ar->short_src);
+            takeSample(ar->event,ar->linedefined, ar->name ? ar->name : "", ar->short_src);
 		}
 
 		int changeHookState(lua_State* L) {
 			HookState state = (HookState)lua_tointeger(L, 1);
 			currentHookState = state;
 			if (state == HookState::UNHOOK) {
-                LuaMemoryProfile::stop();
+//                LuaMemoryProfile::stop();
 				lua_sethook(L, nullptr, 0, 0);
 			}
 			else if (state == HookState::HOOKED) {
@@ -192,7 +290,7 @@ namespace NS_SLUA {
 		ensure(lua_gettop(L) == 0);
 	}
 
-	void LuaProfiler::tick()
+	void LuaProfiler::tick(lua_State* L)
 	{
 		ignoreHook = true;
 		if (currentHookState == HookState::UNHOOK) {
@@ -208,11 +306,13 @@ namespace NS_SLUA {
                 memoryInfoList.Add(memInfo.Value);
             }
             
+            if(checkSocketRead()) memoryGC(L);
             takeMemorySample(NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK, memoryInfoList);
-			takeSample(NS_SLUA::ProfilerHookEvent::PHE_TICK, -1, "", "");
+            takeSample(NS_SLUA::ProfilerHookEvent::PHE_TICK, -1, "", "");
 		}
 		ignoreHook = false;
 	}
+    
 
 	LuaProfiler::LuaProfiler(const char* funcName)
 	{
@@ -221,7 +321,7 @@ namespace NS_SLUA {
 
 	LuaProfiler::~LuaProfiler()
 	{
-		takeSample(ProfilerHookEvent::PHE_RETURN, 0, "", "");
+        takeSample(ProfilerHookEvent::PHE_RETURN, 0, "", "");
 	}
 
 }

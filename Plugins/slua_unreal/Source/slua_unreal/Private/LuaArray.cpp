@@ -91,11 +91,13 @@ namespace NS_SLUA {
 
     void LuaArray::AddReferencedObjects( FReferenceCollector& Collector )
     {
-        Collector.AddReferencedObject(inner);
+        if (inner) Collector.AddReferencedObject(inner);
 		if (prop) Collector.AddReferencedObject(prop);
 		if (propObj) Collector.AddReferencedObject(propObj);
-        // if empty
-        if(num()==0) return;
+
+        // if empty or owner object had been collected
+		// AddReferencedObject will auto null propObj
+        if(num()==0 || (!shouldFree && !propObj)) return;
 		for (int n = num() - 1; n >= 0; n--) {
             void* ptr = getRawPtr(n);
 			// if AddReferencedObject collect obj

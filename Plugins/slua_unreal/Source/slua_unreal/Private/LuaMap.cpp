@@ -109,13 +109,14 @@ namespace NS_SLUA {
 
 	void LuaMap::AddReferencedObjects( FReferenceCollector& Collector )
     {
-        Collector.AddReferencedObject(keyProp);
-        Collector.AddReferencedObject(valueProp);
+        if(keyProp) Collector.AddReferencedObject(keyProp);
+        if(valueProp) Collector.AddReferencedObject(valueProp);
 		if(prop) Collector.AddReferencedObject(prop);
 		if(propObj) Collector.AddReferencedObject(propObj);
 
-		// if is empty 
-		if(num()<=0) return;
+		// if empty or owner object had been collected
+		// AddReferencedObject will auto null propObj
+		if(num()<=0 || (!shouldFree && !propObj)) return;
 		bool rehash = false;
 		// for each valid entry of map
 		for (int index = helper.GetMaxIndex()-1;index>=0; index--) {

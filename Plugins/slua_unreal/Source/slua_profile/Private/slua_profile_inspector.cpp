@@ -1529,13 +1529,13 @@ int SProfilerWidget::CalcClickSampleIdx(FVector2D &cursorPos)
 		}
 	}
 
-    // check if the point is behind the chart
+    // check if the point is in front of the chart
     if(m_pathArrayNum != 0 && m_arraylinePath[m_arraylinePath.Num() - m_pathArrayNum].X > cursorPos.X)
     {
         cursorPos = m_arraylinePath[m_arraylinePath.Num() - m_pathArrayNum];
         return m_arraylinePath.Num() - m_pathArrayNum;
     }
-    // check if the point is after the chart
+    // check if the point is behind the chart
     else if(m_pathArrayNum != 0 && m_arraylinePath[m_arraylinePath.Num() - 1].X < cursorPos.X){
         cursorPos = m_arraylinePath[m_arraylinePath.Num() - 1];
         return m_arraylinePath.Num() - 1;
@@ -1775,8 +1775,6 @@ int32 SProfilerWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
                                          true,
                                          2.0f
                                          );
-        } else {
-            UE_LOG(LogTemp, Warning, TEXT(""));
         }
 	}
 

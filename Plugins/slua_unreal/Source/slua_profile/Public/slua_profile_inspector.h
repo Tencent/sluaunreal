@@ -23,6 +23,7 @@
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Notifications/SProgressBar.h"
 #include "Widgets/Views/STreeView.h"
+#include "slua_remote_profile.h"
 #include "slua_unreal/Private/LuaMemoryProfile.h"
 #include "Input/Reply.h"
 
@@ -45,7 +46,10 @@ const int cMaxViewHeight = 200;
 
 struct FileMemInfo {
     FString hint;
+    FString lineNumber;
     float size;
+    // one line memory difference between two point
+    float difference;
 };
 
 struct ProflierMemNode {
@@ -63,7 +67,7 @@ public:
     TSharedRef<class SDockTab> GetSDockTab();
     TSharedRef<ITableRow> OnGenerateMemRowForList(TSharedPtr<FileMemInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
     TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FunctionProfileInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
-    void OnGetMemChildrenForTree(FileMemInfo Item, TArray<FileMemInfo>& OutChildren);
+    void OnGetMemChildrenForTree(TSharedPtr<FileMemInfo> Parent, TArray<TSharedPtr<FileMemInfo>>& OutChildren);
     void OnGetChildrenForTree(TSharedPtr<FunctionProfileInfo> Parent, TArray<TSharedPtr<FunctionProfileInfo>>& OutChildren);
     void StartChartRolling();
     bool GetNeedProfilerCleared() const
@@ -75,9 +79,9 @@ public:
         needProfilerCleared = needClear;
     }
     
+    TSharedPtr<slua::FProfileServer> ProfileServer;
+    
 private:
-    int indexx = 0;
-    int ptrIndex = 0;
     const static int sampleNum = cMaxSampleNum;
     const static int fixRowWidth = 300;
     const static int refreshInterval = 50;
@@ -85,6 +89,7 @@ private:
     
     TSharedPtr<STreeView<TSharedPtr<FunctionProfileInfo>>> treeview;
     TSharedPtr<SListView<TSharedPtr<FileMemInfo>>> listview;
+    TSharedPtr<STreeView<TSharedPtr<FileMemInfo>>> memTreeView;
     TSharedPtr<SCheckBox> profilerCheckBox;
     TSharedPtr<SCheckBox> memProfilerCheckBox;
     TSharedPtr<SProgressBar> profilerBarArray[sampleNum];
@@ -109,6 +114,9 @@ private:
     float avgProfileSamplesCostTime;
     bool hasCleared;
     bool needProfilerCleared;
+    bool isMemMouseButtonUp;
+    FVector2D mouseUpPoint;
+    FVector2D mouseDownPoint;
     
     TArray<SluaProfiler> tmpProfilersArraySamples[sampleNum];
     TArray<SluaProfiler> profilersArraySamples[sampleNum];
@@ -118,7 +126,11 @@ private:
     SluaProfiler tmpProfiler;
     /* holding all of the memory node which are showed on Profiler chart */
     MemNodeInfoList luaMemNodeChartList;
+    /* refresh with the chart line, when mouse clicks down, it'll get point from this array */
+    MemNodeInfoList tempLuaMemNodeChartList;
     ShownMemInfoList shownFileInfo;
+    /* store the file name as the parent item in memory treeview */
+    ShownMemInfoList shownParentFileName;
     
     void initLuaMemChartList();
     bool NeedReBuildInspector();
@@ -139,11 +151,12 @@ private:
     void OnClearBtnClicked();
     void SortProfiler(SluaProfiler &shownRootProfiler);
     void SortShownInfo();
+    void CalcPointMemdiff(int beginIndex, int endIndex);
     void CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInfoList);
     void CombineSameFileInfo(MemFileInfoList& infoList);
-    int ContainsFile(FString& fileName);
+    int ContainsFile(FString& fileName, ShownMemInfoList &list);
     FString ChooseMemoryUnit(float memorySize);
-    FString SplitFlieName(FString filePath);
+    TArray<FString> SplitFlieName(FString filePath);
     
 };
 
@@ -160,9 +173,10 @@ public:
     
     /** Constructs this widget with InArgs */
     void Construct(const FArguments& InArgs);
-    void SetArrayValue(TArray<float> &chartValArray, float maxCostTime);
-    void SetArrayValue(MemNodeInfoList& chartValArray, float maxCostTime);
-    int CalcClickSampleIdx(const FVector2D cursorPos);
+    void SetMouseMovePoint(FVector2D mouseDownPoint);
+    void SetMouseClickPoint(FVector2D mouseClickPoint);
+    void SetArrayValue(TArray<float> &chartValArray, float maxCostTime, float maxMemSize);
+    int CalcClickSampleIdx(FVector2D &cursorPos);
     int CalcHoverSampleIdx(const FVector2D cursorPos);
     void SetToolTipVal(float val);
     void ClearClickedPoint();
@@ -178,22 +192,28 @@ private:
     void DrawStdLine(const FGeometry& AllottedGeometry, FSlateWindowElementList& OutDrawElements, int32 LayerId, float positionY, FString stdStr) const;
     void AddStdLine(float &maxPointValue, float &stdLineValue, FString &stdLineName);
     void CalcStdLine(float &maxCostTime);
+    void CalcMemStdText(float &maxMemorySize);
     
     TArray<FVector2D> m_arraylinePath;
     TArray<float> m_arrayVal;
 
     TArray<float> m_stdPositionY;
     TArray<FString> m_stdStr;
+    TArray<FString> m_stdMemStr;
     TAttribute<EVisibility> m_stdLineVisibility;
     const int32 m_cSliceCount = cMaxSampleNum;
     const float m_cStdWidth = 1300;
     float m_widgetWidth;
     const int32 m_cStdLeftPosition = 30;
     float m_maxCostTime;
+    float m_maxMemSize;
     float m_maxPointHeight;
     float m_pointInterval;
     float m_toolTipVal;
+    int32 m_memStdScale;
+    int32 m_pathArrayNum;
     FVector2D m_clickedPoint;
+    FVector2D m_mouseDownPoint;
     const float m_cStdHighVal = cMaxViewHeight;
 };
 

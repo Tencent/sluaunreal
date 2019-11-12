@@ -24,7 +24,8 @@ namespace NS_SLUA {
 		PHE_CALL = 0,
 		PHE_RETURN = 1,
 		PHE_LINE = 2,
-		PHE_TAILRET = 4
+		PHE_TAILRET = 4,
+        PHE_MEMORY_GC = 5
 	};
 
 	class SLUA_UNREAL_API LuaProfiler
@@ -34,7 +35,7 @@ namespace NS_SLUA {
 		~LuaProfiler();
 		
 		static void init(lua_State* L);
-		static void tick();
+		static void tick(lua_State* L);
 	};
 
 #ifdef ENABLE_PROFILER

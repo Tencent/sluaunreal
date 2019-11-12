@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #include "slua_remote_profile.h"
+#include "slua_profile.h"
 #include "Common/TcpListener.h"
 #include "SharedPointer.h"
 #include "SocketSubsystem.h"
 #include "SluaUtil.h"
 #include "LuaProfiler.h"
-#include "slua_profile.h"
 
 namespace slua
 {
@@ -31,7 +31,7 @@ namespace slua
 	FProfileServer::~FProfileServer()
 	{
 		StopTransport();
-
+        
 		Thread->WaitForCompletion();
 		SafeDelete(Thread);
 	}
@@ -51,6 +51,10 @@ namespace slua
 		Listener->OnConnectionAccepted().BindRaw(this, &FProfileServer::HandleConnectionAccepted);
 		return true;
 	}
+    
+    TArray<TSharedPtr<FProfileConnection>> FProfileServer::GetConnections() {
+        return Connections;
+    }
 
 	uint32 FProfileServer::Run()
 	{
@@ -93,8 +97,7 @@ namespace slua
 				{
 					OnProfileMessageDelegate.ExecuteIfBound(Message);
 				}
-
-				// todo: Multiple mobile profile to support!
+                
 				break;
 			}
 
@@ -133,7 +136,6 @@ namespace slua
 
 		return true;
 	}
-
 
 	FProfileConnection::FProfileConnection(FSocket* InSocket, const FIPv4Endpoint& InRemoteEndpoint)
 		: RemoteEndpoint(InRemoteEndpoint)
@@ -214,8 +216,15 @@ namespace slua
 		return true;
 	}
 
+    FSocket* FProfileConnection::GetSocket()
+    {
+        if(Socket) return Socket;
+        return nullptr;
+    }
+    
 	uint32 FProfileConnection::Run()
 	{
+         
 		while (bRun)
 		{
 			if ((!ReceiveMessages() || Socket->GetConnectionState() == SCS_ConnectionError) && bRun)
@@ -292,7 +301,6 @@ namespace slua
 
                 check(BytesRead == sizeof(uint32));
                 TotalBytesReceived += BytesRead;
-
 				// Setup variables to receive the message
 				MessagesizeData << RecvMessageDataRemaining;
 
@@ -351,7 +359,6 @@ namespace slua
 		FArrayReader& MessageReader = Message.ToSharedRef().Get();
 
 		MessageReader << Event;
-        
         if(Event == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK)
         {
             MessageReader << memoryInfoList;

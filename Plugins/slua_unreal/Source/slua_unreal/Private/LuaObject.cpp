@@ -938,6 +938,10 @@ namespace NS_SLUA {
         ensure(p);
         auto uss = p->Struct;
 
+		// if it's LuaBPVar
+		if (uss->GetName() == "LuaBPVar")
+			return FLuaBPVar::checkValue(L, p, parms, i);
+
 		// skip first char to match type
 		if (LuaObject::matchType(L, i, TCHAR_TO_UTF8(*uss->GetName()),true)) {
 			if (LuaWrapper::checkValue(L, p, uss, parms, i))

@@ -120,6 +120,15 @@ FLuaBPVar ULuaBlueprintLibrary::CreateVarFromObject(UObject* WorldContextObject,
     return FLuaBPVar(ret);
 }
 
+int FLuaBPVar::checkValue(NS_SLUA::lua_State* L, UStructProperty* p, uint8* params, int i)
+{
+	FLuaBPVar ret;
+	ret.value.set(L, i);
+	p->CopyCompleteValue(params, &ret);
+	return 0;
+}
+
+
 namespace {
     using namespace NS_SLUA;
 

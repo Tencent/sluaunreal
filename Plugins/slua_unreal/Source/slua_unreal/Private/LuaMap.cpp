@@ -77,12 +77,11 @@ namespace NS_SLUA {
 		if (buf) {
 			clone(map,kp,vp,buf);
 			createdByBp = frombp;
-			// if map is cloned data, set a flag to free later
-			shouldFree = true;
 		} else {
 			createdByBp = false;
-			shouldFree = false;
 		}
+		// if map is cloned data, set a flag to free later
+		shouldFree = true;
 	} 
 
 	LuaMap::LuaMap(UMapProperty* p, UObject* obj) : 
@@ -110,42 +109,33 @@ namespace NS_SLUA {
 
 	void LuaMap::AddReferencedObjects( FReferenceCollector& Collector )
     {
-		// I noticed this function be called in collect thread
-        // should add a lock, but I don't find any lock code in unreal engine codebase
-        // why?
-		
-        Collector.AddReferencedObject(keyProp);
-        Collector.AddReferencedObject(valueProp);
+        if(keyProp) Collector.AddReferencedObject(keyProp);
+        if(valueProp) Collector.AddReferencedObject(valueProp);
 		if(prop) Collector.AddReferencedObject(prop);
 		if(propObj) Collector.AddReferencedObject(propObj);
 
-		// if is empty 
-		int num = this->num();
-		if(num<=0) return;
-
-		int index = 0;
+		// if empty or owner object had been collected
+		// AddReferencedObject will auto null propObj
+		if(num()<=0 || (!shouldFree && !propObj)) return;
+		bool rehash = false;
 		// for each valid entry of map
-        do {
-			if(num <=0 ) return;
+		for (int index = helper.GetMaxIndex()-1;index>=0; index--) {
 
 			if (helper.IsValidIndex(index)) {
 				auto pairPtr = helper.GetPairPtr(index);
 				auto keyPtr = getKeyPtr(pairPtr);
 				auto valuePtr = getValuePtr(pairPtr);
 
-				bool keyChanged = false;
-				bool valuesChanged = false;
-
-				keyChanged = LuaReference::addRefByProperty(Collector, keyProp, keyPtr, false);
-				valuesChanged = LuaReference::addRefByProperty(Collector, valueProp, valuePtr, false);
-				if(keyChanged) helper.Rehash();
-				
-				index += 1;
-				num -= 1;
-			} else {
-				index += 1;
+				bool keyChanged = LuaReference::addRefByProperty(Collector, keyProp, keyPtr, false);
+				bool valuesChanged = LuaReference::addRefByProperty(Collector, valueProp, valuePtr, false);
+				// if key auto null, we remove pair
+				if (keyChanged || keyChanged) {
+					removeAt(index);
+					rehash = true;
+				}
 			}
-		} while (true);
+		}
+		if (rehash) helper.Rehash();
     }
 
 	uint8* LuaMap::getKeyPtr(uint8* pairPtr) {
@@ -171,7 +161,7 @@ namespace NS_SLUA {
 		checkSlow(Slack >= 0);
 
 		int32 OldNum = num();
-		if(!prop) {
+		if(shouldFree) {
 			if (OldNum) {
 				destructItems(0, OldNum);
 			}
@@ -184,7 +174,7 @@ namespace NS_SLUA {
 	// modified FScriptMapHelper::DestructItems function to add value property offset on value ptr 
 	void LuaMap::destructItems(uint8* PairPtr, uint32 Stride, int32 Index, int32 Count, bool bDestroyKeys, bool bDestroyValues) {
 		// if map is owned by uobject, don't destructItems
-		if(prop) return;
+		if(!shouldFree) return;
 		auto valueOffset = createdByBp ? 0 : helper.MapLayout.ValueOffset;
 		for (; Count; ++Index) {
 			if (helper.IsValidIndex(Index)) {
@@ -253,8 +243,15 @@ namespace NS_SLUA {
 	int LuaMap::__ctor(lua_State* L) {
 		auto keyType = (EPropertyClass)LuaObject::checkValue<int>(L, 1);
 		auto valueType = (EPropertyClass)LuaObject::checkValue<int>(L, 2);
-		auto keyProp = PropertyProto::createProperty(keyType);
-		auto valueProp = PropertyProto::createProperty(valueType);
+		auto cls = LuaObject::checkValueOpt<UClass*>(L, 3, nullptr);
+		auto cls2 = LuaObject::checkValueOpt<UClass*>(L, 4, nullptr);
+		if (keyType == EPropertyClass::Object && !cls)
+			luaL_error(L, "UObject key should have 3rd parameter is UClass");
+		if (valueType == EPropertyClass::Object && !cls2)
+			luaL_error(L, "UObject value should have 4th parameter is UClass");
+
+		auto keyProp = PropertyProto::createProperty({ keyType,cls });
+		auto valueProp = PropertyProto::createProperty({ valueType,cls2 });
 		return push(L, keyProp, valueProp, nullptr);
 	}
 

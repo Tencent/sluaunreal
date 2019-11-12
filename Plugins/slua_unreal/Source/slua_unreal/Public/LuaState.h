@@ -163,7 +163,7 @@ namespace NS_SLUA {
 		const UObjectRefMap& cacheSet() const {
 			return objRefs;
 		}
-
+        
 		void setTickFunction(LuaVar func);
 
 		// add obj to ref, tell Engine don't collect this obj

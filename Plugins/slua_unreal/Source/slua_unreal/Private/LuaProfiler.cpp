@@ -90,11 +90,7 @@ namespace NS_SLUA {
             while (err == IO_DONE) {
                 size_t count;
                 err = buffer_get(buf, &count, messageReader);
-				#if PLATFORM_WINDOWS
-				count = min(count, wanted - total);
-				#else
-                count = MIN(count, wanted - total);
-				#endif
+                count = FGenericPlatformMath::Min(count, wanted - total);
                 buffer_skip(buf, count);
                 total += count;
                 if(err == IO_DONE)

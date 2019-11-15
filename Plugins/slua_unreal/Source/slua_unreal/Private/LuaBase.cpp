@@ -134,15 +134,34 @@ namespace NS_SLUA {
 		func->Script.Insert(code, sizeof(code), 0);
 	}
 
+	LuaBase* checkBase(UObject* obj) {
+		if (auto uit = Cast<ULuaUserWidget>(obj))
+			return uit;
+		else if (auto ait = Cast<ALuaActor>(obj))
+			return ait;
+		else if (auto pit = Cast<ALuaPawn>(obj))
+			return pit;
+		else if (auto cit = Cast<ALuaCharacter>(obj))
+			return cit;
+		else if (auto coit = Cast<ALuaController>(obj))
+			return coit;
+		else if (auto pcit = Cast<ALuaPlayerController>(obj))
+			return pcit;
+		else if (auto acit = Cast<ULuaActorComponent>(obj))
+			return acit;
+		else if (auto gmit = Cast<ALuaGameModeBase>(obj))
+			return gmit;
+		else if (auto hit = Cast<ALuaHUD>(obj))
+			return hit;
+		else
+			return nullptr;
+	}
+
 	DEFINE_FUNCTION(LuaBase::luaOverrideFunc)
 	{
 		UFunction* func = Stack.Node;
 		ensure(func);
-		LuaBase* lb = nullptr;
-		if (auto uit = Cast<ULuaUserWidget>(Stack.Object))
-			lb = uit;
-		else if (auto ait = Cast<ALuaActor>(Stack.Object))
-			lb = ait;
+		LuaBase* lb = checkBase(Stack.Object);
 
 		ensure(lb);
 

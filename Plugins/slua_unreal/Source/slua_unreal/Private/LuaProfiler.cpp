@@ -37,20 +37,20 @@
 
 #ifdef ENABLE_PROFILER
 namespace NS_SLUA {
+    
+    #include "LuaProfiler.inl"
 
-	#include "LuaProfiler.inl"
+    enum class HookState {
+        UNHOOK=0,
+        HOOKED=1,
+    };
 
-	enum class HookState {
-		UNHOOK=0,
-		HOOKED=1,
-	};
+    enum class RunState {
+        DISCONNECT = 0,
+        CONNECTED = 1,
+    };
 
-	enum class RunState {
-		DISCONNECT = 0,
-		CONNECTED = 1,
-	};
-
-	namespace {
+    namespace {
 
 		LuaVar selfProfiler;
 		bool ignoreHook = false;
@@ -294,7 +294,7 @@ namespace NS_SLUA {
             ignoreHook = false;
 			return;
 		}
-        
+    
 		RunState currentRunState = (RunState)selfProfiler.getFromTable<int>("currentRunState");
 		if (currentRunState == RunState::CONNECTED) {
             TArray<LuaMemInfo> memoryInfoList;

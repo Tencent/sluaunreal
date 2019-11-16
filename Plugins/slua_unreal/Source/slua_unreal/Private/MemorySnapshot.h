@@ -19,24 +19,29 @@
 #include "lua/lua.hpp"
 
 namespace NS_SLUA {
-    typedef TMap<void*, FString> MemoryNodeMap;
+    // use lightuserdata as the map key
+    typedef TMap<const void*, FString> MemoryNodeMap;
+    typedef TMap<const void*, MemoryNodeMap> MemoryTypeMap;
     
     class SnapshotMap{
     public:
         void initSnapShotMap(int typeSize);
         bool isMarked(const void *pointer);
+        MemoryTypeMap getMemoryMap(int index);
     private:
-        TArray<MemoryNodeMap> typeArray;
+        TArray<MemoryTypeMap> typeArray;
     };
     
     class MemorySnapshot{
     public:
+        void printMap();
         SnapshotMap getMemorySnapshot(lua_State *L, int typeSize);
+        
     private:
         lua_State *L;
         SnapshotMap shotMap;
         
-        FString getKey(int index);
+        FString getKey(int keyIndex);
         const void* readObject(const void *parent, FString description);
         
         void markObject(const void *parent, FString description);

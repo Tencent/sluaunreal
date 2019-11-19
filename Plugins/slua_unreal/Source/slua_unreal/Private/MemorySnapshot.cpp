@@ -51,6 +51,9 @@ namespace NS_SLUA {
         lua_pushvalue(this->L, LUA_REGISTRYINDEX);
         // mark lua registry table
         markTable(NULL, convert2str("registry table"));
+        // free pointer L;
+        L = nullptr;
+        delete L;
         return shotMap;
     }
     
@@ -107,6 +110,7 @@ namespace NS_SLUA {
             if(childMap == nullptr){
                 childMap->Add(parent, description);
             }
+            lua_pop(L, 1);
             return NULL;
         }
         
@@ -116,6 +120,24 @@ namespace NS_SLUA {
     }
     
     void MemorySnapshot::markObject(const void *parent, FString description){
+        int type = lua_type(L, -1);
+        switch (type) {
+            case LUA_TTABLE:
+                markTable(parent, description);
+                break;
+            case LUA_TTHREAD:
+                markThread(parent, description);
+                break;
+            case LUA_TFUNCTION:
+                markFunction(parent, description);
+                break;
+            case LUA_TUSERDATA:
+                markUserdata(parent, description);
+                break;
+            default:
+                lua_pop(L, 1);
+                break;
+        }
     }
     
     void MemorySnapshot::markTable(const void *parent, FString description){
@@ -145,6 +167,7 @@ namespace NS_SLUA {
         //traverce table - regirstry table or the table's value(if value is a table -1:nil, -2:value, -3:key)
         lua_pushnil(L);
         while(lua_next(L, -2)) {
+            // traverce statck top item : value(L : -1)
             if(weakValue) {
                 lua_pop(L, -1);
             } else {
@@ -153,6 +176,7 @@ namespace NS_SLUA {
             }
             
             if(!weakKey) {
+                // copy key and put it onto top to mark top value of stack and keep the stack balance
                 lua_pushvalue(L, -1);
                 markObject(pointer, "table's key");
             }
@@ -170,9 +194,52 @@ namespace NS_SLUA {
     }
     
     void MemorySnapshot::markFunction(const void *parent, FString description){
+        const void *pointer = readObject(parent, description);
         
+        if(pointer == nullptr) return;
+        
+        markEnviroment(parent, "function enviroment");
+        
+        // record function upvalue;
+        int upvalueIndex = 1;
+        while(true) {
+            const char *upvalueName = lua_getupvalue(L, -1, upvalueIndex);
+            
+            if(upvalueName == nullptr) break;
+            
+            upvalueIndex++;
+            markObject(pointer, FString::Printf(TEXT("%s"), upvalueName));
+        }
+        
+        // record c function or lua closure
+        if(lua_iscfunction(L, -1)){
+            // the c function have no upvalue means that it is a light c function
+            if(upvalueIndex == 1) {
+                MemoryNodeMap map;
+                // NULL value use to judge whether the function map item is light c function
+                shotMap.getMemoryMap(FUNCTION).Add(pointer);
+            }
+            
+            lua_pop(L, 1);
+        } else {
+            // get lua closure debug info
+            lua_Debug ar;
+            FString info;
+            
+            lua_getinfo(L, "nSl", &ar);
+//            lua_getinfo(L, ">S", &ar);
+            info = FString::Printf(TEXT("%s:%d"), UTF8_TO_TCHAR(ar.source), ar.currentline);
+            
+            MemoryNodeMap map;
+            map.Add(pointer, info);
+            shotMap.getMemoryMap(SOURCE).Add(pointer, map);
+        }
     }
     
+    void MemorySnapshot::markEnviroment(const void *parent, FString description){
+    }
+    
+    /* print the map recording lua memory*/
     void MemorySnapshot::printMap() {
         for(int i = 0; i < MARKED; i++){
             FString mapType = convert2str("");
@@ -189,9 +256,6 @@ namespace NS_SLUA {
                 case USERDATA:
                     mapType = convert2str("Userdata");
                     break;
-//                case SOURCE:
-//                    memInfo = convert2str("Source");
-//                    break;
                 default:
                     break;
             }
@@ -199,6 +263,13 @@ namespace NS_SLUA {
             for(auto &parent : map) {
                 FString memInfo = convert2str("");
                 memInfo = mapType + FString::Printf(TEXT("Stack Item Address : %p \n"), parent.Key);
+                
+                if(i == SOURCE) {
+                    MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE).Find(parent.Key);
+                    FString source = FString::Printf(TEXT("%s"), sourceMap ? "light c function"
+                                                                            :(convert2str("lua closure")+ sourceMap->FindRef(parent.Key)));
+                    memInfo += source;
+                }
                 for(auto &child : parent.Value)
                     memInfo = FString::Printf(TEXT("Item Child : \n \t child address :%p    value : %s"), child.Key, *child.Value);
                 Log::Log(*memInfo);

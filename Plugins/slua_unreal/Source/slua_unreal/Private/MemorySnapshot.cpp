@@ -191,7 +191,35 @@ namespace NS_SLUA {
         const void *pointer = readObject(parent, description);
         if(pointer == nullptr) return;
         
+        int level = 0;
+        lua_Debug ar;
+        FString threadInfo;
+        lua_State *tL = lua_tothread(L, -1);
         
+        if(tL == L) level = 1;
+        
+        // record the thread stack
+        while(lua_getstack(tL, level, &ar) && lua_getinfo(L, "nSl", &ar)){
+            threadInfo = FString::Printf(TEXT("%s"), UTF8_TO_TCHAR(ar.source));
+            if(ar.currentline >= 0)
+                threadInfo += FString::Printf(TEXT(":%d"), ar.currentline);
+            
+            // record the local variable in thread
+            for(int i = 1;; i++) {
+                const char *variableName = lua_getlocal(L, &ar, i);
+                if(variableName == NULL) break;
+                
+                FString localVariableInfo = FString::Printf(TEXT("local variable name -> %s :%s:%d"), variableName, UTF8_TO_TCHAR(ar.source), ar.currentline);
+                markObject(parent, localVariableInfo);
+            }
+            level++;
+        }
+        
+        MemoryNodeMap map;
+        map.Add(pointer, threadInfo);
+        shotMap.getMemoryMap(SOURCE).Add(pointer, map);
+        
+        lua_pop(L, 1);
     }
     
     void MemorySnapshot::markUserdata(const void *parent, FString description){
@@ -244,9 +272,8 @@ namespace NS_SLUA {
             lua_Debug ar;
             FString info;
             
-            lua_getinfo(L, "nSl", &ar);
-//            lua_getinfo(L, ">S", &ar);
-            info = FString::Printf(TEXT("%s:%d"), UTF8_TO_TCHAR(ar.source), ar.currentline);
+            lua_getinfo(L, ">S", &ar);
+            info = FString::Printf(TEXT("%s:%d"), UTF8_TO_TCHAR(ar.source), ar.linedefined);
             
             MemoryNodeMap map;
             map.Add(pointer, info);

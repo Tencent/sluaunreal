@@ -57,7 +57,6 @@ namespace NS_SLUA {
         return shotMap;
     }
     
-    
     /* get the value's key in one pair */
     FString MemorySnapshot::getKey(int keyIndex){
         int type = lua_type(L, keyIndex);
@@ -83,6 +82,7 @@ namespace NS_SLUA {
         return keyStr;
     }
 
+    /* read the top item in the lua regirstry */
     const void* MemorySnapshot::readObject(const void *parent, FString description){
         int type = lua_type(L, -1);
         int mapType = 0;
@@ -105,7 +105,9 @@ namespace NS_SLUA {
         }
         
         const void *pointer = lua_topointer(L, -1);
+        // check if the item have already recorded
         if(shotMap.isMarked(pointer)){
+            // put the item's description and its parent address as child item in its map
             MemoryNodeMap *childMap = shotMap.getMemoryMap(mapType).Find(pointer);
             if(childMap == nullptr){
                 childMap->Add(parent, description);
@@ -186,11 +188,27 @@ namespace NS_SLUA {
     }
     
     void MemorySnapshot::markThread(const void *parent, FString description){
+        const void *pointer = readObject(parent, description);
+        if(pointer == nullptr) return;
+        
         
     }
     
     void MemorySnapshot::markUserdata(const void *parent, FString description){
+        const void *pointer = readObject(parent, description);
+        if(pointer == nullptr) return;
         
+        // record userdata's metatable
+        if(lua_getmetatable(L, -1)) markObject(parent, convert2str("userdata metatable"));
+        
+        // reocrd userdata's uservalue (used to be called as enviroment)
+        lua_getuservalue(L, -1);
+        if(!lua_isnil(L, -1))
+            markTable(parent, "uservalue");
+         else
+            lua_pop(L, 1);
+        
+        lua_pop(L, 1);
     }
     
     void MemorySnapshot::markFunction(const void *parent, FString description){
@@ -215,8 +233,8 @@ namespace NS_SLUA {
         if(lua_iscfunction(L, -1)){
             // the c function have no upvalue means that it is a light c function
             if(upvalueIndex == 1) {
-                MemoryNodeMap map;
                 // NULL value use to judge whether the function map item is light c function
+                shotMap.getMemoryMap(FUNCTION).FindAndRemoveChecked(pointer);
                 shotMap.getMemoryMap(FUNCTION).Add(pointer);
             }
             
@@ -264,14 +282,18 @@ namespace NS_SLUA {
                 FString memInfo = convert2str("");
                 memInfo = mapType + FString::Printf(TEXT("Stack Item Address : %p \n"), parent.Key);
                 
-                if(i == SOURCE) {
+                if(i == FUNCTION) {
                     MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE).Find(parent.Key);
-                    FString source = FString::Printf(TEXT("%s"), sourceMap ? "light c function"
-                                                                            :(convert2str("lua closure")+ sourceMap->FindRef(parent.Key)));
+                    FString source = FString::Printf(TEXT("%s"), sourceMap ? *convert2str("light c function")
+                                                                            :*(convert2str("lua closure")+ sourceMap->FindRef(parent.Key)));
                     memInfo += source;
+                } else if(i == THREAD) {
+                     MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE).Find(parent.Key);
+                    memInfo += FString::Printf(TEXT("thread : %s"), *(sourceMap->FindRef(parent.Key)));
                 }
+                
                 for(auto &child : parent.Value)
-                    memInfo = FString::Printf(TEXT("Item Child : \n \t child address :%p    value : %s"), child.Key, *child.Value);
+                    memInfo = FString::Printf(TEXT("Item Child : \n\tchild address :%p\tvalue : %s"), child.Key, *child.Value);
                 Log::Log(*memInfo);
             }
         }

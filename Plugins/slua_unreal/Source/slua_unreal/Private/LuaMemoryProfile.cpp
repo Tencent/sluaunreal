@@ -99,25 +99,25 @@ namespace NS_SLUA {
 
     bool getMemInfo(lua_State* L, void* ptr, size_t size, LuaMemInfo& info) {
         lua_Debug ar;
-		for (int i = 0;;i++) {
-			if (lua_getstack(L, i, &ar) && lua_getinfo(L, "nSl", &ar)) {
-				CallInfo* ci = (CallInfo*)ar.i_ci;
+        for (int i = 0;;i++) {
+            if (lua_getstack(L, i, &ar) && lua_getinfo(L, "nSl", &ar)) {
+                CallInfo* ci = (CallInfo*)ar.i_ci;
                 if (!isLua(ci))
-					continue;
-    
+                    continue;
+                
                 if (strcmp(ar.source, SLUA_LUACODE) == 0)
                     continue;
                 
-				if (strcmp(ar.what, "Lua") == 0 || strcmp(ar.what, "main") == 0) {
-					info.ptr = ptr;
-					info.size = size;
-					info.hint = FString::Printf(TEXT("%s:%d"), UTF8_TO_TCHAR(ar.source), ar.currentline);
-					return true;
-				}
-			}
+                if (strcmp(ar.what, "Lua") == 0 || strcmp(ar.what, "main") == 0) {
+                    info.ptr = ptr;
+                    info.size = size;
+                    info.hint = FString::Printf(TEXT("%s:%d"), UTF8_TO_TCHAR(ar.source), ar.currentline);
+                    return true;
+                }
+            }
             else break;
-		}
-		return false;
+        }
+        return false;
     }
 
 #if WITH_EDITOR

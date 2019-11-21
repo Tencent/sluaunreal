@@ -16,6 +16,7 @@
 #include "LuaState.h"
 #include "ArrayWriter.h"
 #include "ArrayReader.h"
+#include "MemorySnapshot.h"
 #include "LuaMemoryProfile.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "luasocket/auxiliar.h"
@@ -301,7 +302,11 @@ namespace NS_SLUA {
             for(auto& memInfo : NS_SLUA::LuaMemoryProfile::memDetail()) {
                 memoryInfoList.Add(memInfo.Value);
             }
-            
+            if(L) {
+                MemorySnapshot snapshot;
+                snapshot.getMemorySnapshot(L, 6);
+                snapshot.printMap();
+            }
             if(checkSocketRead()) memoryGC(L);
             takeMemorySample(NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK, memoryInfoList);
             takeSample(NS_SLUA::ProfilerHookEvent::PHE_TICK, -1, "", "");

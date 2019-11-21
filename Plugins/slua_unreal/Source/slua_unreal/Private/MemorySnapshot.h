@@ -27,8 +27,7 @@ namespace NS_SLUA {
     public:
         void initSnapShotMap(int typeSize);
         bool isMarked(const void *pointer);
-        MemoryTypeMap getMemoryMap(int index);
-    private:
+        MemoryTypeMap* getMemoryMap(int index);
         TArray<MemoryTypeMap> typeArray;
     };
     

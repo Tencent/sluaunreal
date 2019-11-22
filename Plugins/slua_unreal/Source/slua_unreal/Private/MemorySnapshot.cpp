@@ -63,23 +63,22 @@ namespace NS_SLUA {
         FString keyStr = convert2str("");
         switch (type) {
             case LUA_TSTRING:
-                keyStr = FString::Printf(TEXT("%s"), lua_tostring(L, keyIndex));
+                keyStr = FString::Printf(TEXT("%s"), UTF8_TO_TCHAR(lua_tostring(L, keyIndex)));
                 break;
             case LUA_TNIL:
                 keyStr = convert2str("nil");
                 break;
             case LUA_TBOOLEAN:
-                keyStr = lua_toboolean(L, keyIndex) ? FString::Printf(TEXT("true")) : FString::Printf(TEXT("false"));
+                keyStr = lua_toboolean(L, keyIndex) ? convert2str("true") : convert2str("false");
                 break;
             case LUA_TNUMBER:
-                keyStr = FString::Printf(TEXT("%f"),lua_tonumber(L, keyIndex));
+                keyStr = FString::Printf(TEXT("%f"), lua_tonumber(L, keyIndex));
                 break;
             default:
-                keyStr = FString::Printf(TEXT("%s : %p"), lua_typename(L, type), lua_topointer(L, keyIndex));
+                keyStr = FString::Printf(TEXT("other type -> %s : %p"), UTF8_TO_TCHAR(lua_typename(L, type)), UTF8_TO_TCHAR(lua_topointer(L, keyIndex)));
                 break;
         }
         
-        Log::Log("%s", *keyStr);
         return keyStr;
     }
 
@@ -119,7 +118,7 @@ namespace NS_SLUA {
                 childMap->Add(parent, description);
             }
             lua_pop(L,1);
-            return nullptr;
+            return NULL;
         }
         
         MemoryNodeMap childMap;
@@ -206,8 +205,9 @@ namespace NS_SLUA {
         if(tL == L) level = 1;
         
         // record the thread stack
-        while(lua_getstack(tL, level, &ar) && lua_getinfo(L, "nSl", &ar)){
+        while(lua_getstack(tL, level, &ar) && lua_getinfo(tL, "nSl", &ar)){
             threadInfo = FString::Printf(TEXT("%s"), UTF8_TO_TCHAR(ar.source));
+            
             if(ar.currentline >= 0)
                 threadInfo += FString::Printf(TEXT(":%d"), ar.currentline);
             
@@ -217,7 +217,7 @@ namespace NS_SLUA {
                 if(variableName == NULL) break;
                 
                 FString localVariableInfo = FString::Printf(TEXT("local variable name -> %s :%s:%d"),
-                                                            variableName, UTF8_TO_TCHAR(ar.source), ar.currentline);
+                                                            UTF8_TO_TCHAR(variableName), UTF8_TO_TCHAR(ar.source), ar.currentline);
                 markObject(parent, localVariableInfo);
             }
             level++;
@@ -242,13 +242,13 @@ namespace NS_SLUA {
         if(lua_isnil(L, -1))
             lua_pop(L, 1);
          else
-             markTable(parent, "uservalue");
+             markTable(parent, convert2str("uservalue"));
         
         lua_pop(L, 1);
     }
     
     void MemorySnapshot::markFunction(const void *parent, FString description){
-        void *pointer = (void *)readObject(parent, description);
+        const void *pointer = readObject(parent, description);
         
         if(pointer == NULL)return;
         
@@ -259,10 +259,14 @@ namespace NS_SLUA {
         while(true) {
             const char *upvalueName = lua_getupvalue(L, -1, upvalueIndex);
 
-            if(upvalueName == nullptr) break;
+            if(upvalueName == NULL) break;
 
             upvalueIndex++;
-            markObject(pointer, FString::Printf(TEXT("%s"), upvalueName));
+            markObject(pointer, FString::Printf(TEXT("upvalue : %s"),
+                                                *upvalueName == '\0' ?
+                                                *convert2str("c function upvalue") :
+                                                UTF8_TO_TCHAR(upvalueName)
+                                                ));
         }
         
         // record c function or lua closure
@@ -277,11 +281,10 @@ namespace NS_SLUA {
         } else {
             // get lua closure debug info
             lua_Debug ar;
-            FString info;
 
-            lua_getinfo(L, ">S", &ar);
-            info = FString::Printf(TEXT("%s:%d"), UTF8_TO_TCHAR(ar.source), ar.linedefined);
-
+            lua_getinfo(L, ">Sln", &ar);
+            FString info = FString::Printf(TEXT("%s:%d"), UTF8_TO_TCHAR(ar.short_src), ar.linedefined);
+            
             MemoryNodeMap map;
             map.Add(pointer, info);
             shotMap.getMemoryMap(SOURCE)->Add(pointer, map);
@@ -314,21 +317,27 @@ namespace NS_SLUA {
             MemoryTypeMap map = *shotMap.getMemoryMap(i);
             for(auto &parent : map) {
                 FString memInfo = convert2str("");
-                memInfo = mapType + FString::Printf(TEXT("Stack Item Address : %p \n"), parent.Key);
+                memInfo = mapType + FString::Printf(TEXT(" -> Item Address : %p "), parent.Key);
                 
                 if(i == FUNCTION) {
                     MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
-                    FString source = FString::Printf(TEXT("%s"), sourceMap == NULL ? *convert2str("light c function")
-                                                                            :*(convert2str("lua closure")+ sourceMap->FindRef(parent.Key)));
-//                    memInfo += source;
+                    FString source;
+                    
+                    if(sourceMap == NULL)
+                        source = convert2str("light c function");
+                    else
+                        source = convert2str("lua closure")+ sourceMap->FindRef(parent.Key);
+                    
+                    memInfo += source;
                 } else if(i == THREAD) {
                      MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
                     memInfo += FString::Printf(TEXT("thread : %s"), *(sourceMap->FindRef(parent.Key)));
                 }
                 
                 for(auto &child : parent.Value)
-                    memInfo = FString::Printf(TEXT("Item Child : \n\tchild address :%p\tvalue : %s"), child.Key, *child.Value);
-                Log::Log(*memInfo);
+//                    memInfo = FString::Printf(TEXT("Child : address :%p\tvalue : %s"), child.Key, *child.Value);
+                    memInfo = FString::Printf(TEXT("Child value : %s"), *child.Value);
+                Log::Log("%s", TCHAR_TO_UTF8(*memInfo));
             }
         }
     }

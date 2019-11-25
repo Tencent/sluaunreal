@@ -304,7 +304,7 @@ namespace NS_SLUA {
             }
             if(L) {
                 MemorySnapshot snapshot;
-                snapshot.getMemorySnapshot(L, 6);
+                snapshot.getMemorySnapshot(L, 7);
                 snapshot.printMap();
             }
             if(checkSocketRead()) memoryGC(L);

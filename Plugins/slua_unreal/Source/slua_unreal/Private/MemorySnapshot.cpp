@@ -20,11 +20,19 @@
 #define SOURCE 2
 #define THREAD 3
 #define USERDATA 4
-#define MARKED 5
+#define OTHERS 5
+#define MARKED 6
 
 #define convert2str(data) FString::Printf(TEXT(data))
 
 namespace NS_SLUA {
+// support lua 5.1 API
+#if LUA_VERSION_NUM == 501
+    void lua_getuservalue(lua_State *L, int idx) {
+        lua_getfenv(L, idx);
+    }
+#endif
+    
     void SnapshotMap::initSnapShotMap(int typeSize){
         for(int i = 0; i < typeSize; i++) {
             MemoryTypeMap map;
@@ -100,9 +108,13 @@ namespace NS_SLUA {
             case LUA_TUSERDATA:
                 mapType = USERDATA;
                 break;
-            default:
-                lua_pop(L, 1);
+            default:{
+                if(description.Equals("table's key", ESearchCase::CaseSensitive))
+                    return NULL;
+                else
+                    mapType = OTHERS;
                 break;
+            }
         }
         
         const void *pointer = lua_topointer(L, -1);
@@ -122,6 +134,7 @@ namespace NS_SLUA {
         }
         
         MemoryNodeMap childMap;
+        childMap.Add(pointer, description);
         shotMap.getMemoryMap(mapType)->Add(pointer, childMap);
         return pointer;
     }
@@ -141,9 +154,13 @@ namespace NS_SLUA {
             case LUA_TUSERDATA:
                 markUserdata(parent, description);
                 break;
-            default:
-                lua_pop(L, 1);
+            default:{
+                if(description.Equals("table's key", ESearchCase::CaseSensitive))
+                    lua_pop(L, 1);
+                else
+                    markOthers(parent, description);
                 break;
+            }
         }
     }
     
@@ -151,7 +168,7 @@ namespace NS_SLUA {
         const void *pointer = readObject(parent, description);
         
         if(pointer == NULL) return;
-        
+
         // check the mode of table's key and value
         bool weakKey = false;
         bool weakValue = false;
@@ -201,7 +218,6 @@ namespace NS_SLUA {
         lua_Debug ar;
         FString threadInfo;
         lua_State *tL = lua_tothread(L, -1);
-        
         if(tL == L) level = 1;
         
         // record the thread stack
@@ -222,7 +238,7 @@ namespace NS_SLUA {
             }
             level++;
         }
-        
+
         MemoryNodeMap map;
         map.Add(pointer, threadInfo);
         shotMap.getMemoryMap(SOURCE)->Add(pointer, map);
@@ -233,16 +249,16 @@ namespace NS_SLUA {
     void MemorySnapshot::markUserdata(const void *parent, FString description){
         const void *pointer = readObject(parent, description);
         if(pointer == NULL) return;
-        
+
         // record userdata's metatable
         if(lua_getmetatable(L, -1)) markObject(parent, convert2str("userdata metatable"));
         
         // reocrd userdata's uservalue (used to be called as enviroment)
         lua_getuservalue(L, -1);
-        if(lua_isnil(L, -1))
+        if(lua_istable(L, -1))
+            markTable(parent, convert2str("uservalue"));
+        else
             lua_pop(L, 1);
-         else
-             markTable(parent, convert2str("uservalue"));
         
         lua_pop(L, 1);
     }
@@ -252,8 +268,8 @@ namespace NS_SLUA {
         
         if(pointer == NULL)return;
         
-        markEnviroment(parent, "function enviroment");
-        
+        // record enviroment
+       
         // record function upvalue;
         int upvalueIndex = 1;
         while(true) {
@@ -291,7 +307,12 @@ namespace NS_SLUA {
         }
     }
     
-    void MemorySnapshot::markEnviroment(const void *parent, FString description){
+    void MemorySnapshot::markOthers(const void *parent, FString description){
+        const void *pointer = readObject(parent, description);
+        
+        if(pointer == NULL) return;
+        
+        lua_pop(L, 1);
     }
     
     /* print the map recording lua memory*/
@@ -312,6 +333,7 @@ namespace NS_SLUA {
                     mapType = convert2str("Userdata");
                     break;
                 default:
+                    mapType = convert2str("OtherType");
                     break;
             }
             MemoryTypeMap map = *shotMap.getMemoryMap(i);
@@ -323,20 +345,34 @@ namespace NS_SLUA {
                     MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
                     FString source;
                     
-                    if(sourceMap == NULL)
-                        source = convert2str("light c function");
-                    else
-                        source = convert2str("lua closure")+ sourceMap->FindRef(parent.Key);
-                    
-                    memInfo += source;
+                    if(sourceMap == NULL) {
+                        source = convert2str("Light c function");
+                        memInfo += source;
+                    } else {
+                        memInfo += FString::Printf(TEXT("%s "),
+                                                   sourceMap->Contains(parent.Key) ?
+                                                   *sourceMap->FindRef(parent.Key) :
+                                                   *convert2str("")
+                                                   );
+                    }
                 } else if(i == THREAD) {
-                     MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
-                    memInfo += FString::Printf(TEXT("thread : %s"), *(sourceMap->FindRef(parent.Key)));
+                    MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
+                    memInfo += FString::Printf(TEXT("%s"),
+                                              sourceMap->Contains(parent.Key) ?
+                                               *sourceMap->FindRef(parent.Key) :
+                                               *convert2str("")
+                                               );
+                } else if(parent.Value.Contains(parent.Key)){
+                    memInfo += FString::Printf(TEXT(" %s"),
+                                               parent.Value.Contains(parent.Key) ?
+                                               *parent.Value.FindAndRemoveChecked(parent.Key) :
+                                               *convert2str("")
+                                               );
                 }
                 
                 for(auto &child : parent.Value)
 //                    memInfo = FString::Printf(TEXT("Child : address :%p\tvalue : %s"), child.Key, *child.Value);
-                    memInfo = FString::Printf(TEXT("Child value : %s"), *child.Value);
+                    memInfo += FString::Printf(TEXT("\nChild value : %s"), *child.Value);
                 Log::Log("%s", TCHAR_TO_UTF8(*memInfo));
             }
         }

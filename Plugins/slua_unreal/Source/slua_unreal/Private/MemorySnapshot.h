@@ -48,6 +48,6 @@ namespace NS_SLUA {
         void markThread(const void *parent, FString description);
         void markUserdata(const void *parent, FString description);
         void markFunction(const void *parent, FString description);
-        void markEnviroment(const void *parent, FString description);
+        void markOthers(const void *parent, FString description);
     };
 }

@@ -26,13 +26,6 @@
 #define convert2str(data) FString::Printf(TEXT(data))
 
 namespace NS_SLUA {
-// support lua 5.1 API
-#if LUA_VERSION_NUM == 501
-    void lua_getuservalue(lua_State *L, int idx) {
-        lua_getfenv(L, idx);
-    }
-#endif
-    
     void SnapshotMap::initSnapShotMap(int typeSize){
         for(int i = 0; i < typeSize; i++) {
             MemoryTypeMap map;
@@ -139,35 +132,36 @@ namespace NS_SLUA {
         return pointer;
     }
     
-    void MemorySnapshot::markObject(const void *parent, FString description){
+    int MemorySnapshot::markObject(const void *parent, FString description){
         int type = lua_type(L, -1);
         switch (type) {
             case LUA_TTABLE:
-                markTable(parent, description);
+                return markTable(parent, description);
                 break;
             case LUA_TTHREAD:
-                markThread(parent, description);
+                return markThread(parent, description);
                 break;
             case LUA_TFUNCTION:
-                markFunction(parent, description);
+                return markFunction(parent, description);
                 break;
             case LUA_TUSERDATA:
-                markUserdata(parent, description);
+                return markUserdata(parent, description);
                 break;
             default:{
                 if(description.Equals("table's key", ESearchCase::CaseSensitive))
                     lua_pop(L, 1);
                 else
-                    markOthers(parent, description);
-                break;
+                    return markOthers(parent, description);
             }
         }
+        return 0;
     }
     
-    void MemorySnapshot::markTable(const void *parent, FString description){
+    int MemorySnapshot::markTable(const void *parent, FString description){
+        int size = 0;
         const void *pointer = readObject(parent, description);
         
-        if(pointer == NULL) return;
+        if(pointer == NULL) return size;
 
         // check the mode of table's key and value
         bool weakKey = false;
@@ -181,13 +175,14 @@ namespace NS_SLUA {
                 const char *mode = lua_tostring(L, -1);
                 
                 if(strchr(mode, 'k'))
-                        weakKey == true;
+                        weakKey = true;
                 if(strchr(mode, 'v'))
-                        weakValue == true;
+                        weakValue = true;
             }
             lua_pop(L, 1);
             markTable(pointer, convert2str("metatable"));
         }
+        
         //traverce table - regirstry table or the table's value(if value is a table -1:nil, -2:value, -3:key)
         lua_pushnil(L);
         while(lua_next(L, -2)) {
@@ -207,12 +202,20 @@ namespace NS_SLUA {
             }
         }
         
+        // record table size
+        Table *h = (Table *)pointer;
+        size = sizeof(Table) +
+                sizeof(TValue) * h->sizearray +
+                sizeof(Node) * (h->lastfree == NULL ? 0 : sizenode(h));
+
         lua_pop(L, 1);
+        return size;
     }
     
-    void MemorySnapshot::markThread(const void *parent, FString description){
+    int MemorySnapshot::markThread(const void *parent, FString description){
+        int size = 0;
         const void *pointer = readObject(parent, description);
-        if(pointer == NULL) return;
+        if(pointer == NULL) return size;
         
         int level = 0;
         lua_Debug ar;
@@ -238,17 +241,41 @@ namespace NS_SLUA {
             }
             level++;
         }
+        
+        //record thread size
+        size = sizeof(lua_State) +
+                sizeof(TValue) * tL->stacksize +
+                sizeof(CallInfo) * tL->nci;
 
         MemoryNodeMap map;
         map.Add(pointer, threadInfo);
         shotMap.getMemoryMap(SOURCE)->Add(pointer, map);
         
         lua_pop(L, 1);
+        return size;
     }
     
-    void MemorySnapshot::markUserdata(const void *parent, FString description){
+    int MemorySnapshot::markUserdata(const void *parent, FString description){
+        // judge the userdata type - LuaAcror, LuaArray, LuaMap
+//        if(lua_getmetatable(L, -1)) {
+//            // check the item whether is Lua Array
+//            lua_pushliteral(L, "__name");
+//            lua_rawget(L, -2);
+//            if(lua_isstring(L, -1)){
+//                const char *name = lua_tostring(L, -1);
+//                FString nameStr = FString::Printf(TEXT("%s"), UTF8_TO_TCHAR(name));
+//                UE_LOG(LogTemp, Warning, TEXT("%s"), *nameStr);
+//                if(nameStr.Equals("LuaArray", ESearchCase::CaseSensitive)){
+//                    UE_LOG(LogTemp, Warning, TEXT("LuaArray"));
+//                }
+//            }
+//            lua_pop(L, 2);
+//        }
+        int size = 0;
         const void *pointer = readObject(parent, description);
-        if(pointer == NULL) return;
+        if(pointer == NULL) return size;
+
+        size = lua_rawlen(L, -1);
 
         // record userdata's metatable
         if(lua_getmetatable(L, -1)) markObject(parent, convert2str("userdata metatable"));
@@ -261,12 +288,14 @@ namespace NS_SLUA {
             lua_pop(L, 1);
         
         lua_pop(L, 1);
+        return size;
     }
     
-    void MemorySnapshot::markFunction(const void *parent, FString description){
+    int MemorySnapshot::markFunction(const void *parent, FString description){
+        int size = 0;
         const void *pointer = readObject(parent, description);
         
-        if(pointer == NULL)return;
+        if(pointer == NULL)return size;
         
         // record enviroment
        
@@ -286,6 +315,7 @@ namespace NS_SLUA {
         }
         
         // record c function or lua closure
+        Closure *cl = (Closure *)pointer;
         if(lua_iscfunction(L, -1)){
             // the c function have no upvalue means that it is a light c function
             if(upvalueIndex == 1) {
@@ -293,6 +323,9 @@ namespace NS_SLUA {
                 shotMap.getMemoryMap(FUNCTION)->FindAndRemoveChecked(pointer);
                 shotMap.getMemoryMap(FUNCTION)->Add(pointer);
             }
+            // reocrd c function size
+            size = sizeof(CClosure) + sizeof(TValue) * (cl->c.nupvalues - 1);
+            
             lua_pop(L, 1);
         } else {
             // get lua closure debug info
@@ -304,15 +337,21 @@ namespace NS_SLUA {
             MemoryNodeMap map;
             map.Add(pointer, info);
             shotMap.getMemoryMap(SOURCE)->Add(pointer, map);
+            
+            size = sizeof(LClosure) + sizeof(TValue *) * (cl->l.nupvalues - 1);
         }
+
+        return size;
     }
     
-    void MemorySnapshot::markOthers(const void *parent, FString description){
+    int MemorySnapshot::markOthers(const void *parent, FString description){
+        int size = 0;
         const void *pointer = readObject(parent, description);
         
-        if(pointer == NULL) return;
+        if(pointer == NULL) return size;
         
         lua_pop(L, 1);
+        return size;
     }
     
     /* print the map recording lua memory*/
@@ -372,7 +411,7 @@ namespace NS_SLUA {
                 
                 for(auto &child : parent.Value)
 //                    memInfo = FString::Printf(TEXT("Child : address :%p\tvalue : %s"), child.Key, *child.Value);
-                    memInfo += FString::Printf(TEXT("\nChild value : %s"), *child.Value);
+                    memInfo += FString::Printf(TEXT("\nChild value : %s , address : %p"), *child.Value, child.Key);
                 Log::Log("%s", TCHAR_TO_UTF8(*memInfo));
             }
         }

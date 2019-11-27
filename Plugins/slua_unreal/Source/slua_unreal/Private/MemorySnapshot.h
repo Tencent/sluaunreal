@@ -43,11 +43,11 @@ namespace NS_SLUA {
         FString getKey(int keyIndex);
         const void* readObject(const void *parent, FString description);
         
-        void markObject(const void *parent, FString description);
-        void markTable(const void *parent, FString description);
-        void markThread(const void *parent, FString description);
-        void markUserdata(const void *parent, FString description);
-        void markFunction(const void *parent, FString description);
-        void markOthers(const void *parent, FString description);
+        int markObject(const void *parent, FString description);
+        int markTable(const void *parent, FString description);
+        int markThread(const void *parent, FString description);
+        int markUserdata(const void *parent, FString description);
+        int markFunction(const void *parent, FString description);
+        int markOthers(const void *parent, FString description);
     };
 }

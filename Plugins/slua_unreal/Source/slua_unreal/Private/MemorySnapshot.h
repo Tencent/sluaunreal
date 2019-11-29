@@ -15,12 +15,13 @@
 #pragma once
 #include "Containers/Array.h"
 #include "Containers/Map.h"
+#include "LuaMemoryProfile.h"
 #include "LuaState.h"
 #include "lua/lua.hpp"
 
 namespace NS_SLUA {
     // use lightuserdata as the map key
-    typedef TMap<const void*, FString> MemoryNodeMap;
+    typedef TMap<const void*, LuaMemInfo> MemoryNodeMap;
     typedef TMap<const void*, MemoryNodeMap> MemoryTypeMap;
     
     class SnapshotMap{
@@ -41,6 +42,7 @@ namespace NS_SLUA {
         SnapshotMap shotMap;
         
         FString getKey(int keyIndex);
+        FString chooseMemoryUnit(float memoryByteSize);
         const void* readObject(const void *parent, FString description);
         
         int markObject(const void *parent, FString description);

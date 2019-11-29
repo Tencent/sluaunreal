@@ -58,6 +58,24 @@ namespace NS_SLUA {
         return shotMap;
     }
     
+    FString MemorySnapshot::chooseMemoryUnit(float memoryByteSize) {
+        Log::Log("origin mem size : %.3f", memoryByteSize);
+        memoryByteSize /= 1024.0f;
+        
+        if (memoryByteSize < 1024) {
+            Log::Log("mem size : %.3f KB", memoryByteSize);
+            return FString::Printf(TEXT("%.3f KB"), memoryByteSize);
+        } else if (memoryByteSize < 1024 *1024 ) {
+            Log::Log("mem size : %.3f MB", memoryByteSize);
+            return FString::Printf(TEXT("%.3f MB"), (memoryByteSize / 1024.0f));
+        } else if (memoryByteSize >= 1024 * 1024) {
+            Log::Log("mem size : %.3f GB", memoryByteSize);
+            return FString::Printf(TEXT("%.3f GB"), (memoryByteSize / (1024.0f * 1024.0f)));
+        }
+        
+        return FString::Printf(TEXT("%.3f"), memoryByteSize);
+    }
+    
     /* get the value's key in one pair */
     FString MemorySnapshot::getKey(int keyIndex){
         int type = lua_type(L, keyIndex);
@@ -120,14 +138,21 @@ namespace NS_SLUA {
             // put the item's description and its parent address as child item in its map
             MemoryNodeMap *childMap = shotMap.getMemoryMap(mapType)->Find(pointer);
             if(childMap != NULL){
-                childMap->Add(parent, description);
+                LuaMemInfo memInfo;
+                memInfo.hint = description;
+                memInfo.ptr = (void *)pointer;
+                childMap->Add(parent, memInfo);
             }
             lua_pop(L,1);
             return NULL;
         }
         
         MemoryNodeMap childMap;
-        childMap.Add(pointer, description);
+        LuaMemInfo memInfo;
+        memInfo.hint = description;
+        memInfo.ptr = (void *)pointer;
+        memInfo.size = 0;
+        childMap.Add(parent, memInfo);
         shotMap.getMemoryMap(mapType)->Add(pointer, childMap);
         return pointer;
     }
@@ -208,6 +233,7 @@ namespace NS_SLUA {
                 sizeof(TValue) * h->sizearray +
                 sizeof(Node) * (h->lastfree == NULL ? 0 : sizenode(h));
 
+        shotMap.getMemoryMap(TABLE)->Find(pointer)->Find(parent)->size = size;
         lua_pop(L, 1);
         return size;
     }
@@ -248,7 +274,11 @@ namespace NS_SLUA {
                 sizeof(CallInfo) * tL->nci;
 
         MemoryNodeMap map;
-        map.Add(pointer, threadInfo);
+        LuaMemInfo memInfo;
+        memInfo.hint = threadInfo;
+        memInfo.ptr = (void *)pointer;
+        memInfo.size = size;
+        map.Add(pointer, memInfo);
         shotMap.getMemoryMap(SOURCE)->Add(pointer, map);
         
         lua_pop(L, 1);
@@ -257,25 +287,27 @@ namespace NS_SLUA {
     
     int MemorySnapshot::markUserdata(const void *parent, FString description){
         // judge the userdata type - LuaAcror, LuaArray, LuaMap
-//        if(lua_getmetatable(L, -1)) {
-//            // check the item whether is Lua Array
-//            lua_pushliteral(L, "__name");
-//            lua_rawget(L, -2);
-//            if(lua_isstring(L, -1)){
-//                const char *name = lua_tostring(L, -1);
-//                FString nameStr = FString::Printf(TEXT("%s"), UTF8_TO_TCHAR(name));
-//                UE_LOG(LogTemp, Warning, TEXT("%s"), *nameStr);
-//                if(nameStr.Equals("LuaArray", ESearchCase::CaseSensitive)){
-//                    UE_LOG(LogTemp, Warning, TEXT("LuaArray"));
-//                }
-//            }
-//            lua_pop(L, 2);
-//        }
+        if(lua_getmetatable(L, -1)) {
+            // check the item whether is Lua Array
+            lua_pushliteral(L, "__name");
+            lua_rawget(L, -2);
+            if(lua_isstring(L, -1)){
+                const char *name = lua_tostring(L, -1);
+                FString nameStr = FString::Printf(TEXT("%s"), UTF8_TO_TCHAR(name));
+                UE_LOG(LogTemp, Warning, TEXT("%s"), *nameStr);
+                if(nameStr.Equals("LuaArray", ESearchCase::CaseSensitive)){
+                    UE_LOG(LogTemp, Warning, TEXT("LuaArray"));
+                }
+            }
+            lua_pop(L, 2);
+        }
+        
         int size = 0;
         const void *pointer = readObject(parent, description);
         if(pointer == NULL) return size;
 
         size = lua_rawlen(L, -1);
+        shotMap.getMemoryMap(USERDATA)->Find(pointer)->Find(parent)->size = size;
 
         // record userdata's metatable
         if(lua_getmetatable(L, -1)) markObject(parent, convert2str("userdata metatable"));
@@ -322,10 +354,11 @@ namespace NS_SLUA {
                 // NULL value use to judge whether the function map item is light c function
                 shotMap.getMemoryMap(FUNCTION)->FindAndRemoveChecked(pointer);
                 shotMap.getMemoryMap(FUNCTION)->Add(pointer);
+            } else {
+                // reocrd c function size
+                size = sizeof(CClosure) + sizeof(TValue) * (cl->c.nupvalues - 1);
+                shotMap.getMemoryMap(FUNCTION)->Find(pointer)->Find(parent)->size = size;
             }
-            // reocrd c function size
-            size = sizeof(CClosure) + sizeof(TValue) * (cl->c.nupvalues - 1);
-            
             lua_pop(L, 1);
         } else {
             // get lua closure debug info
@@ -333,12 +366,15 @@ namespace NS_SLUA {
 
             lua_getinfo(L, ">Sln", &ar);
             FString info = FString::Printf(TEXT("%s:%d"), UTF8_TO_TCHAR(ar.short_src), ar.linedefined);
+            size = sizeof(LClosure) + sizeof(TValue *) * (cl->l.nupvalues - 1);
             
             MemoryNodeMap map;
-            map.Add(pointer, info);
+            LuaMemInfo memInfo;
+            memInfo.hint = info;
+            memInfo.size = size;
+            memInfo.ptr = (void *)pointer;
+            map.Add(pointer, memInfo);
             shotMap.getMemoryMap(SOURCE)->Add(pointer, map);
-            
-            size = sizeof(LClosure) + sizeof(TValue *) * (cl->l.nupvalues - 1);
         }
 
         return size;
@@ -388,30 +424,45 @@ namespace NS_SLUA {
                         source = convert2str("Light c function");
                         memInfo += source;
                     } else {
-                        memInfo += FString::Printf(TEXT("%s "),
+                        memInfo += FString::Printf(TEXT("%s , size : %s "),
                                                    sourceMap->Contains(parent.Key) ?
-                                                   *sourceMap->FindRef(parent.Key) :
+                                                   *sourceMap->FindRef(parent.Key).hint :
+                                                   *convert2str(""),
+                                                   parent.Value.Contains(parent.Key) ?
+                                                   *chooseMemoryUnit(sourceMap->FindRef(parent.Key).size) :
                                                    *convert2str("")
                                                    );
                     }
                 } else if(i == THREAD) {
                     MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
-                    memInfo += FString::Printf(TEXT("%s"),
+                    memInfo += FString::Printf(TEXT("%s , size : %s "),
                                               sourceMap->Contains(parent.Key) ?
-                                               *sourceMap->FindRef(parent.Key) :
+                                               *sourceMap->FindRef(parent.Key).hint :
+                                               *convert2str(""),
+                                               parent.Value.Contains(parent.Key) ?
+                                               *chooseMemoryUnit(sourceMap->FindRef(parent.Key).size) :
                                                *convert2str("")
                                                );
-                } else if(parent.Value.Contains(parent.Key)){
-                    memInfo += FString::Printf(TEXT(" %s"),
+//                    if(parent.Value.Contains(parent.Key))
+                } else {
+                    Log::Log("Table");
+                    FString size = parent.Value.Contains(parent.Key) ?
+                                    chooseMemoryUnit(parent.Value.FindRef(parent.Key).size) :
+                                    convert2str("");
+                    Log::Log("lllll");
+                    memInfo += FString::Printf(TEXT(" %s , size : %s "),
                                                parent.Value.Contains(parent.Key) ?
-                                               *parent.Value.FindAndRemoveChecked(parent.Key) :
-                                               *convert2str("")
+                                               *parent.Value.FindAndRemoveChecked(parent.Key).hint :
+                                               *convert2str(""),
+                                               *size
                                                );
                 }
                 
-                for(auto &child : parent.Value)
+                for(auto &child : parent.Value) {
+                    FString size = chooseMemoryUnit(child.Value.size);
 //                    memInfo = FString::Printf(TEXT("Child : address :%p\tvalue : %s"), child.Key, *child.Value);
-                    memInfo += FString::Printf(TEXT("\nChild value : %s , address : %p"), *child.Value, child.Key);
+                    memInfo += FString::Printf(TEXT("\nChild value : %s , address : %p , size : %s"), *child.Value.hint, child.Key, *chooseMemoryUnit(child.Value.size));
+                }
                 Log::Log("%s", TCHAR_TO_UTF8(*memInfo));
             }
         }

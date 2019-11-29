@@ -155,7 +155,7 @@ private:
     void CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInfoList);
     void CombineSameFileInfo(MemFileInfoList& infoList);
     int ContainsFile(FString& fileName, ShownMemInfoList &list);
-    FString ChooseMemoryUnit(float memorySize);
+    FString ChooseMemoryUnit(float memoryKBSize);
     TArray<FString> SplitFlieName(FString filePath);
     
 };

@@ -20,8 +20,11 @@
 #define SOURCE 2
 #define THREAD 3
 #define USERDATA 4
-#define OTHERS 5
+#define OTHERS 5 
 #define MARKED 6
+//#define LUAARRAY 6
+//#define LUAMAP 7
+//#define MARKED 8
 
 #define convert2str(data) FString::Printf(TEXT(data))
 
@@ -59,18 +62,15 @@ namespace NS_SLUA {
     }
     
     FString MemorySnapshot::chooseMemoryUnit(float memoryByteSize) {
-        Log::Log("origin mem size : %.3f", memoryByteSize);
+        // form byte to KB
         memoryByteSize /= 1024.0f;
-        
+
         if (memoryByteSize < 1024) {
-            Log::Log("mem size : %.3f KB", memoryByteSize);
             return FString::Printf(TEXT("%.3f KB"), memoryByteSize);
-        } else if (memoryByteSize < 1024 *1024 ) {
-            Log::Log("mem size : %.3f MB", memoryByteSize);
-            return FString::Printf(TEXT("%.3f MB"), (memoryByteSize / 1024.0f));
+        } else if (memoryByteSize < 1024 * 1024) {
+            return FString::Printf(TEXT("%.3f MB"), (memoryByteSize /= 1024.0f));
         } else if (memoryByteSize >= 1024 * 1024) {
-            Log::Log("mem size : %.3f GB", memoryByteSize);
-            return FString::Printf(TEXT("%.3f GB"), (memoryByteSize / (1024.0f * 1024.0f)));
+            return FString::Printf(TEXT("%.3f GB"), (memoryByteSize /= (1024.0f * 1024.0f)));
         }
         
         return FString::Printf(TEXT("%.3f"), memoryByteSize);
@@ -136,8 +136,9 @@ namespace NS_SLUA {
         // check if the item have already recorded
         if(shotMap.isMarked(pointer)){
             // put the item's description and its parent address as child item in its map
-            MemoryNodeMap *childMap = shotMap.getMemoryMap(mapType)->Find(pointer);
-            if(childMap != NULL){
+            if(shotMap.getMemoryMap(mapType)->Contains(pointer) ||
+               shotMap.getMemoryMap(mapType)->Find(pointer) != NULL){
+                MemoryNodeMap *childMap = shotMap.getMemoryMap(mapType)->Find(pointer);
                 LuaMemInfo memInfo;
                 memInfo.hint = description;
                 memInfo.ptr = (void *)pointer;
@@ -146,13 +147,13 @@ namespace NS_SLUA {
             lua_pop(L,1);
             return NULL;
         }
-        
+
         MemoryNodeMap childMap;
         LuaMemInfo memInfo;
         memInfo.hint = description;
-        memInfo.ptr = (void *)pointer;
+        memInfo.ptr = (void *)parent;
         memInfo.size = 0;
-        childMap.Add(parent, memInfo);
+        childMap.Add(pointer, memInfo);
         shotMap.getMemoryMap(mapType)->Add(pointer, childMap);
         return pointer;
     }
@@ -233,7 +234,15 @@ namespace NS_SLUA {
                 sizeof(TValue) * h->sizearray +
                 sizeof(Node) * (h->lastfree == NULL ? 0 : sizenode(h));
 
-        shotMap.getMemoryMap(TABLE)->Find(pointer)->Find(parent)->size = size;
+//        if(shotMap.getMemoryMap(TABLE)->Find(pointer)->Contains(pointer)) {
+//            LuaMemInfo memInfo = shotMap.getMemoryMap(TABLE)->Find(pointer)->FindRef(pointer);
+//            UE_LOG(LogTemp, Warning, TEXT("dec : %s, add : %p, parent : %p, size : %d"), *memInfo.hint, pointer, memInfo.ptr, memInfo.size)
+//        }
+//        if(shotMap.getMemoryMap(TABLE)->Contains(pointer)) {
+//            Log::Log("parent");
+//        }
+        
+        shotMap.getMemoryMap(TABLE)->Find(pointer)->Find(pointer)->size = size;
         lua_pop(L, 1);
         return size;
     }
@@ -293,21 +302,20 @@ namespace NS_SLUA {
             lua_rawget(L, -2);
             if(lua_isstring(L, -1)){
                 const char *name = lua_tostring(L, -1);
-                FString nameStr = FString::Printf(TEXT("%s"), UTF8_TO_TCHAR(name));
-                UE_LOG(LogTemp, Warning, TEXT("%s"), *nameStr);
-                if(nameStr.Equals("LuaArray", ESearchCase::CaseSensitive)){
-                    UE_LOG(LogTemp, Warning, TEXT("LuaArray"));
+                FString nameStr = FString::Printf(TEXT("%s : "), UTF8_TO_TCHAR(name));
+                if(nameStr.Equals("LuaArray : ", ESearchCase::CaseSensitive)){
+                    description = nameStr + description;
                 }
             }
             lua_pop(L, 2);
         }
-        
+
         int size = 0;
         const void *pointer = readObject(parent, description);
         if(pointer == NULL) return size;
-
+        
         size = lua_rawlen(L, -1);
-        shotMap.getMemoryMap(USERDATA)->Find(pointer)->Find(parent)->size = size;
+        shotMap.getMemoryMap(USERDATA)->Find(pointer)->Find(pointer)->size = size;
 
         // record userdata's metatable
         if(lua_getmetatable(L, -1)) markObject(parent, convert2str("userdata metatable"));
@@ -357,7 +365,7 @@ namespace NS_SLUA {
             } else {
                 // reocrd c function size
                 size = sizeof(CClosure) + sizeof(TValue) * (cl->c.nupvalues - 1);
-                shotMap.getMemoryMap(FUNCTION)->Find(pointer)->Find(parent)->size = size;
+                shotMap.getMemoryMap(FUNCTION)->Find(pointer)->Find(pointer)->size = size;
             }
             lua_pop(L, 1);
         } else {
@@ -423,6 +431,7 @@ namespace NS_SLUA {
                     if(sourceMap == NULL) {
                         source = convert2str("Light c function");
                         memInfo += source;
+                        continue;
                     } else {
                         memInfo += FString::Printf(TEXT("%s , size : %s "),
                                                    sourceMap->Contains(parent.Key) ?
@@ -445,11 +454,9 @@ namespace NS_SLUA {
                                                );
 //                    if(parent.Value.Contains(parent.Key))
                 } else {
-                    Log::Log("Table");
                     FString size = parent.Value.Contains(parent.Key) ?
                                     chooseMemoryUnit(parent.Value.FindRef(parent.Key).size) :
                                     convert2str("");
-                    Log::Log("lllll");
                     memInfo += FString::Printf(TEXT(" %s , size : %s "),
                                                parent.Value.Contains(parent.Key) ?
                                                *parent.Value.FindAndRemoveChecked(parent.Key).hint :
@@ -461,7 +468,7 @@ namespace NS_SLUA {
                 for(auto &child : parent.Value) {
                     FString size = chooseMemoryUnit(child.Value.size);
 //                    memInfo = FString::Printf(TEXT("Child : address :%p\tvalue : %s"), child.Key, *child.Value);
-                    memInfo += FString::Printf(TEXT("\nChild value : %s , address : %p , size : %s"), *child.Value.hint, child.Key, *chooseMemoryUnit(child.Value.size));
+                    memInfo += FString::Printf(TEXT("\nChild value : %s , parent : %p, address : %p , size : %s"), *child.Value.hint, child.Key, child.Value.ptr, *chooseMemoryUnit(child.Value.size));
                 }
                 Log::Log("%s", TCHAR_TO_UTF8(*memInfo));
             }

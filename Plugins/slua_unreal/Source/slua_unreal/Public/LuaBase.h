@@ -128,6 +128,7 @@ namespace NS_SLUA {
 		FWeakObjectPtr context;
 		static LuaVar metaTable;
 		bool isOverride = false;
+		UFunction* currentFunction = nullptr;
 	};
 
 	DefTypeName(LuaSuper);

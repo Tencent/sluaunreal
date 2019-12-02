@@ -165,7 +165,7 @@ namespace NS_SLUA {
 
 		ensure(lb);
 
-		if (lb->isOverride) {
+		if (lb->isOverride && lb->currentFunction==func) {
 			*(bool*)RESULT_PARAM = false;
 			return;
 		}
@@ -176,8 +176,16 @@ namespace NS_SLUA {
 		NS_SLUA::LuaVar lfunc = luaSelfTable.getFromTable<NS_SLUA::LuaVar>(func->GetName(), true);
 		if (lfunc.isValid()) {
 			lfunc.callByUFunction(func, (uint8*)params, &luaSelfTable, Stack.OutParms);
+			*(bool*)RESULT_PARAM = true;
 		}
-		*(bool*)RESULT_PARAM = true;
+		else {
+			// if RESULT_PARAM is true, don't execute code behind this hook
+			// otherwise execute code continue
+			// don't have lua override function, continue execute bp code
+			*(bool*)RESULT_PARAM = false;
+		}
+
+		
 	}
 
 	void LuaBase::bindOverrideFunc(UObject* obj)
@@ -238,9 +246,13 @@ namespace NS_SLUA {
 		if (!func || !func->IsValidLowLevel())
 			luaL_error(L, "Super function is isvalid");
 		lua_pop(L, 1);
-		UD->base->isOverride = true;
-		int ret = UD->base->superCall(L, func);
-		UD->base->isOverride = false;
+		auto lbase = UD->base;
+		ensure(lbase);
+		lbase->currentFunction = func;
+		lbase->isOverride = true;
+		int ret = lbase->superCall(L, func);
+		lbase->isOverride = false;
+		lbase->currentFunction = nullptr;
 		return ret;
 	}
 

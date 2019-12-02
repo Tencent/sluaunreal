@@ -116,7 +116,7 @@ namespace NS_SLUA {
 
 		// if empty or owner object had been collected
 		// AddReferencedObject will auto null propObj
-		if(num()<=0 || (!shouldFree && !propObj)) return;
+		if((!shouldFree && !propObj) || num()<=0) return;
 		bool rehash = false;
 		// for each valid entry of map
 		for (int index = helper.GetMaxIndex()-1;index>=0; index--) {

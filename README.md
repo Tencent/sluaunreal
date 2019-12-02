@@ -58,6 +58,8 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 
 我们开发了专门的vs code调试插件，支持真机调试，断点，查看变量值，代码智能提示等功能。
 
+We developed a tool integrated with VsCode to support debug in device, breakpoint, watch variant and code intellisence.
+
 ![](https://user-images.githubusercontent.com/6227270/69936013-7fbde480-1511-11ea-8cb8-f1eb8d1bd9f2.gif)
 
 [调试器支持](https://github.com/Tencent/luapanda)

@@ -97,7 +97,7 @@ namespace NS_SLUA {
 
         // if empty or owner object had been collected
 		// AddReferencedObject will auto null propObj
-        if(num()==0 || (!shouldFree && !propObj)) return;
+        if((!shouldFree && !propObj) || num()==0) return;
 		for (int n = num() - 1; n >= 0; n--) {
             void* ptr = getRawPtr(n);
 			// if AddReferencedObject collect obj

@@ -50,6 +50,19 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 ![1](profiler.png)
 ![2](profiler_2.png)
 
+
+
+#调试器支持
+
+# Debugger Support
+
+我们开发了专门的vs code调试插件，支持真机调试，断点，查看变量值，代码智能提示等功能。
+
+![](https://user-images.githubusercontent.com/6227270/69936013-7fbde480-1511-11ea-8cb8-f1eb8d1bd9f2.gif)
+
+[调试器支持](https://github.com/Tencent/luapanda)
+[Debugger](https://github.com/Tencent/luapanda)
+
 # 使用方法简单范例
 
 ## Usage at glance
@@ -173,9 +186,6 @@ Test machine, MacOSX, Unreal 4.18 develop building, CPU i7 4GHz, test case can f
 slua-unreal依赖dot-clang做c++静态代码生成的工具稍后开源，目前常用FVector等常用类的静态生成代码已经附带。
 
 [使用帮助(Document in Chinese)](https://github.com/Tencent/sluaunreal/wiki)
-
-[调试器支持](https://github.com/Tencent/luapanda)
-[Debugger](https://github.com/Tencent/luapanda)
 
 [更完整的demo](https://github.com/IriskaDev/slua_unreal_demo)
 

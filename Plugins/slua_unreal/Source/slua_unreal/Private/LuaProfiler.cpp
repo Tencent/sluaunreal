@@ -100,7 +100,7 @@ namespace NS_SLUA {
             return err;
         }
         
-        bool receieveGCMessage(size_t wanted) {
+        int receieveMessage(size_t wanted) {
             if(!tcpSocket) return false;
             
             int event = 0;
@@ -113,14 +113,13 @@ namespace NS_SLUA {
             }
             
             messageReader << event;
-            return event == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_GC;
+            return event;
         }
         
         void memoryGC(lua_State* L) {
             if(!tcpSocket) return;
             
-            int wantedSize = 4;
-            if(L && receieveGCMessage(wantedSize)) {
+            if(L) {
                 int nowMemSize;
                 int originMemSize = lua_gc(L, LUA_GCCOUNT, 0);
                 
@@ -129,20 +128,32 @@ namespace NS_SLUA {
                 Log::Log(("After GC , lua free %d KB"), originMemSize - nowMemSize);
             }
         }
-    
-    bool checkSocketRead() {
-		int result;
-		u_long nread = 0;
-		t_socket fd = tcpSocket->sock;
-		
-        #if PLATFORM_WINDOWS
-		result = ioctlsocket(fd, FIONREAD, &nread);
-        #else
-		result = ioctl(fd, FIONREAD, &nread);
-        #endif
         
-        return result == 0 && nread > 0;
-    }
+        void memorySnapshot(lua_State *L) {
+            if(!tcpSocket) return;
+            
+            if(L) {
+                MemorySnapshot snapshot;
+                SnapshotMap map2 = snapshot.getMemorySnapshot(L, 7, 2);
+                SnapshotMap map1 = snapshot.getMemorySnapshot(L, 7, 1);
+                SnapshotMap diff = snapshot.checkMemoryDiff(map2);
+                SnapshotMap::printMap(diff);
+            }
+        }
+    
+        bool checkSocketRead() {
+            int result;
+            u_long nread = 0;
+            t_socket fd = tcpSocket->sock;
+            
+            #if PLATFORM_WINDOWS
+            result = ioctlsocket(fd, FIONREAD, &nread);
+            #else
+            result = ioctl(fd, FIONREAD, &nread);
+            #endif
+            
+            return result == 0 && nread > 0;
+        }
 
         
 		void makeProfilePackage(FArrayWriter& messageWriter,
@@ -298,16 +309,23 @@ namespace NS_SLUA {
     
 		RunState currentRunState = (RunState)selfProfiler.getFromTable<int>("currentRunState");
 		if (currentRunState == RunState::CONNECTED) {
+            if(checkSocketRead()){
+                int wantedSize = 4;
+                switch (receieveMessage(wantedSize)) {
+                    case PHE_MEMORY_SNAPSHOT:
+                        memorySnapshot(L);
+                        break;
+                    case PHE_MEMORY_GC:
+                        memoryGC(L);
+                        break;
+                }
+            }
+            
             TArray<LuaMemInfo> memoryInfoList;
             for(auto& memInfo : NS_SLUA::LuaMemoryProfile::memDetail()) {
                 memoryInfoList.Add(memInfo.Value);
             }
-            if(L) {
-                MemorySnapshot snapshot;
-                snapshot.getMemorySnapshot(L, 7);
-                snapshot.printMap();
-            }
-            if(checkSocketRead()) memoryGC(L);
+            
             takeMemorySample(NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK, memoryInfoList);
             takeSample(NS_SLUA::ProfilerHookEvent::PHE_TICK, -1, "", "");
 		}

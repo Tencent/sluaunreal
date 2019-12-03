@@ -734,7 +734,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 							.Text(FText::FromString("MEMORY	|   "))
 						]
 
-						+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(0, 3.0f, 15.0f, 0).AutoWidth()
+						+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(0, 3.0f, 15.0f, 0).MaxWidth(100.0f)
 						[
 							SNew(STextBlock)
 							.Text_Lambda([=]() {
@@ -763,31 +763,57 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 							}))	
 						]
 					
-                         + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth()
-                         [
-                             SNew(SButton)
-                             .Text(FText::FromName("Forced GC"))
-                             .ContentPadding(FMargin(2.0, 2.0))
-                             .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-                                 FArrayWriter messageWriter;
-                                 int bytesSend = 0;
-                                 int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_MEMORY_GC;
-                                 int connectionsSize = ProfileServer->GetConnections().Num();
-                                 
-                                 messageWriter.Empty();
-                                 messageWriter.Seek(0);
-                                 messageWriter << hookEvent;
-                                 
-                                 if(connectionsSize > 0)
-                                 {
-                                     FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
-                                     if (socket && socket->GetConnectionState() == SCS_Connected)
-                                         socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
-                                 }
-                             
-                                 return FReply::Handled();
-                             }))
-                         ]
+                        + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth()
+                        [
+                            SNew(SButton)
+                            .Text(FText::FromName("Forced GC"))
+                            .ContentPadding(FMargin(2.0, 2.0))
+                            .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+                                FArrayWriter messageWriter;
+                                int bytesSend = 0;
+                                int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_MEMORY_GC;
+                                int connectionsSize = ProfileServer->GetConnections().Num();
+
+                                messageWriter.Empty();
+                                messageWriter.Seek(0);
+                                messageWriter << hookEvent;
+
+                                if(connectionsSize > 0)
+                                {
+                                    FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
+                                    if (socket && socket->GetConnectionState() == SCS_Connected)
+                                        socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
+                                }
+
+                                return FReply::Handled();
+                            }))
+                        ]
+                     
+                        + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth().Padding(20.0f, 0)
+                        [
+                            SNew(SButton)
+                            .Text(FText::FromName("Snapshot"))
+                            .ContentPadding(FMargin(2.0, 2.0))
+                            .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+                                FArrayWriter messageWriter;
+                                int bytesSend = 0;
+                                int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_MEMORY_SNAPSHOT;
+                                int connectionsSize = ProfileServer->GetConnections().Num();
+
+                                messageWriter.Empty();
+                                messageWriter.Seek(0);
+                                messageWriter << hookEvent;
+
+                                if(connectionsSize > 0)
+                                {
+                                    FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
+                                    if (socket && socket->GetConnectionState() == SCS_Connected)
+                                        socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
+                                }
+
+                                return FReply::Handled();
+                            }))
+                        ]
 					]
 
 					+ SVerticalBox::Slot().AutoHeight()

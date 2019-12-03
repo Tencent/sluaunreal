@@ -26,16 +26,19 @@ namespace NS_SLUA {
     
     class SnapshotMap{
     public:
+        TArray<MemoryTypeMap> typeArray;
+        
+        void Empty();
         void initSnapShotMap(int typeSize);
         bool isMarked(const void *pointer);
+        static void printMap(SnapshotMap shotMap);
         MemoryTypeMap* getMemoryMap(int index);
-        TArray<MemoryTypeMap> typeArray;
     };
     
     class MemorySnapshot{
     public:
-        void printMap();
-        SnapshotMap getMemorySnapshot(lua_State *L, int typeSize);
+        SnapshotMap checkMemoryDiff(SnapshotMap map);
+        SnapshotMap getMemorySnapshot(lua_State *L, int typeSize, int type);
         
     private:
         lua_State *L;
@@ -45,11 +48,11 @@ namespace NS_SLUA {
         FString chooseMemoryUnit(float memoryByteSize);
         const void* readObject(const void *parent, FString description);
         
-        int markObject(const void *parent, FString description);
-        int markTable(const void *parent, FString description);
-        int markThread(const void *parent, FString description);
-        int markUserdata(const void *parent, FString description);
-        int markFunction(const void *parent, FString description);
-        int markOthers(const void *parent, FString description);
+        void markObject(const void *parent, FString description);
+        void markTable(const void *parent, FString description);
+        void markThread(const void *parent, FString description);
+        void markUserdata(const void *parent, FString description);
+        void markFunction(const void *parent, FString description);
+        void markOthers(const void *parent, FString description);
     };
 }

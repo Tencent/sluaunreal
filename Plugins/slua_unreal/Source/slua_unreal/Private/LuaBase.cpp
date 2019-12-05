@@ -28,7 +28,7 @@ namespace NS_SLUA {
 
 	bool LuaBase::luaImplemented(UFunction * func, void * params)
 	{
-		if (isOverride) return false;
+		if (indexFlag!=IF_NONE && func==currentFunction) return false;
 
 		if (!func->HasAnyFunctionFlags(EFunctionFlags::FUNC_BlueprintEvent))
 			return false;
@@ -59,7 +59,7 @@ namespace NS_SLUA {
 		superTick();
 	}
 
-	int LuaBase::superCall(lua_State* L,UFunction* func)
+	int LuaBase::superOrRpcCall(lua_State* L,UFunction* func)
 	{
 		UObject* obj = context.Get();
 		if (!obj) return 0;
@@ -165,7 +165,7 @@ namespace NS_SLUA {
 
 		ensure(lb);
 
-		if (lb->isOverride && lb->currentFunction==func) {
+		if (lb->indexFlag!=IF_NONE && lb->currentFunction==func) {
 			*(bool*)RESULT_PARAM = false;
 			return;
 		}
@@ -202,39 +202,55 @@ namespace NS_SLUA {
 		}
 	}
 
-	NS_SLUA::LuaSuper* LuaBase::newSuper(LuaBase* base)
-	{
-		return new LuaSuper{base};
-	}
-
-	int LuaBase::__superIndex(lua_State* L) {
-		CheckUD(LuaSuper, L, 1);
+	template<typename T>
+	UFunction* getSuperOrRpcFunction(lua_State* L) {
+		CheckUD(T, L, 1);
 		lua_getmetatable(L, 1);
 		const char* name = LuaObject::checkValue<const char*>(L, 2);
 
 		lua_getfield(L, -1, name);
 		lua_remove(L, -2); // remove mt of ud
 		if (!lua_isnil(L, -1)) {
-			return 1;
+			return nullptr;
 		}
-		
+
 		UObject* obj = UD->base->context.Get();
-		if (!obj) 
-			luaL_error(L,"Context is invalid");
+		if (!obj)
+			luaL_error(L, "Context is invalid");
 		UFunction* func = obj->GetClass()->FindFunctionByName(UTF8_TO_TCHAR(name));
 		if (!func || (func->FunctionFlags&FUNC_BlueprintEvent) == 0)
 			luaL_error(L, "Can't find function %s in super", name);
 
+		return func;
+	}
+
+	int LuaBase::__superIndex(lua_State* L) {
+		
+		UFunction* func = getSuperOrRpcFunction<LuaSuper>(L);
+		if (!func) return 1;
+
 		lua_pushlightuserdata(L, func);
-		lua_pushcclosure(L, __superCall, 1);
+		lua_pushboolean(L, false);
+		lua_pushcclosure(L, __superCall, 2);
+		return 1;
+	}
+
+	int LuaBase::__rpcIndex(lua_State* L) {
+
+		UFunction* func = getSuperOrRpcFunction<LuaRpc>(L);
+		if (!func) return 1;
+
+		lua_pushlightuserdata(L, func);
+		lua_pushboolean(L, true);
+		lua_pushcclosure(L, __superCall, 2);
 		return 1;
 	}
 
 	int LuaBase::__superTick(lua_State* L) {
 		CheckUD(LuaSuper, L, 1);
-		UD->base->isOverride = true;
+		UD->base->indexFlag = IF_SUPER;
 		UD->base->superTick(L);
-		UD->base->isOverride = false;
+		UD->base->indexFlag = IF_NONE;
 		return 0;
 	}
 
@@ -246,12 +262,19 @@ namespace NS_SLUA {
 		if (!func || !func->IsValidLowLevel())
 			luaL_error(L, "Super function is isvalid");
 		lua_pop(L, 1);
+		int p = lua_upvalueindex(2);
+		lua_pushvalue(L, p);
+		// get call flag
+		bool isRpc = lua_toboolean(L, -1);
+		// pop
+		lua_pop(L, 1);
+
 		auto lbase = UD->base;
 		ensure(lbase);
 		lbase->currentFunction = func;
-		lbase->isOverride = true;
-		int ret = lbase->superCall(L, func);
-		lbase->isOverride = false;
+		lbase->indexFlag = isRpc?IF_RPC:IF_SUPER;
+		int ret = lbase->superOrRpcCall(L, func);
+		lbase->indexFlag = IF_NONE;
 		lbase->currentFunction = nullptr;
 		return ret;
 	}
@@ -264,10 +287,10 @@ namespace NS_SLUA {
 		return 0;
 	}
 
-	int LuaBase::supergc(lua_State* L)
+	int LuaBase::rpcmt(lua_State* L)
 	{
-		CheckUD(LuaSuper, L, 1);
-		delete UD;
+		LuaObject::setupMTSelfSearch(L);
+		RegMetaMethodByName(L, "__index", __rpcIndex);
 		return 0;
 	}
 

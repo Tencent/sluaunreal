@@ -3,8 +3,11 @@
 local actor={}
 
 function actor:ReceiveBeginPlay()
-    print("actor:ReceiveBeginPlay")
-    self.Super:ReceiveBeginPlay()
+    -- print("actor:ReceiveBeginPlay")
+    -- self.Super:ReceiveBeginPlay()
+    print("call rpc begin")
+    self.Rpc:OnBloodChange("cc","dd")
+    print("call rpc end")
 end
 
 
@@ -17,6 +20,9 @@ end
 -- server event
 function actor:OnBloodChange()
     print("actor:OnBloodChange rpc")
+    -- print("call super begin")
+    -- self.Super:OnBloodChange("aa","bb")
+    -- print("call super end")
 end
 
 function actor:Tick(dt)

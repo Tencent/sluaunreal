@@ -40,11 +40,21 @@ namespace NS_SLUA {
 
 	class SLUA_UNREAL_API LuaBase {
 	public:
+		enum IndexFlag {
+			IF_NONE,
+			IF_SUPER,
+			IF_RPC,
+		};
+
 		virtual bool luaImplemented(UFunction* func, void* params);
 		virtual ~LuaBase() {}
 
 		const FWeakObjectPtr& getContext() const {
 			return context;
+		}
+
+		const IndexFlag getIndexFlag() const {
+			return indexFlag;
 		}
 	protected:
 		
@@ -97,12 +107,12 @@ namespace NS_SLUA {
 			LuaObject::pushType(L, new LuaSuper(this) , "LuaSuper", supermt, genericGC<LuaSuper>);
 			lua_setfield(L, -2, "Super");
 
-			//LuaObject::pushType(L, new LuaRpc(this), "LuaRpc", rpcmt, genericGC<LuaRpc>);
-			//lua_setfield(L, -2, "Rpc");
+			LuaObject::pushType(L, new LuaRpc(this), "LuaRpc", rpcmt, genericGC<LuaRpc>);
+			lua_setfield(L, -2, "Rpc");
 
-			//int top = lua_gettop(L);
-			//bindOverrideFunc(ptrT);
-			//int newtop = lua_gettop(L);
+			int top = lua_gettop(L);
+			bindOverrideFunc(ptrT);
+			int newtop = lua_gettop(L);
 
 			// setup metatable
 			if (!metaTable.isValid()) {
@@ -149,16 +159,10 @@ namespace NS_SLUA {
 		static int __superCall(lua_State* L);
 		static int __rpcCall(lua_State* L);
 
-		enum IndexFlag {
-			IF_NONE,
-			IF_SUPER,
-			IF_RPC,
-		};
-
 		LuaVar luaSelfTable;
 		LuaVar tickFunction;
 		FWeakObjectPtr context;
-		static LuaVar metaTable;
+		LuaVar metaTable;
 		IndexFlag indexFlag = IF_NONE;
 		UFunction* currentFunction = nullptr;
 	};

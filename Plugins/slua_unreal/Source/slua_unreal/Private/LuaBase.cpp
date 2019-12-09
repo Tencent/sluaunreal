@@ -24,8 +24,6 @@ ULuaTableObjectInterface::ULuaTableObjectInterface(const class FObjectInitialize
 
 namespace NS_SLUA {
 
-	NS_SLUA::LuaVar LuaBase::metaTable;
-
 	bool LuaBase::luaImplemented(UFunction * func, void * params)
 	{
 		if (indexFlag!=IF_NONE && func==currentFunction) return false;
@@ -175,7 +173,7 @@ namespace NS_SLUA {
 
 		ensure(lb);
 
-		if (lb->indexFlag!=IF_NONE && lb->currentFunction==func) {
+		if (lb->indexFlag==IF_SUPER && lb->currentFunction==func) {
 			*(bool*)RESULT_PARAM = false;
 			return;
 		}
@@ -229,6 +227,9 @@ namespace NS_SLUA {
 		UObject* obj = UD->base->getContext().Get();
 		if (!obj)
 			luaL_error(L, "Context is invalid");
+		if (UD->base->getIndexFlag() == LuaBase::IF_RPC)
+			luaL_error(L, "Can't call super in RPC function");
+
 		UFunction* func = obj->GetClass()->FindFunctionByName(UTF8_TO_TCHAR(name));
 		if (!func || (func->FunctionFlags&FUNC_BlueprintEvent) == 0)
 			luaL_error(L, "Can't find function %s in super", name);

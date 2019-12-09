@@ -42,6 +42,10 @@ namespace NS_SLUA {
 	public:
 		virtual bool luaImplemented(UFunction* func, void* params);
 		virtual ~LuaBase() {}
+
+		const FWeakObjectPtr& getContext() const {
+			return context;
+		}
 	protected:
 		
 		inline UGameInstance* getGameInstance(AActor* self) {
@@ -93,10 +97,12 @@ namespace NS_SLUA {
 			LuaObject::pushType(L, new LuaSuper(this) , "LuaSuper", supermt, genericGC<LuaSuper>);
 			lua_setfield(L, -2, "Super");
 
-			LuaObject::pushType(L, new LuaRpc(this), "LuaRpc", rpcmt, genericGC<LuaRpc>);
-			lua_setfield(L, -2, "Rpc");
+			//LuaObject::pushType(L, new LuaRpc(this), "LuaRpc", rpcmt, genericGC<LuaRpc>);
+			//lua_setfield(L, -2, "Rpc");
 
-			bindOverrideFunc(ptrT);
+			//int top = lua_gettop(L);
+			//bindOverrideFunc(ptrT);
+			//int newtop = lua_gettop(L);
 
 			// setup metatable
 			if (!metaTable.isValid()) {
@@ -141,6 +147,7 @@ namespace NS_SLUA {
 		static int __rpcIndex(lua_State* L);
 		static int __superTick(lua_State* L);
 		static int __superCall(lua_State* L);
+		static int __rpcCall(lua_State* L);
 
 		enum IndexFlag {
 			IF_NONE,

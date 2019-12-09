@@ -129,9 +129,12 @@ namespace NS_SLUA {
 		// if func had hooked
 		if (func->Script.Num() > 5 && func->Script[5] == Ex_LuaHook)
 			return;
-		// goto 8(a uint32 value) to skip return
-		uint8 code[] = { EX_JumpIfNot,8,0,0,0,Ex_LuaHook,EX_Return,EX_Nothing };
-		func->Script.Insert(code, sizeof(code), 0);
+		// if script isn't empty
+		if (func->Script.Num() > 0) {
+			// goto 8(a uint32 value) to skip return
+			uint8 code[] = { EX_JumpIfNot,8,0,0,0,Ex_LuaHook,EX_Return,EX_Nothing };
+			func->Script.Insert(code, sizeof(code), 0);
+		}
 	}
 
 	LuaBase* checkBase(UObject* obj) {
@@ -162,6 +165,13 @@ namespace NS_SLUA {
 		UFunction* func = Stack.Node;
 		ensure(func);
 		LuaBase* lb = checkBase(Stack.Object);
+
+		// maybe lb is nullptr, some member function with same name in different class
+		// we don't care about it
+		if (!lb) {
+			*(bool*)RESULT_PARAM = false;
+			return;
+		}
 
 		ensure(lb);
 
@@ -195,7 +205,9 @@ namespace NS_SLUA {
 		ensure(cls);
 
 		EFunctionFlags availableFlag = FUNC_BlueprintEvent;
-		for (TFieldIterator<UFunction> it(cls); it && (it->FunctionFlags&availableFlag); ++it) {
+		for (TFieldIterator<UFunction> it(cls); it; ++it) {
+			if (!(it->FunctionFlags&availableFlag))
+				continue;
 			if (luaSelfTable.getFromTable<LuaVar>(it->GetName(), true).isFunction()) {
 				hookBpScript(*it, (FNativeFuncPtr)&luaOverrideFunc);
 			}
@@ -214,7 +226,7 @@ namespace NS_SLUA {
 			return nullptr;
 		}
 
-		UObject* obj = UD->base->context.Get();
+		UObject* obj = UD->base->getContext().Get();
 		if (!obj)
 			luaL_error(L, "Context is invalid");
 		UFunction* func = obj->GetClass()->FindFunctionByName(UTF8_TO_TCHAR(name));
@@ -230,8 +242,7 @@ namespace NS_SLUA {
 		if (!func) return 1;
 
 		lua_pushlightuserdata(L, func);
-		lua_pushboolean(L, false);
-		lua_pushcclosure(L, __superCall, 2);
+		lua_pushcclosure(L, __superCall, 1);
 		return 1;
 	}
 
@@ -241,8 +252,7 @@ namespace NS_SLUA {
 		if (!func) return 1;
 
 		lua_pushlightuserdata(L, func);
-		lua_pushboolean(L, true);
-		lua_pushcclosure(L, __superCall, 2);
+		lua_pushcclosure(L, __rpcCall, 1);
 		return 1;
 	}
 
@@ -262,17 +272,28 @@ namespace NS_SLUA {
 		if (!func || !func->IsValidLowLevel())
 			luaL_error(L, "Super function is isvalid");
 		lua_pop(L, 1);
-		int p = lua_upvalueindex(2);
-		lua_pushvalue(L, p);
-		// get call flag
-		bool isRpc = lua_toboolean(L, -1);
-		// pop
-		lua_pop(L, 1);
-
 		auto lbase = UD->base;
 		ensure(lbase);
 		lbase->currentFunction = func;
-		lbase->indexFlag = isRpc?IF_RPC:IF_SUPER;
+		lbase->indexFlag = IF_SUPER;
+		int ret = lbase->superOrRpcCall(L, func);
+		lbase->indexFlag = IF_NONE;
+		lbase->currentFunction = nullptr;
+		return ret;
+	}
+
+	int LuaBase::__rpcCall(lua_State* L)
+	{
+		CheckUD(LuaRpc, L, 1);
+		lua_pushvalue(L, lua_upvalueindex(1));
+		UFunction* func = (UFunction*)lua_touserdata(L, -1);
+		if (!func || !func->IsValidLowLevel())
+			luaL_error(L, "Super function is isvalid");
+		lua_pop(L, 1);
+		auto lbase = UD->base;
+		ensure(lbase);
+		lbase->currentFunction = func;
+		lbase->indexFlag = IF_RPC;
 		int ret = lbase->superOrRpcCall(L, func);
 		lbase->indexFlag = IF_NONE;
 		lbase->currentFunction = nullptr;

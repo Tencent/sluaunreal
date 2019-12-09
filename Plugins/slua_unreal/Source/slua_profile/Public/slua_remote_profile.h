@@ -148,7 +148,7 @@ namespace slua {
 
 	public:
 		int Event;
-		int64_t Time;
+		int64 Time;
 
 		int Linedefined;
 		FString Name;

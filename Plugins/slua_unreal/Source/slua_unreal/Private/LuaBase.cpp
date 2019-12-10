@@ -66,7 +66,7 @@ namespace NS_SLUA {
 		LuaObject::fillParam(L, 2, func, params.GetStructMemory());
 		{
 			// call function with params
-			obj->ProcessEvent(func, params.GetStructMemory());
+			LuaObject::callUFunction(L, obj, func, params.GetStructMemory());
 		}
 		// return value to push lua stack
 		return LuaObject::returnValue(L, func, params.GetStructMemory());

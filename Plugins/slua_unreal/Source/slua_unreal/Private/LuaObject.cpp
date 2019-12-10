@@ -491,6 +491,25 @@ namespace NS_SLUA {
         }
     }
 
+	void LuaObject::callRpc(lua_State* L, UObject* obj, UFunction* func, uint8* params) {
+		// call rpc without outparams
+		const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
+		uint8* ReturnValueAddress = bHasReturnParam ? ((uint8*)params + func->ReturnValueOffset) : nullptr;
+		FFrame NewStack(obj, func, params, NULL, func->Children);
+		NewStack.OutParms = nullptr;
+		func->Invoke(obj, NewStack, ReturnValueAddress);
+	}
+
+	void LuaObject::callUFunction(lua_State* L, UObject* obj, UFunction* func, uint8* params) {
+		auto ff = func->FunctionFlags;
+		// it's an RPC function
+		if (ff&FUNC_Net)
+			LuaObject::callRpc(L, obj, func, params);
+		else
+		// it's a local function
+			obj->ProcessEvent(func, params);
+	}
+
     // handle return value and out params
     int LuaObject::returnValue(lua_State* L,UFunction* func,uint8* params) {
 
@@ -555,8 +574,7 @@ namespace NS_SLUA {
 		FStructOnScope params(func);
 		LuaObject::fillParam(L, offset, func, params.GetStructMemory());
 		{
-			// call function with params
-			obj->ProcessEvent(func, params.GetStructMemory());
+			LuaObject::callUFunction(L, obj, func, params.GetStructMemory());
 		}
 		// return value to push lua stack
 		return LuaObject::returnValue(L, func, params.GetStructMemory());

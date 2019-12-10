@@ -10,9 +10,9 @@ function actor:ReceiveBeginPlay()
 end
 
 
-function actor:HelloEvent()
-    self.Rpc:MultiClientEvent()
-end
+-- function actor:HelloEvent()
+--     self.Rpc:MultiClientEvent()
+-- end
 
 -- override event from blueprint
 function actor:ReceiveEndPlay(reason)
@@ -22,8 +22,8 @@ end
 
 function actor:onPressH()
     local array = self.tt:GetArrayStr();
+
     self.Rpc:HelloEvent(121,array)
-    --self:RpcTest(121,array)
 end
 
 function actor:MultiClientEvent()

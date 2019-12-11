@@ -18,6 +18,8 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 ## Feature
 
 * call reflection method exported by blueprint
+* support rpc function
+* can override any blueprint function with a lua function
 * add event listener for blueprint event as lua function
 * normal c++ function and class exported by c++ template 
 * auto code generation to wrap your normal c++ fucntion to lua
@@ -34,6 +36,8 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 # slua-unreal 有什么功能
 
 * 通过蓝图反射机制，自动导出unreal 4的蓝图api到lua接口
+* 支持rpc函数调用
+* 支持复写任何蓝图函数，包括rpc函数，用lua函数替代
 * 支持以lua function作为蓝图事件的回调函数
 * 支持普通c++函数和类 通过静态代码生成或者泛型代码展开导出到lua接口，同时支持与蓝图接口交互
 * 完整支持了unreal4的枚举，并导出了全部枚举值到lua

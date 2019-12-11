@@ -669,6 +669,13 @@ namespace NS_SLUA {
             return push(L, TypeName<T>::value().c_str(), ptr);
         }
 
+		// it's an override for non-uobject, non-ptr, only accept struct or class value
+		template<typename T>
+		static int push(lua_State* L, const T& v, typename std::enable_if<!std::is_base_of<UObject, T>::value && std::is_class<T>::value>::type* = nullptr) {
+			T* newPtr = new T(v);
+			return push(L, newPtr);
+		}
+
 		// if T has a member function named LUA_typename,
 		// used this branch
 		template<typename T>

@@ -18,6 +18,8 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 ## Feature
 
 * call reflection method exported by blueprint
+* support rpc function
+* can override any blueprint function with a lua function
 * add event listener for blueprint event as lua function
 * normal c++ function and class exported by c++ template 
 * auto code generation to wrap your normal c++ fucntion to lua
@@ -34,6 +36,8 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 # slua-unreal 有什么功能
 
 * 通过蓝图反射机制，自动导出unreal 4的蓝图api到lua接口
+* 支持rpc函数调用
+* 支持复写任何蓝图函数，包括rpc函数，用lua函数替代
 * 支持以lua function作为蓝图事件的回调函数
 * 支持普通c++函数和类 通过静态代码生成或者泛型代码展开导出到lua接口，同时支持与蓝图接口交互
 * 完整支持了unreal4的枚举，并导出了全部枚举值到lua
@@ -49,6 +53,21 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 
 ![1](profiler.png)
 ![2](profiler_2.png)
+
+
+
+# 调试器支持
+
+# Debugger Support
+
+我们开发了专门的vs code调试插件，支持真机调试，断点，查看变量值，代码智能提示等功能。
+
+We developed a tool integrated with VsCode to support debug in device, breakpoint, watch variant and code intellisence.
+
+![](https://user-images.githubusercontent.com/6227270/69936013-7fbde480-1511-11ea-8cb8-f1eb8d1bd9f2.gif)
+
+[调试器支持](https://github.com/Tencent/luapanda)
+[Debugger](https://github.com/Tencent/luapanda)
 
 # 使用方法简单范例
 
@@ -173,9 +192,6 @@ Test machine, MacOSX, Unreal 4.18 develop building, CPU i7 4GHz, test case can f
 slua-unreal依赖dot-clang做c++静态代码生成的工具稍后开源，目前常用FVector等常用类的静态生成代码已经附带。
 
 [使用帮助(Document in Chinese)](https://github.com/Tencent/sluaunreal/wiki)
-
-[调试器支持](https://github.com/Tencent/luapanda)
-[Debugger](https://github.com/Tencent/luapanda)
 
 [更完整的demo](https://github.com/IriskaDev/slua_unreal_demo)
 

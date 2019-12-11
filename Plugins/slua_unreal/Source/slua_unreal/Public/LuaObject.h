@@ -317,6 +317,8 @@ namespace NS_SLUA {
 		static void finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc, lua_CFunction strHint=nullptr);
 		static void fillParam(lua_State* L, int i, UFunction* func, uint8* params);
 		static int returnValue(lua_State* L, UFunction* func, uint8* params);
+		
+		static void callUFunction(lua_State* L, UObject* obj, UFunction* func, uint8* params);
 		// create new enum type to lua, see DefEnum macro
 		template<class T>
 		static void newEnum(lua_State* L, const char* tn, const char* keys, std::initializer_list<T> values) {
@@ -767,6 +769,7 @@ namespace NS_SLUA {
         static void setupMetaTable(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc);
 		static void setupMetaTable(lua_State* L, const char* tn, lua_CFunction setupmt, int gc);
 		static void setupMetaTable(lua_State* L, const char* tn, lua_CFunction gc);
+		static void callRpc(lua_State* L, UObject* obj, UFunction* func, uint8* params);
 
         template<class T, bool F = IsUObject<T>::value>
         static int pushType(lua_State* L,T cls,const char* tn,lua_CFunction setupmt,int gc) {

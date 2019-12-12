@@ -369,7 +369,7 @@ namespace slua
 		MessageReader << Linedefined;
 		MessageReader << Name;
 		MessageReader << ShortSrc;
-        
-		return true;
+
+        return true;
 	}
 }

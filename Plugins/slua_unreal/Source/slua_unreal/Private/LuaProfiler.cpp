@@ -134,9 +134,9 @@ namespace NS_SLUA {
             
             if(L) {
                 MemorySnapshot snapshot;
-                SnapshotMap map2 = snapshot.getMemorySnapshot(L, 7, 2);
-                SnapshotMap map1 = snapshot.getMemorySnapshot(L, 7, 1);
-                SnapshotMap diff = snapshot.checkMemoryDiff(map2);
+                SnapshotMap map = snapshot.getMemorySnapshot(L, MARKED + 1);
+                SnapshotMap::printMap(map);
+                SnapshotMap diff = map.checkMemoryDiff(map);
                 SnapshotMap::printMap(diff);
             }
         }

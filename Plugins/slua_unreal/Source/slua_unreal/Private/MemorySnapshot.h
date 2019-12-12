@@ -19,6 +19,14 @@
 #include "LuaState.h"
 #include "lua/lua.hpp"
 
+#define TABLE 0
+#define FUNCTION 1
+#define SOURCE 2
+#define THREAD 3
+#define USERDATA 4
+#define OTHERS 5
+#define MARKED 6
+
 namespace NS_SLUA {
     // use lightuserdata as the map key
     typedef TMap<const void*, LuaMemInfo> MemoryNodeMap;
@@ -33,12 +41,12 @@ namespace NS_SLUA {
         bool isMarked(const void *pointer);
         static void printMap(SnapshotMap shotMap);
         MemoryTypeMap* getMemoryMap(int index);
+        SnapshotMap checkMemoryDiff(SnapshotMap map);
     };
     
     class MemorySnapshot{
     public:
-        SnapshotMap checkMemoryDiff(SnapshotMap map);
-        SnapshotMap getMemorySnapshot(lua_State *L, int typeSize, int type);
+        SnapshotMap getMemorySnapshot(lua_State *L, int typeSize);
         
     private:
         lua_State *L;

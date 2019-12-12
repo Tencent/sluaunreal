@@ -13,23 +13,16 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #include "MemorySnapshot.h"
+#include "LuaState.h"
 #include "Log.h"
-
-#define TABLE 0
-#define FUNCTION 1
-#define SOURCE 2
-#define THREAD 3
-#define USERDATA 4
-#define OTHERS 5 
-#define MARKED 6
-//#define LUAARRAY 6
-//#define LUAMAP 7
-//#define MARKED 8
 
 #define convert2str(data) FString::Printf(TEXT(data))
 
 namespace NS_SLUA {
     FString chooseMemoryUnit(float memoryByteSize) {
+        if(memoryByteSize < 1024.0f) {
+            return FString::Printf(TEXT("%d Bytes"), (int)memoryByteSize);
+        }
         // form byte to KB
         memoryByteSize /= 1024.0f;
         
@@ -67,20 +60,49 @@ namespace NS_SLUA {
         return &typeArray[index];
     }
     
-    SnapshotMap MemorySnapshot::getMemorySnapshot(lua_State *cL, int typeSize, int type){
+    /* check memory difference between two SnapshotMap */
+    SnapshotMap SnapshotMap::checkMemoryDiff(SnapshotMap previousMap) {
+        SnapshotMap diffMap;
+        diffMap.initSnapShotMap(MARKED);
+        
+        for(int i = 0; i < MARKED; i++){
+            MemoryTypeMap typeMap = typeArray[i];
+            MemoryTypeMap compareTypeMap = *previousMap.getMemoryMap(i);
+            
+            for(auto &parent : typeArray[i]) {
+                if(compareTypeMap.Contains(parent.Key)) {
+                    compareTypeMap.Remove(parent.Key);
+                } else {
+                    diffMap.getMemoryMap(i)->Add(parent.Key, parent.Value);
+                }
+            }
+            
+            for(auto &parent : compareTypeMap) {
+                // if not contains the key, the key-value is a light c function
+                if(parent.Value.Contains(parent.Key)) {
+                    int size = -(parent.Value.FindRef(parent.Key).size);
+                    parent.Value.Find(parent.Key)->size = size;
+                }
+                diffMap.getMemoryMap(i)->Add(parent.Key, parent.Value);
+            }
+        }
+        
+        return diffMap;
+    }
+    
+    SnapshotMap MemorySnapshot::getMemorySnapshot(lua_State *cL, int typeSize){
         L = cL;
         shotMap.Empty();
         shotMap.initSnapShotMap(typeSize);
-        //get lua registry table
-        lua_pushvalue(L, LUA_REGISTRYINDEX);
-        if(type == 2) {
+
         // mark lua registry table
+        lua_pushvalue(L, LUA_REGISTRYINDEX);
         markTable(NULL, convert2str("registry table"));
-        } else {
+
         // mark lua _G root
-        lua_rawgeti(L, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS);
-        markTable(NULL, convert2str("_G root"));
-        }
+//        lua_rawgeti(L, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS);
+//        markTable(NULL, convert2str("_G root"));
+        
         // free pointer L;
         L = nullptr;
         delete L;
@@ -217,7 +239,6 @@ namespace NS_SLUA {
         // check the mode of table's key and value
         bool weakKey = false;
         bool weakValue = false;
-        
         if(lua_getmetatable(L, -1)) {
             // push the key in top and get the key's value
             lua_pushliteral(L, "__mode");
@@ -233,6 +254,11 @@ namespace NS_SLUA {
             lua_pop(L, 1);
             markTable(pointer, convert2str("metatable"));
         }
+        
+        
+            weakKey = false;
+            weakValue = false;
+        
         
         //traverce table - regirstry table or the table's value(if value is a table -1:nil, -2:value, -3:key)
         lua_pushnil(L);
@@ -258,14 +284,6 @@ namespace NS_SLUA {
         size = sizeof(Table) + sizeof(TValue) * h->sizearray +
                                sizeof(Node) * (h->lastfree == NULL ? 0 : sizenode(h));
 
-//        if(shotMap.getMemoryMap(TABLE)->Find(pointer)->Contains(pointer)) {
-//            LuaMemInfo memInfo = shotMap.getMemoryMap(TABLE)->Find(pointer)->FindRef(pointer);
-//            UE_LOG(LogTemp, Warning, TEXT("dec : %s, add : %p, parent : %p, size : %d"), *memInfo.hint, pointer, memInfo.ptr, memInfo.size)
-//        }
-//        if(shotMap.getMemoryMap(TABLE)->Contains(pointer)) {
-//            Log::Log("parent");
-//        }
-        
         shotMap.getMemoryMap(TABLE)->Find(pointer)->Find(pointer)->size = size;
         lua_pop(L, 1);
     }
@@ -316,28 +334,59 @@ namespace NS_SLUA {
     }
     
     void MemorySnapshot::markUserdata(const void *parent, FString description){
-        // judge the userdata type - LuaAcror, LuaArray, LuaMap
-        if(lua_getmetatable(L, -1)) {
-            // check the item whether is Lua Array
-            lua_pushliteral(L, "__name");
-            lua_rawget(L, -2);
-            if(lua_isstring(L, -1)){
-                const char *name = lua_tostring(L, -1);
-                FString nameStr = FString::Printf(TEXT("%s : "), UTF8_TO_TCHAR(name));
-//                if(nameStr.Equals("LuaArray : ", ESearchCase::CaseSensitive) ||
-//                   nameStr.Equals("LuaMap : ", ESearchCase::CaseSensitive){
-                    description = nameStr + description;
-//                }
-            }
-            lua_pop(L, 2);
-        }
-
         int size = 0;
+        bool isTexture = false;
+        TArray<FString> strArray;
+        
+//        // get userdata type info
+//        lua_getglobal(L, "tostring");
+//        lua_pushvalue(L, -1);   // tostring function to be called
+//        lua_pushvalue(L, -3);   // push userdata copy into stack
+//        lua_call(L, 1, 1);      // call tostring function to get type info
+//
+//        const char *name = lua_tostring(L, -1);    // get result
+//        FString nameStr = FString::Printf(TEXT("%s"), UTF8_TO_TCHAR(name));
+//        int32 arrayNum = nameStr.ParseIntoArray(strArray, TEXT(" ")) - 1;
+//        // drop the userdata's address
+//        nameStr = TEXT("");
+//        for (int i = 0; i < arrayNum; i++) {
+//            nameStr += (strArray[i] + TEXT(" "));
+//        }
+//        description = nameStr + description;
+//        lua_pop(L, 2);
+        
+        // get userdata type info
+        UObject* obj = LuaObject::checkUD<UObject>(L, -1, false);
+        if (obj) {
+            FString clsName = obj->GetClass()->GetFName().ToString();
+            FString objName = obj->GetFName().ToString();
+            description = FString::Printf(TEXT("%s : %s %s"), *clsName, *objName, *description);
+        } else {
+            int tt = luaL_getmetafield(L, -1, "__name");
+            if(lua_type(L,-1)==LUA_TSTRING) {
+                const char *metaname = lua_tostring(L,-1);
+                
+                description = FString::Printf(TEXT("%s : %s"), *FString(metaname), *description);
+            }
+            
+            if(tt != LUA_TNIL)lua_pop(L, 1);
+        }
+        
         const void *pointer = readObject(parent, description);
-
+        
         if(pointer == NULL) return;
         
-        size = lua_rawlen(L, -1);
+        if(obj) {
+            // calculate the UObject size, plus 512 used to output the greatest integer
+            size = obj->GetResourceSizeBytes(EResourceSizeMode::Exclusive);
+//            Log::Log("%d -> %f", size, ((float)size / 1024.0f));
+        }
+        
+        // if the UObject's size is 0, use lua_rawlen to get size
+        if(size == 0) {
+            size = lua_rawlen(L, -1);
+//            Log::Log("rawlen : %d -> %f", size, ((float)size / 1024.0f));
+        }
         shotMap.getMemoryMap(USERDATA)->Find(pointer)->Find(pointer)->size = size;
 
         // record userdata's metatable
@@ -359,7 +408,7 @@ namespace NS_SLUA {
         
         if(pointer == NULL)return;
         
-        // record enviroment
+        // TODO : record enviroment
        
         // record function upvalue;
         int upvalueIndex = 1;
@@ -408,6 +457,7 @@ namespace NS_SLUA {
         }
     }
     
+    /* mark lua string, number, boolean, nil types */
     void MemorySnapshot::markOthers(const void *parent, FString description){
         int size = 0;
         const void *pointer = readObject(parent, description);
@@ -415,36 +465,6 @@ namespace NS_SLUA {
         if(pointer == NULL) return;
         
         lua_pop(L, 1);
-    }
-    
-    /* check memory difference between two SnapshotMap */
-    SnapshotMap MemorySnapshot::checkMemoryDiff(SnapshotMap previousMap) {
-        SnapshotMap diffMap;
-        diffMap.initSnapShotMap(MARKED);
-        
-        for(int i = 0; i < MARKED; i++){
-            MemoryTypeMap typeMap = *shotMap.getMemoryMap(i);
-            MemoryTypeMap compareTypeMap = *previousMap.getMemoryMap(i);
-            
-            for(auto &parent : *shotMap.getMemoryMap(i)) {
-                if(compareTypeMap.Contains(parent.Key)) {
-                    compareTypeMap.Remove(parent.Key);
-                } else {
-                    diffMap.getMemoryMap(i)->Add(parent.Key, parent.Value);
-                }
-            }
-            
-            for(auto &parent : compareTypeMap) {
-                // if not contains the key, the key-value is a light c function
-                if(parent.Value.Contains(parent.Key)) {
-                    int size = -(parent.Value.FindRef(parent.Key).size);
-                    parent.Value.Find(parent.Key)->size = size;
-                }
-                diffMap.getMemoryMap(i)->Add(parent.Key, parent.Value);
-            }
-        }
-        
-        return diffMap;
     }
     
     /* print the map recording lua memory*/

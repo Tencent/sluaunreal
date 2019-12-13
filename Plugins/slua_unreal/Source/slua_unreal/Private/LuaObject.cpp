@@ -861,6 +861,11 @@ namespace NS_SLUA {
 		if (LuaWrapper::pushValue(L, p, uss, parms))
 			return 1;
 
+		if (uss->GetName() == "LuaBPVar") {
+			((FLuaBPVar*)parms)->value.push(L);
+			return 1;
+		}
+
 		uint32 size = uss->GetStructureSize() ? uss->GetStructureSize() : 1;
 		uint8* buf = (uint8*)FMemory::Malloc(size);
 		uss->InitializeStruct(buf);

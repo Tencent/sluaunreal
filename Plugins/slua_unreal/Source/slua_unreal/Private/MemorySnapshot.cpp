@@ -94,7 +94,7 @@ namespace NS_SLUA {
         L = cL;
         shotMap.Empty();
         shotMap.initSnapShotMap(typeSize);
-
+                 
         // mark lua registry table
         lua_pushvalue(L, LUA_REGISTRYINDEX);
         markTable(NULL, convert2str("registry table"));
@@ -107,21 +107,6 @@ namespace NS_SLUA {
         L = nullptr;
         delete L;
         return shotMap;
-    }
-    
-    FString MemorySnapshot::chooseMemoryUnit(float memoryByteSize) {
-        // form byte to KB
-        memoryByteSize /= 1024.0f;
-
-        if (memoryByteSize < 1024) {
-            return FString::Printf(TEXT("%.3f KB"), memoryByteSize);
-        } else if (memoryByteSize < 1024 * 1024) {
-            return FString::Printf(TEXT("%.3f MB"), (memoryByteSize /= 1024.0f));
-        } else if (memoryByteSize >= 1024 * 1024) {
-            return FString::Printf(TEXT("%.3f GB"), (memoryByteSize /= (1024.0f * 1024.0f)));
-        }
-        
-        return FString::Printf(TEXT("%.3f"), memoryByteSize);
     }
     
     /* get the value's key in one pair */
@@ -147,6 +132,46 @@ namespace NS_SLUA {
         }
         
         return keyStr;
+    }
+    
+    int MemorySnapshot::getLuaObjSize(int mapType, const void *pointer) {
+        int size = 0;
+        switch (mapType) {
+            case TABLE: {
+                Table *h = (Table *)pointer;
+                size = sizeof(Table) + sizeof(TValue) * h->sizearray +
+                                       sizeof(Node) * (h->lastfree == NULL ? 0 : sizenode(h));
+                break;
+            }
+            case THREAD: {
+                lua_State *tL = lua_tothread(L, -1);
+                size = sizeof(lua_State) + sizeof(TValue) * tL->stacksize +
+                                           sizeof(CallInfo) * tL->nci;
+                break;
+            }
+            case FUNCTION: {
+                Closure *cl = (Closure *)pointer;
+                if(lua_iscfunction(L, -1)) {
+                    // reocrd c function size
+                    size = sizeof(CClosure) + sizeof(TValue) * (cl->c.nupvalues - 1);
+                } else {
+                    // get lua closure debug info
+                    size = sizeof(LClosure) + sizeof(TValue *) * (cl->l.nupvalues - 1);
+                }
+                break;
+            }
+            case USERDATA: {
+                UObject* obj = LuaObject::checkUD<UObject>(L, -1, false);
+                
+                // calculate the UObject size, plus 512 used to output the greatest integer
+                if(obj) size = obj->GetResourceSizeBytes(EResourceSizeMode::Exclusive);
+                
+                // if the UObject's size is 0, use lua_rawlen to get size
+                if(size == 0) size = lua_rawlen(L, -1);
+                break;
+            }
+        }
+        return size;
     }
 
     /* read the top item in the lua regirstry */
@@ -187,9 +212,12 @@ namespace NS_SLUA {
             if(shotMap.getMemoryMap(mapType)->Contains(pointer) ||
                shotMap.getMemoryMap(mapType)->Find(pointer) != NULL){
                 MemoryNodeMap *childMap = shotMap.getMemoryMap(mapType)->Find(pointer);
+                
                 LuaMemInfo memInfo;
                 memInfo.hint = description;
                 memInfo.ptr = (void *)pointer;
+                memInfo.size = getLuaObjSize(mapType, pointer);
+                
                 childMap->Add(parent, memInfo);
             }
             lua_pop(L,1);
@@ -200,7 +228,7 @@ namespace NS_SLUA {
         LuaMemInfo memInfo;
         memInfo.hint = description;
         memInfo.ptr = (void *)parent;
-        memInfo.size = 0;
+        memInfo.size = getLuaObjSize(mapType, pointer);
         childMap.Add(pointer, memInfo);
         shotMap.getMemoryMap(mapType)->Add(pointer, childMap);
         return pointer;
@@ -279,12 +307,6 @@ namespace NS_SLUA {
             }
         }
         
-        // record table size
-        Table *h = (Table *)pointer;
-        size = sizeof(Table) + sizeof(TValue) * h->sizearray +
-                               sizeof(Node) * (h->lastfree == NULL ? 0 : sizenode(h));
-
-        shotMap.getMemoryMap(TABLE)->Find(pointer)->Find(pointer)->size = size;
         lua_pop(L, 1);
     }
     
@@ -376,19 +398,6 @@ namespace NS_SLUA {
         
         if(pointer == NULL) return;
         
-        if(obj) {
-            // calculate the UObject size, plus 512 used to output the greatest integer
-            size = obj->GetResourceSizeBytes(EResourceSizeMode::Exclusive);
-//            Log::Log("%d -> %f", size, ((float)size / 1024.0f));
-        }
-        
-        // if the UObject's size is 0, use lua_rawlen to get size
-        if(size == 0) {
-            size = lua_rawlen(L, -1);
-//            Log::Log("rawlen : %d -> %f", size, ((float)size / 1024.0f));
-        }
-        shotMap.getMemoryMap(USERDATA)->Find(pointer)->Find(pointer)->size = size;
-
         // record userdata's metatable
         if(lua_getmetatable(L, -1)) markObject(parent, convert2str("userdata metatable"));
         
@@ -433,11 +442,8 @@ namespace NS_SLUA {
                 // NULL value use to judge whether the function map item is light c function
                 shotMap.getMemoryMap(FUNCTION)->FindAndRemoveChecked(pointer);
                 shotMap.getMemoryMap(FUNCTION)->Add(pointer);
-            } else {
-                // reocrd c function size
-                size = sizeof(CClosure) + sizeof(TValue) * (cl->c.nupvalues - 1);
-                shotMap.getMemoryMap(FUNCTION)->Find(pointer)->Find(pointer)->size = size;
             }
+
             lua_pop(L, 1);
         } else {
             // get lua closure debug info

@@ -52,10 +52,10 @@ namespace NS_SLUA {
         lua_State *L;
         SnapshotMap shotMap;
         
+        int getLuaObjSize(int mapType, const void *pointer);
         FString getKey(int keyIndex);
-        FString chooseMemoryUnit(float memoryByteSize);
         const void* readObject(const void *parent, FString description);
-        
+
         void markObject(const void *parent, FString description);
         void markTable(const void *parent, FString description);
         void markThread(const void *parent, FString description);

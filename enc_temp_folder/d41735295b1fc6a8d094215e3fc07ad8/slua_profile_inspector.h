@@ -27,7 +27,6 @@
 #include "slua_unreal/Private/LuaMemoryProfile.h"
 #include "Input/Reply.h"
 
-
 #define IsMemoryProfiler (m_stdLineVisibility.Get() != EVisibility::Visible)
 
 struct FunctionProfileInfo;
@@ -80,7 +79,7 @@ public:
     SProfilerInspector();
     ~SProfilerInspector();
     
-    void Refresh(TArray<SluaProfiler>& curProfilersArray, TArray<NS_SLUA::LuaMemInfo> memoryInfoList, TArray<TArray<int>> snapshotInfo);
+    void Refresh(TArray<SluaProfiler>& curProfilersArray, TArray<NS_SLUA::LuaMemInfo> memoryInfoList);
     TSharedRef<class SDockTab> GetSDockTab();
     TSharedRef<ITableRow> OnGenerateMemRowForList(TSharedPtr<FileMemInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
     TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FunctionProfileInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
@@ -120,7 +119,6 @@ private:
     
     TArray<float> chartValArray;
     TArray<float> memChartValArray;
-    TArray<TArray<int>> snapshotInfoArray;
     TArray<TSharedPtr<FString>> snapshotIdArray;
     bool stopChartRolling;
     int refreshIdx;

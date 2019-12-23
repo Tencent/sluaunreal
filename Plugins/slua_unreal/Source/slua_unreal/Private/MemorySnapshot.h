@@ -29,7 +29,7 @@
 
 namespace NS_SLUA {
     // use lightuserdata as the map key
-    typedef TMap<const void*, LuaMemInfo> MemoryNodeMap;
+    typedef TMap<FString, LuaMemInfo> MemoryNodeMap;
     typedef TMap<const void*, MemoryNodeMap> MemoryTypeMap;
     
     class SnapshotMap{
@@ -39,7 +39,11 @@ namespace NS_SLUA {
         void Empty();
         void initSnapShotMap(int typeSize);
         bool isMarked(const void *pointer);
+        
         static void printMap(SnapshotMap shotMap);
+        static int getSnapshotMemSize(SnapshotMap shotMap);
+        static int getSnapshotObjSize(SnapshotMap shotMap);
+        
         MemoryTypeMap* getMemoryMap(int index);
         SnapshotMap checkMemoryDiff(SnapshotMap map);
     };

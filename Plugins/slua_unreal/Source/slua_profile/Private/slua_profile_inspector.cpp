@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #include "SlateColorBrush.h"
+#include "Widgets/Input/STextComboBox.h"
 #include "Widgets/Input/SCheckBox.h"
 #include "Widgets/Images/SImage.h"
 #include "Public/Brushes/SlateDynamicImageBrush.h"
@@ -28,7 +29,6 @@
 #include "LuaProfiler.h"
 #include "Sockets.h"
 #include "Log.h"
-#include "slua_profile.h"
 #include "slua_profile_inspector.h"
 
 static const FName slua_profileTabNameInspector("slua_profile");
@@ -52,6 +52,7 @@ SProfilerInspector::SProfilerInspector()
     mouseUpPoint = FVector2D(-1.0f, 0.0f);
     mouseDownPoint = FVector2D(-1.0f, 0.0f);
 	initLuaMemChartList();
+	snapshotIdArray.Add(MakeShareable(new FString("Choose one snapshot")));
 	chartValArray.SetNumUninitialized(sampleNum);
 	memChartValArray.SetNumUninitialized(sampleNum);
 	luaMemNodeChartList.SetNumUninitialized(sampleNum);
@@ -65,6 +66,7 @@ SProfilerInspector::~SProfilerInspector()
 	tmpProfiler.Empty();
 	luaMemNodeChartList.Empty();
     tempLuaMemNodeChartList.Empty();
+    snapshotIdArray.Empty();
 }
 
 void SProfilerInspector::StartChartRolling()
@@ -121,7 +123,7 @@ void  SProfilerInspector::CopyFunctionNode(TSharedPtr<FunctionProfileInfo>& oldF
 	newFuncNode->mergeIdxArray = oldFuncNode->mergeIdxArray;
 }
 
-void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray, TArray<NS_SLUA::LuaMemInfo> memoryInfoList)
+void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray, TArray<NS_SLUA::LuaMemInfo> memoryInfoList, TArray<TArray<int>> snapshotInfo)
 {
 	if (stopChartRolling == true || profilersArray.Num() == 0)
 	{
@@ -131,6 +133,7 @@ void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray, TArray<NS
 	CollectMemoryNode(memoryInfoList);
 	AssignProfiler(profilersArray, tmpRootProfiler, tmpProfiler);
 
+    snapshotInfoArray = snapshotInfo;
 	tmpProfilersArraySamples[arrayOffset] = profilersArray;
 	arrayOffset = (arrayOffset + 1) >= sampleNum ? 0 : (arrayOffset + 1);
 
@@ -572,7 +575,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 	memProfilerWidget->SetOnMouseLeave(FSimpleNoReplyPointerEventHandler::CreateLambda([=](const FPointerEvent&) {
 		isMemMouseButtonDown = false;
 	}));
-
+    
 	// init tree view
 	SAssignNew(treeview, STreeView<TSharedPtr<FunctionProfileInfo>>)
 	.ItemHeight(800)
@@ -644,6 +647,20 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 						return FReply::Handled();
 					}))
 				]
+             
+                +SVerticalBox::Slot()
+                .Padding(8.0, 5.0)
+                .MaxHeight(200.0f)
+                .Padding(0, 3.0f)
+                [
+                    SAssignNew(memTabWidget, SProfilerTabWidget)
+                    .TabIcon(FEditorStyle::GetBrush("Matinee.CreateCameraActor"))
+                    .TabName(FText::FromString("Lua Memory\nSnapshot"))
+                    .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+                        tabSwitcher->SetActiveWidgetIndex(2);
+                        return FReply::Handled();
+                    }))
+                ]
 			]
 		]
 
@@ -720,147 +737,262 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 			+SWidgetSwitcher::Slot()
 			.HAlign(EHorizontalAlignment::HAlign_Fill)
 			[
-				SAssignNew(tabSwitcher, SWidgetSwitcher)
-				.WidgetIndex(0)
-				+SWidgetSwitcher::Slot()
-				[
-					SNew(SVerticalBox)
-					+SVerticalBox::Slot().AutoHeight()
-					[
-						SNew(SHorizontalBox)
-						+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth().Padding(5.0f, 3.0f, 0, 0)
-						[
-							SNew(STextBlock)
-							.Text(FText::FromString("MEMORY	|   "))
-						]
 
-						+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(0, 3.0f, 15.0f, 0).MaxWidth(100.0f)
-						[
-							SNew(STextBlock)
-							.Text_Lambda([=]() {
-							FString totalMemory = TEXT("Total : ") + ChooseMemoryUnit(luaTotalMemSize);
-							return FText::FromString(totalMemory);
-							})
-						]
-
-						+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).MaxWidth(25.0f)
-						[
-							memProfilerCheckBox.ToSharedRef()
-						]
-
-						+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).MaxWidth(60.0f).Padding(0, 3.0f, 0, 0)
-						[
-							SNew(STextBlock).Text(FText::FromName("Animate"))
-						]
-
-						+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).MaxWidth(60.0f)
-						[
-							SNew(SButton).Text(FText::FromName("Clear"))
-							.ContentPadding(FMargin(2.0, 2.0))
-							.OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-							OnClearBtnClicked();
-							return FReply::Handled();
-							}))	
-						]
-					
-                        + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth()
-                        [
-                            SNew(SButton)
-                            .Text(FText::FromName("Forced GC"))
-                            .ContentPadding(FMargin(2.0, 2.0))
-                            .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-                                FArrayWriter messageWriter;
-                                int bytesSend = 0;
-                                int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_MEMORY_GC;
-                                int connectionsSize = ProfileServer->GetConnections().Num();
-
-                                messageWriter.Empty();
-                                messageWriter.Seek(0);
-                                messageWriter << hookEvent;
-
-                                if(connectionsSize > 0)
-                                {
-                                    FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
-                                    if (socket && socket->GetConnectionState() == SCS_Connected)
-                                        socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
-                                }
-
-                                return FReply::Handled();
-                            }))
-                        ]
-                     
-                        + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth().Padding(20.0f, 0)
-                        [
-                            SNew(SButton)
-                            .Text(FText::FromName("Snapshot"))
-                            .ContentPadding(FMargin(2.0, 2.0))
-                            .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-                                FArrayWriter messageWriter;
-                                int bytesSend = 0;
-                                int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_MEMORY_SNAPSHOT;
-                                int connectionsSize = ProfileServer->GetConnections().Num();
-
-                                messageWriter.Empty();
-                                messageWriter.Seek(0);
-                                messageWriter << hookEvent;
-
-                                if(connectionsSize > 0)
-                                {
-                                    FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
-                                    if (socket && socket->GetConnectionState() == SCS_Connected)
-                                        socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
-                                }
-
-                                return FReply::Handled();
-                            }))
-                        ]
-					]
-
-					+ SVerticalBox::Slot().AutoHeight()
-					[
-						SNew(SHorizontalBox)
-						+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Fill)
-						[
-							memProfilerWidget.ToSharedRef()
-						]
-					]
-
-					+ SVerticalBox::Slot().AutoHeight()
-					[
-						SNew(SVerticalBox)
-						+SVerticalBox::Slot()
-						.Padding(0, 1.0f)
-						.HAlign(EHorizontalAlignment::HAlign_Fill)
-						.MaxHeight(1.0f)
-						[
-							SNew(SBorder)
-							.BorderImage(FEditorStyle::GetBrush("ProgressBar.ThinBackground"))
-						]
-					]
-
-					+ SVerticalBox::Slot()
+                SNew(SVerticalBox)
+                +SVerticalBox::Slot().AutoHeight()
+                [
+                    SNew(SHorizontalBox)
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth().Padding(5.0f, 3.0f, 0, 0)
                     [
-                        SNew(SScrollBox)
-                        +SScrollBox::Slot()
-                        [
-                            SNew(SVerticalBox)
-                            + SVerticalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Center).Padding(0, 10.0f)
-                            [
-                                SNew(STextBlock).Text_Lambda([=]() {
-                                FString titleStr = TEXT("============================ Memory profiler Max("
-                                                 + ChooseMemoryUnit(maxLuaMemory)
-                                                 +"), Avg("
-                                                 + ChooseMemoryUnit(avgLuaMemory)
-                                                 +") ============================");
-                                return FText::FromString(titleStr);
-                                })
-                            ]
-                        ]
+                        SNew(STextBlock)
+                        .Text(FText::FromString("MEMORY	|   "))
+                    ]
 
-                        + SScrollBox::Slot()
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(0, 3.0f, 15.0f, 0).MaxWidth(100.0f)
+                    [
+                        SNew(STextBlock)
+                        .Text_Lambda([=]() {
+                        FString totalMemory = TEXT("Total : ") + ChooseMemoryUnit(luaTotalMemSize);
+                        return FText::FromString(totalMemory);
+                        })
+                    ]
+
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).MaxWidth(25.0f)
+                    [
+                        memProfilerCheckBox.ToSharedRef()
+                    ]
+
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).MaxWidth(60.0f).Padding(0, 3.0f, 0, 0)
+                    [
+                        SNew(STextBlock).Text(FText::FromName("Animate"))
+                    ]
+
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).MaxWidth(60.0f)
+                    [
+                        SNew(SButton).Text(FText::FromName("Clear"))
+                        .ContentPadding(FMargin(2.0, 2.0))
+                        .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+                        OnClearBtnClicked();
+                        return FReply::Handled();
+                        }))
+                    ]
+                
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth()
+                    [
+                        SNew(SButton)
+                        .Text(FText::FromName("Forced GC"))
+                        .ContentPadding(FMargin(2.0, 2.0))
+                        .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+                            FArrayWriter messageWriter;
+                            int bytesSend = 0;
+                            int emptySnapshotID = -1;
+                            int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_MEMORY_GC;
+                            int connectionsSize = ProfileServer->GetConnections().Num();
+
+                            messageWriter.Empty();
+                            messageWriter.Seek(0);
+                            messageWriter << hookEvent;
+                            messageWriter << emptySnapshotID;
+                            messageWriter << emptySnapshotID;
+                        
+                            if(connectionsSize > 0)
+                            {
+                                FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
+                                if (socket && socket->GetConnectionState() == SCS_Connected)
+                                    socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
+                            }
+
+                            return FReply::Handled();
+                        }))
+                    ]
+                ]
+
+                + SVerticalBox::Slot().AutoHeight()
+                [
+                    SNew(SHorizontalBox)
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Fill)
+                    [
+                        memProfilerWidget.ToSharedRef()
+                    ]
+                ]
+
+                + SVerticalBox::Slot().AutoHeight()
+                [
+                    SNew(SVerticalBox)
+                    +SVerticalBox::Slot()
+                    .Padding(0, 1.0f)
+                    .HAlign(EHorizontalAlignment::HAlign_Fill)
+                    .MaxHeight(1.0f)
+                    [
+                        SNew(SBorder)
+                        .BorderImage(FEditorStyle::GetBrush("ProgressBar.ThinBackground"))
+                    ]
+                ]
+
+                + SVerticalBox::Slot()
+                [
+                    SNew(SScrollBox)
+                    +SScrollBox::Slot()
+                    [
+                        SNew(SVerticalBox)
+                        + SVerticalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Center).Padding(0, 10.0f)
                         [
-                            memTreeView.ToSharedRef()
+                            SNew(STextBlock).Text_Lambda([=]() {
+                            FString titleStr = TEXT("============================ Memory profiler Max("
+                                             + ChooseMemoryUnit(maxLuaMemory)
+                                             +"), Avg("
+                                             + ChooseMemoryUnit(avgLuaMemory)
+                                             +") ============================");
+                            return FText::FromString(titleStr);
+                            })
                         ]
+                    ]
+
+                    + SScrollBox::Slot()
+                    [
+                        memTreeView.ToSharedRef()
+                    ]
+                ]
+            ]
+         
+            +SWidgetSwitcher::Slot()
+            .HAlign(EHorizontalAlignment::HAlign_Fill)
+            [
+                SNew(SVerticalBox)
+                +SVerticalBox::Slot().AutoHeight()
+                [
+                    SNew(SHorizontalBox)
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth().Padding(15.0f, 3.0f, 15.0, 0)
+                    [
+                        SNew(SButton)
+                        .Text(FText::FromName("Snapshot"))
+                        .ContentPadding(FMargin(2.0, 2.0))
+                        .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+                            FArrayWriter messageWriter;
+                            int bytesSend = 0;
+                            int emptySnapshotID = -1;
+                            int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_MEMORY_SNAPSHOT;
+                            int connectionsSize = ProfileServer->GetConnections().Num();
+
+                            messageWriter.Empty();
+                            messageWriter.Seek(0);
+                            messageWriter << hookEvent;
+                            messageWriter << emptySnapshotID;
+                            messageWriter << emptySnapshotID;
+
+                            if(connectionsSize > 0)
+                            {
+                                FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
+                                if (socket && socket->GetConnectionState() == SCS_Connected) {
+                                    socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
+                                    if(bytesSend > 0) {
+										snapshotIdArray.Add(MakeShareable(new FString(TEXT("memory snapshot ") + FString::FromInt(snapshotIdArray.Num()))));
+                                    }
+                                }
+                            }
+
+                            return FReply::Handled();
+                            }))
+                    ]
+                 
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(3.0f, 5.0f, 3.0f, 0).AutoWidth()
+                    [
+                        SNew(STextBlock)
+                        .Text(FText::FromName("Need Compare : "))
+                    ]
+                 
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(0, 3.0f, 5.0f, 0).AutoWidth()
+                    [
+                        SNew(STextComboBox)
+//                        .Font(IDetailLayoutBuilder::GetDetailFont())
+                        .OptionsSource(&snapshotIdArray)
+                        .InitiallySelectedItem(snapshotIdArray[0])
+                        .OnSelectionChanged_Raw(this, &SProfilerInspector::OnPreSnapshotItemChanged)
+                    ]
+                 
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(3.0f, 5.0f, 3.0f, 0).AutoWidth()
+                    [
+                        SNew(STextBlock)
+                        .Text(FText::FromName("<->"))
+                    ]
+                 
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(5.0f, 3.0f, 5.0f, 0).AutoWidth()
+                    [
+                        SNew(STextComboBox)
+//                        .Font(IDetailLayoutBuilder::GetDetailFont())
+                        .OptionsSource(&snapshotIdArray)
+                        .InitiallySelectedItem(snapshotIdArray[0])
+                        .OnSelectionChanged_Raw(this, &SProfilerInspector::OnSnapshotItemChanged)
+                    ]
+                 
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).AutoWidth().Padding(5.0f, 3.0f, 0, 0)
+                    [
+                        SNew(SButton)
+                        .Text(FText::FromName("Compare"))
+                        .ContentPadding(FMargin(2.0, 2.0))
+                        .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+                        
+                        for(int i = 0; i < snapshotInfoArray.Num(); i++) {
+                            UE_LOG(LogTemp, Warning, TEXT("%d : obj : %d, memSize : %d"), i, (snapshotInfoArray[i])[0], (snapshotInfoArray[i])[1]);
+                        }
+                            FArrayWriter messageWriter;
+                            int bytesSend = 0;
+                            int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_COMPARE;
+                            int connectionsSize = ProfileServer->GetConnections().Num();
+                        
+                            messageWriter.Empty();
+                            messageWriter.Seek(0);
+                            messageWriter << hookEvent;
+                            messageWriter << preSnapshotID;
+                            messageWriter << snapshotID;
+                        
+                            if(connectionsSize > 0)
+                            {
+                                FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
+                                if (socket && socket->GetConnectionState() == SCS_Connected && snapshotID && preSnapshotID) {
+                                    socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
+                                }
+                            }
+                            return FReply::Handled();
+                        }))
+                    ]
+                ]
+             
+                + SVerticalBox::Slot().AutoHeight()
+                [
+                    SNew(SVerticalBox)
+                    +SVerticalBox::Slot()
+                    .Padding(0, 1.0f)
+                    .HAlign(EHorizontalAlignment::HAlign_Fill)
+                    .MaxHeight(1.0f)
+                    [
+                        SNew(SBorder)
+                        .BorderImage(FEditorStyle::GetBrush("ProgressBar.ThinBackground"))
+                    ]
+                ]
+
+                + SVerticalBox::Slot()
+                [
+                    SNew(SScrollBox)
+                    +SScrollBox::Slot()
+                    [
+                        SNew(SVerticalBox)
+                        + SVerticalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Center).Padding(0, 10.0f)
+                        [
+                            SNew(STextBlock).Text_Lambda([=]() {
+                            FString titleStr = TEXT("============================ Diff Memory Size("
+                                       + ChooseMemoryUnit(maxLuaMemory)
+                                       +"), Diff Object Num("
+                                       + ChooseMemoryUnit(avgLuaMemory)
+                                       +") ============================");
+                            return FText::FromString(titleStr);
+                            })
+                        ]
+                    ]
+
+                    + SScrollBox::Slot()
+                    [
+                    memTreeView.ToSharedRef()
                     ]
                 ]
             ]
@@ -1292,6 +1424,30 @@ void SortMemInfo(ShownMemInfoList& list, int beginIndex, int endIndex)
 void SProfilerInspector::SortShownInfo()
 {
     SortMemInfo(shownFileInfo, 0, shownFileInfo.Num()-1);
+}
+
+void SProfilerInspector::OnSnapshotItemChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo)
+{
+    for(int32 ItemID = 0; ItemID < snapshotIdArray.Num(); ItemID++)
+    {
+        if(snapshotIdArray[ItemID] == NewSelection )
+        {
+            snapshotID = ItemID;
+            UE_LOG(LogTemp, Warning, TEXT("snapshot ID : %d"), snapshotID);
+        }
+    }
+}
+
+void SProfilerInspector::OnPreSnapshotItemChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo)
+{
+    for(int32 ItemID = 0; ItemID < snapshotIdArray.Num(); ItemID++)
+    {
+        if(snapshotIdArray[ItemID] == NewSelection )
+        {
+            preSnapshotID = ItemID;
+            UE_LOG(LogTemp, Warning, TEXT("pre snapshot ID : %d"), preSnapshotID);
+        }
+    }
 }
 
 void SProfilerInspector::CalcPointMemdiff(int beginIndex, int endIndex)

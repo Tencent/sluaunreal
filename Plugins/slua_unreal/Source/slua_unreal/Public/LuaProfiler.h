@@ -26,7 +26,8 @@ namespace NS_SLUA {
 		PHE_LINE = 2,
 		PHE_TAILRET = 4,
         PHE_MEMORY_GC = 5,
-        PHE_MEMORY_SNAPSHOT = 6
+        PHE_MEMORY_SNAPSHOT = 6,
+        PHE_SNAPSHOT_COMPARE = 7
 	};
 
 	class SLUA_UNREAL_API LuaProfiler

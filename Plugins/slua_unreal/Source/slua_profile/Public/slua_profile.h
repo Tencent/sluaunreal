@@ -67,22 +67,6 @@ private:
     void debug_hook_c(int event, double nanoseconds, int linedefined, const FString& name, const FString& short_src, TArray<NS_SLUA::LuaMemInfo> memoryInfoList);
 };
 
-struct SLUA_PROFILE_API FunctionProfileInfo
-{
-	FString functionName;
-	FString brevName;
-	int64_t begTime;
-	int64_t endTime;
-	int64_t costTime;
-	int64_t mergedCostTime;
-	int globalIdx;
-	int layerIdx;
-	int mergedNum;
-	bool beMerged;
-	bool isDuplicated = false;
-	TArray<int> mergeIdxArray;
-};
-
 #if WITH_EDITOR
 class Flua_profileCommands : public TCommands<Flua_profileCommands>
 {

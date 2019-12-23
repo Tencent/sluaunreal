@@ -56,6 +56,67 @@ namespace NS_SLUA {
        return false;
     }
     
+    int SnapshotMap::getSnapshotMemSize(SnapshotMap shotMap) {
+        int64 totalSize = 0;
+        for(int i = 0; i < MARKED; i++){
+            if(i == SOURCE) continue;
+            
+            FString mapType = convert2str("");
+            MemoryTypeMap map = *shotMap.getMemoryMap(i);
+            for(auto &parent : map) {
+                FString keyPointer = FString::Printf(TEXT("%p"),parent.Key);
+                
+                if(i == FUNCTION) {
+                    MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
+                    
+                    if(sourceMap == NULL) {
+                        if(parent.Value.Num() == 0) continue;
+                        
+                        totalSize += parent.Value.Contains(keyPointer) ?
+                                     parent.Value.FindRef(keyPointer).size :0;
+                    } else {
+                        totalSize += parent.Value.Contains(keyPointer) ?
+                                     sourceMap->FindRef(keyPointer).size : 0;
+                    }
+                }else if(i == THREAD) {
+                    MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
+                    totalSize += parent.Value.Contains(keyPointer) ?
+                                 sourceMap->FindRef(keyPointer).size : 0;
+                    
+                } else {
+                    totalSize += parent.Value.Contains(keyPointer) ?
+                                 parent.Value.FindRef(keyPointer).size : 0;
+                }
+            }
+        }
+
+        //return value are expressed in KB: #bytes/2^10 */
+        return cast_int(totalSize >> 10);
+    }
+
+    int SnapshotMap::getSnapshotObjSize(SnapshotMap shotMap){
+        int objSize = 0;
+        for(int i = 0; i < MARKED; i++){
+            if(i == SOURCE) continue;
+            
+            FString mapType = convert2str("");
+            MemoryTypeMap map = *shotMap.getMemoryMap(i);
+            for(auto &parent : map) {
+                FString keyPointer = FString::Printf(TEXT("%p"),parent.Key);
+                
+                if(i == FUNCTION) {
+                    MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
+                    if(sourceMap == NULL && parent.Value.Num() == 0) continue;
+                }
+                
+                for(auto &child : parent.Value) {
+                    objSize ++;
+                }
+            }
+        }
+        return objSize;
+    }
+    
     MemoryTypeMap* SnapshotMap::getMemoryMap(int index){
         return &typeArray[index];
     }
@@ -79,9 +140,9 @@ namespace NS_SLUA {
             
             for(auto &parent : compareTypeMap) {
                 // if not contains the key, the key-value is a light c function
-                if(parent.Value.Contains(parent.Key)) {
-                    int size = -(parent.Value.FindRef(parent.Key).size);
-                    parent.Value.Find(parent.Key)->size = size;
+                if(parent.Value.Contains(FString::Printf(TEXT("%p"),parent.Key))) {
+                    int size = -(parent.Value.FindRef(FString::Printf(TEXT("%p"),parent.Key)).size);
+                    parent.Value.Find(FString::Printf(TEXT("%p"),parent.Key))->size = size;
                 }
                 diffMap.getMemoryMap(i)->Add(parent.Key, parent.Value);
             }
@@ -209,8 +270,8 @@ namespace NS_SLUA {
         // check if the item have already recorded
         if(shotMap.isMarked(pointer)){
             // put the item's description and its parent address as child item in its map
-            if(shotMap.getMemoryMap(mapType)->Contains(pointer) ||
-               shotMap.getMemoryMap(mapType)->Find(pointer) != NULL){
+            if(shotMap.getMemoryMap(mapType)->Contains(pointer) &&
+               shotMap.getMemoryMap(mapType)->FindRef(pointer).Num() != 0){
                 MemoryNodeMap *childMap = shotMap.getMemoryMap(mapType)->Find(pointer);
                 
                 LuaMemInfo memInfo;
@@ -218,7 +279,7 @@ namespace NS_SLUA {
                 memInfo.ptr = (void *)pointer;
                 memInfo.size = getLuaObjSize(mapType, pointer);
                 
-                childMap->Add(parent, memInfo);
+                childMap->Add(FString::Printf(TEXT("%p"), parent), memInfo);
             }
             lua_pop(L,1);
             return NULL;
@@ -229,8 +290,9 @@ namespace NS_SLUA {
         memInfo.hint = description;
         memInfo.ptr = (void *)parent;
         memInfo.size = getLuaObjSize(mapType, pointer);
-        childMap.Add(pointer, memInfo);
+        childMap.Add(FString::Printf(TEXT("%p"),pointer), memInfo);
         shotMap.getMemoryMap(mapType)->Add(pointer, childMap);
+        
         return pointer;
     }
     
@@ -349,7 +411,7 @@ namespace NS_SLUA {
         memInfo.hint = threadInfo;
         memInfo.ptr = (void *)pointer;
         memInfo.size = size;
-        map.Add(pointer, memInfo);
+        map.Add(FString::Printf(TEXT("%p"),pointer), memInfo);
         shotMap.getMemoryMap(SOURCE)->Add(pointer, map);
         
         lua_pop(L, 1);
@@ -443,7 +505,7 @@ namespace NS_SLUA {
                 shotMap.getMemoryMap(FUNCTION)->FindAndRemoveChecked(pointer);
                 shotMap.getMemoryMap(FUNCTION)->Add(pointer);
             }
-
+            
             lua_pop(L, 1);
         } else {
             // get lua closure debug info
@@ -458,7 +520,7 @@ namespace NS_SLUA {
             memInfo.hint = info;
             memInfo.size = size;
             memInfo.ptr = (void *)pointer;
-            map.Add(pointer, memInfo);
+            map.Add(FString::Printf(TEXT("%p"),pointer), memInfo);
             shotMap.getMemoryMap(SOURCE)->Add(pointer, map);
         }
     }
@@ -496,60 +558,70 @@ namespace NS_SLUA {
                     mapType = convert2str("OtherType");
                     break;
             }
-            
+//
             MemoryTypeMap map = *shotMap.getMemoryMap(i);
             for(auto &parent : map) {
                 FString memInfo = convert2str("");
+                FString keyPointer = FString::Printf(TEXT("%p"),parent.Key);
                 memInfo = mapType + FString::Printf(TEXT(" -> Item Address : %p "), parent.Key);
                 
                 if(i == FUNCTION) {
-                    MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
                     FString source;
+                    FString funcInfo;
+                    FString funcName;
+                    FString funcSize;
+                    
+                    MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
                     
                     if(sourceMap == NULL) {
-                        source = convert2str("Light c function");
-                        memInfo += source;
-                        continue;
-                    } else {
-                        FString funcInfo =  sourceMap->Contains(parent.Key) ?
-                                            sourceMap->FindRef(parent.Key).hint :
-                                            convert2str("");
-                        FString funcName =  parent.Value.Contains(parent.Key) ?
-                                            parent.Value.FindRef(parent.Key).hint:
-                                            convert2str("");
-                        FString funcSize =  parent.Value.Contains(parent.Key) ?
-                                            chooseMemoryUnit(sourceMap->FindRef(parent.Key).size) :
-                                            convert2str("");
+                        if(parent.Value.Num() == 0) continue;
                         
-                        memInfo += FString::Printf(TEXT("%s, name : %s, size : %s "), *funcInfo, *funcName, *funcSize);
-                        Log::Log("%s", TCHAR_TO_UTF8(*memInfo));
-                        continue;
+                        funcInfo =  parent.Value.Contains(keyPointer) ?
+                                            parent.Value.FindRef(keyPointer).hint :
+                                            convert2str("");
+                        funcName =  convert2str("C Funtion ");
+                        
+                        funcSize =  parent.Value.Contains(keyPointer) ?
+                                            chooseMemoryUnit(parent.Value.FindRef(keyPointer).size) :
+                                            convert2str("empty size");
+                    } else {
+                        funcInfo =  sourceMap->Contains(keyPointer) ?
+                                            sourceMap->FindRef(keyPointer).hint :
+                                            convert2str("");
+                        funcName =  parent.Value.Contains(keyPointer) ?
+                                            parent.Value.FindRef(keyPointer).hint:
+                                            convert2str("");
+                        funcSize =  parent.Value.Contains(keyPointer) ?
+                                            chooseMemoryUnit(sourceMap->FindRef(keyPointer).size) :
+                                            convert2str("");
                     }
-                } else if(i == THREAD) {
+                    
+                    memInfo += FString::Printf(TEXT("%s, name : %s, size : %s "), *funcInfo, *funcName, *funcSize);
+                }else if(i == THREAD) {
                     MemoryNodeMap *sourceMap =  shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
-                    FString threadInfo = sourceMap->Contains(parent.Key) ?
-                                                sourceMap->FindRef(parent.Key).hint :
+                    FString threadInfo = sourceMap->Contains(keyPointer) ?
+                                                sourceMap->FindRef(keyPointer).hint :
                                                 convert2str("");
-                    FString threadSize = parent.Value.Contains(parent.Key) ?
-                                        chooseMemoryUnit(sourceMap->FindRef(parent.Key).size) :
+                    FString threadSize = parent.Value.Contains(keyPointer) ?
+                                        chooseMemoryUnit(sourceMap->FindRef(keyPointer).size) :
                                         convert2str("");
                     
                     memInfo += FString::Printf(TEXT("%s , size : %s "),  *threadInfo, *threadSize);
                 } else {
-                    FString info =  parent.Value.Contains(parent.Key) ?
-                                    parent.Value.FindRef(parent.Key).hint :
+                    FString info =  parent.Value.Contains(keyPointer) ?
+                                    parent.Value.FindRef(keyPointer).hint :
                                     convert2str("");
-                    FString size =  parent.Value.Contains(parent.Key) ?
-                                    chooseMemoryUnit(parent.Value.FindRef(parent.Key).size) :
+                    FString size =  parent.Value.Contains(keyPointer) ?
+                                    chooseMemoryUnit(parent.Value.FindRef(keyPointer).size) :
                                     convert2str("");
                     memInfo += FString::Printf(TEXT(" %s , size : %s "), *info, *size);
                 }
-                
+    
                 for(auto &child : parent.Value) {
-                    if(child.Key == parent.Key) continue;
+                    if(child.Key.Equals(keyPointer)) continue;
                     FString size = chooseMemoryUnit(child.Value.size);
-//                    memInfo = FString::Printf(TEXT("Child : address :%p\tvalue : %s"), child.Key, *child.Value);
-                    memInfo += FString::Printf(TEXT("\nChild value : %s , parent : %p, address : %p , size : %s"), *child.Value.hint, child.Key, child.Value.ptr, *chooseMemoryUnit(child.Value.size));
+//                    memInfo = FString::Printf(TEXT("Child : address :%d\tvalue : %s"), *child.Key, *child.Value);
+                    memInfo += FString::Printf(TEXT("\nChild value : %s , parent : %s, address : %p , size : %s"), *child.Value.hint, *child.Key, child.Value.ptr, *chooseMemoryUnit(child.Value.size));
                 }
                 Log::Log("%s", TCHAR_TO_UTF8(*memInfo));
             }

@@ -52,7 +52,8 @@ namespace NS_SLUA {
     };
 
     namespace {
-
+        int snapshotID = 0;
+        int preSnapshotID = 0;
 		LuaVar selfProfiler;
 		bool ignoreHook = false;
 		HookState currentHookState = HookState::UNHOOK;
@@ -104,8 +105,9 @@ namespace NS_SLUA {
             if(!tcpSocket) return false;
             
             int event = 0;
+            int emptyID = 0;
             FArrayReader messageReader = FArrayReader(true);
-            messageReader.SetNumUninitialized(sizeof(int));
+            messageReader.SetNumUninitialized(sizeof(int) * 3);
             
             int err = recvraw(&tcpSocket->buf, wanted, messageReader);
             if(err != IO_DONE) {
@@ -113,6 +115,15 @@ namespace NS_SLUA {
             }
             
             messageReader << event;
+            
+            if(event == PHE_SNAPSHOT_COMPARE) {
+                messageReader << preSnapshotID;
+                messageReader << snapshotID;
+            } else {
+                messageReader << emptyID;
+                messageReader << emptyID;
+            }
+            
             return event;
         }
         
@@ -126,18 +137,6 @@ namespace NS_SLUA {
                 lua_gc(L, LUA_GCCOLLECT, 0);
                 nowMemSize = lua_gc(L, LUA_GCCOUNT, 0);
                 Log::Log(("After GC , lua free %d KB"), originMemSize - nowMemSize);
-            }
-        }
-        
-        void memorySnapshot(lua_State *L) {
-            if(!tcpSocket) return;
-            
-            if(L) {
-                MemorySnapshot snapshot;
-                SnapshotMap map = snapshot.getMemorySnapshot(L, MARKED + 1);
-                SnapshotMap::printMap(map);
-                SnapshotMap diff = map.checkMemoryDiff(map);
-                SnapshotMap::printMap(diff);
             }
         }
     
@@ -239,6 +238,31 @@ namespace NS_SLUA {
             makeMemoryProfilePackage(s_memoryMessageWriter, event, memoryInfoList);
             sendMessage(s_memoryMessageWriter);
         }
+        
+        void takeMemSnapshotSample(int event, double objSize, int memorySize) {
+            static FArrayWriter s_messageWriter;
+            s_messageWriter.Empty();
+            s_messageWriter.Seek(0);
+            makeProfilePackage(s_messageWriter, event, objSize, memorySize, "", "");
+            sendMessage(s_messageWriter);
+        }
+        
+        void getMemorySnapshot(lua_State *L) {
+            if(!tcpSocket) return;
+            
+            if(L) {
+                MemorySnapshot snapshot;
+                SnapshotMap map = snapshot.getMemorySnapshot(L, MARKED + 1);
+                SnapshotMap::printMap(map);
+                double objSize = (double)SnapshotMap::getSnapshotObjSize(map);
+                int memSize = SnapshotMap::getSnapshotMemSize(map);
+                
+                takeMemSnapshotSample(PHE_SNAPSHOT_COMPARE, objSize, memSize);
+				Log::Log("obj size : %d, memSIze : %d", cast_int(objSize), memSize);
+                //                SnapshotMap diff = map.checkMemoryDiff(map);
+                //                SnapshotMap::printMap(diff);
+            }
+        }
 
 		void debug_hook(lua_State* L, lua_Debug* ar) {
 			if (ignoreHook) return;
@@ -309,19 +333,22 @@ namespace NS_SLUA {
     
 		RunState currentRunState = (RunState)selfProfiler.getFromTable<int>("currentRunState");
 		if (currentRunState == RunState::CONNECTED) {
+            TArray<LuaMemInfo> memoryInfoList;
+            
             if(checkSocketRead()){
-                int wantedSize = 4;
+                int wantedSize = sizeof(int) * 3;
                 switch (receieveMessage(wantedSize)) {
-                    case PHE_MEMORY_SNAPSHOT:
-                        memorySnapshot(L);
+                    case PHE_MEMORY_SNAPSHOT: {
+                        getMemorySnapshot(L);
+                        
                         break;
+                    }
                     case PHE_MEMORY_GC:
                         memoryGC(L);
                         break;
                 }
             }
             
-            TArray<LuaMemInfo> memoryInfoList;
             for(auto& memInfo : NS_SLUA::LuaMemoryProfile::memDetail()) {
                 memoryInfoList.Add(memInfo.Value);
             }

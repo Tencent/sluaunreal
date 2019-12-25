@@ -37,8 +37,9 @@ namespace {
 	static const FString CoroutineName(TEXT("coroutine"));
 	SluaProfiler curProfiler;
 	
-    TArray<TArray<int>> snapshotInfoArray;
+    TArray<SnapshotInfo> snapshotInfoArray;
     TArray<NS_SLUA::LuaMemInfo> memoryInfo;
+    TArray<NS_SLUA::LuaMemInfo> snapshotDiffArray;
 	TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe> curProfilersArray = MakeShareable(new TArray<SluaProfiler>());
 	TQueue<TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe>, EQueueMode::Mpsc> profilerArrayQueue;
 
@@ -108,7 +109,9 @@ bool Fslua_profileModule::Tick(float DeltaTime)
 	{
 		TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe> profilesArray;
 		profilerArrayQueue.Dequeue(profilesArray);
-		sluaProfilerInspector->Refresh(*profilesArray.Get(), memoryInfo, snapshotInfoArray);
+		sluaProfilerInspector->Refresh(*profilesArray.Get(), memoryInfo, snapshotInfoArray, snapshotDiffArray);
+        snapshotInfoArray.Empty();
+        snapshotDiffArray.Empty();
 	}
 
 	return true;
@@ -295,12 +298,16 @@ void Fslua_profileModule::debug_hook_c(int event, double nanoseconds, int linede
     {
         memoryInfo = memoryInfoList;
     }
-    else if(event == NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_COMPARE) {
-		TArray<int> snapInfo;
-		snapInfo.Add(cast_int(nanoseconds));
-		snapInfo.Add(linedefined);
-		UE_LOG(LogTemp, Warning, TEXT("obj : %d, memSIze : %d"), cast_int(nanoseconds), linedefined);
-        snapshotInfoArray.Add(snapInfo);
+    else if(event == NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_COMPARE)
+    {
+        snapshotDiffArray = memoryInfoList;
+    }
+    else if (event == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_SNAPSHOT) {
+        SnapshotInfo info;
+        info.memSize = linedefined;
+        info.objSize = cast_int(nanoseconds);
+        info.id = FCString::Atoi(*name);
+        snapshotInfoArray.Add(info);
     }
 }
 

@@ -32,12 +32,14 @@
 #include "slua_profile_inspector.h"
 
 static const FName slua_profileTabNameInspector("slua_profile");
+FLinearColor checkLinearColor(float checkNumber);
 void SortMemInfo(ShownMemInfoList& list, int beginIndex, int endIndex);
 void ExchangeMemInfoNode(ShownMemInfoList& list, int originIndx, int newIndex);
 ///////////////////////////////////////////////////////////////////////////
 SProfilerInspector::SProfilerInspector()
 {
 	stopChartRolling = false;
+    showSnapshotDiff = false;
 	arrayOffset = 0;
 	lastArrayOffset = 0;
 	refreshIdx = 0;
@@ -123,17 +125,23 @@ void  SProfilerInspector::CopyFunctionNode(TSharedPtr<FunctionProfileInfo>& oldF
 	newFuncNode->mergeIdxArray = oldFuncNode->mergeIdxArray;
 }
 
-void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray, TArray<NS_SLUA::LuaMemInfo> memoryInfoList, TArray<TArray<int>> snapshotInfo)
+void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray, TArray<NS_SLUA::LuaMemInfo> memoryInfoList,
+                                 TArray<SnapshotInfo> snapshotArray, TArray<NS_SLUA::LuaMemInfo> snapshotDifferentArray)
 {
 	if (stopChartRolling == true || profilersArray.Num() == 0)
 	{
+        if(memoryInfoList.Num()) CollectMemoryNode(memoryInfoList);
+        if(snapshotArray.Num()) CollectSnapshotInfo(snapshotArray);
+        if(snapshotDifferentArray.Num()) CollectSnapshotDiff(snapshotDifferentArray);
+
 		return;
 	}
 
+    if(snapshotArray.Num()) CollectSnapshotInfo(snapshotArray);
+    if(snapshotDifferentArray.Num()) CollectSnapshotDiff(snapshotDifferentArray);
 	CollectMemoryNode(memoryInfoList);
 	AssignProfiler(profilersArray, tmpRootProfiler, tmpProfiler);
 
-    snapshotInfoArray = snapshotInfo;
 	tmpProfilersArraySamples[arrayOffset] = profilersArray;
 	arrayOffset = (arrayOffset + 1) >= sampleNum ? 0 : (arrayOffset + 1);
 
@@ -585,10 +593,10 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 	.SelectionMode(ESelectionMode::None)
 	.HeaderRow
 	(
-	 SNew(SHeaderRow)
-	 + SHeaderRow::Column("Overview").DefaultLabel(FText::FromName("Overview")).FixedWidth(fixRowWidth)
-	 + SHeaderRow::Column("Time ms").DefaultLabel(FText::FromName("Time ms")).FixedWidth(fixRowWidth)
-	 + SHeaderRow::Column("Calls").DefaultLabel(FText::FromName("Calls")).FixedWidth(fixRowWidth)
+        SNew(SHeaderRow)
+        + SHeaderRow::Column("Overview").DefaultLabel(FText::FromName("Overview")).FixedWidth(fixRowWidth)
+        + SHeaderRow::Column("Time ms").DefaultLabel(FText::FromName("Time ms")).FixedWidth(fixRowWidth)
+        + SHeaderRow::Column("Calls").DefaultLabel(FText::FromName("Calls")).FixedWidth(fixRowWidth)
 	 );
 
     SAssignNew(memTreeView, STreeView<TSharedPtr<FileMemInfo>>)
@@ -600,9 +608,35 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
     .HeaderRow
     (
         SNew(SHeaderRow)
-         + SHeaderRow::Column("Overview").DefaultLabel(FText::FromName("Overview")).FixedWidth(fixRowWidth)
-         + SHeaderRow::Column("Memory Size").DefaultLabel(FText::FromName("Memory Size")).FixedWidth(fixRowWidth)
-         + SHeaderRow::Column("Compare Two Point").DefaultLabel(FText::FromName("Compare Two Point")).FixedWidth(fixRowWidth)
+        + SHeaderRow::Column("Overview").DefaultLabel(FText::FromName("Overview")).FixedWidth(fixRowWidth)
+        + SHeaderRow::Column("Memory Size").DefaultLabel(FText::FromName("Memory Size")).FixedWidth(fixRowWidth)
+        + SHeaderRow::Column("Compare Two Point").DefaultLabel(FText::FromName("Compare Two Point")).FixedWidth(fixRowWidth)
+     );
+    
+    SAssignNew(snapshotDiffTreeView, STreeView<TSharedPtr<FileMemInfo>>)
+    .ItemHeight(800)
+    .TreeItemsSource(&snapshotDiffParentArray)
+    .OnGenerateRow_Raw(this, &SProfilerInspector::OnGenerateSnapshotDiffList)
+    .OnGetChildren_Raw(this, &SProfilerInspector::OnGetSnapshotDiffChildrenForTree)
+    .SelectionMode(ESelectionMode::None)
+    .HeaderRow
+    (
+     SNew(SHeaderRow)
+     + SHeaderRow::Column("Object Info").DefaultLabel(FText::FromName("Object Info")).FixedWidth(snapshotInfoRowWidth)
+     + SHeaderRow::Column("Memory Size").DefaultLabel(FText::FromName("Memory Size")).FixedWidth(fixRowWidth)
+     );
+    
+    SAssignNew(snapshotListView, SListView<TSharedPtr<SnapshotInfo>>)
+    .ItemHeight(800)
+    .ListItemsSource(&snapshotInfoArray)
+    .OnGenerateRow_Raw(this, &SProfilerInspector::OnGenerateSnapshotInfoRowForList)
+    .SelectionMode(ESelectionMode::None)
+    .HeaderRow
+    (
+        SNew(SHeaderRow)
+        + SHeaderRow::Column("Snapshot Name").DefaultLabel(FText::FromName("Snapshot Name")).FixedWidth(fixRowWidth)
+        + SHeaderRow::Column("Allocations (Diff)").DefaultLabel(FText::FromName("Allocations(Diff)")).FixedWidth(fixRowWidth)
+        + SHeaderRow::Column("Memory Size (Diff)").DefaultLabel(FText::FromName("Memory Size (Diff)")).FixedWidth(fixRowWidth)
      );
 
 	memProfilerWidget->SetStdLineVisibility(EVisibility::Collapsed);
@@ -752,7 +786,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                     [
                         SNew(STextBlock)
                         .Text_Lambda([=]() {
-                        FString totalMemory = TEXT("Total : ") + ChooseMemoryUnit(luaTotalMemSize);
+                        FString totalMemory = TEXT("Total : ") + ChooseMemoryUnit(luaTotalMemSize * 1024.0f);
                         return FText::FromString(totalMemory);
                         })
                     ]
@@ -839,9 +873,9 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                         [
                             SNew(STextBlock).Text_Lambda([=]() {
                             FString titleStr = TEXT("============================ Memory profiler Max("
-                                             + ChooseMemoryUnit(maxLuaMemory)
+                                             + ChooseMemoryUnit(maxLuaMemory * 1024.0f)
                                              +"), Avg("
-                                             + ChooseMemoryUnit(avgLuaMemory)
+                                             + ChooseMemoryUnit(avgLuaMemory * 1024.0f)
                                              +") ============================");
                             return FText::FromString(titleStr);
                             })
@@ -871,22 +905,32 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                             FArrayWriter messageWriter;
                             int bytesSend = 0;
                             int emptySnapshotID = -1;
+                            int snapshotSendId = snapshotIdArray.Num();
                             int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_MEMORY_SNAPSHOT;
                             int connectionsSize = ProfileServer->GetConnections().Num();
 
                             messageWriter.Empty();
                             messageWriter.Seek(0);
                             messageWriter << hookEvent;
+                            messageWriter << snapshotSendId;
                             messageWriter << emptySnapshotID;
                             messageWriter << emptySnapshotID;
 
                             if(connectionsSize > 0)
                             {
                                 FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
-                                if (socket && socket->GetConnectionState() == SCS_Connected) {
+                                if (socket && socket->GetConnectionState() == SCS_Connected)
+                                {
                                     socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
-                                    if(bytesSend > 0) {
-										snapshotIdArray.Add(MakeShareable(new FString(TEXT("memory snapshot ") + FString::FromInt(snapshotIdArray.Num()))));
+                                    if(bytesSend > 0)
+                                    {
+                                        FString *name = new FString(TEXT("memory snapshot ") + FString::FromInt(snapshotSendId));
+										snapshotIdArray.Add(MakeShareable(name));
+                                        SnapshotInfo *info = new SnapshotInfo();
+                                        info->name = *name;
+                                        info->id = snapshotSendId;
+//                                        info->preInfoPtr = snapshotSendId == 1 ? NULL : snapshotInfoArray[snapshotSendId - 2].Get();
+                                        snapshotInfoArray.Add(MakeShareable(info));
                                     }
                                 }
                             }
@@ -931,27 +975,29 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                         .Text(FText::FromName("Compare"))
                         .ContentPadding(FMargin(2.0, 2.0))
                         .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-                        
-                        for(int i = 0; i < snapshotInfoArray.Num(); i++) {
-                            UE_LOG(LogTemp, Warning, TEXT("%d : obj : %d, memSize : %d"), i, (snapshotInfoArray[i])[0], (snapshotInfoArray[i])[1]);
-                        }
                             FArrayWriter messageWriter;
                             int bytesSend = 0;
+                            int snapshotSendId = 0;
                             int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_COMPARE;
                             int connectionsSize = ProfileServer->GetConnections().Num();
                         
                             messageWriter.Empty();
                             messageWriter.Seek(0);
                             messageWriter << hookEvent;
+                            messageWriter << snapshotSendId;
                             messageWriter << preSnapshotID;
                             messageWriter << snapshotID;
                         
                             if(connectionsSize > 0)
                             {
                                 FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
-                                if (socket && socket->GetConnectionState() == SCS_Connected && snapshotID && preSnapshotID) {
+                                // if snapshotId or preSnapshotId equals 0, means that user does not choose effective snapshot
+                                if (socket && socket->GetConnectionState() == SCS_Connected && snapshotID && preSnapshotID)
+                                {
                                     socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
                                 }
+                                
+                                if(bytesSend > 0) showSnapshotDiff = true;
                             }
                             return FReply::Handled();
                         }))
@@ -977,22 +1023,42 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                     +SScrollBox::Slot()
                     [
                         SNew(SVerticalBox)
+                        .Visibility_Lambda([=]() {
+                            if(showSnapshotDiff && preSnapshotID && snapshotID)
+                            {
+                                return EVisibility::Visible;
+                            } else {
+                                return EVisibility::Collapsed;
+                            }
+                        })
+                     
                         + SVerticalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Center).Padding(0, 10.0f)
                         [
                             SNew(STextBlock).Text_Lambda([=]() {
+                            SnapshotInfo *preInfo = snapshotInfoArray[preSnapshotID-1].Get();
+                            SnapshotInfo *info = snapshotInfoArray[snapshotID-1].Get();
+                            
+                            int memDiffSize = info->memSize - preInfo->memSize;
+                            int objDiffSize = info->objSize - preInfo->objSize;
+                            
                             FString titleStr = TEXT("============================ Diff Memory Size("
-                                       + ChooseMemoryUnit(maxLuaMemory)
+                                       + ChooseMemoryUnit(memDiffSize * 1024.0f)
                                        +"), Diff Object Num("
-                                       + ChooseMemoryUnit(avgLuaMemory)
+                                       + FString::FromInt(objDiffSize)
                                        +") ============================");
                             return FText::FromString(titleStr);
                             })
+                        ]
+                     
+                        +SVerticalBox::Slot().AutoHeight()
+                        [
+                            snapshotDiffTreeView.ToSharedRef()
                         ]
                     ]
 
                     + SScrollBox::Slot()
                     [
-                    memTreeView.ToSharedRef()
+                        snapshotListView.ToSharedRef()
                     ]
                 ]
             ]
@@ -1151,35 +1217,25 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateRowForList(TSharedPtr<Functi
 	 ];
 }
 
-
 TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<FileMemInfo> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
     FText difference;
-    FLinearColor linearColor;
     
     if(Item->lineNumber.Equals("-1", ESearchCase::CaseSensitive))
         difference = FText::FromString("");
     else
-        difference = FText::FromString(ChooseMemoryUnit(Item->difference / 1024.0));
-    
-    if (Item->difference > 0) {
-        linearColor = FLinearColor(1, 0, 0, 1);
-    } else if (Item->difference < 0) {
-        linearColor = FLinearColor(0, 1, 0, 1);
-    } else {
-        linearColor = FLinearColor(1, 1, 1, 1);
-    }
+        difference = FText::FromString(ChooseMemoryUnit((float)Item->difference));
     
 	return
 	SNew(STableRow<TSharedPtr<FString>>, OwnerTable)
 	.Padding(2.0f)
 	[
-         SNew(SHeaderRow)
-         + SHeaderRow::Column("Overview").DefaultLabel(TAttribute<FText>::Create([=]() {
+        SNew(SHeaderRow)
+        + SHeaderRow::Column("Overview").DefaultLabel(TAttribute<FText>::Create([=]() {
             if (!Item->hint.IsEmpty())
             {
                 FString fileNameInfo;
-                
+
                 if(Item->lineNumber.Equals("-1", ESearchCase::CaseSensitive))
                     fileNameInfo = Item->hint;
                 else
@@ -1188,27 +1244,29 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<Fil
             }
             return FText::FromString("");
         }))
-         .FixedWidth(fixRowWidth)
+        .FixedWidth(fixRowWidth)
 
-         + SHeaderRow::Column("Memory Size").DefaultLabel(TAttribute<FText>::Create([=]() {
+        + SHeaderRow::Column("Memory Size").DefaultLabel(TAttribute<FText>::Create([=]() {
             if (Item->size >= 0)
             {
                 if(Item->lineNumber.Equals("-1", ESearchCase::CaseSensitive))
                     return FText::FromString("");
                 else
-                    return FText::FromString(ChooseMemoryUnit(Item->size / 1024.0));
+                    return FText::FromString(ChooseMemoryUnit((float)Item->size));
             }
             return FText::FromString("");
         }))
-         .FixedWidth(fixRowWidth)
-     
-         + SHeaderRow::Column("Compare Two Point")
-         .FixedWidth(fixRowWidth)
-         [
-              SNew(STextBlock)
-              .Text(difference)
-              .ColorAndOpacity(linearColor)
-         ]
+        .FixedWidth(fixRowWidth)
+
+        + SHeaderRow::Column("Compare Two Point")
+        .FixedWidth(fixRowWidth)
+        [
+            SNew(STextBlock)
+            .Text(difference)
+            .ColorAndOpacity_Lambda([=]() {
+                return checkLinearColor(Item->difference);
+            })
+        ]
 	 ];
 }
 
@@ -1218,6 +1276,18 @@ void SProfilerInspector::OnGetMemChildrenForTree(TSharedPtr<FileMemInfo> Parent,
     for(auto &item : shownFileInfo)
     {
         if(Parent->hint.Equals(item->hint, ESearchCase::CaseSensitive))
+            OutChildren.Add(item);
+    }
+}
+
+#define LABEL 0
+void SProfilerInspector::OnGetSnapshotDiffChildrenForTree(TSharedPtr<FileMemInfo> Parent, TArray<TSharedPtr<FileMemInfo>>& OutChildren)
+{
+    if(Parent->size != LABEL) return;
+    
+    for(auto &item : snapshotDiffArray)
+    {
+        if(Parent->difference == item->difference)
             OutChildren.Add(item);
     }
 }
@@ -1281,6 +1351,99 @@ void SProfilerInspector::OnGetChildrenForTree(TSharedPtr<FunctionProfileInfo> Pa
 	}
 }
 
+TSharedRef<ITableRow> SProfilerInspector::OnGenerateSnapshotInfoRowForList(TSharedPtr<SnapshotInfo> Item, const TSharedRef<STableViewBase>& OwnerTable)
+{
+    return
+    SNew(STableRow<TSharedPtr<FString>>, OwnerTable)
+    .Padding(2.0f)
+    [
+        SNew(SHeaderRow)
+        + SHeaderRow::Column("Snapshot Name")
+        .FixedWidth(fixRowWidth)
+        [
+            SNew(STextBlock)
+         .Text(FText::FromString(Item->name))
+        ]
+
+        + SHeaderRow::Column("Allocations (Diff)")
+        .FixedWidth(fixRowWidth)
+        [
+            SNew(SHorizontalBox)
+            +SHorizontalBox::Slot().AutoWidth()
+            [
+                SNew(STextBlock)
+                 .Text_Lambda([=]() {
+                    FString objStr = FString::Printf(TEXT("%d"), Item->objSize);
+                    return FText::FromString(objStr);
+                })
+            ]
+         
+            +SHorizontalBox::Slot().AutoWidth()
+            [
+                SNew(STextBlock)
+                .ColorAndOpacity_Lambda([=]() {
+                    return checkLinearColor((float)Item->objDiff);
+                })
+                .Text_Lambda([=]() {
+                    FString objStr = FString::Printf(TEXT("(%d)"), Item->objDiff);
+                    return FText::FromString(objStr);
+                })
+            ]
+        ]
+
+
+        + SHeaderRow::Column("Memory Size (Diff)")
+        .FixedWidth(fixRowWidth)
+        [
+            SNew(SHorizontalBox)
+            +SHorizontalBox::Slot().AutoWidth()
+            [
+                SNew(STextBlock)
+                .Text_Lambda([=]() {
+                    return FText::FromString(ChooseMemoryUnit(Item->memSize * 1024.0f));
+                })
+            ]
+         
+            +SHorizontalBox::Slot().AutoWidth()
+            [
+                SNew(STextBlock)
+                .ColorAndOpacity_Lambda([=]() {
+                    return checkLinearColor((float)Item->memDiff);
+                })
+                .Text_Lambda([=]() {
+                    FString objStr = FString::Printf(TEXT("(%s)"), *ChooseMemoryUnit(Item->memDiff * 1024.0f));
+                    return FText::FromString(objStr);
+                })
+            ]
+        ]
+    ];
+}
+
+TSharedRef<ITableRow> SProfilerInspector::OnGenerateSnapshotDiffList(TSharedPtr<FileMemInfo> Item, const TSharedRef<STableViewBase>& OwnerTable)
+{
+    return
+    SNew(STableRow<TSharedPtr<FString>>, OwnerTable)
+    .Padding(2.0f)
+    [
+        SNew(SHeaderRow)
+        + SHeaderRow::Column("Object Info")
+        .FixedWidth(snapshotInfoRowWidth)
+        [
+            SNew(STextBlock)
+            .Text(FText::FromString(Item->hint))
+        ]
+
+        + SHeaderRow::Column("Memory Size")
+        .FixedWidth(fixRowWidth)
+        .DefaultLabel(TAttribute<FText>::Create([=]() {
+            if(Item->size == 0)
+                return FText::FromString("");
+            else
+                return FText::FromString(ChooseMemoryUnit((float)Item->size));
+        }))
+     ];
+}
+
 void SProfilerInspector::MergeSiblingNode(SluaProfiler &profiler, int begIdx, int endIdx, TArray<int> parentMergeArray, int mergeArrayIdx)
 {
 	if (begIdx == endIdx || profiler[begIdx]->beMerged == true)
@@ -1322,6 +1485,119 @@ void SProfilerInspector::SearchSiblingNode(SluaProfiler& profiler, int curIdx, i
 		}
 		curIdx++;
 	}
+}
+
+void SProfilerInspector::CollectSnapshotInfo(TArray<SnapshotInfo> snapshotArray)
+{
+    for(int i =0; i < snapshotArray.Num(); i++)
+    {
+        SnapshotInfo info = snapshotArray[i];
+        SnapshotInfo *infoPtr = snapshotInfoArray[info.id - 1].Get();
+        if(info.id ==infoPtr->id)
+        {
+            infoPtr->objSize = info.objSize;
+            infoPtr->memSize = info.memSize;
+            
+            infoPtr->objDiff = infoPtr->id == 1 ? 0 : info.objSize - snapshotInfoArray[info.id - 2].Get()->objSize;
+            infoPtr->memDiff = infoPtr->id == 1 ? 0 : info.memSize - snapshotInfoArray[info.id - 2].Get()->memSize;
+        }
+    }
+    
+    snapshotListView->RequestListRefresh();
+}
+
+#define TABLE 1
+#define FUNCTION 2
+#define THREAD 3
+#define USERDATA 4
+#define OTHERS 5
+
+void SProfilerInspector::CollectSnapshotDiff(TArray<NS_SLUA::LuaMemInfo> diffArray)
+{
+    int id = -1;
+    int objNum = 0;
+    snapshotDiffArray.Empty();
+    snapshotDiffParentArray.Empty();
+    for(int i = 0; i < diffArray.Num(); i++)
+    {
+        NS_SLUA::LuaMemInfo item = diffArray[i];
+        if(item.size == 0)
+        {
+            if(item.hint.Equals("Table", ESearchCase::CaseSensitive))
+            {
+                id = TABLE;
+            }
+            else if(item.hint.Equals("Function", ESearchCase::CaseSensitive))
+            {
+                id = FUNCTION;
+                if(objNum)
+                {
+                    FileMemInfo *info = new FileMemInfo();
+                    info->hint = FString("Table");
+                    info->size = LABEL;
+                    info->difference = TABLE;
+                    snapshotDiffParentArray.Add(MakeShareable(info));
+                }
+            }
+            else if(item.hint.Equals("Thread", ESearchCase::CaseSensitive))
+            {
+                id = THREAD;
+                if(objNum)
+                {
+                    FileMemInfo *info = new FileMemInfo();
+                    info->hint = FString("Function");
+                    info->size = LABEL;
+                    info->difference = FUNCTION;
+                    snapshotDiffParentArray.Add(MakeShareable(info));
+                }
+            }
+            else if(item.hint.Equals("Userdata", ESearchCase::CaseSensitive))
+            {
+                id = USERDATA;
+                if(objNum) {
+                    FileMemInfo *info = new FileMemInfo();
+                    info->hint = FString("Thread");
+                    info->size = LABEL;
+                    info->difference = THREAD;
+                    snapshotDiffParentArray.Add(MakeShareable(info));
+                }
+            }
+            else if(item.hint.Equals("OtherType", ESearchCase::CaseSensitive))
+            {
+                id = OTHERS;
+                if(objNum)
+                {
+                    FileMemInfo *info = new FileMemInfo();
+                    info->hint = FString("Userdata");
+                    info->size = LABEL;
+                    info->difference = USERDATA;
+                    snapshotDiffParentArray.Add(MakeShareable(info));
+                }
+            }
+            objNum = 0;
+            continue;
+        }
+        
+        FileMemInfo *info = new FileMemInfo();
+        info->hint = item.hint;
+        info->size = item.size;
+        info->difference = id;
+        
+        snapshotDiffArray.Add(MakeShareable(info));
+        objNum++;
+
+        
+        if(i == diffArray.Num() - 1 && objNum)
+        {
+            FileMemInfo *parentInfo = new FileMemInfo();
+            info->hint = FString("OtherType");
+            info->size = 0;
+            info->difference = OTHERS;
+            snapshotDiffParentArray.Add(MakeShareable(info));
+        }
+    }
+    
+    snapshotDiffTreeView->RequestTreeRefresh();
 }
 
 void SProfilerInspector::CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInfoList)
@@ -1430,11 +1706,7 @@ void SProfilerInspector::OnSnapshotItemChanged(TSharedPtr<FString> NewSelection,
 {
     for(int32 ItemID = 0; ItemID < snapshotIdArray.Num(); ItemID++)
     {
-        if(snapshotIdArray[ItemID] == NewSelection )
-        {
-            snapshotID = ItemID;
-            UE_LOG(LogTemp, Warning, TEXT("snapshot ID : %d"), snapshotID);
-        }
+        if(snapshotIdArray[ItemID] == NewSelection ) snapshotID = ItemID;
     }
 }
 
@@ -1442,18 +1714,15 @@ void SProfilerInspector::OnPreSnapshotItemChanged(TSharedPtr<FString> NewSelecti
 {
     for(int32 ItemID = 0; ItemID < snapshotIdArray.Num(); ItemID++)
     {
-        if(snapshotIdArray[ItemID] == NewSelection )
-        {
-            preSnapshotID = ItemID;
-            UE_LOG(LogTemp, Warning, TEXT("pre snapshot ID : %d"), preSnapshotID);
-        }
+        if(snapshotIdArray[ItemID] == NewSelection ) preSnapshotID = ItemID;
     }
 }
 
 void SProfilerInspector::CalcPointMemdiff(int beginIndex, int endIndex)
 {
     // Always use new record of memory as the compareing data;
-    if(beginIndex > endIndex) {
+    if(beginIndex > endIndex)
+    {
         int temp = beginIndex;
         beginIndex = endIndex;
         endIndex = temp;
@@ -1477,16 +1746,16 @@ void SProfilerInspector::CalcPointMemdiff(int beginIndex, int endIndex)
         {
             FileMemInfo *newInfo = new FileMemInfo();
             newInfo->hint = info.hint;
-            newInfo->size = 0.0f;
+            newInfo->size = 0;
             newInfo->lineNumber = info.lineNumber;
             newInfo->difference -= info.size;
             shownFileInfo.Add(MakeShareable(newInfo));
         }
     }
     
-    float diff = 0.0f;
+    float diff = 0;
     for(auto &info : shownFileInfo) diff += info->difference;
-    NS_SLUA::Log::Log("The difference between two Point is %.3f KB", diff/1024.0f);
+    NS_SLUA::Log::Log("The difference between two Point is %.3f KB", (float)diff/1024.0f);
 }
 
 int SProfilerInspector::ContainsFile(FString& fileName, ShownMemInfoList &list)
@@ -1505,8 +1774,19 @@ int SProfilerInspector::ContainsFile(FString& fileName, ShownMemInfoList &list)
 
 FString SProfilerInspector::ChooseMemoryUnit(float memorySize)
 {
-	if (memorySize < 1024) return FString::Printf(TEXT("%.3f KB"), memorySize);
-	else if (memorySize >= 1024) return FString::Printf(TEXT("%.3f MB"), (memorySize / 1024.0f));
+    int absMemSize = FGenericPlatformMath::Abs(memorySize);
+    
+    if(absMemSize < 1024.0f)
+    {
+        return FString::Printf(TEXT("%d Bytes"), (int)memorySize);
+    }
+    
+    // form byte to KB
+    memorySize /= 1024.0f;
+    absMemSize /= 1024.0f;
+    
+	if (absMemSize < 1024.0f) return FString::Printf(TEXT("%.3f KB"), memorySize);
+	else if (absMemSize >= 1024.0f) return FString::Printf(TEXT("%.3f MB"), (memorySize / 1024.0f));
 	return FString::Printf(TEXT("%.3f"), memorySize);
 }
 
@@ -1529,6 +1809,26 @@ TArray<FString> SProfilerInspector::SplitFlieName(FString filePath)
     if(stringArray.Num() == 0) stringArray.Add(fileInfo);
     
     return stringArray;
+}
+
+FLinearColor checkLinearColor(float checkNumber)
+{
+    FLinearColor linearColor;
+
+    if (checkNumber > 0)
+    {
+        linearColor = FLinearColor(1, 0, 0, 1);
+    }
+    else if (checkNumber < 0)
+    {
+        linearColor = FLinearColor(0, 1, 0, 1);
+    }
+    else
+    {
+        linearColor = FLinearColor(1, 1, 1, 1);
+    }
+    
+    return linearColor;
 }
 
 ////////////////////////////// SProfilerWidget //////////////////////////////
@@ -1718,7 +2018,8 @@ int SProfilerWidget::CalcClickSampleIdx(FVector2D &cursorPos)
         return m_arraylinePath.Num() - m_pathArrayNum;
     }
     // check if the point is behind the chart
-    else if(m_pathArrayNum != 0 && m_arraylinePath[m_arraylinePath.Num() - 1].X < cursorPos.X){
+    else if(m_pathArrayNum != 0 && m_arraylinePath[m_arraylinePath.Num() - 1].X < cursorPos.X)
+    {
         cursorPos = m_arraylinePath[m_arraylinePath.Num() - 1];
         return m_arraylinePath.Num() - 1;
     }

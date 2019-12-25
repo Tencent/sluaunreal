@@ -359,7 +359,7 @@ namespace slua
 		FArrayReader& MessageReader = Message.ToSharedRef().Get();
 
 		MessageReader << Event;
-        if(Event == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK)
+        if(Event == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK || Event == NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_COMPARE)
         {
             MessageReader << memoryInfoList;
             return true;

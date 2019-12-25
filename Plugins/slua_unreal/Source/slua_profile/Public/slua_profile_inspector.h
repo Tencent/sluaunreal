@@ -33,6 +33,7 @@
 struct FunctionProfileInfo;
 struct FileMemInfo;
 struct ProflierMemNode;
+struct SnapshotInfo;
 
 typedef TArray<TSharedPtr<FunctionProfileInfo>> SluaProfiler;
 typedef TArray<FileMemInfo> MemFileInfoList;
@@ -48,14 +49,23 @@ const int cMaxViewHeight = 200;
 struct FileMemInfo {
     FString hint;
     FString lineNumber;
-    float size;
+    int size;
     // one line memory difference between two point
-    float difference;
+    int difference;
 };
 
 struct ProflierMemNode {
     MemFileInfoList infoList;
     float totalSize;
+};
+
+struct SnapshotInfo {
+    int id;
+    int objSize;
+    int memSize;
+    int objDiff;
+    int memDiff;
+    FString name;
 };
 
 struct SLUA_PROFILE_API FunctionProfileInfo
@@ -80,11 +90,15 @@ public:
     SProfilerInspector();
     ~SProfilerInspector();
     
-    void Refresh(TArray<SluaProfiler>& curProfilersArray, TArray<NS_SLUA::LuaMemInfo> memoryInfoList, TArray<TArray<int>> snapshotInfo);
+    void Refresh(TArray<SluaProfiler>& curProfilersArray, TArray<NS_SLUA::LuaMemInfo> memoryInfoList,
+                 TArray<SnapshotInfo> snapshotArray, TArray<NS_SLUA::LuaMemInfo> snapshotDifferentArray);
     TSharedRef<class SDockTab> GetSDockTab();
     TSharedRef<ITableRow> OnGenerateMemRowForList(TSharedPtr<FileMemInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
     TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FunctionProfileInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
+    TSharedRef<ITableRow> OnGenerateSnapshotInfoRowForList(TSharedPtr<SnapshotInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
+    TSharedRef<ITableRow> OnGenerateSnapshotDiffList(TSharedPtr<FileMemInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
     void OnGetMemChildrenForTree(TSharedPtr<FileMemInfo> Parent, TArray<TSharedPtr<FileMemInfo>>& OutChildren);
+    void OnGetSnapshotDiffChildrenForTree(TSharedPtr<FileMemInfo> Parent, TArray<TSharedPtr<FileMemInfo>>& OutChildren);
     void OnGetChildrenForTree(TSharedPtr<FunctionProfileInfo> Parent, TArray<TSharedPtr<FunctionProfileInfo>>& OutChildren);
     void StartChartRolling();
     bool GetNeedProfilerCleared() const
@@ -101,12 +115,14 @@ public:
 private:
     const static int sampleNum = cMaxSampleNum;
     const static int fixRowWidth = 300;
+    const static int snapshotInfoRowWidth = 600;
     const static int refreshInterval = 50;
     const float perMilliSec = 1000.0f;
     
     TSharedPtr<STreeView<TSharedPtr<FunctionProfileInfo>>> treeview;
     TSharedPtr<STreeView<TSharedPtr<FileMemInfo>>> memTreeView;
-    TSharedPtr<SListView<TSharedPtr<FileMemInfo>>> snapshotListView;
+    TSharedPtr<STreeView<TSharedPtr<FileMemInfo>>> snapshotDiffTreeView;
+    TSharedPtr<SListView<TSharedPtr<SnapshotInfo>>> snapshotListView;
     TSharedPtr<SCheckBox> profilerCheckBox;
     TSharedPtr<SCheckBox> memProfilerCheckBox;
     TSharedPtr<SProgressBar> profilerBarArray[sampleNum];
@@ -120,9 +136,8 @@ private:
     
     TArray<float> chartValArray;
     TArray<float> memChartValArray;
-    TArray<TArray<int>> snapshotInfoArray;
-    TArray<TSharedPtr<FString>> snapshotIdArray;
     bool stopChartRolling;
+    bool showSnapshotDiff;
     int refreshIdx;
     int arrayOffset;
     int lastArrayOffset;
@@ -152,6 +167,14 @@ private:
     ShownMemInfoList shownFileInfo;
     /* store the file name as the parent item in memory treeview */
     ShownMemInfoList shownParentFileName;
+    /* store the different item between two snapshots for snapshot diff treeview */
+    ShownMemInfoList snapshotDiffArray;
+    /* store the item's label(like Table/Func/Userdata etc.) for snapshot diff treeview */
+    ShownMemInfoList snapshotDiffParentArray;
+    /* store each snapshot's name for TextComboBox to be chosen */
+    TArray<TSharedPtr<FString>> snapshotIdArray;
+    /* store each snapshot's basic info(allocations and mem size) for snapshot Info treeview */
+    TArray<TSharedPtr<SnapshotInfo>> snapshotInfoArray;
     
     void initLuaMemChartList();
     bool NeedReBuildInspector();
@@ -174,6 +197,8 @@ private:
     void SortShownInfo();
     void CalcPointMemdiff(int beginIndex, int endIndex);
     void CombineSameFileInfo(MemFileInfoList& infoList);
+    void CollectSnapshotInfo(TArray<SnapshotInfo> snapshotArray);
+    void CollectSnapshotDiff(TArray<NS_SLUA::LuaMemInfo> diffArray);
     void CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInfoList);
     void OnSnapshotItemChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
     void OnPreSnapshotItemChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);

@@ -54,12 +54,14 @@ namespace NS_SLUA {
     namespace {
         int snapshotID = 0;
         int preSnapshotID = 0;
+        int snapshotNum = 0;
 		LuaVar selfProfiler;
 		bool ignoreHook = false;
 		HookState currentHookState = HookState::UNHOOK;
 		int64 profileTotalCost = 0;
 		p_tcp tcpSocket = nullptr;
 		const char* ChunkName = "[ProfilerScript]";
+        TMap<int, SnapshotMap> snapshotList;
         
         // copy code from buffer.cpp in luasocket
         int buffer_get(p_buffer buf, size_t *count, FArrayReader& messageReader) {
@@ -106,6 +108,7 @@ namespace NS_SLUA {
             
             int event = 0;
             int emptyID = 0;
+           
             FArrayReader messageReader = FArrayReader(true);
             messageReader.SetNumUninitialized(sizeof(int) * 3);
             
@@ -117,9 +120,11 @@ namespace NS_SLUA {
             messageReader << event;
             
             if(event == PHE_SNAPSHOT_COMPARE) {
+                messageReader << emptyID;
                 messageReader << preSnapshotID;
                 messageReader << snapshotID;
-            } else {
+            } else if(event == PHE_MEMORY_SNAPSHOT){
+                messageReader << snapshotNum;
                 messageReader << emptyID;
                 messageReader << emptyID;
             }
@@ -212,13 +217,15 @@ namespace NS_SLUA {
             return err;
         }
 
-		void sendMessage(FArrayWriter& msg) {
-			if (!tcpSocket) return;
+		size_t sendMessage(FArrayWriter& msg) {
+			if (!tcpSocket) return -1;
 			size_t sent;
 			int err = sendraw(&tcpSocket->buf, (const char*)msg.GetData(), msg.Num(), &sent);
 			if (err != IO_DONE) {
 				selfProfiler.callField("disconnect");
 			}
+            
+            return sent;
 		}
 
 		void takeSample(int event,int line,const char* funcname,const char* shortsrc) {
@@ -239,12 +246,13 @@ namespace NS_SLUA {
             sendMessage(s_memoryMessageWriter);
         }
         
-        void takeMemSnapshotSample(int event, double objSize, int memorySize) {
+        size_t takeMemSnapshotSample(int event, double objSize, int memorySize, int snapshotId) {
             static FArrayWriter s_messageWriter;
             s_messageWriter.Empty();
             s_messageWriter.Seek(0);
-            makeProfilePackage(s_messageWriter, event, objSize, memorySize, "", "");
-            sendMessage(s_messageWriter);
+            char *id = TCHAR_TO_ANSI(*FString::FromInt(snapshotId));
+            makeProfilePackage(s_messageWriter, event, objSize, memorySize, id, "");
+            return sendMessage(s_messageWriter);
         }
         
         void getMemorySnapshot(lua_State *L) {
@@ -256,12 +264,18 @@ namespace NS_SLUA {
                 SnapshotMap::printMap(map);
                 double objSize = (double)SnapshotMap::getSnapshotObjSize(map);
                 int memSize = SnapshotMap::getSnapshotMemSize(map);
-                
-                takeMemSnapshotSample(PHE_SNAPSHOT_COMPARE, objSize, memSize);
-				Log::Log("obj size : %d, memSIze : %d", cast_int(objSize), memSize);
-                //                SnapshotMap diff = map.checkMemoryDiff(map);
-                //                SnapshotMap::printMap(diff);
+                size_t msgSent = takeMemSnapshotSample(PHE_MEMORY_SNAPSHOT, objSize, memSize, snapshotNum);
+                if(msgSent && snapshotNum) snapshotList.Add(snapshotNum, map);
             }
+        }
+        
+        TArray<LuaMemInfo> checkSnapshotDiff() {
+            TArray<LuaMemInfo> emptyList;
+            if(tcpSocket && snapshotList.Contains(preSnapshotID) && snapshotList.Contains(snapshotID)) {
+                return snapshotList.FindRef(snapshotID).checkMemoryDiff(snapshotList.FindRef(preSnapshotID));
+            }
+            
+            return emptyList;
         }
 
 		void debug_hook(lua_State* L, lua_Debug* ar) {
@@ -336,11 +350,15 @@ namespace NS_SLUA {
             TArray<LuaMemInfo> memoryInfoList;
             
             if(checkSocketRead()){
-                int wantedSize = sizeof(int) * 3;
+                int wantedSize = sizeof(int) * 4;
                 switch (receieveMessage(wantedSize)) {
                     case PHE_MEMORY_SNAPSHOT: {
                         getMemorySnapshot(L);
-                        
+                        break;
+                    }
+                    case PHE_SNAPSHOT_COMPARE: {
+                        // send the comparing result of two snapshots
+                        takeMemorySample(NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_COMPARE, checkSnapshotDiff());
                         break;
                     }
                     case PHE_MEMORY_GC:

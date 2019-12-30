@@ -900,6 +900,15 @@ namespace NS_SLUA {
 	}
 #endif
 
+#if (ENGINE_MINOR_VERSION>=24) && (ENGINE_MAJOR_VERSION>=4)
+	int pushUMulticastSparseDelegateProperty(lua_State* L, UProperty* prop, uint8* parms, bool ref) {
+		auto p = Cast<UMulticastSparseDelegateProperty>(prop);
+		ensure(p);
+		FMulticastScriptDelegate* delegate = const_cast<FMulticastScriptDelegate*>(p->GetMulticastDelegate(parms));
+		return LuaMultiDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
+	}
+#endif
+
     int checkUDelegateProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
         auto p = Cast<UDelegateProperty>(prop);
         ensure(p);
@@ -1216,6 +1225,9 @@ namespace NS_SLUA {
         regPusher(UMulticastDelegateProperty::StaticClass(),pushUMulticastDelegateProperty);
 #if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
 		regPusher(UMulticastInlineDelegateProperty::StaticClass(), pushUMulticastInlineDelegateProperty);
+#endif
+#if (ENGINE_MINOR_VERSION>=24) && (ENGINE_MAJOR_VERSION>=4)
+		regPusher(UMulticastSparseDelegateProperty::StaticClass(), pushUMulticastSparseDelegateProperty);
 #endif
         regPusher(UObjectProperty::StaticClass(),pushUObjectProperty);
         regPusher(UArrayProperty::StaticClass(),pushUArrayProperty);

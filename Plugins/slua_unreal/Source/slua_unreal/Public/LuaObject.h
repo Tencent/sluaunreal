@@ -177,7 +177,7 @@ namespace NS_SLUA {
     {
     private:
 
-#define CHECK_UD_VALID(ptr) if (ptr && ptr->flag&UD_HADFREE) { \
+		#define CHECK_UD_VALID(ptr) if (ptr && ptr->flag&UD_HADFREE) { \
 		if (checkfree) \
 			luaL_error(L, "arg %d had been freed(%p), can't be used", lua_absindex(L, p), ptr->ud); \
 		else \
@@ -226,9 +226,9 @@ namespace NS_SLUA {
 			else if (!t)
 				return maybeAnUDTable<T>(L, p,checkfree);
 
-			// check UObject is reachable
-			if (t->IsUnreachable()) return nullptr;
-            return t;
+			// check UObject is valid
+			if (isUObjectValid(t)) return t;
+            return nullptr;
         }
 
         // testudata, if T is uobject
@@ -243,7 +243,7 @@ namespace NS_SLUA {
 				auto wptr = (UserData<WeakUObjectUD*>*)ptr;
 				return wptr->ud->get();
 			}
-			else if (ptr->ud && !ptr->ud->IsUnreachable())
+			else if (isUObjectValid(ptr->ud))
 				return ptr->ud;
 			return nullptr;
         }
@@ -321,6 +321,11 @@ namespace NS_SLUA {
 		static void finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc, lua_CFunction strHint=nullptr);
 		static void fillParam(lua_State* L, int i, UFunction* func, uint8* params);
 		static int returnValue(lua_State* L, UFunction* func, uint8* params);
+
+		// check UObject is valid
+		static bool isUObjectValid(UObject* obj) {
+			return obj && !obj->IsUnreachable() && !obj->IsPendingKill();
+		}
 		
 		static void callUFunction(lua_State* L, UObject* obj, UFunction* func, uint8* params);
 		// create new enum type to lua, see DefEnum macro

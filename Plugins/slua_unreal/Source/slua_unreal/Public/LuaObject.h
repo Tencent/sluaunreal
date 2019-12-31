@@ -225,6 +225,9 @@ namespace NS_SLUA {
 			}
 			else if (!t)
 				return maybeAnUDTable<T>(L, p,checkfree);
+
+			// check UObject is reachable
+			if (t->IsUnreachable()) return nullptr;
             return t;
         }
 
@@ -240,8 +243,9 @@ namespace NS_SLUA {
 				auto wptr = (UserData<WeakUObjectUD*>*)ptr;
 				return wptr->ud->get();
 			}
-			else
-				return ptr?ptr->ud:nullptr;
+			else if (ptr->ud && !ptr->ud->IsUnreachable())
+				return ptr->ud;
+			return nullptr;
         }
 
 		template<class T>
@@ -361,7 +365,7 @@ namespace NS_SLUA {
             lua_pop(L,1);
 
             if(checkfree && !typearg)
-                luaL_error(L,"expect userdata at %d",p);
+                luaL_error(L,"expect userdata at %d, if you passed an UObject, maybe it's unreachable",p);
 
 			if (LuaObject::isBaseTypeOf(L, typearg, TypeName<T>::value().c_str())) {
 				UserData<T*> *udptr = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, p));
@@ -369,7 +373,7 @@ namespace NS_SLUA {
 				return udptr->ud;
 			}
             if(checkfree) 
-				luaL_error(L,"expect userdata %s, but got %s",TypeName<T>::value().c_str(),typearg);
+				luaL_error(L,"expect userdata %s, but got %s, if you passed an UObject, maybe it's unreachable",TypeName<T>::value().c_str(),typearg);
             return nullptr;
         }
 
@@ -466,13 +470,6 @@ namespace NS_SLUA {
 			using ValueType = typename TPairTraits<typename T::ElementType>::ValueType;
 			return UD->asTMap<KeyType, ValueType>(L);
 		}
-
-        template<class T>
-        static UObject* checkUObject(lua_State* L,int p) {
-            UserData<UObject*>* ud = reinterpret_cast<UserData<UObject*>*>(luaL_checkudata(L, p,"UObject"));
-            if(!ud) luaL_error(L, "checkValue error at %d",p);
-            return Cast<T>(ud->ud);
-        }
 
         template<typename T>
         static void* void_cast( const T* v ) {

@@ -205,7 +205,7 @@ namespace NS_SLUA {
 			return LuaObject::push(L, isValid);
 		// if this ud is boxed UObject
 		if (gud->flag & UD_UOBJECT) {
-			UObject* obj = LuaObject::checkUD<UObject>(L, 1);
+			UObject* obj = LuaObject::checkUD<UObject>(L, 1, false);
 			isValid = IsValid(obj) && !obj->IsUnreachable();
 		}
 		else if (gud->flag&UD_WEAKUPTR) {

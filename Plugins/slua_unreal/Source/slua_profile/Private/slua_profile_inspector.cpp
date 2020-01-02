@@ -66,9 +66,14 @@ SProfilerInspector::~SProfilerInspector()
 	shownRootProfiler.Empty();
 	tmpRootProfiler.Empty();
 	tmpProfiler.Empty();
+    shownFileInfo.Empty();
+    shownParentFileName.Empty();
 	luaMemNodeChartList.Empty();
     tempLuaMemNodeChartList.Empty();
     snapshotIdArray.Empty();
+    snapshotInfoArray.Empty();
+    snapshotDiffArray.Empty();
+    snapshotDiffParentArray.Empty();
 }
 
 void SProfilerInspector::StartChartRolling()
@@ -819,6 +824,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                         .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
                             FArrayWriter messageWriter;
                             int bytesSend = 0;
+                            int snapshotSendId = 0;
                             int emptySnapshotID = -1;
                             int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_MEMORY_GC;
                             int connectionsSize = ProfileServer->GetConnections().Num();
@@ -826,6 +832,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                             messageWriter.Empty();
                             messageWriter.Seek(0);
                             messageWriter << hookEvent;
+                            messageWriter << snapshotSendId;
                             messageWriter << emptySnapshotID;
                             messageWriter << emptySnapshotID;
                         
@@ -1053,6 +1060,19 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                         +SVerticalBox::Slot().AutoHeight()
                         [
                             snapshotDiffTreeView.ToSharedRef()
+                        ]
+                     
+                        + SVerticalBox::Slot().AutoHeight()
+                        [
+                            SNew(SVerticalBox)
+                            +SVerticalBox::Slot()
+                            .Padding(0, 1.0f)
+                            .HAlign(EHorizontalAlignment::HAlign_Fill)
+                            .MaxHeight(1.0f)
+                            [
+                                SNew(SBorder)
+                                .BorderImage(FEditorStyle::GetBrush("ProgressBar.ThinBackground"))
+                            ]
                         ]
                     ]
 
@@ -1708,14 +1728,18 @@ void SProfilerInspector::OnSnapshotItemChanged(TSharedPtr<FString> NewSelection,
     {
         if(snapshotIdArray[ItemID] == NewSelection ) snapshotID = ItemID;
     }
+    
+    if(snapshotID == 0) showSnapshotDiff = false;
 }
 
 void SProfilerInspector::OnPreSnapshotItemChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo)
 {
     for(int32 ItemID = 0; ItemID < snapshotIdArray.Num(); ItemID++)
     {
-        if(snapshotIdArray[ItemID] == NewSelection ) preSnapshotID = ItemID;
+        if(snapshotIdArray[ItemID] == NewSelection) preSnapshotID = ItemID;
     }
+    
+    if(preSnapshotID == 0) showSnapshotDiff = false;
 }
 
 void SProfilerInspector::CalcPointMemdiff(int beginIndex, int endIndex)

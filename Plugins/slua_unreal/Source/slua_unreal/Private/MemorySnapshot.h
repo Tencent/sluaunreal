@@ -46,6 +46,7 @@ namespace NS_SLUA {
         
         MemoryTypeMap* getMemoryMap(int index);
         TArray<LuaMemInfo> checkMemoryDiff(SnapshotMap map);
+        TArray<LuaMemInfo> snapshotMapToArray(SnapshotMap map);
     };
     
     class MemorySnapshot{

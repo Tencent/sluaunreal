@@ -110,7 +110,7 @@ namespace NS_SLUA {
             int emptyID = 0;
            
             FArrayReader messageReader = FArrayReader(true);
-            messageReader.SetNumUninitialized(sizeof(int) * 3);
+            messageReader.SetNumUninitialized(sizeof(int) * 4);
             
             int err = recvraw(&tcpSocket->buf, wanted, messageReader);
             if(err != IO_DONE) {
@@ -261,7 +261,6 @@ namespace NS_SLUA {
             if(L) {
                 MemorySnapshot snapshot;
                 SnapshotMap map = snapshot.getMemorySnapshot(L, MARKED + 1);
-                SnapshotMap::printMap(map);
                 double objSize = (double)SnapshotMap::getSnapshotObjSize(map);
                 int memSize = SnapshotMap::getSnapshotMemSize(map);
                 size_t msgSent = takeMemSnapshotSample(PHE_MEMORY_SNAPSHOT, objSize, memSize, snapshotNum);
@@ -388,5 +387,18 @@ namespace NS_SLUA {
         takeSample(ProfilerHookEvent::PHE_RETURN, 0, "", "");
 	}
 
-}
+    #if WITH_EDITOR
+    void dumpLastSnapshotInfo() {
+        if(snapshotList.Contains(snapshotList.Num()))
+            SnapshotMap::printMap(snapshotList.FindRef(snapshotList.Num()));
+    }
+    
+    static FAutoConsoleCommand CVarDumpLastSnpashotInfo(
+                                                    TEXT("slua.DumpLastSnapshot"),
+                                                    TEXT("Dump last memory snapshot information"),
+                                                    FConsoleCommandDelegate::CreateStatic(dumpLastSnapshotInfo),
+                                                    ECVF_Cheat);
+    }
+    #endif
+
 #endif

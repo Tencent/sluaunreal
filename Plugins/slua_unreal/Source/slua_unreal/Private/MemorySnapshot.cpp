@@ -59,6 +59,14 @@ namespace NS_SLUA {
         return mapType;
     }
     
+    int getSnapshotItemSize(MemoryNodeMap checkMap, MemoryNodeMap findingMap, FString key) {
+        return checkMap.Contains(key) ? findingMap.FindRef(key).size : 0;
+    }
+    
+    FString getSnapshotItemHint(MemoryNodeMap checkMap, MemoryNodeMap findingMap, FString key) {
+        return checkMap.Contains(key) ? findingMap.FindRef(key).hint : FString("");
+    }
+    
     void SnapshotMap::Empty() {
         typeArray.Empty();
     }
@@ -95,20 +103,17 @@ namespace NS_SLUA {
                     if(sourceMap == NULL) {
                         if(parent.Value.Num() == 0) continue;
                         
-                        totalSize += parent.Value.Contains(keyPointer) ?
-                                     parent.Value.FindRef(keyPointer).size :0;
+                        totalSize += getSnapshotItemSize(parent.Value, parent.Value, keyPointer);
                     } else {
-                        totalSize += parent.Value.Contains(keyPointer) ?
-                                     sourceMap->FindRef(keyPointer).size : 0;
+                        
+                        totalSize += getSnapshotItemSize(parent.Value, *sourceMap, keyPointer);
                     }
                 }else if(i == THREAD) {
                     MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
-                    totalSize += parent.Value.Contains(keyPointer) ?
-                                 sourceMap->FindRef(keyPointer).size : 0;
+                    totalSize += getSnapshotItemSize(parent.Value, *sourceMap, keyPointer);
                     
                 } else {
-                    totalSize += parent.Value.Contains(keyPointer) ?
-                                 parent.Value.FindRef(keyPointer).size : 0;
+                    totalSize += getSnapshotItemSize(parent.Value, parent.Value, keyPointer);
                 }
             }
         }
@@ -199,38 +204,24 @@ namespace NS_SLUA {
                     if(sourceMap == NULL) {
                         if(parent.Value.Num() == 0) continue;
                         
-                        funcInfo =  parent.Value.Contains(keyPointer) ?
-                                    parent.Value.FindRef(keyPointer).hint :
-                        convert2str("");
-                        funcName =  convert2str("C Func");
+                        funcInfo = getSnapshotItemHint(parent.Value, parent.Value, keyPointer);
+                        funcName = convert2str("C Func");
                         
-                        info.size = parent.Value.Contains(keyPointer) ?
-                                    parent.Value.FindRef(keyPointer).size : 0;
+                        info.size = getSnapshotItemSize(parent.Value, parent.Value, keyPointer);
                     } else {
-                        funcInfo =  sourceMap->Contains(keyPointer) ?
-                                    sourceMap->FindRef(keyPointer).hint :
-                                    convert2str("");
-                        funcName =  parent.Value.Contains(keyPointer) ?
-                                    parent.Value.FindRef(keyPointer).hint:
-                                    convert2str("");
-                        info.size = parent.Value.Contains(keyPointer) ?
-                                    sourceMap->FindRef(keyPointer).size : 0;
+                        funcInfo = getSnapshotItemHint(*sourceMap, *sourceMap, keyPointer);
+                        funcName = getSnapshotItemHint(parent.Value, parent.Value, keyPointer);
+                        info.size = getSnapshotItemSize(parent.Value, *sourceMap, keyPointer);
                     }
                     
                     objHint += FString::Printf(TEXT("%s : %s"), *funcName, *funcInfo);
                 }else if(i == THREAD) {
                     MemoryNodeMap *sourceMap =  transferMap.getMemoryMap(SOURCE)->Find(parent.Key);
-                    objHint +=  sourceMap->Contains(keyPointer) ?
-                                sourceMap->FindRef(keyPointer).hint :
-                                convert2str("");
-                    info.size = parent.Value.Contains(keyPointer) ?
-                                sourceMap->FindRef(keyPointer).size : 0;
+                    objHint += getSnapshotItemHint(*sourceMap, *sourceMap, keyPointer);
+                    info.size = getSnapshotItemSize(parent.Value, *sourceMap, keyPointer);
                 } else {
-                    objHint +=  parent.Value.Contains(keyPointer) ?
-                                parent.Value.FindRef(keyPointer).hint :
-                                convert2str("");
-                    info.size = parent.Value.Contains(keyPointer) ?
-                                parent.Value.FindRef(keyPointer).size : 0;
+                    objHint += getSnapshotItemHint(parent.Value, parent.Value, keyPointer);
+                    info.size = getSnapshotItemSize(parent.Value, parent.Value, keyPointer);
                 }
                 info.hint = objHint;
                 snapshotDetailsArray.Add(info);
@@ -648,44 +639,25 @@ namespace NS_SLUA {
                     if(sourceMap == NULL) {
                         if(parent.Value.Num() == 0) continue;
                         
-                        funcInfo =  parent.Value.Contains(keyPointer) ?
-                                            parent.Value.FindRef(keyPointer).hint :
-                                            convert2str("");
-                        funcName =  convert2str("C Funtion ");
-                        
-                        funcSize =  parent.Value.Contains(keyPointer) ?
-                                            chooseMemoryUnit(parent.Value.FindRef(keyPointer).size) :
-                                            convert2str("empty size");
+                        funcInfo = getSnapshotItemHint(parent.Value, parent.Value, keyPointer);
+                        funcName = convert2str("C Funtion ");
+                        funcSize = chooseMemoryUnit(getSnapshotItemSize(parent.Value, parent.Value, keyPointer));
                     } else {
-                        funcInfo =  sourceMap->Contains(keyPointer) ?
-                                            sourceMap->FindRef(keyPointer).hint :
-                                            convert2str("");
-                        funcName =  parent.Value.Contains(keyPointer) ?
-                                            parent.Value.FindRef(keyPointer).hint:
-                                            convert2str("");
-                        funcSize =  parent.Value.Contains(keyPointer) ?
-                                            chooseMemoryUnit(sourceMap->FindRef(keyPointer).size) :
-                                            convert2str("");
+                        funcInfo = getSnapshotItemHint(*sourceMap, *sourceMap, keyPointer);
+                        funcName = getSnapshotItemHint(parent.Value, parent.Value, keyPointer);
+                        funcSize =  chooseMemoryUnit(getSnapshotItemSize(parent.Value, *sourceMap, keyPointer));
                     }
                     
                     memInfo += FString::Printf(TEXT("%s, name : %s, size : %s "), *funcInfo, *funcName, *funcSize);
                 }else if(i == THREAD) {
                     MemoryNodeMap *sourceMap =  shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
-                    FString threadInfo = sourceMap->Contains(keyPointer) ?
-                                                sourceMap->FindRef(keyPointer).hint :
-                                                convert2str("");
-                    FString threadSize = parent.Value.Contains(keyPointer) ?
-                                        chooseMemoryUnit(sourceMap->FindRef(keyPointer).size) :
-                                        convert2str("");
+                    FString threadInfo = getSnapshotItemHint(*sourceMap, *sourceMap, keyPointer);
+                    FString threadSize = chooseMemoryUnit(getSnapshotItemSize(parent.Value, *sourceMap, keyPointer));
                     
                     memInfo += FString::Printf(TEXT("%s , size : %s "),  *threadInfo, *threadSize);
                 } else {
-                    FString info =  parent.Value.Contains(keyPointer) ?
-                                    parent.Value.FindRef(keyPointer).hint :
-                                    convert2str("");
-                    FString size =  parent.Value.Contains(keyPointer) ?
-                                    chooseMemoryUnit(parent.Value.FindRef(keyPointer).size) :
-                                    convert2str("");
+                    FString info = getSnapshotItemHint(parent.Value, parent.Value, keyPointer);
+                    FString size = chooseMemoryUnit(getSnapshotItemSize(parent.Value, parent.Value, keyPointer));
                     memInfo += FString::Printf(TEXT(" %s , size : %s "), *info, *size);
                 }
     

@@ -43,6 +43,9 @@ SProfilerInspector::SProfilerInspector()
 	arrayOffset = 0;
 	lastArrayOffset = 0;
 	refreshIdx = 0;
+    snapshotID = 0;
+    preSnapshotID = 0;
+    deleteSnapshotID = 0;
 	maxLuaMemory = 0.0f;
 	avgLuaMemory = 0.0f;
 	luaTotalMemSize = 0.0f;
@@ -912,7 +915,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                             FArrayWriter messageWriter;
                             int bytesSend = 0;
                             int emptySnapshotID = -1;
-                            int snapshotSendId = snapshotIdArray.Num();
+                            int snapshotSendId = snapshotInfoArray.Num() == 0 ? 1 : snapshotInfoArray[snapshotInfoArray.Num() - 1].Get()->id + 1;
                             int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_MEMORY_SNAPSHOT;
                             int connectionsSize = ProfileServer->GetConnections().Num();
 
@@ -1009,6 +1012,76 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                             return FReply::Handled();
                         }))
                     ]
+                 
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(5.0f, 3.0f, 5.0f, 0).AutoWidth()
+                    [
+                        SNew(STextComboBox)
+                        //                        .Font(IDetailLayoutBuilder::GetDetailFont())
+                        .OptionsSource(&snapshotIdArray)
+                        .InitiallySelectedItem(snapshotIdArray[0])
+                        .OnSelectionChanged_Raw(this, &SProfilerInspector::OnDeleteSnapshotItem)
+                    ]
+
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).AutoWidth().Padding(5.0f, 3.0f, 0, 0)
+                    [
+                        SNew(SButton)
+                        .Text(FText::FromName("Delete"))
+                        .ContentPadding(FMargin(2.0, 2.0))
+                        .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+                            FArrayWriter messageWriter;
+                            int bytesSend = 0;
+                            int emptySnapshotID = -1;
+                            int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_DELETE;
+                            int connectionsSize = ProfileServer->GetConnections().Num();
+
+                            messageWriter.Empty();
+                            messageWriter.Seek(0);
+                            messageWriter << hookEvent;
+                            messageWriter << deleteSnapshotID;
+                            messageWriter << emptySnapshotID;
+                            messageWriter << emptySnapshotID;
+
+                            if(connectionsSize > 0)
+                            {
+                                FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
+                                // if snapshotId or preSnapshotId equals 0, means that user does not choose effective snapshot
+                                if (socket && socket->GetConnectionState() == SCS_Connected && deleteSnapshotID)
+                                {
+                                    socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
+                                }
+                                
+                                if(bytesSend > 0)
+                                {
+                                    int removeIndex = getSnapshotInfoIndex(deleteSnapshotID);
+                                    if(removeIndex != -1) {
+                                        if(removeIndex != 0 && removeIndex + 1 < snapshotInfoArray.Num()) {
+                                            SnapshotInfo *preInfo = snapshotInfoArray[removeIndex - 1].Get();
+                                            SnapshotInfo *nextInfo = snapshotInfoArray[removeIndex + 1].Get();
+                                            preInfo->memDiff = preInfo->memSize - nextInfo->memSize;
+                                            preInfo->objDiff = preInfo->objSize - nextInfo->objSize;
+                                        } else if(removeIndex == 0) {
+                                            SnapshotInfo *nextInfo = snapshotInfoArray[removeIndex + 1].Get();
+                                            nextInfo->memDiff = 0;
+                                            nextInfo->objDiff = 0;
+                                        }
+                                        snapshotInfoArray.RemoveAt(removeIndex);
+                                    }
+                                    
+                                    for(int i = 1; i < snapshotIdArray.Num(); i++) {
+                                        TArray<FString> stringArray;
+                                        snapshotIdArray[i].Get()->ParseIntoArray(stringArray, TEXT(" "), false);
+                                        if(FCString::Atoi(*stringArray[stringArray.Num() - 1]) == deleteSnapshotID)
+                                        {
+                                            snapshotIdArray.RemoveAt(i);
+                                        }
+                                    }
+                                }
+                            }
+                            deleteSnapshotID = 0;
+                            snapshotListView->RequestListRefresh();
+                            return FReply::Handled();
+                        }))
+                    ]
                 ]
              
                 + SVerticalBox::Slot().AutoHeight()
@@ -1042,18 +1115,25 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                         + SVerticalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Center).Padding(0, 10.0f)
                         [
                             SNew(STextBlock).Text_Lambda([=]() {
-                            SnapshotInfo *preInfo = snapshotInfoArray[preSnapshotID-1].Get();
-                            SnapshotInfo *info = snapshotInfoArray[snapshotID-1].Get();
+                                int memDiffSize = 0;
+                                int objDiffSize = 0;
+                                int index = getSnapshotInfoIndex(snapshotID);
+                                int preIndex = getSnapshotInfoIndex(preSnapshotID);
                             
-                            int memDiffSize = info->memSize - preInfo->memSize;
-                            int objDiffSize = info->objSize - preInfo->objSize;
+                                if(index != -1 && preIndex != -1) {
+                                    SnapshotInfo *info = snapshotInfoArray[index].Get();
+                                    SnapshotInfo *preInfo = snapshotInfoArray[preIndex].Get();
+                                
+                                    memDiffSize = info->memSize - preInfo->memSize;
+                                    objDiffSize = info->objSize - preInfo->objSize;
+                                }
                             
-                            FString titleStr = TEXT("============================ Diff Memory Size("
-                                       + ChooseMemoryUnit(memDiffSize * 1024.0f)
-                                       +"), Diff Object Num("
-                                       + FString::FromInt(objDiffSize)
-                                       +") ============================");
-                            return FText::FromString(titleStr);
+                                FString titleStr = TEXT("============================ Diff Memory Size("
+                                           + ChooseMemoryUnit(memDiffSize * 1024.0f)
+                                           +"), Diff Object Num("
+                                           + FString::FromInt(objDiffSize)
+                                           +") ============================");
+                                return FText::FromString(titleStr);
                             })
                         ]
                      
@@ -1402,10 +1482,10 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateSnapshotInfoRowForList(TShar
             [
                 SNew(STextBlock)
                 .ColorAndOpacity_Lambda([=]() {
-                    return checkLinearColor((float)Item->objDiff);
+                    return checkLinearColor((float)(Item->objDiff));
                 })
                 .Text_Lambda([=]() {
-                    FString objStr = FString::Printf(TEXT("(%d)"), Item->objDiff);
+                    FString objStr = FString::Printf(TEXT("(%d)"), (Item->objDiff));
                     return FText::FromString(objStr);
                 })
             ]
@@ -1512,14 +1592,17 @@ void SProfilerInspector::CollectSnapshotInfo(TArray<SnapshotInfo> snapshotArray)
     for(int i =0; i < snapshotArray.Num(); i++)
     {
         SnapshotInfo info = snapshotArray[i];
-        SnapshotInfo *infoPtr = snapshotInfoArray[info.id - 1].Get();
+        int infoIndex = getSnapshotInfoIndex(info.id);
+        SnapshotInfo *infoPtr = snapshotInfoArray[infoIndex].Get();
+            
         if(info.id ==infoPtr->id)
         {
             infoPtr->objSize = info.objSize;
             infoPtr->memSize = info.memSize;
-            
-            infoPtr->objDiff = infoPtr->id == 1 ? 0 : info.objSize - snapshotInfoArray[info.id - 2].Get()->objSize;
-            infoPtr->memDiff = infoPtr->id == 1 ? 0 : info.memSize - snapshotInfoArray[info.id - 2].Get()->memSize;
+
+            // when infoIndex equals 0 or -1, the diff equals 0;
+            infoPtr->objDiff = infoIndex > 0 ? info.objSize - snapshotInfoArray[infoIndex - 1].Get()->objSize : 0;
+            infoPtr->memDiff = infoIndex > 0 ? info.memSize - snapshotInfoArray[infoIndex - 1].Get()->memSize : 0;
         }
     }
     
@@ -1741,6 +1824,17 @@ void SProfilerInspector::OnPreSnapshotItemChanged(TSharedPtr<FString> NewSelecti
     
     if(preSnapshotID == 0) showSnapshotDiff = false;
 }
+void SProfilerInspector::OnDeleteSnapshotItem(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo)
+{
+    for(int32 ItemID = 0; ItemID < snapshotIdArray.Num(); ItemID++)
+    {
+        if(snapshotIdArray[ItemID] == NewSelection) {
+            TArray<FString> stringArray;
+            snapshotIdArray[ItemID].Get()->ParseIntoArray(stringArray, TEXT(" "), false);
+            deleteSnapshotID = FCString::Atoi(*stringArray[stringArray.Num() - 1]);
+        }
+    }
+}
 
 void SProfilerInspector::CalcPointMemdiff(int beginIndex, int endIndex)
 {
@@ -1833,6 +1927,17 @@ TArray<FString> SProfilerInspector::SplitFlieName(FString filePath)
     if(stringArray.Num() == 0) stringArray.Add(fileInfo);
     
     return stringArray;
+}
+
+int SProfilerInspector::getSnapshotInfoIndex(int id)
+{
+    for(int i = 0; i < snapshotInfoArray.Num(); i++) {
+        if(snapshotInfoArray[i].Get()->id == id)
+        {
+            return i;
+        }
+    }
+    return -1;
 }
 
 FLinearColor checkLinearColor(float checkNumber)

@@ -143,6 +143,7 @@ private:
     int lastArrayOffset;
     int snapshotID;
     int preSnapshotID;
+    int deleteSnapshotID;
     float maxLuaMemory;
     float avgLuaMemory;
     float luaTotalMemSize;
@@ -202,7 +203,9 @@ private:
     void CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInfoList);
     void OnSnapshotItemChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
     void OnPreSnapshotItemChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
+    void OnDeleteSnapshotItem(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
     int ContainsFile(FString& fileName, ShownMemInfoList &list);
+    int getSnapshotInfoIndex(int id);
     FString ChooseMemoryUnit(float memoryKBSize);
     TArray<FString> SplitFlieName(FString filePath);   
 };

@@ -55,6 +55,7 @@ namespace NS_SLUA {
         int snapshotID = 0;
         int preSnapshotID = 0;
         int snapshotNum = 0;
+        int snapshotDeleteID = 0;
 		LuaVar selfProfiler;
 		bool ignoreHook = false;
 		HookState currentHookState = HookState::UNHOOK;
@@ -123,8 +124,12 @@ namespace NS_SLUA {
                 messageReader << emptyID;
                 messageReader << preSnapshotID;
                 messageReader << snapshotID;
-            } else if(event == PHE_MEMORY_SNAPSHOT){
+            } else if(event == PHE_MEMORY_SNAPSHOT) {
                 messageReader << snapshotNum;
+                messageReader << emptyID;
+                messageReader << emptyID;
+            } else if (event == PHE_SNAPSHOT_DELETE) {
+                messageReader << snapshotDeleteID;
                 messageReader << emptyID;
                 messageReader << emptyID;
             }
@@ -359,6 +364,11 @@ namespace NS_SLUA {
                         // send the comparing result of two snapshots
                         takeMemorySample(NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_COMPARE, checkSnapshotDiff());
                         break;
+                    }
+                    case PHE_SNAPSHOT_DELETE : {
+                        if(snapshotList.Contains(snapshotDeleteID)) {
+                            snapshotList.FindAndRemoveChecked(snapshotDeleteID);
+                        }
                     }
                     case PHE_MEMORY_GC:
                         memoryGC(L);

@@ -13,6 +13,7 @@
 
 #include "slua_profile.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
+#include "Misc/ScopeLock.h"
 #include "FileManager.h"
 #include "Engine/GameEngine.h"
 #include "Containers/Ticker.h"
@@ -21,6 +22,7 @@
 #if WITH_EDITOR
 #include "LevelEditor.h"
 #include "EditorStyle.h"
+#include "ScopeLock.h"
 #endif
 
 #include "slua_remote_profile.h"
@@ -36,10 +38,13 @@ namespace {
 
 	static const FString CoroutineName(TEXT("coroutine"));
 	SluaProfiler curProfiler;
-	
+	FCriticalSection memMutex;
+    FCriticalSection cpuMutex;
+    FCriticalSection snapshotMutex;
     TArray<SnapshotInfo> snapshotInfoArray;
-    TArray<NS_SLUA::LuaMemInfo> memoryInfo;
     TArray<NS_SLUA::LuaMemInfo> snapshotDiffArray;
+    TArray<NS_SLUA::LuaMemInfo> memoryInfoArray;
+    TQueue<TArray<NS_SLUA::LuaMemInfo>, EQueueMode::Mpsc> memoryInfoQueue;
 	TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe> curProfilersArray = MakeShareable(new TArray<SluaProfiler>());
 	TQueue<TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe>, EQueueMode::Mpsc> profilerArrayQueue;
 
@@ -105,14 +110,54 @@ bool Fslua_profileModule::Tick(float DeltaTime)
 		return true;
 	}
 
-	while (!profilerArrayQueue.IsEmpty())
+	while (true)
 	{
-		TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe> profilesArray;
-		profilerArrayQueue.Dequeue(profilesArray);
-		sluaProfilerInspector->Refresh(*profilesArray.Get(), memoryInfo, snapshotInfoArray, snapshotDiffArray);
+		bool bMemBreak = false;
+		bool bcpuBreak = false;
+
+		{
+			FScopeLock ScopeLock(&cpuMutex);
+			if (profilerArrayQueue.IsEmpty()) bcpuBreak = true;
+			else bcpuBreak = false;
+		}
+		
+		{
+			FScopeLock ScopeLock(&memMutex);
+			if (memoryInfoQueue.IsEmpty()) bMemBreak = true;
+			else bMemBreak = false;
+		}
+		
+		if (bMemBreak && bcpuBreak) break;
+
+        TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe> profilesArrayPtr;
+        TArray<SluaProfiler> profilesArray;
+        TArray<NS_SLUA::LuaMemInfo> memoryInfo;
+        TArray<SnapshotInfo> curSnapshotArray;
+        
+        
+        {
+            FScopeLock ScopeLock(&memMutex);
+			if (!profilerArrayQueue.IsEmpty()) {
+				profilerArrayQueue.Dequeue(profilesArrayPtr);
+				profilesArray = *profilesArrayPtr.Get();
+			}
+        }
+        
+        {
+            FScopeLock ScopeLock(&cpuMutex);
+            if(!memoryInfoQueue.IsEmpty())
+				memoryInfoQueue.Dequeue(memoryInfo);
+        }
+        
+        FScopeLock ScopeLock(&snapshotMutex);
+        curSnapshotArray = snapshotInfoArray;
+        
+        sluaProfilerInspector->Refresh(profilesArray, memoryInfo, curSnapshotArray, snapshotDiffArray);
+        
+        FScopeLock ScopeEmptyLock(&snapshotMutex);
         snapshotInfoArray.Empty();
         snapshotDiffArray.Empty();
-	}
+}
 
 	return true;
 }
@@ -290,13 +335,21 @@ void Fslua_profileModule::debug_hook_c(int event, double nanoseconds, int linede
 	}
 	else if (event == NS_SLUA::ProfilerHookEvent::PHE_TICK)
 	{
-		profilerArrayQueue.Enqueue(curProfilersArray);
+        {
+            FScopeLock ScopeLock(&cpuMutex);
+            profilerArrayQueue.Enqueue(curProfilersArray);
 
-		ClearCurProfiler();
+            ClearCurProfiler();
+        }
 	}
     else if (event == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK)
     {
-        memoryInfo = memoryInfoList;
+        {
+            FScopeLock ScopeLock(&memMutex);
+            memoryInfoArray = memoryInfoList;
+            memoryInfoQueue.Enqueue(memoryInfoArray);
+            memoryInfoArray.Empty();
+        }
     }
     else if(event == NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_COMPARE)
     {
@@ -307,6 +360,8 @@ void Fslua_profileModule::debug_hook_c(int event, double nanoseconds, int linede
         info.memSize = linedefined;
         info.objSize = cast_int(nanoseconds);
         info.id = FCString::Atoi(*name);
+
+        FScopeLock ScopeLock(&snapshotMutex);
         snapshotInfoArray.Add(info);
     }
 }

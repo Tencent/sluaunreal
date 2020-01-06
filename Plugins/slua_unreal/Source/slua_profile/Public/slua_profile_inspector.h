@@ -48,7 +48,7 @@ const int cMaxViewHeight = 200;
 
 struct FileMemInfo {
     FString hint;
-    FString lineNumber;
+    FString lineNum;
     int size;
     // one line memory difference between two point
     int difference;
@@ -90,7 +90,7 @@ public:
     SProfilerInspector();
     ~SProfilerInspector();
     
-    void Refresh(TArray<SluaProfiler>& curProfilersArray, TArray<NS_SLUA::LuaMemInfo> memoryInfoList,
+    void Refresh(TArray<SluaProfiler>& curProfilersArray, TArray<NS_SLUA::LuaMemInfo>& memoryInfoList,
                  TArray<SnapshotInfo> snapshotArray, TArray<NS_SLUA::LuaMemInfo> snapshotDifferentArray);
     TSharedRef<class SDockTab> GetSDockTab();
     TSharedRef<ITableRow> OnGenerateMemRowForList(TSharedPtr<FileMemInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
@@ -200,7 +200,7 @@ private:
     void CombineSameFileInfo(MemFileInfoList& infoList);
     void CollectSnapshotInfo(TArray<SnapshotInfo> snapshotArray);
     void CollectSnapshotDiff(TArray<NS_SLUA::LuaMemInfo> diffArray);
-    void CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInfoList);
+    void CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo>& memoryInfoList);
     void OnSnapshotItemChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
     void OnPreSnapshotItemChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
     void OnDeleteSnapshotItem(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);

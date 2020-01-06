@@ -133,12 +133,12 @@ void  SProfilerInspector::CopyFunctionNode(TSharedPtr<FunctionProfileInfo>& oldF
 	newFuncNode->mergeIdxArray = oldFuncNode->mergeIdxArray;
 }
 
-void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray, TArray<NS_SLUA::LuaMemInfo> memoryInfoList,
+void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray, TArray<NS_SLUA::LuaMemInfo> &memoryInfoList,
                                  TArray<SnapshotInfo> snapshotArray, TArray<NS_SLUA::LuaMemInfo> snapshotDifferentArray)
 {
 	if (stopChartRolling == true || profilersArray.Num() == 0)
 	{
-        if(memoryInfoList.Num()) CollectMemoryNode(memoryInfoList);
+        if(!(stopChartRolling || memoryInfoList.Num())) CollectMemoryNode(memoryInfoList);
         if(snapshotArray.Num()) CollectSnapshotInfo(snapshotArray);
         if(snapshotDifferentArray.Num()) CollectSnapshotDiff(snapshotDifferentArray);
 
@@ -147,7 +147,7 @@ void SProfilerInspector::Refresh(TArray<SluaProfiler>& profilersArray, TArray<NS
 
     if(snapshotArray.Num()) CollectSnapshotInfo(snapshotArray);
     if(snapshotDifferentArray.Num()) CollectSnapshotDiff(snapshotDifferentArray);
-	CollectMemoryNode(memoryInfoList);
+    if(memoryInfoList.Num()) CollectMemoryNode(memoryInfoList);
 	AssignProfiler(profilersArray, tmpRootProfiler, tmpProfiler);
 
 	tmpProfilersArraySamples[arrayOffset] = profilersArray;
@@ -571,7 +571,6 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
         
         return FReply::Handled();
     }));
-
 
 	memProfilerWidget->SetOnMouseButtonUp(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
         isMemMouseButtonUp = true;
@@ -1057,9 +1056,9 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                                         if(removeIndex != 0 && removeIndex + 1 < snapshotInfoArray.Num()) {
                                             SnapshotInfo *preInfo = snapshotInfoArray[removeIndex - 1].Get();
                                             SnapshotInfo *nextInfo = snapshotInfoArray[removeIndex + 1].Get();
-                                            preInfo->memDiff = preInfo->memSize - nextInfo->memSize;
-                                            preInfo->objDiff = preInfo->objSize - nextInfo->objSize;
-                                        } else if(removeIndex == 0) {
+                                            nextInfo->memDiff = nextInfo->memSize - preInfo->memSize;
+                                            nextInfo->objDiff = nextInfo->objSize - preInfo->objSize;
+                                        } else if(removeIndex == 0 && snapshotInfoArray.Num() != 1) {
                                             SnapshotInfo *nextInfo = snapshotInfoArray[removeIndex + 1].Get();
                                             nextInfo->memDiff = 0;
                                             nextInfo->objDiff = 0;
@@ -1321,7 +1320,7 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<Fil
 {
     FText difference;
     
-    if(Item->lineNumber.Equals("-1", ESearchCase::CaseSensitive))
+    if(Item->lineNum.Equals("-1", ESearchCase::CaseSensitive))
         difference = FText::FromString("");
     else
         difference = FText::FromString(ChooseMemoryUnit((float)Item->difference));
@@ -1336,10 +1335,10 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<Fil
             {
                 FString fileNameInfo;
 
-                if(Item->lineNumber.Equals("-1", ESearchCase::CaseSensitive))
+                if(Item->lineNum.Equals("-1", ESearchCase::CaseSensitive))
                     fileNameInfo = Item->hint;
                 else
-                    fileNameInfo = Item->hint + ":" + Item->lineNumber;
+                    fileNameInfo = Item->hint + ":" + Item->lineNum;
                 return FText::FromString(fileNameInfo);
             }
             return FText::FromString("");
@@ -1349,7 +1348,7 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<Fil
         + SHeaderRow::Column("Memory Size").DefaultLabel(TAttribute<FText>::Create([=]() {
             if (Item->size >= 0)
             {
-                if(Item->lineNumber.Equals("-1", ESearchCase::CaseSensitive))
+                if(Item->lineNum.Equals("-1", ESearchCase::CaseSensitive))
                     return FText::FromString("");
                 else
                     return FText::FromString(ChooseMemoryUnit((float)Item->size));
@@ -1372,7 +1371,7 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<Fil
 
 void SProfilerInspector::OnGetMemChildrenForTree(TSharedPtr<FileMemInfo> Parent, TArray<TSharedPtr<FileMemInfo>>& OutChildren)
 {
-    if(!Parent->lineNumber.Equals("-1", ESearchCase::CaseSensitive)) return;
+    if(!Parent->lineNum.Equals("-1", ESearchCase::CaseSensitive)) return;
     for(auto &item : shownFileInfo)
     {
         if(Parent->hint.Equals(item->hint, ESearchCase::CaseSensitive))
@@ -1703,14 +1702,17 @@ void SProfilerInspector::CollectSnapshotDiff(TArray<NS_SLUA::LuaMemInfo> diffArr
     snapshotDiffTreeView->RequestTreeRefresh();
 }
 
-void SProfilerInspector::CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInfoList)
+void SProfilerInspector::CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo>& memoryInfoList)
 {
 	luaTotalMemSize = 0;
 	ProflierMemNode memNode;
+    
 	for(auto& memFileInfo : memoryInfoList)
 	{
         TArray<FString> fileInfoList = SplitFlieName(memFileInfo.hint);
-		FString fileName = fileInfoList[0];
+        if(fileInfoList.Num() == 0) continue;
+        
+        FString fileName = fileInfoList[0];
         
         // if the record file have file name and line number, the return array should have two item.
         if(fileInfoList.Num() < 2 || fileName.Contains(TEXT("ProfilerScript"), ESearchCase::CaseSensitive, ESearchDir::FromEnd))
@@ -1720,7 +1722,7 @@ void SProfilerInspector::CollectMemoryNode(TArray<NS_SLUA::LuaMemInfo> memoryInf
         luaTotalMemSize += memFileInfo.size;
         FileMemInfo fileInfo;
         fileInfo.hint = fileName;
-        fileInfo.lineNumber = fileInfoList[1];
+        fileInfo.lineNum = fileInfoList[1];
         fileInfo.size = memFileInfo.size;
         memNode.infoList.Add(fileInfo);
 	}
@@ -1738,7 +1740,7 @@ void SProfilerInspector::CombineSameFileInfo(MemFileInfoList& infoList)
     for(auto& fileInfo : infoList)
     {
         FString fileHint = fileInfo.hint;
-        int index = ContainsFile(fileHint.Append(fileInfo.lineNumber), shownFileInfo);
+        int index = ContainsFile(fileHint.Append(fileInfo.lineNum), shownFileInfo);
         if(index >= 0)
         {
             shownFileInfo[index]->size += fileInfo.size;
@@ -1747,7 +1749,7 @@ void SProfilerInspector::CombineSameFileInfo(MemFileInfoList& infoList)
         {
             FileMemInfo *info = new FileMemInfo();
             info->hint = fileInfo.hint;
-            info->lineNumber = fileInfo.lineNumber;
+            info->lineNum = fileInfo.lineNum;
             info->size = fileInfo.size;
             shownFileInfo.Add(MakeShareable(info));
             
@@ -1757,7 +1759,7 @@ void SProfilerInspector::CombineSameFileInfo(MemFileInfoList& infoList)
             {
                 FileMemInfo *fileParent = new FileMemInfo();
                 fileParent->hint = fileInfo.hint;
-                fileParent->lineNumber = "-1";
+                fileParent->lineNum = "-1";
                 shownParentFileName.Add(MakeShareable(fileParent));
             }
         }
@@ -1770,7 +1772,7 @@ void ExchangeMemInfoNode(ShownMemInfoList& list, int originIndx, int newIndex)
 {
     list[originIndx]->size = list[newIndex]->size;
     list[originIndx]->hint = list[newIndex]->hint;
-    list[originIndx]->lineNumber = list[newIndex]->lineNumber;
+    list[originIndx]->lineNum = list[newIndex]->lineNum;
 }
 
 void SortMemInfo(ShownMemInfoList& list, int beginIndex, int endIndex)
@@ -1781,7 +1783,7 @@ void SortMemInfo(ShownMemInfoList& list, int beginIndex, int endIndex)
         if(left >= right) return ;
         int key = list[left]->size;
         FString keyHint = list[left]->hint;
-        FString keyLineNumber = list[left]->lineNumber;
+        FString keyLineNumber = list[left]->lineNum;
         
         while(left<right)
         {
@@ -1793,7 +1795,7 @@ void SortMemInfo(ShownMemInfoList& list, int beginIndex, int endIndex)
         }
         list[left]->size = key;
         list[left]->hint = keyHint;
-        list[left]->lineNumber = keyLineNumber;
+        list[left]->lineNum = keyLineNumber;
         
         SortMemInfo(list, beginIndex, left - 1);
         SortMemInfo(list, left + 1, endIndex);
@@ -1855,7 +1857,7 @@ void SProfilerInspector::CalcPointMemdiff(int beginIndex, int endIndex)
     {
         FString fileHint = info.hint;
 
-        int index = ContainsFile(fileHint.Append(info.lineNumber), shownFileInfo);
+        int index = ContainsFile(fileHint.Append(info.lineNum), shownFileInfo);
         if(index >= 0)
         {
             shownFileInfo[index].Get()->difference -= info.size;
@@ -1865,7 +1867,7 @@ void SProfilerInspector::CalcPointMemdiff(int beginIndex, int endIndex)
             FileMemInfo *newInfo = new FileMemInfo();
             newInfo->hint = info.hint;
             newInfo->size = 0;
-            newInfo->lineNumber = info.lineNumber;
+            newInfo->lineNum = info.lineNum;
             newInfo->difference -= info.size;
             shownFileInfo.Add(MakeShareable(newInfo));
         }
@@ -1884,7 +1886,7 @@ int SProfilerInspector::ContainsFile(FString& fileName, ShownMemInfoList &list)
         index ++;
         
         FString fileHint = fileInfo->hint;
-        if(fileName.Equals(fileHint.Append(fileInfo->lineNumber), ESearchCase::CaseSensitive)) return index;
+        if(fileName.Equals(fileHint.Append(fileInfo->lineNum), ESearchCase::CaseSensitive)) return index;
     }
     index = -1;
     return index;
@@ -1911,6 +1913,7 @@ FString SProfilerInspector::ChooseMemoryUnit(float memorySize)
 TArray<FString> SProfilerInspector::SplitFlieName(FString filePath)
 {
     TArray<FString> stringArray;
+    if(&filePath == NULL) return stringArray;
     FString fileInfo;
 	filePath.ParseIntoArray(stringArray, TEXT("/"), false);
 

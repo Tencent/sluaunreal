@@ -491,6 +491,25 @@ namespace NS_SLUA {
         }
     }
 
+	void LuaObject::callRpc(lua_State* L, UObject* obj, UFunction* func, uint8* params) {
+		// call rpc without outparams
+		const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
+		uint8* ReturnValueAddress = bHasReturnParam ? ((uint8*)params + func->ReturnValueOffset) : nullptr;
+		FFrame NewStack(obj, func, params, NULL, func->Children);
+		NewStack.OutParms = nullptr;
+		func->Invoke(obj, NewStack, ReturnValueAddress);
+	}
+
+	void LuaObject::callUFunction(lua_State* L, UObject* obj, UFunction* func, uint8* params) {
+		auto ff = func->FunctionFlags;
+		// it's an RPC function
+		if (ff&FUNC_Net)
+			LuaObject::callRpc(L, obj, func, params);
+		else
+		// it's a local function
+			obj->ProcessEvent(func, params);
+	}
+
     // handle return value and out params
     int LuaObject::returnValue(lua_State* L,UFunction* func,uint8* params) {
 
@@ -555,8 +574,7 @@ namespace NS_SLUA {
 		FStructOnScope params(func);
 		LuaObject::fillParam(L, offset, func, params.GetStructMemory());
 		{
-			// call function with params
-			obj->ProcessEvent(func, params.GetStructMemory());
+			LuaObject::callUFunction(L, obj, func, params.GetStructMemory());
 		}
 		// return value to push lua stack
 		return LuaObject::returnValue(L, func, params.GetStructMemory());
@@ -843,6 +861,11 @@ namespace NS_SLUA {
 		if (LuaWrapper::pushValue(L, p, uss, parms))
 			return 1;
 
+		if (uss->GetName() == "LuaBPVar") {
+			((FLuaBPVar*)parms)->value.push(L);
+			return 1;
+		}
+
 		uint32 size = uss->GetStructureSize() ? uss->GetStructureSize() : 1;
 		uint8* buf = (uint8*)FMemory::Malloc(size);
 		uss->InitializeStruct(buf);
@@ -871,6 +894,15 @@ namespace NS_SLUA {
 #if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
 	int pushUMulticastInlineDelegateProperty(lua_State* L, UProperty* prop, uint8* parms, bool ref) {
 		auto p = Cast<UMulticastInlineDelegateProperty>(prop);
+		ensure(p);
+		FMulticastScriptDelegate* delegate = const_cast<FMulticastScriptDelegate*>(p->GetMulticastDelegate(parms));
+		return LuaMultiDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
+	}
+#endif
+
+#if (ENGINE_MINOR_VERSION>=24) && (ENGINE_MAJOR_VERSION>=4)
+	int pushUMulticastSparseDelegateProperty(lua_State* L, UProperty* prop, uint8* parms, bool ref) {
+		auto p = Cast<UMulticastSparseDelegateProperty>(prop);
 		ensure(p);
 		FMulticastScriptDelegate* delegate = const_cast<FMulticastScriptDelegate*>(p->GetMulticastDelegate(parms));
 		return LuaMultiDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
@@ -1193,6 +1225,9 @@ namespace NS_SLUA {
         regPusher(UMulticastDelegateProperty::StaticClass(),pushUMulticastDelegateProperty);
 #if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
 		regPusher(UMulticastInlineDelegateProperty::StaticClass(), pushUMulticastInlineDelegateProperty);
+#endif
+#if (ENGINE_MINOR_VERSION>=24) && (ENGINE_MAJOR_VERSION>=4)
+		regPusher(UMulticastSparseDelegateProperty::StaticClass(), pushUMulticastSparseDelegateProperty);
 #endif
         regPusher(UObjectProperty::StaticClass(),pushUObjectProperty);
         regPusher(UArrayProperty::StaticClass(),pushUArrayProperty);

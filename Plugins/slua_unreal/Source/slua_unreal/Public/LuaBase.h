@@ -25,14 +25,37 @@ namespace NS_SLUA {
 // special tick function
 #define UFUNCTION_TICK ((UFunction*)-1)
 
-	struct LuaSuper {
+	struct LuaSuperOrRpc {
 		class LuaBase* base;
+		LuaSuperOrRpc(class LuaBase* pBase) :base(pBase) {}
+	};
+
+	struct LuaSuper : public LuaSuperOrRpc {
+		LuaSuper(class LuaBase* pBase) :LuaSuperOrRpc(pBase) {}
+	};
+
+	struct LuaRpc : public LuaSuperOrRpc {
+		LuaRpc(class LuaBase* pBase) :LuaSuperOrRpc(pBase) {}
 	};
 
 	class SLUA_UNREAL_API LuaBase {
 	public:
+		enum IndexFlag {
+			IF_NONE,
+			IF_SUPER,
+			IF_RPC,
+		};
+
 		virtual bool luaImplemented(UFunction* func, void* params);
 		virtual ~LuaBase() {}
+
+		const FWeakObjectPtr& getContext() const {
+			return context;
+		}
+
+		const IndexFlag getIndexFlag() const {
+			return indexFlag;
+		}
 	protected:
 		
 		inline UGameInstance* getGameInstance(AActor* self) {
@@ -49,6 +72,13 @@ namespace NS_SLUA {
 #else
 			return UGameplayStatics::GetGameInstance(self);
 #endif
+		}
+
+		template<typename T>
+		static int genericGC(lua_State* L) {
+			CheckUDGC(T, L, 1);
+			delete UD;
+			return 0;
 		}
 
 		template<typename T>
@@ -74,9 +104,15 @@ namespace NS_SLUA {
 			LuaObject::push(L, ptrT, true);
 			lua_setfield(L, -2, SLUA_CPPINST);
 
-			LuaObject::pushType(L, newSuper(this), "LuaSuper", supermt, supergc);
+			LuaObject::pushType(L, new LuaSuper(this) , "LuaSuper", supermt, genericGC<LuaSuper>);
 			lua_setfield(L, -2, "Super");
+
+			LuaObject::pushType(L, new LuaRpc(this), "LuaRpc", rpcmt, genericGC<LuaRpc>);
+			lua_setfield(L, -2, "Rpc");
+
+			int top = lua_gettop(L);
 			bindOverrideFunc(ptrT);
+			int newtop = lua_gettop(L);
 
 			// setup metatable
 			if (!metaTable.isValid()) {
@@ -100,10 +136,8 @@ namespace NS_SLUA {
 		void bindOverrideFunc(UObject* obj);
 		DECLARE_FUNCTION(luaOverrideFunc);
 
-		static LuaSuper* newSuper(LuaBase* obj);
 		static int supermt(lua_State* L);
-		static int supergc(lua_State* L);
-
+		static int rpcmt(lua_State* L);
 
 		// store deltaTime for super call
 		float deltaTime;
@@ -116,21 +150,25 @@ namespace NS_SLUA {
 		// should override this function to support super::tick
 		virtual void superTick(lua_State* L);
 		virtual void superTick() = 0;
-		virtual int superCall(lua_State* L, UFunction* func);
+		virtual int superOrRpcCall(lua_State* L, UFunction* func);
 		static int __index(lua_State* L);
 		static int __newindex(lua_State* L);
 		static int __superIndex(lua_State* L);
+		static int __rpcIndex(lua_State* L);
 		static int __superTick(lua_State* L);
 		static int __superCall(lua_State* L);
+		static int __rpcCall(lua_State* L);
 
 		LuaVar luaSelfTable;
 		LuaVar tickFunction;
 		FWeakObjectPtr context;
-		static LuaVar metaTable;
-		bool isOverride = false;
+		LuaVar metaTable;
+		IndexFlag indexFlag = IF_NONE;
+		UFunction* currentFunction = nullptr;
 	};
 
 	DefTypeName(LuaSuper);
+	DefTypeName(LuaRpc);
 }
 
 UINTERFACE()

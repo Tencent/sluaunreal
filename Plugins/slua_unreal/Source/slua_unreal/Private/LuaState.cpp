@@ -789,7 +789,6 @@ namespace NS_SLUA {
 			FPlatformProcess::Sleep(1.0f);
 			if (frameCounter.GetValue() != 0) {
 				timeoutCounter.Increment();
-				Log::Log("script run time %d", timeoutCounter.GetValue());
 				if(timeoutCounter.GetValue() >= MaxLuaExecTime)
 					onScriptTimeout();
 			}

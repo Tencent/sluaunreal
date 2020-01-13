@@ -15,6 +15,7 @@
 #define LUA_LIB
 #include "CoreMinimal.h"
 #include "lua/lua.hpp"
+#include "Misc/CoreMisc.h"
 #include "UObject/UnrealType.h"
 #include "UObject/WeakObjectPtr.h"
 #include "Blueprint/UserWidget.h"
@@ -923,3 +924,69 @@ namespace NS_SLUA {
 		return 1;
 	}
 }
+
+#if !PLATFORM_WINDOWS
+struct FNewFrame : public FOutputDevice
+    {
+    public:
+        // Variables.
+        UFunction* Node;
+        UObject* Object;
+        uint8* Code;
+        uint8* Locals;
+        
+        UProperty* MostRecentProperty;
+        uint8* MostRecentPropertyAddress;
+        
+        /** The execution flow stack for compiled Kismet code */
+        FlowStackType FlowStack;
+        
+        /** Previous frame on the stack */
+        FFrame* PreviousFrame;
+        
+        /** contains information on any out parameters */
+        FOutParmRec* OutParms;
+        
+        /** If a class is compiled in then this is set to the property chain for compiled-in functions. In that case, we follow the links to setup the args instead of executing by code. */
+        UField* PropertyChainForCompiledIn;
+        
+        /** Currently executed native function */
+        UFunction* CurrentNativeFunction;
+        
+        bool bArrayContextFailed;
+    public:
+        
+        // Constructors.
+        FNewFrame( UObject* InObject, UFunction* InNode, void* InLocals, FFrame* InPreviousFrame = NULL, UField* InPropertyChainForCompiledIn = NULL )
+        : Node(InNode)
+        , Object(InObject)
+        , Code(InNode->Script.GetData())
+        , Locals((uint8*)InLocals)
+        , MostRecentProperty(NULL)
+        , MostRecentPropertyAddress(NULL)
+        , PreviousFrame(InPreviousFrame)
+        , OutParms(NULL)
+        , PropertyChainForCompiledIn(InPropertyChainForCompiledIn)
+        , CurrentNativeFunction(NULL)
+        , bArrayContextFailed(false)
+        {
+    #if DO_BLUEPRINT_GUARD
+            FBlueprintExceptionTracker::Get().ScriptStack.Push((FFrame *)this);
+    #endif
+        }
+        
+        virtual ~FNewFrame()
+        {
+            #if DO_BLUEPRINT_GUARD
+                FBlueprintExceptionTracker& BlueprintExceptionTracker = FBlueprintExceptionTracker::Get();
+                if (BlueprintExceptionTracker.ScriptStack.Num())
+                {
+                    BlueprintExceptionTracker.ScriptStack.Pop(false);
+                }
+            #endif
+        }
+        
+        virtual void Serialize( const TCHAR* V, ELogVerbosity::Type Verbosity, const class FName& Category ) {};
+    };
+#endif
+

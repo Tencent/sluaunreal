@@ -110,24 +110,46 @@ bool Fslua_profileModule::Tick(float DeltaTime)
 		return true;
 	}
 
-	while (!(profilerArrayQueue.IsEmpty() && memoryInfoQueue.IsEmpty()))
+	while (true)
 	{
+		bool bMemBreak = false;
+		bool bcpuBreak = false;
+
+		{
+			FScopeLock ScopeLock(&cpuMutex);
+			if (profilerArrayQueue.IsEmpty()) bcpuBreak = true;
+			else bcpuBreak = false;
+		}
+		
+		{
+			FScopeLock ScopeLock(&memMutex);
+			if (memoryInfoQueue.IsEmpty()) bMemBreak = true;
+			else bMemBreak = false;
+		}
+		
+		if (bMemBreak && bcpuBreak) {
+			UE_LOG(LogTemp, Warning, TEXT("break loop"));
+			break;
+		}
+
         TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe> profilesArrayPtr;
         TArray<SluaProfiler> profilesArray;
         TArray<NS_SLUA::LuaMemInfo> memoryInfo;
         TArray<SnapshotInfo> curSnapshotArray;
         
-        if(!profilerArrayQueue.IsEmpty())
+        
         {
             FScopeLock ScopeLock(&memMutex);
-            profilerArrayQueue.Dequeue(profilesArrayPtr);
-            profilesArray = *profilesArrayPtr.Get();
+			if (!profilerArrayQueue.IsEmpty()) {
+				profilerArrayQueue.Dequeue(profilesArrayPtr);
+				profilesArray = *profilesArrayPtr.Get();
+			}
         }
         
-        if(!memoryInfoQueue.IsEmpty())
         {
             FScopeLock ScopeLock(&cpuMutex);
-            memoryInfoQueue.Dequeue(memoryInfo);
+            if(!memoryInfoQueue.IsEmpty())
+				memoryInfoQueue.Dequeue(memoryInfo);
         }
         
         FScopeLock ScopeLock(&snapshotMutex);
@@ -341,6 +363,7 @@ void Fslua_profileModule::debug_hook_c(int event, double nanoseconds, int linede
         info.memSize = linedefined;
         info.objSize = cast_int(nanoseconds);
         info.id = FCString::Atoi(*name);
+
         FScopeLock ScopeLock(&snapshotMutex);
         snapshotInfoArray.Add(info);
     }

@@ -495,17 +495,17 @@ namespace NS_SLUA {
 		// call rpc without outparams
 		const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
 		uint8* ReturnValueAddress = bHasReturnParam ? ((uint8*)params + func->ReturnValueOffset) : nullptr;
-    #if PLATFORM_WINDOWS
-        FFrame NewStack(obj, func, params, NULL, func->Children);
-        NewStack.OutParms = nullptr;
-        func->Invoke(obj, NewStack, ReturnValueAddress);
-    #else
-        FNewFrame NewStack(obj, func, params, NULL, func->Children);
-        NewStack.OutParms = nullptr;
-        FFrame *frame = (FFrame *)&NewStack;
-        func->Invoke(obj, *frame, ReturnValueAddress);
-    #endif
         
+        #if ENGINE_MINOR_VERSION>22 && !PLATFORM_WINDOWS
+            FNewFrame NewStack(obj, func, params, NULL, func->Children);
+            NewStack.OutParms = nullptr;
+            FFrame *frame = (FFrame *)&NewStack;
+            func->Invoke(obj, *frame, ReturnValueAddress);
+        #else
+            FFrame NewStack(obj, func, params, NULL, func->Children);
+            NewStack.OutParms = nullptr;
+            func->Invoke(obj, NewStack, ReturnValueAddress);
+        #endif
 	}
 
 	void LuaObject::callUFunction(lua_State* L, UObject* obj, UFunction* func, uint8* params) {

@@ -40,6 +40,7 @@ SProfilerInspector::SProfilerInspector()
 {
 	stopChartRolling = false;
     showSnapshotDiff = false;
+    bSnapshotCompare = false;
 	arrayOffset = 0;
 	lastArrayOffset = 0;
 	refreshIdx = 0;
@@ -997,8 +998,9 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                             messageWriter << preSnapshotID;
                             messageWriter << snapshotID;
                         
-                            if(connectionsSize > 0)
+                            if(connectionsSize > 0 && bSnapshotCompare)
                             {
+                                UE_LOG(LogTemp, Warning, TEXT("bSnapshotCompare comp: %d"), bSnapshotCompare);
                                 FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
                                 // if snapshotId or preSnapshotId equals 0, means that user does not choose effective snapshot
                                 if (socket && socket->GetConnectionState() == SCS_Connected && snapshotID && preSnapshotID)
@@ -1007,6 +1009,9 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                                 }
                                 
                                 if(bytesSend > 0) showSnapshotDiff = true;
+                                bSnapshotCompare = false;
+                            } else {
+                                UE_LOG(LogTemp, Warning, TEXT("bSnapshotCompare uncomp: %d"), bSnapshotCompare);
                             }
                             return FReply::Handled();
                         }))
@@ -1040,11 +1045,13 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                             messageWriter << emptySnapshotID;
                             messageWriter << emptySnapshotID;
 
-                            if(connectionsSize > 0)
+                            if(connectionsSize > 0 && deleteSnapshotID)
                             {
+                                UE_LOG(LogTemp, Warning, TEXT("bSnapshotDelete delete: %d"), deleteSnapshotID);
+
                                 FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
                                 // if snapshotId or preSnapshotId equals 0, means that user does not choose effective snapshot
-                                if (socket && socket->GetConnectionState() == SCS_Connected && deleteSnapshotID)
+                                if (socket && socket->GetConnectionState() == SCS_Connected)
                                 {
                                     socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
                                 }
@@ -1075,10 +1082,77 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                                         }
                                     }
                                 }
+                            } else {
+                                UE_LOG(LogTemp, Warning, TEXT("bSnapshotDelete undelete: %d"), deleteSnapshotID);
                             }
                             deleteSnapshotID = 0;
                             snapshotListView->RequestListRefresh();
                             return FReply::Handled();
+                        }))
+                    ]
+                 
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).AutoWidth().Padding(5.0f, 3.0f, 0, 0)
+                    [
+                    SNew(SButton)
+                    .Text(FText::FromName("Delete"))
+                    .ContentPadding(FMargin(2.0, 2.0))
+                    .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+                         FArrayWriter messageWriter;
+                         int bytesSend = 0;
+                         int emptySnapshotID = -1;
+                         int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_DELETE;
+                         int connectionsSize = ProfileServer->GetConnections().Num();
+
+                         messageWriter.Empty();
+                         messageWriter.Seek(0);
+                         messageWriter << hookEvent;
+                         messageWriter << deleteSnapshotID;
+                         messageWriter << emptySnapshotID;
+                         messageWriter << emptySnapshotID;
+
+                         if(connectionsSize > 0 && deleteSnapshotID)
+                         {
+                             UE_LOG(LogTemp, Warning, TEXT("bSnapshotDelete delete: %d"), deleteSnapshotID);
+
+                             FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
+                             // if snapshotId or preSnapshotId equals 0, means that user does not choose effective snapshot
+                             if (socket && socket->GetConnectionState() == SCS_Connected)
+                             {
+                                 socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
+                             }
+                             
+                             if(bytesSend > 0)
+                             {
+                                 int removeIndex = getSnapshotInfoIndex(deleteSnapshotID);
+                                 if(removeIndex != -1) {
+                                     if(removeIndex != 0 && removeIndex + 1 < snapshotInfoArray.Num()) {
+                                         SnapshotInfo *preInfo = snapshotInfoArray[removeIndex - 1].Get();
+                                         SnapshotInfo *nextInfo = snapshotInfoArray[removeIndex + 1].Get();
+                                         nextInfo->memDiff = nextInfo->memSize - preInfo->memSize;
+                                         nextInfo->objDiff = nextInfo->objSize - preInfo->objSize;
+                                     } else if(removeIndex == 0 && snapshotInfoArray.Num() != 1) {
+                                         SnapshotInfo *nextInfo = snapshotInfoArray[removeIndex + 1].Get();
+                                         nextInfo->memDiff = 0;
+                                         nextInfo->objDiff = 0;
+                                     }
+                                     snapshotInfoArray.RemoveAt(removeIndex);
+                                 }
+                                 
+                                 for(int i = 1; i < snapshotIdArray.Num(); i++) {
+                                     TArray<FString> stringArray;
+                                     snapshotIdArray[i].Get()->ParseIntoArray(stringArray, TEXT(" "), false);
+                                     if(FCString::Atoi(*stringArray[stringArray.Num() - 1]) == deleteSnapshotID)
+                                     {
+                                         snapshotIdArray.RemoveAt(i);
+                                     }
+                                 }
+                             }
+                         } else {
+                             UE_LOG(LogTemp, Warning, TEXT("bSnapshotDelete undelete: %d"), deleteSnapshotID);
+                         }
+                         deleteSnapshotID = 0;
+                         snapshotListView->RequestListRefresh();
+                         return FReply::Handled();
                         }))
                     ]
                 ]
@@ -1698,7 +1772,7 @@ void SProfilerInspector::CollectSnapshotDiff(TArray<NS_SLUA::LuaMemInfo> diffArr
             snapshotDiffParentArray.Add(MakeShareable(info));
         }
     }
-    
+    SortShownInfo(snapshotDiffArray);
     snapshotDiffTreeView->RequestTreeRefresh();
 }
 
@@ -1765,7 +1839,7 @@ void SProfilerInspector::CombineSameFileInfo(MemFileInfoList& infoList)
         }
     }
     
-    SortShownInfo();
+    SortShownInfo(shownFileInfo);
 }
 
 void ExchangeMemInfoNode(ShownMemInfoList& list, int originIndx, int newIndex)
@@ -1773,6 +1847,7 @@ void ExchangeMemInfoNode(ShownMemInfoList& list, int originIndx, int newIndex)
     list[originIndx]->size = list[newIndex]->size;
     list[originIndx]->hint = list[newIndex]->hint;
     list[originIndx]->lineNum = list[newIndex]->lineNum;
+    list[originIndx]->difference = list[newIndex]->difference;
 }
 
 void SortMemInfo(ShownMemInfoList& list, int beginIndex, int endIndex)
@@ -1782,6 +1857,7 @@ void SortMemInfo(ShownMemInfoList& list, int beginIndex, int endIndex)
         int left = beginIndex,right = endIndex;
         if(left >= right) return ;
         int key = list[left]->size;
+        int diff = list[left]->difference;
         FString keyHint = list[left]->hint;
         FString keyLineNumber = list[left]->lineNum;
         
@@ -1796,22 +1872,26 @@ void SortMemInfo(ShownMemInfoList& list, int beginIndex, int endIndex)
         list[left]->size = key;
         list[left]->hint = keyHint;
         list[left]->lineNum = keyLineNumber;
+        list[left]->difference = diff;
         
         SortMemInfo(list, beginIndex, left - 1);
         SortMemInfo(list, left + 1, endIndex);
     }
 }
 
-void SProfilerInspector::SortShownInfo()
+void SProfilerInspector::SortShownInfo(ShownMemInfoList& list)
 {
-    SortMemInfo(shownFileInfo, 0, shownFileInfo.Num()-1);
+    SortMemInfo(list, 0, list.Num()-1);
 }
 
 void SProfilerInspector::OnSnapshotItemChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo)
 {
     for(int32 ItemID = 0; ItemID < snapshotIdArray.Num(); ItemID++)
     {
-        if(snapshotIdArray[ItemID] == NewSelection ) snapshotID = ItemID;
+        if(ItemID == preSnapshotID) bSnapshotCompare = bSnapshotCompare | false;
+        else bSnapshotCompare = bSnapshotCompare | true;
+        
+        if(snapshotIdArray[ItemID] == NewSelection) snapshotID = ItemID;
     }
     
     if(snapshotID == 0) showSnapshotDiff = false;
@@ -1821,7 +1901,12 @@ void SProfilerInspector::OnPreSnapshotItemChanged(TSharedPtr<FString> NewSelecti
 {
     for(int32 ItemID = 0; ItemID < snapshotIdArray.Num(); ItemID++)
     {
-        if(snapshotIdArray[ItemID] == NewSelection) preSnapshotID = ItemID;
+        if(snapshotIdArray[ItemID] == NewSelection) {
+            if(ItemID == preSnapshotID) bSnapshotCompare = bSnapshotCompare | false;
+            else bSnapshotCompare = bSnapshotCompare | true;
+            
+            preSnapshotID = ItemID;
+        }
     }
     
     if(preSnapshotID == 0) showSnapshotDiff = false;

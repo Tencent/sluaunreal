@@ -138,6 +138,7 @@ private:
     TArray<float> memChartValArray;
     bool stopChartRolling;
     bool showSnapshotDiff;
+    bool bSnapshotCompare;
     int refreshIdx;
     int arrayOffset;
     int lastArrayOffset;
@@ -195,7 +196,7 @@ private:
     void InitProfilerBar(int barIdx, TSharedPtr<SHorizontalBox>& horBox);
     void OnClearBtnClicked();
     void SortProfiler(SluaProfiler &shownRootProfiler);
-    void SortShownInfo();
+    void SortShownInfo(ShownMemInfoList& shownList);
     void CalcPointMemdiff(int beginIndex, int endIndex);
     void CombineSameFileInfo(MemFileInfoList& infoList);
     void CollectSnapshotInfo(TArray<SnapshotInfo> snapshotArray);

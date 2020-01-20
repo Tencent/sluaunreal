@@ -120,20 +120,23 @@ namespace NS_SLUA {
             
             messageReader << event;
             
-            if(event == PHE_SNAPSHOT_COMPARE) {
-                messageReader << emptyID;
-                messageReader << preSnapshotID;
-                messageReader << snapshotID;
-            } else if(event == PHE_MEMORY_SNAPSHOT) {
-                messageReader << snapshotNum;
-                messageReader << emptyID;
-                messageReader << emptyID;
-            } else if (event == PHE_SNAPSHOT_DELETE) {
-                messageReader << snapshotDeleteID;
-                messageReader << emptyID;
-                messageReader << emptyID;
+            switch(event) {
+                case PHE_SNAPSHOT_COMPARE: {
+                    messageReader << emptyID;
+                    messageReader << preSnapshotID;
+                    messageReader << snapshotID;
+                }
+                case PHE_MEMORY_SNAPSHOT: {
+                    messageReader << snapshotNum;
+                    messageReader << emptyID;
+                    messageReader << emptyID;
+                }
+                case PHE_SNAPSHOT_DELETE: {
+                    messageReader << snapshotDeleteID;
+                    messageReader << emptyID;
+                    messageReader << emptyID;
+                }
             }
-            
             return event;
         }
         
@@ -281,6 +284,33 @@ namespace NS_SLUA {
             
             return emptyList;
         }
+        
+        void dispatchReceieveEvent(lua_State *L, int event) {
+            switch (event) {
+                case PHE_MEMORY_SNAPSHOT: {
+                    getMemorySnapshot(L);
+                    break;
+                }
+                case PHE_SNAPSHOT_COMPARE: {
+                    // send the comparing result of two snapshots
+                    takeMemorySample(NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_COMPARE, checkSnapshotDiff());
+                    break;
+                }
+                case PHE_SNAPSHOT_DELETE: {
+                    if(snapshotList.Contains(snapshotDeleteID)) {
+                        snapshotList.FindAndRemoveChecked(snapshotDeleteID);
+                    }
+                }
+                case PHE_MEMORY_GC: {
+                    memoryGC(L);
+                    break;
+                }
+                case PHE_SNAPSHOT_DELETE_ALL: {
+                    snapshotList.Empty();
+                    break;
+                }
+            }
+        }
 
 		void debug_hook(lua_State* L, lua_Debug* ar) {
 			if (ignoreHook) return;
@@ -355,25 +385,7 @@ namespace NS_SLUA {
             
             if(checkSocketRead()){
                 int wantedSize = sizeof(int) * 4;
-                switch (receieveMessage(wantedSize)) {
-                    case PHE_MEMORY_SNAPSHOT: {
-                        getMemorySnapshot(L);
-                        break;
-                    }
-                    case PHE_SNAPSHOT_COMPARE: {
-                        // send the comparing result of two snapshots
-                        takeMemorySample(NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_COMPARE, checkSnapshotDiff());
-                        break;
-                    }
-                    case PHE_SNAPSHOT_DELETE : {
-                        if(snapshotList.Contains(snapshotDeleteID)) {
-                            snapshotList.FindAndRemoveChecked(snapshotDeleteID);
-                        }
-                    }
-                    case PHE_MEMORY_GC:
-                        memoryGC(L);
-                        break;
-                }
+                dispatchReceieveEvent(L, receieveMessage(wantedSize));
             }
             
             for(auto& memInfo : NS_SLUA::LuaMemoryProfile::memDetail()) {

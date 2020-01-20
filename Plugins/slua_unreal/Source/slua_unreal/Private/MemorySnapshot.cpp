@@ -19,218 +19,11 @@
 #define convert2str(data) FString::Printf(TEXT(data))
 
 namespace NS_SLUA {
-    FString chooseMemoryUnit(float memoryByteSize) {
-        if(memoryByteSize < 1024.0f) {
-            return FString::Printf(TEXT("%d Bytes"), cast_int(memoryByteSize));
-        }
-        // form byte to KB
-        memoryByteSize /= 1024.0f;
-        
-        if (memoryByteSize < 1024) {
-            return FString::Printf(TEXT("%.3f KB"), memoryByteSize);
-        } else if (memoryByteSize < 1024 * 1024) {
-            return FString::Printf(TEXT("%.3f MB"), (memoryByteSize /= 1024.0f));
-        } else if (memoryByteSize >= 1024 * 1024) {
-            return FString::Printf(TEXT("%.3f GB"), (memoryByteSize /= (1024.0f * 1024.0f)));
-        }
-        
-        return FString::Printf(TEXT("%.3f"), memoryByteSize);
-    }
-    
-    FString getMapType(int typeId) {
-        FString mapType = convert2str("");
-        switch (typeId) {
-            case TABLE:
-                mapType = convert2str("Table");
-                break;
-            case FUNCTION:
-                mapType = convert2str("Function");
-                break;
-            case THREAD:
-                mapType = convert2str("Thread");
-                break;
-            case USERDATA:
-                mapType = convert2str("Userdata");
-                break;
-            default:
-                mapType = convert2str("OtherType");
-                break;
-        }
-        return mapType;
-    }
-    
-    int getSnapshotItemSize(MemoryNodeMap checkMap, MemoryNodeMap findingMap, FString key) {
-        return checkMap.Contains(key) ? findingMap.FindRef(key).size : 0;
-    }
-    
-    FString getSnapshotItemHint(MemoryNodeMap checkMap, MemoryNodeMap findingMap, FString key) {
-        return checkMap.Contains(key) ? findingMap.FindRef(key).hint : FString("");
-    }
-    
-    void SnapshotMap::Empty() {
-        typeArray.Empty();
-    }
-    
-    void SnapshotMap::initSnapShotMap(int typeSize){
-        for(int i = 0; i < typeSize; i++) {
-            MemoryTypeMap map;
-            typeArray.Add(map);
-        }
-    }
-    
-    bool SnapshotMap::isMarked(const void *pointer){
-        if(typeArray[MARKED].Contains(pointer))
-           return true;
-           
-       typeArray[MARKED].Add(pointer);
-       return false;
-    }
-    
-    int SnapshotMap::getSnapshotMemSize(SnapshotMap shotMap) {
-        int64 totalSize = 0;
-        for(int i = 0; i < MARKED; i++){
-            if(i == SOURCE) continue;
-            
-            FString mapType = convert2str("");
-            MemoryTypeMap map = *shotMap.getMemoryMap(i);
-            
-            for(auto &parent : map) {
-                FString keyPointer = FString::Printf(TEXT("%p"),parent.Key);
-                
-                if(i == FUNCTION) {
-                    MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
-                    
-                    if(sourceMap == NULL) {
-                        if(parent.Value.Num() == 0) continue;
-                        
-                        totalSize += getSnapshotItemSize(parent.Value, parent.Value, keyPointer);
-                    } else {
-                        
-                        totalSize += getSnapshotItemSize(parent.Value, *sourceMap, keyPointer);
-                    }
-                }else if(i == THREAD) {
-                    MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
-                    totalSize += getSnapshotItemSize(parent.Value, *sourceMap, keyPointer);
-                    
-                } else {
-                    totalSize += getSnapshotItemSize(parent.Value, parent.Value, keyPointer);
-                }
-            }
-        }
-        
-        //return value are expressed in KB: #bytes/2^10 */
-        return cast_int(totalSize >> 10);
-    }
-
-    int SnapshotMap::getSnapshotObjSize(SnapshotMap shotMap){
-        int objSize = 0;
-        for(int i = 0; i < MARKED; i++){
-            if(i == SOURCE) continue;
-            
-            FString mapType = convert2str("");
-            MemoryTypeMap map = *shotMap.getMemoryMap(i);
-            for(auto &parent : map) {
-                FString keyPointer = FString::Printf(TEXT("%p"),parent.Key);
-                
-                if(i == FUNCTION) {
-                    MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
-                    if(sourceMap == NULL && parent.Value.Num() == 0) continue;
-                }
-                
-                for(auto &child : parent.Value) {
-                    objSize ++;
-                }
-            }
-        }
-        return objSize;
-    }
-    
-    MemoryTypeMap* SnapshotMap::getMemoryMap(int index){
-        return &typeArray[index];
-    }
-    
-    /* check memory difference between two SnapshotMap */
-    TArray<LuaMemInfo> SnapshotMap::checkMemoryDiff(SnapshotMap previousMap) {
-        SnapshotMap diffMap;
-        diffMap.initSnapShotMap(MARKED);
-        
-        for(int i = 0; i < MARKED; i++){
-            MemoryTypeMap typeMap = typeArray[i];
-            MemoryTypeMap compareTypeMap = *previousMap.getMemoryMap(i);
-            
-            for(auto &parent : typeArray[i]) {
-                if(compareTypeMap.Contains(parent.Key)) {
-                    compareTypeMap.Remove(parent.Key);
-                } else {
-                    diffMap.getMemoryMap(i)->Add(parent.Key, parent.Value);
-                }
-            }
-            
-            for(auto &parent : compareTypeMap) {
-                // if not contains the key, the key-value is a light c function
-                if(parent.Value.Contains(FString::Printf(TEXT("%p"),parent.Key))) {
-                    int size = -(parent.Value.FindRef(FString::Printf(TEXT("%p"),parent.Key)).size);
-                    parent.Value.Find(FString::Printf(TEXT("%p"),parent.Key))->size = size;
-                }
-                diffMap.getMemoryMap(i)->Add(parent.Key, parent.Value);
-            }
-        }
-        return snapshotMapToArray(diffMap);
-    }
-    
-    TArray<LuaMemInfo> SnapshotMap::snapshotMapToArray(SnapshotMap transferMap) {
-        TArray<LuaMemInfo> snapshotDetailsArray;
-        for(int i = 0; i < MARKED; i++){
-            if(i == SOURCE) continue;
-            FString mapType = getMapType(i);
-            LuaMemInfo splitInfo;
-            
-            splitInfo.hint = mapType;
-            splitInfo.size = 0;
-            snapshotDetailsArray.Add(splitInfo);
-            
-            MemoryTypeMap map = *(transferMap.getMemoryMap(i));
-            for(auto &parent : map) {
-                LuaMemInfo info;
-                FString keyPointer = FString::Printf(TEXT("%p"),parent.Key);
-                FString objHint = FString::Printf(TEXT("(%p) "),parent.Key);
-                
-                if(i == FUNCTION) {
-                    FString funcInfo;
-                    FString funcName;
-                    
-                    MemoryNodeMap *sourceMap = transferMap.getMemoryMap(SOURCE)->Find(parent.Key);
-                    
-                    if(sourceMap == NULL) {
-                        if(parent.Value.Num() == 0) continue;
-                        
-                        funcInfo = getSnapshotItemHint(parent.Value, parent.Value, keyPointer);
-                        funcName = convert2str("C Func");
-                        
-                        info.size = getSnapshotItemSize(parent.Value, parent.Value, keyPointer);
-                    } else {
-                        funcInfo = getSnapshotItemHint(*sourceMap, *sourceMap, keyPointer);
-                        funcName = getSnapshotItemHint(parent.Value, parent.Value, keyPointer);
-                        info.size = getSnapshotItemSize(parent.Value, *sourceMap, keyPointer);
-                    }
-                    
-                    objHint += FString::Printf(TEXT("%s : %s"), *funcName, *funcInfo);
-                }else if(i == THREAD) {
-                    MemoryNodeMap *sourceMap =  transferMap.getMemoryMap(SOURCE)->Find(parent.Key);
-                    objHint += getSnapshotItemHint(*sourceMap, *sourceMap, keyPointer);
-                    info.size = getSnapshotItemSize(parent.Value, *sourceMap, keyPointer);
-                } else {
-                    objHint += getSnapshotItemHint(parent.Value, parent.Value, keyPointer);
-                    info.size = getSnapshotItemSize(parent.Value, parent.Value, keyPointer);
-                }
-                info.hint = objHint;
-                snapshotDetailsArray.Add(info);
-            }
-        }
-        
-        return snapshotDetailsArray;
-    }
-    
+    FString chooseMemoryUnit(float memoryByteSize);
+    FString getMapType(int typeId);
+    int getSnapshotItemSize(MemoryNodeMap checkMap, MemoryNodeMap findingMap, FString key);
+    FString getSnapshotItemHint(MemoryNodeMap checkMap, MemoryNodeMap findingMap, FString key);
+    int getUDTypeSize(FString typeName);
     
     SnapshotMap MemorySnapshot::getMemorySnapshot(lua_State *cL, int typeSize){
         L = cL;
@@ -251,72 +44,6 @@ namespace NS_SLUA {
         return shotMap;
     }
     
-    /* get the value's key in one pair */
-    FString MemorySnapshot::getKey(int keyIndex){
-        int type = lua_type(L, keyIndex);
-        FString keyStr = convert2str("");
-        switch (type) {
-            case LUA_TSTRING:
-                keyStr = FString::Printf(TEXT("%s"), UTF8_TO_TCHAR(lua_tostring(L, keyIndex)));
-                break;
-            case LUA_TNIL:
-                keyStr = convert2str("nil");
-                break;
-            case LUA_TBOOLEAN:
-                keyStr = lua_toboolean(L, keyIndex) ? convert2str("true") : convert2str("false");
-                break;
-            case LUA_TNUMBER:
-                keyStr = FString::Printf(TEXT("%f"), lua_tonumber(L, keyIndex));
-                break;
-            default:
-//                keyStr = FString::Printf(TEXT("other type -> %s : %p"), UTF8_TO_TCHAR(lua_typename(L, type)), UTF8_TO_TCHAR(lua_topointer(L, keyIndex)));
-                keyStr = FString::Printf(TEXT("other type -> %s"), UTF8_TO_TCHAR(lua_typename(L, type)));
-                break;
-        }
-        
-        return keyStr;
-    }
-    
-    int MemorySnapshot::getLuaObjSize(int mapType, const void *pointer) {
-        int size = 0;
-        switch (mapType) {
-            case TABLE: {
-                Table *h = (Table *)pointer;
-                size = sizeof(Table) + sizeof(TValue) * h->sizearray +
-                                       sizeof(Node) * (h->lastfree == NULL ? 0 : sizenode(h));
-                break;
-            }
-            case THREAD: {
-                lua_State *tL = lua_tothread(L, -1);
-                size = sizeof(lua_State) + sizeof(TValue) * tL->stacksize +
-                                           sizeof(CallInfo) * tL->nci;
-                break;
-            }
-            case FUNCTION: {
-                Closure *cl = (Closure *)pointer;
-                if(lua_iscfunction(L, -1)) {
-                    // reocrd c function size
-                    size = sizeof(CClosure) + sizeof(TValue) * (cl->c.nupvalues - 1);
-                } else {
-                    // get lua closure debug info
-                    size = sizeof(LClosure) + sizeof(TValue *) * (cl->l.nupvalues - 1);
-                }
-                break;
-            }
-            case USERDATA: {
-                UObject* obj = LuaObject::checkUD<UObject>(L, -1, false);
-                
-                // calculate the UObject size, plus 512 used to output the greatest integer
-                if(obj) size = obj->GetResourceSizeBytes(EResourceSizeMode::Exclusive);
-                
-                // if the UObject's size is 0, use lua_rawlen to get size
-                if(size == 0) size = lua_rawlen(L, -1);
-                break;
-            }
-        }
-        return size;
-    }
-
     /* read the top item in the lua regirstry */
     const void* MemorySnapshot::readObject(const void *parent, FString description){
         int type = lua_type(L, -1);
@@ -614,6 +341,83 @@ namespace NS_SLUA {
         
         lua_pop(L, 1);
     }
+
+    int MemorySnapshot::getLuaObjSize(int mapType, const void *pointer) {
+        int size = 0;
+        switch (mapType) {
+            case TABLE: {
+                Table *h = (Table *)pointer;
+                size = sizeof(Table) + sizeof(TValue) * h->sizearray +
+                                       sizeof(Node) * (h->lastfree == NULL ? 0 : sizenode(h));
+                break;
+            }
+            case THREAD: {
+                lua_State *tL = lua_tothread(L, -1);
+                size = sizeof(lua_State) + sizeof(TValue) * tL->stacksize +
+                                           sizeof(CallInfo) * tL->nci;
+                break;
+            }
+            case FUNCTION: {
+                Closure *cl = (Closure *)pointer;
+                if(lua_iscfunction(L, -1)) {
+                    // reocrd c function size
+                    size = sizeof(CClosure) + sizeof(TValue) * (cl->c.nupvalues - 1);
+                } else {
+                    // get lua closure debug info
+                    size = sizeof(LClosure) + sizeof(TValue *) * (cl->l.nupvalues - 1);
+                }
+                break;
+            }
+            case USERDATA: {
+                UObject* obj = LuaObject::checkUD<UObject>(L, -1, false);
+                
+                // calculate the UObject size, plus 512 used to output the greatest integer
+                if(obj) {
+                    size = obj->GetResourceSizeBytes(EResourceSizeMode::Exclusive);
+                } else {
+                    // use lua_rawlen to get size plus UD obj's origin Type Size
+                    int typeSize = 0;
+                    int tt = luaL_getmetafield(L, -1, "__name");
+                    if(lua_type(L,-1)==LUA_TSTRING) {
+//                        const char *metaname = lua_tostring(L,-1);
+                        typeSize = getUDTypeSize(FString(lua_tostring(L,-1)));
+                    }
+                    
+                    if(tt != LUA_TNIL)lua_pop(L, 1);
+                    size = lua_rawlen(L, -1) + typeSize;
+                }
+                break;
+            }
+        }
+        return size;
+    }
+
+
+    /* get the value's key in one pair */
+    FString MemorySnapshot::getKey(int keyIndex){
+        int type = lua_type(L, keyIndex);
+        FString keyStr = convert2str("");
+        switch (type) {
+            case LUA_TSTRING:
+                keyStr = FString::Printf(TEXT("%s"), UTF8_TO_TCHAR(lua_tostring(L, keyIndex)));
+                break;
+            case LUA_TNIL:
+                keyStr = convert2str("nil");
+                break;
+            case LUA_TBOOLEAN:
+                keyStr = lua_toboolean(L, keyIndex) ? convert2str("true") : convert2str("false");
+                break;
+            case LUA_TNUMBER:
+                keyStr = FString::Printf(TEXT("%f"), lua_tonumber(L, keyIndex));
+                break;
+            default:
+//                keyStr = FString::Printf(TEXT("other type -> %s : %p"), UTF8_TO_TCHAR(lua_typename(L, type)), UTF8_TO_TCHAR(lua_topointer(L, keyIndex)));
+                keyStr = FString::Printf(TEXT("other type -> %s"), UTF8_TO_TCHAR(lua_typename(L, type)));
+                break;
+        }
+        
+        return keyStr;
+    }
     
     /* print the map recording lua memory*/
     void SnapshotMap::printMap(SnapshotMap shotMap) {
@@ -669,6 +473,276 @@ namespace NS_SLUA {
                 }
                 Log::Log("%s", TCHAR_TO_UTF8(*memInfo));
             }
+        }
+    }
+
+    void SnapshotMap::Empty() {
+        typeArray.Empty();
+    }
+
+    void SnapshotMap::initSnapShotMap(int typeSize){
+        for(int i = 0; i < typeSize; i++) {
+            MemoryTypeMap map;
+            typeArray.Add(map);
+        }
+    }
+
+    bool SnapshotMap::isMarked(const void *pointer){
+        if(typeArray[MARKED].Contains(pointer))
+           return true;
+           
+       typeArray[MARKED].Add(pointer);
+       return false;
+    }
+
+    int SnapshotMap::getSnapshotMemSize(SnapshotMap shotMap) {
+        int64 totalSize = 0;
+        for(int i = 0; i < MARKED; i++){
+            if(i == SOURCE) continue;
+            
+            FString mapType = convert2str("");
+            MemoryTypeMap map = *shotMap.getMemoryMap(i);
+            
+            for(auto &parent : map) {
+                FString keyPointer = FString::Printf(TEXT("%p"),parent.Key);
+                
+                if(i == FUNCTION) {
+                    MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
+                    
+                    if(sourceMap == NULL) {
+                        if(parent.Value.Num() == 0) continue;
+                        
+                        totalSize += getSnapshotItemSize(parent.Value, parent.Value, keyPointer);
+                    } else {
+                        
+                        totalSize += getSnapshotItemSize(parent.Value, *sourceMap, keyPointer);
+                    }
+                }else if(i == THREAD) {
+                    MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
+                    totalSize += getSnapshotItemSize(parent.Value, *sourceMap, keyPointer);
+                    
+                } else {
+                    totalSize += getSnapshotItemSize(parent.Value, parent.Value, keyPointer);
+                }
+            }
+        }
+        
+        //return value are expressed in KB: #bytes/2^10 */
+        return cast_int(totalSize >> 10);
+    }
+
+    int SnapshotMap::getSnapshotObjSize(SnapshotMap shotMap){
+        int objSize = 0;
+        for(int i = 0; i < MARKED; i++){
+            if(i == SOURCE) continue;
+            
+            FString mapType = convert2str("");
+            MemoryTypeMap map = *shotMap.getMemoryMap(i);
+            for(auto &parent : map) {
+                FString keyPointer = FString::Printf(TEXT("%p"),parent.Key);
+                
+                if(i == FUNCTION) {
+                    MemoryNodeMap *sourceMap = shotMap.getMemoryMap(SOURCE)->Find(parent.Key);
+                    if(sourceMap == NULL && parent.Value.Num() == 0) continue;
+                }
+                
+                for(auto &child : parent.Value) {
+                    objSize ++;
+                }
+            }
+        }
+        return objSize;
+    }
+
+    MemoryTypeMap* SnapshotMap::getMemoryMap(int index){
+        return &typeArray[index];
+    }
+
+    /* check memory difference between two SnapshotMap */
+    TArray<LuaMemInfo> SnapshotMap::checkMemoryDiff(SnapshotMap previousMap) {
+        SnapshotMap diffMap;
+        diffMap.initSnapShotMap(MARKED);
+        
+        for(int i = 0; i < MARKED; i++){
+            MemoryTypeMap typeMap = typeArray[i];
+            MemoryTypeMap compareTypeMap = *previousMap.getMemoryMap(i);
+            
+            for(auto &parent : typeArray[i]) {
+                if(compareTypeMap.Contains(parent.Key)) {
+                    compareTypeMap.Remove(parent.Key);
+                } else {
+                    diffMap.getMemoryMap(i)->Add(parent.Key, parent.Value);
+                }
+            }
+            
+            for(auto &parent : compareTypeMap) {
+                // if not contains the key, the key-value is a light c function
+                if(parent.Value.Contains(FString::Printf(TEXT("%p"),parent.Key))) {
+                    int size = -(parent.Value.FindRef(FString::Printf(TEXT("%p"),parent.Key)).size);
+                    parent.Value.Find(FString::Printf(TEXT("%p"),parent.Key))->size = size;
+                }
+                diffMap.getMemoryMap(i)->Add(parent.Key, parent.Value);
+            }
+        }
+        return snapshotMapToArray(diffMap);
+    }
+
+    TArray<LuaMemInfo> SnapshotMap::snapshotMapToArray(SnapshotMap transferMap) {
+        TArray<LuaMemInfo> snapshotDetailsArray;
+        for(int i = 0; i < MARKED; i++){
+            if(i == SOURCE) continue;
+            FString mapType = getMapType(i);
+            LuaMemInfo splitInfo;
+            
+            splitInfo.hint = mapType;
+            splitInfo.size = 0;
+            snapshotDetailsArray.Add(splitInfo);
+            
+            MemoryTypeMap map = *(transferMap.getMemoryMap(i));
+            for(auto &parent : map) {
+                LuaMemInfo info;
+                FString keyPointer = FString::Printf(TEXT("%p"),parent.Key);
+                FString objHint = FString::Printf(TEXT("(%p) "),parent.Key);
+                
+                if(i == FUNCTION) {
+                    FString funcInfo;
+                    FString funcName;
+                    
+                    MemoryNodeMap *sourceMap = transferMap.getMemoryMap(SOURCE)->Find(parent.Key);
+                    
+                    if(sourceMap == NULL) {
+                        if(parent.Value.Num() == 0) continue;
+                        
+                        funcInfo = getSnapshotItemHint(parent.Value, parent.Value, keyPointer);
+                        funcName = convert2str("C Func");
+                        
+                        info.size = getSnapshotItemSize(parent.Value, parent.Value, keyPointer);
+                    } else {
+                        funcInfo = getSnapshotItemHint(*sourceMap, *sourceMap, keyPointer);
+                        funcName = getSnapshotItemHint(parent.Value, parent.Value, keyPointer);
+                        info.size = getSnapshotItemSize(parent.Value, *sourceMap, keyPointer);
+                    }
+                    
+                    objHint += FString::Printf(TEXT("%s : %s"), *funcName, *funcInfo);
+                }else if(i == THREAD) {
+                    MemoryNodeMap *sourceMap =  transferMap.getMemoryMap(SOURCE)->Find(parent.Key);
+                    objHint += getSnapshotItemHint(*sourceMap, *sourceMap, keyPointer);
+                    info.size = getSnapshotItemSize(parent.Value, *sourceMap, keyPointer);
+                } else {
+                    objHint += getSnapshotItemHint(parent.Value, parent.Value, keyPointer);
+                    info.size = getSnapshotItemSize(parent.Value, parent.Value, keyPointer);
+                }
+                info.hint = objHint;
+                snapshotDetailsArray.Add(info);
+            }
+        }
+        
+        return snapshotDetailsArray;
+    }
+
+    FString chooseMemoryUnit(float memoryByteSize) {
+            if(memoryByteSize < 1024.0f) {
+                return FString::Printf(TEXT("%d Bytes"), cast_int(memoryByteSize));
+            }
+            // form byte to KB
+            memoryByteSize /= 1024.0f;
+            
+            if (memoryByteSize < 1024) {
+                return FString::Printf(TEXT("%.3f KB"), memoryByteSize);
+            } else if (memoryByteSize < 1024 * 1024) {
+                return FString::Printf(TEXT("%.3f MB"), (memoryByteSize /= 1024.0f));
+            } else if (memoryByteSize >= 1024 * 1024) {
+                return FString::Printf(TEXT("%.3f GB"), (memoryByteSize /= (1024.0f * 1024.0f)));
+            }
+            
+            return FString::Printf(TEXT("%.3f"), memoryByteSize);
+        }
+        
+        FString getMapType(int typeId) {
+            FString mapType = convert2str("");
+            switch (typeId) {
+                case TABLE:
+                    mapType = convert2str("Table");
+                    break;
+                case FUNCTION:
+                    mapType = convert2str("Function");
+                    break;
+                case THREAD:
+                    mapType = convert2str("Thread");
+                    break;
+                case USERDATA:
+                    mapType = convert2str("Userdata");
+                    break;
+                default:
+                    mapType = convert2str("OtherType");
+                    break;
+            }
+            return mapType;
+        }
+        
+        int getSnapshotItemSize(MemoryNodeMap checkMap, MemoryNodeMap findingMap, FString key) {
+            return checkMap.Contains(key) ? findingMap.FindRef(key).size : 0;
+        }
+        
+        FString getSnapshotItemHint(MemoryNodeMap checkMap, MemoryNodeMap findingMap, FString key) {
+            return checkMap.Contains(key) ? findingMap.FindRef(key).hint : FString("");
+        }
+
+    int getUDTypeSize(FString typeName) {
+        if(typeName.Equals("FHitResult", ESearchCase::CaseSensitive)) {
+            return sizeof(FHitResult);
+        } else if(typeName.Equals("FActorSpawnParameters", ESearchCase::CaseSensitive)) {
+            return sizeof(FActorSpawnParameters);
+        } else if(typeName.Equals("FSlateFontInfo", ESearchCase::CaseSensitive)) {
+            return sizeof(FSlateFontInfo);
+        } else if(typeName.Equals("FSlateBrush", ESearchCase::CaseSensitive)) {
+            return sizeof(FSlateBrush);
+        } else if(typeName.Equals("FMargin", ESearchCase::CaseSensitive)) {
+            return sizeof(FMargin);
+        } else if(typeName.Equals("FGeometry", ESearchCase::CaseSensitive)) {
+            return sizeof(FGeometry);
+        } else if(typeName.Equals("FSlateColor", ESearchCase::CaseSensitive)) {
+            return sizeof(FSlateColor);
+        } else if(typeName.Equals("FRotator", ESearchCase::CaseSensitive)) {
+            return sizeof(FRotator);
+        } else if(typeName.Equals("FTransform", ESearchCase::CaseSensitive)) {
+            return sizeof(FTransform);
+        } else if(typeName.Equals("FLinearColor", ESearchCase::CaseSensitive)) {
+            return sizeof(FLinearColor);
+        } else if(typeName.Equals("FColor", ESearchCase::CaseSensitive)) {
+            return sizeof(FColor);
+        } else if(typeName.Equals("FVector", ESearchCase::CaseSensitive)) {
+            return sizeof(FVector);
+        } else if(typeName.Equals("FVector2D", ESearchCase::CaseSensitive)) {
+            return sizeof(FVector2D);
+        } else if(typeName.Equals("FRandomStream", ESearchCase::CaseSensitive)) {
+            return sizeof(FRandomStream);
+        } else if(typeName.Equals("FGuid", ESearchCase::CaseSensitive)) {
+            return sizeof(FGuid);
+        } else if(typeName.Equals("FBox2D", ESearchCase::CaseSensitive)) {
+            return sizeof(FBox2D);
+        } else if(typeName.Equals("FFloatRangeBound", ESearchCase::CaseSensitive)) {
+            return sizeof(FFloatRangeBound);
+        } else if(typeName.Equals("FFloatRange", ESearchCase::CaseSensitive)) {
+            return sizeof(FFloatRange);
+        } else if(typeName.Equals("FInt32RangeBound", ESearchCase::CaseSensitive)) {
+            return sizeof(FInt32RangeBound);
+        } else if(typeName.Equals("FInt32Range", ESearchCase::CaseSensitive)) {
+            return sizeof(FInt32Range);
+        } else if(typeName.Equals("FFloatInterval", ESearchCase::CaseSensitive)) {
+            return sizeof(FFloatInterval);
+        } else if(typeName.Equals("FInt32Interval", ESearchCase::CaseSensitive)) {
+            return sizeof(FInt32Interval);
+        } else if(typeName.Equals("FPrimaryAssetType", ESearchCase::CaseSensitive)) {
+            return sizeof(FPrimaryAssetType);
+        } else if(typeName.Equals("FPrimaryAssetId", ESearchCase::CaseSensitive)) {
+            return sizeof(FPrimaryAssetId);
+        } else if(typeName.Equals("FActorComponentTickFunction", ESearchCase::CaseSensitive)) {
+            return sizeof(FActorComponentTickFunction);
+        } else if(typeName.Equals("FDateTime", ESearchCase::CaseSensitive)) {
+            return sizeof(FDateTime);
+        } else {
+            return 0;
         }
     }
 }

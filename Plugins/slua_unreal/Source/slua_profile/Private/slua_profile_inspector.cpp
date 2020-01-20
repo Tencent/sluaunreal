@@ -651,46 +651,46 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 	memProfilerWidget->SetStdLineVisibility(EVisibility::Collapsed);
 	cpuProfilerWidget->SetStdLineVisibility(EVisibility::Visible);
 	return SNew(SDockTab)
-	.TabRole(ETabRole::NomadTab)
-	[//		 .AutoWidth()
-		SNew(SHorizontalBox)
-		+SHorizontalBox::Slot()
-		.FillWidth(0.2)
-		[
-			SNew(SBorder)
-			.HAlign(HAlign_Fill)
-			.VAlign(VAlign_Fill)
-			.BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
-			[
-				SNew(SVerticalBox)
-				+SVerticalBox::Slot()
-				.Padding(8.0, 5.0)
-				.MaxHeight(200.0f)
-				.Padding(0, 3.0f)
-				[
-					SAssignNew(cpuTabWidget, SProfilerTabWidget)
-					.TabIcon(FEditorStyle::GetBrush("ProfilerCommand.StatsProfiler"))
-					.TabName(FText::FromString("CPU Usages"))
-					.OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-					tabSwitcher->SetActiveWidgetIndex(0);
-					return FReply::Handled();
-					}))
-				]
+    .TabRole(ETabRole::NomadTab)
+	[//         .AutoWidth()
+        SNew(SHorizontalBox)
+        +SHorizontalBox::Slot()
+        .FillWidth(0.2)
+        [
+            SNew(SBorder)
+            .HAlign(HAlign_Fill)
+            .VAlign(VAlign_Fill)
+            .BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
+            [
+                SNew(SVerticalBox)
+                +SVerticalBox::Slot()
+                .Padding(8.0, 5.0)
+                .MaxHeight(200.0f)
+                .Padding(0, 3.0f)
+                [
+                    SAssignNew(cpuTabWidget, SProfilerTabWidget)
+                    .TabIcon(FEditorStyle::GetBrush("ProfilerCommand.StatsProfiler"))
+                    .TabName(FText::FromString("CPU Usages"))
+                    .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+                    tabSwitcher->SetActiveWidgetIndex(0);
+                    return FReply::Handled();
+                    }))
+                ]
 
-				+SVerticalBox::Slot()
-				.Padding(8.0, 5.0)
-				.MaxHeight(200.0f)
-				.Padding(0, 3.0f)
-				[
-					SAssignNew(memTabWidget, SProfilerTabWidget)
-					.TabIcon(FEditorStyle::GetBrush("ProfilerCommand.MemoryProfiler"))
-					.TabName(FText::FromString("Memory Usages"))
-					.OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-					tabSwitcher->SetActiveWidgetIndex(1);
-						return FReply::Handled();
-					}))
-				]
-             
+                +SVerticalBox::Slot()
+                .Padding(8.0, 5.0)
+                .MaxHeight(200.0f)
+                .Padding(0, 3.0f)
+                [
+                    SAssignNew(memTabWidget, SProfilerTabWidget)
+                    .TabIcon(FEditorStyle::GetBrush("ProfilerCommand.MemoryProfiler"))
+                    .TabName(FText::FromString("Memory Usages"))
+                    .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+                    tabSwitcher->SetActiveWidgetIndex(1);
+                        return FReply::Handled();
+                    }))
+                ]
+
                 +SVerticalBox::Slot()
                 .Padding(8.0, 5.0)
                 .MaxHeight(200.0f)
@@ -704,59 +704,59 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                         return FReply::Handled();
                     }))
                 ]
-			]
-		]
+            ]
+        ]
 
-		+SHorizontalBox::Slot()
-		.FillWidth(0.8)
-		.HAlign(EHorizontalAlignment::HAlign_Fill)
-		[
-			SAssignNew(tabSwitcher, SWidgetSwitcher)
-			.WidgetIndex(0)
-			+SWidgetSwitcher::Slot()
-			[
-				SNew(SVerticalBox)
-				+SVerticalBox::Slot().AutoHeight()
-				[
-					SNew(SHorizontalBox)
-					+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth().Padding(5.0f, 3.0f, 0, 0)
-					[
-						SNew(STextBlock)
-						.Text(FText::FromString("CPU	|	"))
-					]
+        +SHorizontalBox::Slot()
+        .FillWidth(0.8)
+        .HAlign(EHorizontalAlignment::HAlign_Fill)
+        [
+            SAssignNew(tabSwitcher, SWidgetSwitcher)
+            .WidgetIndex(0)
+            +SWidgetSwitcher::Slot()
+            [
+                SNew(SVerticalBox)
+                +SVerticalBox::Slot().AutoHeight()
+                [
+                    SNew(SHorizontalBox)
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth().Padding(5.0f, 3.0f, 0, 0)
+                    [
+                        SNew(STextBlock)
+                        .Text(FText::FromString("CPU    |    "))
+                    ]
 
-					+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).MaxWidth(25.0f)
-					[
-						profilerCheckBox.ToSharedRef()
-					]
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).MaxWidth(25.0f)
+                    [
+                        profilerCheckBox.ToSharedRef()
+                    ]
 
-					+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).MaxWidth(60.0f).Padding(0, 3.0f, 0, 0)
-					[
-						SNew(STextBlock).Text(FText::FromName("Animate"))
-					]
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).MaxWidth(60.0f).Padding(0, 3.0f, 0, 0)
+                    [
+                        SNew(STextBlock).Text(FText::FromName("Animate"))
+                    ]
 
-					+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).MaxWidth(60.0f)
-					[
-						SNew(SButton).Text(FText::FromName("Clear"))
-						.ContentPadding(FMargin(2.0, 2.0))
-						.OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-						OnClearBtnClicked();
-						return FReply::Handled();
-						}))
-					]
-				]
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).MaxWidth(60.0f)
+                    [
+                        SNew(SButton).Text(FText::FromName("Clear"))
+                        .ContentPadding(FMargin(2.0, 2.0))
+                        .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+                        OnClearBtnClicked();
+                        return FReply::Handled();
+                        }))
+                    ]
+                ]
 
-				+ SVerticalBox::Slot().AutoHeight()
-				[
-					SNew(SHorizontalBox)
-					+ SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Fill)
-					[
-						cpuProfilerWidget.ToSharedRef()
-					]
-				]
+                + SVerticalBox::Slot().AutoHeight()
+                [
+                    SNew(SHorizontalBox)
+                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Fill)
+                    [
+                        cpuProfilerWidget.ToSharedRef()
+                    ]
+                ]
 
-				+ SVerticalBox::Slot()
-				[
+                + SVerticalBox::Slot()
+                [
                     SNew(SScrollBox)
                     +SScrollBox::Slot()
                     [
@@ -774,12 +774,12 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                     [
                         treeview.ToSharedRef()
                     ]
-				]
-			]
+                ]
+            ]
 
-			+SWidgetSwitcher::Slot()
-			.HAlign(EHorizontalAlignment::HAlign_Fill)
-			[
+            +SWidgetSwitcher::Slot()
+            .HAlign(EHorizontalAlignment::HAlign_Fill)
+            [
 
                 SNew(SVerticalBox)
                 +SVerticalBox::Slot().AutoHeight()
@@ -788,7 +788,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                     + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth().Padding(5.0f, 3.0f, 0, 0)
                     [
                         SNew(STextBlock)
-                        .Text(FText::FromString("MEMORY	|   "))
+                        .Text(FText::FromString("MEMORY    |   "))
                     ]
 
                     + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(0, 3.0f, 15.0f, 0).MaxWidth(100.0f)
@@ -908,259 +908,261 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                 SNew(SVerticalBox)
                 +SVerticalBox::Slot().AutoHeight()
                 [
-                    SNew(SHorizontalBox)
-                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth().Padding(15.0f, 3.0f, 15.0, 0)
+                    SNew(SVerticalBox)
+                    + SVerticalBox::Slot().AutoHeight().Padding(5.0f, 3.0f, 15.0, 0)
                     [
-                        SNew(SButton)
-                        .Text(FText::FromName("Snapshot"))
-                        .ContentPadding(FMargin(2.0, 2.0))
-                        .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-                            FArrayWriter messageWriter;
-                            int bytesSend = 0;
-                            int emptySnapshotID = -1;
-                            int snapshotSendId = snapshotInfoArray.Num() == 0 ? 1 : snapshotInfoArray[snapshotInfoArray.Num() - 1].Get()->id + 1;
-                            int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_MEMORY_SNAPSHOT;
-                            int connectionsSize = ProfileServer->GetConnections().Num();
+                        SNew(SHorizontalBox)
+                        +SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).AutoWidth()
+                        [
+                            SNew(SButton)
+                            .Text(FText::FromName("Snapshot"))
+                            .ContentPadding(FMargin(2.0, 2.0))
+                            .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+                                FArrayWriter messageWriter;
+                                int bytesSend = 0;
+                                int emptySnapshotID = -1;
+                                int snapshotSendId = snapshotInfoArray.Num() == 0 ? 1 : snapshotInfoArray[snapshotInfoArray.Num() - 1].Get()->id + 1;
+                                int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_MEMORY_SNAPSHOT;
+                                int connectionsSize = ProfileServer->GetConnections().Num();
 
-                            messageWriter.Empty();
-                            messageWriter.Seek(0);
-                            messageWriter << hookEvent;
-                            messageWriter << snapshotSendId;
-                            messageWriter << emptySnapshotID;
-                            messageWriter << emptySnapshotID;
+                                messageWriter.Empty();
+                                messageWriter.Seek(0);
+                                messageWriter << hookEvent;
+                                messageWriter << snapshotSendId;
+                                messageWriter << emptySnapshotID;
+                                messageWriter << emptySnapshotID;
 
-                            if(connectionsSize > 0)
-                            {
-                                FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
-                                if (socket && socket->GetConnectionState() == SCS_Connected)
+                                if(connectionsSize > 0)
                                 {
-                                    socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
-                                    if(bytesSend > 0)
+                                    FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
+                                    if (socket && socket->GetConnectionState() == SCS_Connected)
                                     {
-                                        FString *name = new FString(TEXT("memory snapshot ") + FString::FromInt(snapshotSendId));
-										snapshotIdArray.Add(MakeShareable(name));
-                                        SnapshotInfo *info = new SnapshotInfo();
-                                        info->name = *name;
-                                        info->id = snapshotSendId;
-//                                        info->preInfoPtr = snapshotSendId == 1 ? NULL : snapshotInfoArray[snapshotSendId - 2].Get();
-                                        snapshotInfoArray.Add(MakeShareable(info));
+                                        socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
+                                        if(bytesSend > 0)
+                                        {
+                                            FString *name = new FString(TEXT("memory snapshot ") + FString::FromInt(snapshotSendId));
+                                            snapshotIdArray.Add(MakeShareable(name));
+                                            SnapshotInfo *info = new SnapshotInfo();
+                                            info->name = *name;
+                                            info->id = snapshotSendId;
+                                            snapshotInfoArray.Add(MakeShareable(info));
+                                        }
+                                    } else {
+                                        showMessageDialog(FString("Unable to connect to the network"), EAppMsgType::Ok);
                                     }
                                 } else {
                                     showMessageDialog(FString("Unable to connect to the network"), EAppMsgType::Ok);
                                 }
-                            } else {
-                                showMessageDialog(FString("Unable to connect to the network"), EAppMsgType::Ok);
-                            }
 
-                            return FReply::Handled();
-                            }))
+                                return FReply::Handled();
+                                }))
+                        ]
                     ]
                  
-                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(3.0f, 5.0f, 3.0f, 0).AutoWidth()
+                    + SVerticalBox::Slot().VAlign(EVerticalAlignment::VAlign_Center).AutoHeight()
                     [
-                        SNew(STextBlock)
-                        .Text(FText::FromName("Need Compare : "))
-                    ]
-                 
-                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(0, 3.0f, 5.0f, 0).AutoWidth()
-                    [
-                        SNew(STextComboBox)
-//                        .Font(IDetailLayoutBuilder::GetDetailFont())
-                        .OptionsSource(&snapshotIdArray)
-                        .InitiallySelectedItem(snapshotIdArray[0])
-                        .OnSelectionChanged_Raw(this, &SProfilerInspector::OnPreSnapshotItemChanged)
-                    ]
-                 
-                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(3.0f, 5.0f, 3.0f, 0).AutoWidth()
-                    [
-                        SNew(STextBlock)
-                        .Text(FText::FromName("<->"))
-                    ]
-                 
-                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(5.0f, 3.0f, 5.0f, 0).AutoWidth()
-                    [
-                        SNew(STextComboBox)
-//                        .Font(IDetailLayoutBuilder::GetDetailFont())
-                        .OptionsSource(&snapshotIdArray)
-                        .InitiallySelectedItem(snapshotIdArray[0])
-                        .OnSelectionChanged_Raw(this, &SProfilerInspector::OnSnapshotItemChanged)
-                    ]
-                 
-                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).AutoWidth().Padding(5.0f, 3.0f, 0, 0)
-                    [
-                        SNew(SButton)
-                        .Text(FText::FromName("Compare"))
-                        .ContentPadding(FMargin(2.0, 2.0))
-                        .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-                            FArrayWriter messageWriter;
-                            int bytesSend = 0;
-                            int snapshotSendId = 0;
-                            int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_COMPARE;
-                            int connectionsSize = ProfileServer->GetConnections().Num();
-                        
-                            messageWriter.Empty();
-                            messageWriter.Seek(0);
-                            messageWriter << hookEvent;
-                            messageWriter << snapshotSendId;
-                            messageWriter << preSnapshotID;
-                            messageWriter << snapshotID;
-                        
-                            if(connectionsSize > 0 && bSnapshotCompare)
-                            {
-                                FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
-                                // if snapshotId or preSnapshotId equals 0, means that user does not choose effective snapshot
-                                if (socket && socket->GetConnectionState() == SCS_Connected && snapshotID && preSnapshotID)
+                        SNew(SHorizontalBox)
+                        + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(5.0f, 3.0f, 5.0f, 0).AutoWidth()
+                        [
+                            SNew(STextComboBox)
+    //                        .Font(IDetailLayoutBuilder::GetDetailFont())
+                            .OptionsSource(&snapshotIdArray)
+                            .InitiallySelectedItem(snapshotIdArray[0])
+                            .OnSelectionChanged_Raw(this, &SProfilerInspector::OnPreSnapshotItemChanged)
+                        ]
+                     
+                        + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(3.0f, 5.0f, 3.0f, 0).AutoWidth()
+                        [
+                            SNew(STextBlock)
+                            .Text(FText::FromName("<->"))
+                        ]
+                     
+                        + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(5.0f, 3.0f, 5.0f, 0).AutoWidth()
+                        [
+                            SNew(STextComboBox)
+    //                        .Font(IDetailLayoutBuilder::GetDetailFont())
+                            .OptionsSource(&snapshotIdArray)
+                            .InitiallySelectedItem(snapshotIdArray[0])
+                            .OnSelectionChanged_Raw(this, &SProfilerInspector::OnSnapshotItemChanged)
+                        ]
+                     
+                        + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).AutoWidth().Padding(5.0f, 3.0f, 0, 0)
+                        [
+                            SNew(SButton)
+                            .Text(FText::FromName("Compare"))
+                            .ContentPadding(FMargin(2.0, 2.0))
+                            .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+                                FArrayWriter messageWriter;
+                                int bytesSend = 0;
+                                int snapshotSendId = 0;
+                                int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_COMPARE;
+                                int connectionsSize = ProfileServer->GetConnections().Num();
+                            
+                                messageWriter.Empty();
+                                messageWriter.Seek(0);
+                                messageWriter << hookEvent;
+                                messageWriter << snapshotSendId;
+                                messageWriter << preSnapshotID;
+                                messageWriter << snapshotID;
+                            
+                                if(connectionsSize > 0 && bSnapshotCompare)
                                 {
-                                    socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
-                                }
-                                
-                                if(bytesSend > 0) showSnapshotDiff = true;
-                                bSnapshotCompare = false;
-                            } else if(connectionsSize <= 0) {
-                                showMessageDialog(FString("Unable to connect to the network"), EAppMsgType::Ok);
-                            }
-                            return FReply::Handled();
-                        }))
-                    ]
-                 
-                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(5.0f, 3.0f, 5.0f, 0).AutoWidth()
-                    [
-                        SNew(STextComboBox)
-                        //                        .Font(IDetailLayoutBuilder::GetDetailFont())
-                        .OptionsSource(&snapshotIdArray)
-                        .InitiallySelectedItem(snapshotIdArray[0])
-                        .OnSelectionChanged_Raw(this, &SProfilerInspector::OnDeleteSnapshotItem)
-                    ]
-
-                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).AutoWidth().Padding(5.0f, 3.0f, 0, 0)
-                    [
-                        SNew(SButton)
-                        .Text(FText::FromName("Delete"))
-                        .ContentPadding(FMargin(2.0, 2.0))
-                        .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-                            FArrayWriter messageWriter;
-                            int bytesSend = 0;
-                            int emptySnapshotID = -1;
-                            int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_DELETE;
-                            int connectionsSize = ProfileServer->GetConnections().Num();
-
-                            messageWriter.Empty();
-                            messageWriter.Seek(0);
-                            messageWriter << hookEvent;
-                            messageWriter << deleteSnapshotID;
-                            messageWriter << emptySnapshotID;
-                            messageWriter << emptySnapshotID;
-
-                            if(connectionsSize > 0 && deleteSnapshotID)
-                            {
-                                UE_LOG(LogTemp, Warning, TEXT("bSnapshotDelete delete: %d"), deleteSnapshotID);
-
-                                FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
-                                // if snapshotId or preSnapshotId equals 0, means that user does not choose effective snapshot
-                                if (socket && socket->GetConnectionState() == SCS_Connected)
-                                {
-                                    socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
-                                }
-                                
-                                if(bytesSend > 0)
-                                {
-                                    int removeIndex = getSnapshotInfoIndex(deleteSnapshotID);
-                                    if(removeIndex != -1) {
-                                        if(removeIndex != 0 && removeIndex + 1 < snapshotInfoArray.Num()) {
-                                            SnapshotInfo *preInfo = snapshotInfoArray[removeIndex - 1].Get();
-                                            SnapshotInfo *nextInfo = snapshotInfoArray[removeIndex + 1].Get();
-                                            nextInfo->memDiff = nextInfo->memSize - preInfo->memSize;
-                                            nextInfo->objDiff = nextInfo->objSize - preInfo->objSize;
-                                        } else if(removeIndex == 0 && snapshotInfoArray.Num() != 1) {
-                                            SnapshotInfo *nextInfo = snapshotInfoArray[removeIndex + 1].Get();
-                                            nextInfo->memDiff = 0;
-                                            nextInfo->objDiff = 0;
-                                        }
-                                        snapshotInfoArray.RemoveAt(removeIndex);
+                                    FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
+                                    // if snapshotId or preSnapshotId equals 0, means that user does not choose effective snapshot
+                                    if (socket && socket->GetConnectionState() == SCS_Connected && snapshotID && preSnapshotID)
+                                    {
+                                        socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
                                     }
                                     
-                                    for(int i = 1; i < snapshotIdArray.Num(); i++) {
-                                        TArray<FString> stringArray;
-                                        snapshotIdArray[i].Get()->ParseIntoArray(stringArray, TEXT(" "), false);
-                                        if(FCString::Atoi(*stringArray[stringArray.Num() - 1]) == deleteSnapshotID)
-                                        {
-                                            snapshotIdArray.RemoveAt(i);
-                                        }
-                                    }
+                                    if(bytesSend > 0) showSnapshotDiff = true;
+                                    bSnapshotCompare = false;
+                                } else if(connectionsSize <= 0) {
+                                    showMessageDialog(FString("Unable to connect to the network"), EAppMsgType::Ok);
                                 }
-                            } else {
-                                showMessageDialog(FString("Unable to connect to the network"), EAppMsgType::Ok);
-                            }
-                            deleteSnapshotID = 0;
-                            snapshotListView->RequestListRefresh();
-                            return FReply::Handled();
-                        }))
+                                return FReply::Handled();
+                            }))
+                        ]
                     ]
                  
-                    + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).AutoWidth().Padding(5.0f, 3.0f, 0, 0)
+                    +SVerticalBox::Slot().VAlign(EVerticalAlignment::VAlign_Center).AutoHeight()
                     [
-                    SNew(SButton)
-                    .Text(FText::FromName("Delete All"))
-                    .ContentPadding(FMargin(2.0, 2.0))
-                    .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-                         FArrayWriter messageWriter;
-                         int bytesSend = 0;
-                         int emptySnapshotID = -1;
-                         int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_DELETE;
-                         int connectionsSize = ProfileServer->GetConnections().Num();
+                        SNew(SHorizontalBox)
+                            + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(5.0f, 3.0f, 5.0f, 0).AutoWidth()
+                            [
+                                SNew(STextComboBox)
+                                //                        .Font(IDetailLayoutBuilder::GetDetailFont())
+                                .OptionsSource(&snapshotIdArray)
+                                .InitiallySelectedItem(snapshotIdArray[0])
+                                .OnSelectionChanged_Raw(this, &SProfilerInspector::OnDeleteSnapshotItem)
+                            ]
 
-                         messageWriter.Empty();
-                         messageWriter.Seek(0);
-                         messageWriter << hookEvent;
-                         messageWriter << deleteSnapshotID;
-                         messageWriter << emptySnapshotID;
-                         messageWriter << emptySnapshotID;
+                            + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).AutoWidth().Padding(5.0f, 3.0f, 0, 0)
+                            [
+                                SNew(SButton)
+                                .Text(FText::FromName("Delete"))
+                                .ContentPadding(FMargin(2.0, 2.0))
+                                .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+                                    FArrayWriter messageWriter;
+                                    int bytesSend = 0;
+                                    int emptySnapshotID = -1;
+                                    int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_DELETE;
+                                    int connectionsSize = ProfileServer->GetConnections().Num();
 
-                         if(connectionsSize > 0 && deleteSnapshotID)
-                         {
-                             UE_LOG(LogTemp, Warning, TEXT("bSnapshotDelete delete: %d"), deleteSnapshotID);
+                                    messageWriter.Empty();
+                                    messageWriter.Seek(0);
+                                    messageWriter << hookEvent;
+                                    messageWriter << deleteSnapshotID;
+                                    messageWriter << emptySnapshotID;
+                                    messageWriter << emptySnapshotID;
 
-                             FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
-                             // if snapshotId or preSnapshotId equals 0, means that user does not choose effective snapshot
-                             if (socket && socket->GetConnectionState() == SCS_Connected)
-                             {
-                                 socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
-                             }
-                             
-                             if(bytesSend > 0)
-                             {
-                                 int removeIndex = getSnapshotInfoIndex(deleteSnapshotID);
-                                 if(removeIndex != -1) {
-                                     if(removeIndex != 0 && removeIndex + 1 < snapshotInfoArray.Num()) {
-                                         SnapshotInfo *preInfo = snapshotInfoArray[removeIndex - 1].Get();
-                                         SnapshotInfo *nextInfo = snapshotInfoArray[removeIndex + 1].Get();
-                                         nextInfo->memDiff = nextInfo->memSize - preInfo->memSize;
-                                         nextInfo->objDiff = nextInfo->objSize - preInfo->objSize;
-                                     } else if(removeIndex == 0 && snapshotInfoArray.Num() != 1) {
-                                         SnapshotInfo *nextInfo = snapshotInfoArray[removeIndex + 1].Get();
-                                         nextInfo->memDiff = 0;
-                                         nextInfo->objDiff = 0;
-                                     }
-                                     snapshotInfoArray.RemoveAt(removeIndex);
-                                 }
-                                 
-                                 for(int i = 1; i < snapshotIdArray.Num(); i++) {
-                                     TArray<FString> stringArray;
-                                     snapshotIdArray[i].Get()->ParseIntoArray(stringArray, TEXT(" "), false);
-                                     if(FCString::Atoi(*stringArray[stringArray.Num() - 1]) == deleteSnapshotID)
+                                    if(connectionsSize > 0 && deleteSnapshotID)
+                                    {
+                                        FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
+                                        // if snapshotId or preSnapshotId equals 0, means that user does not choose effective snapshot
+                                        if (socket && socket->GetConnectionState() == SCS_Connected)
+                                        {
+                                            socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
+                                        }
+                                        
+                                        if(bytesSend > 0)
+                                        {
+                                            int removeIndex = getSnapshotInfoIndex(deleteSnapshotID);
+                                            if(removeIndex != -1)
+                                            {
+                                                if(removeIndex != 0 && removeIndex + 1 < snapshotInfoArray.Num())
+                                                {
+                                                    SnapshotInfo *preInfo = snapshotInfoArray[removeIndex - 1].Get();
+                                                    SnapshotInfo *nextInfo = snapshotInfoArray[removeIndex + 1].Get();
+                                                    nextInfo->memDiff = nextInfo->memSize - preInfo->memSize;
+                                                    nextInfo->objDiff = nextInfo->objSize - preInfo->objSize;
+                                                }
+                                                else if(removeIndex == 0 && snapshotInfoArray.Num() != 1)
+                                                {
+                                                    SnapshotInfo *nextInfo = snapshotInfoArray[removeIndex + 1].Get();
+                                                    nextInfo->memDiff = 0;
+                                                    nextInfo->objDiff = 0;
+                                                }
+                                                snapshotInfoArray.RemoveAt(removeIndex);
+                                            }
+                                            
+                                            for(int i = 1; i < snapshotIdArray.Num(); i++)
+                                            {
+                                                TArray<FString> stringArray;
+                                                snapshotIdArray[i].Get()->ParseIntoArray(stringArray, TEXT(" "), false);
+                                                if(FCString::Atoi(*stringArray[stringArray.Num() - 1]) == deleteSnapshotID)
+                                                {
+                                                    snapshotIdArray.RemoveAt(i);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else if(connectionsSize <= 0)
+                                    {
+                                        showMessageDialog(FString("Unable to connect to the network"), EAppMsgType::Ok);
+                                    }
+                                    deleteSnapshotID = 0;
+                                    snapshotListView->RequestListRefresh();
+                                    return FReply::Handled();
+                                }))
+                            ]
+                         
+                            + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).AutoWidth().Padding(15.0f, 3.0f, 0, 0)
+                            [
+                                SNew(SButton)
+                                .Text(FText::FromName("Delete All"))
+                                .ContentPadding(FMargin(2.0, 2.0))
+                                .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+                                     FArrayWriter messageWriter;
+                                     int bytesSend = 0;
+                                     int emptySnapshotID = -1;
+                                     int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_SNAPSHOT_DELETE_ALL;
+                                     int connectionsSize = ProfileServer->GetConnections().Num();
+
+                                     messageWriter.Empty();
+                                     messageWriter.Seek(0);
+                                     messageWriter << hookEvent;
+                                     messageWriter << deleteSnapshotID;
+                                     messageWriter << emptySnapshotID;
+                                     messageWriter << emptySnapshotID;
+
+                                     if(connectionsSize > 0)
                                      {
-                                         snapshotIdArray.RemoveAt(i);
+                                         FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
+                                         // if snapshotId or preSnapshotId equals 0, means that user does not choose effective snapshot
+                                         if (socket && socket->GetConnectionState() == SCS_Connected)
+                                         {
+                                             socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
+                                         }
+                                         if(bytesSend > 0)
+                                         {
+                                             snapshotID = 0;
+                                             preSnapshotID = 0;
+                                             deleteSnapshotID = 0;
+                                             bSnapshotCompare = false;
+                                             showSnapshotDiff = false;
+                                             snapshotDiffArray.Empty();
+                                             snapshotDiffParentArray.Empty();
+                                             snapshotInfoArray.Empty();
+                                             snapshotIdArray.Empty();
+                                             
+                                             snapshotIdArray.Add(MakeShareable(new FString("Choose one snapshot")));
+                                             snapshotListView->RequestListRefresh();
+                                             snapshotDiffTreeView->RequestTreeRefresh();
+                                         }
+                                         else
+                                         {
+                                             showMessageDialog(FString("Unable to connect to the network"), EAppMsgType::Ok);
+                                         }
                                      }
-                                 }
-                             }
-                         } else {
-                             showMessageDialog(FString("Unable to connect to the network"), EAppMsgType::Ok);
-                         }
-                         deleteSnapshotID = 0;
-                         snapshotListView->RequestListRefresh();
-                         return FReply::Handled();
-                        }))
-                    ]
+                                     else
+                                     {
+                                        showMessageDialog(FString("Unable to connect to the network"), EAppMsgType::Ok);
+                                     }
+                                     snapshotListView->RequestListRefresh();
+                                     return FReply::Handled();
+                                    }))
+                                ]
+                        ]
                 ]
              
                 + SVerticalBox::Slot().AutoHeight()
@@ -1242,7 +1244,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                 ]
             ]
         ]
-	];
+    ];
 }
 
 void SProfilerInspector::SortProfiler(SluaProfiler &rootProfiler)

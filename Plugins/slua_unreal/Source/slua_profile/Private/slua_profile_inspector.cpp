@@ -20,6 +20,7 @@
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "UObject/UObjectGlobals.h"
 #include "Templates/SharedPointer.h"
+#include "Misc/MessageDialog.h"
 #include "Delegates/IDelegateInstance.h"
 #include "Internationalization/Regex.h"
 #include "Fonts/SlateFontInfo.h"
@@ -844,6 +845,8 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                                 FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
                                 if (socket && socket->GetConnectionState() == SCS_Connected)
                                     socket->Send(messageWriter.GetData(), messageWriter.Num(), bytesSend);
+                            } else {
+                                showMessageDialog(FString("Unable to connect to the network"), EAppMsgType::Ok);
                             }
 
                             return FReply::Handled();
@@ -942,7 +945,11 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
 //                                        info->preInfoPtr = snapshotSendId == 1 ? NULL : snapshotInfoArray[snapshotSendId - 2].Get();
                                         snapshotInfoArray.Add(MakeShareable(info));
                                     }
+                                } else {
+                                    showMessageDialog(FString("Unable to connect to the network"), EAppMsgType::Ok);
                                 }
+                            } else {
+                                showMessageDialog(FString("Unable to connect to the network"), EAppMsgType::Ok);
                             }
 
                             return FReply::Handled();
@@ -1000,7 +1007,6 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                         
                             if(connectionsSize > 0 && bSnapshotCompare)
                             {
-                                UE_LOG(LogTemp, Warning, TEXT("bSnapshotCompare comp: %d"), bSnapshotCompare);
                                 FSocket* socket = ProfileServer->GetConnections()[0]->GetSocket();
                                 // if snapshotId or preSnapshotId equals 0, means that user does not choose effective snapshot
                                 if (socket && socket->GetConnectionState() == SCS_Connected && snapshotID && preSnapshotID)
@@ -1010,8 +1016,8 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                                 
                                 if(bytesSend > 0) showSnapshotDiff = true;
                                 bSnapshotCompare = false;
-                            } else {
-                                UE_LOG(LogTemp, Warning, TEXT("bSnapshotCompare uncomp: %d"), bSnapshotCompare);
+                            } else if(connectionsSize <= 0) {
+                                showMessageDialog(FString("Unable to connect to the network"), EAppMsgType::Ok);
                             }
                             return FReply::Handled();
                         }))
@@ -1083,7 +1089,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                                     }
                                 }
                             } else {
-                                UE_LOG(LogTemp, Warning, TEXT("bSnapshotDelete undelete: %d"), deleteSnapshotID);
+                                showMessageDialog(FString("Unable to connect to the network"), EAppMsgType::Ok);
                             }
                             deleteSnapshotID = 0;
                             snapshotListView->RequestListRefresh();
@@ -1094,7 +1100,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                     + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).AutoWidth().Padding(5.0f, 3.0f, 0, 0)
                     [
                     SNew(SButton)
-                    .Text(FText::FromName("Delete"))
+                    .Text(FText::FromName("Delete All"))
                     .ContentPadding(FMargin(2.0, 2.0))
                     .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
                          FArrayWriter messageWriter;
@@ -1148,7 +1154,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                                  }
                              }
                          } else {
-                             UE_LOG(LogTemp, Warning, TEXT("bSnapshotDelete undelete: %d"), deleteSnapshotID);
+                             showMessageDialog(FString("Unable to connect to the network"), EAppMsgType::Ok);
                          }
                          deleteSnapshotID = 0;
                          snapshotListView->RequestListRefresh();
@@ -2026,6 +2032,11 @@ int SProfilerInspector::getSnapshotInfoIndex(int id)
         }
     }
     return -1;
+}
+
+EAppReturnType::Type SProfilerInspector::showMessageDialog(FString message, EAppMsgType::Type MessageType) {
+    FText dialogTitle = FText::FromString(FString("slua profiler"));
+    return FMessageDialog::Open(MessageType, FText::FromString(message), &dialogTitle);
 }
 
 FLinearColor checkLinearColor(float checkNumber)

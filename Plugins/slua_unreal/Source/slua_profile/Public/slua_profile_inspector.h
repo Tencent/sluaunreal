@@ -208,6 +208,7 @@ private:
     int ContainsFile(FString& fileName, ShownMemInfoList &list);
     int getSnapshotInfoIndex(int id);
     FString ChooseMemoryUnit(float memoryKBSize);
+    EAppReturnType::Type showMessageDialog(FString message, EAppMsgType::Type MessageType);
     TArray<FString> SplitFlieName(FString filePath);   
 };
 

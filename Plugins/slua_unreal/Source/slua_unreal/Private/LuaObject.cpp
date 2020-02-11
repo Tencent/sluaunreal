@@ -496,7 +496,7 @@ namespace NS_SLUA {
 		const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
 		uint8* ReturnValueAddress = bHasReturnParam ? ((uint8*)params + func->ReturnValueOffset) : nullptr;
         
-        #if ENGINE_MINOR_VERSION == 23 && !PLATFORM_WINDOWS
+        #if ENGINE_MINOR_VERSION >= 23 && !PLATFORM_WINDOWS
             FNewFrame NewStack(obj, func, params, NULL, func->Children);
         
             if (func->ReturnValueOffset != MAX_uint16) {
@@ -542,7 +542,7 @@ namespace NS_SLUA {
         
             FFrame *frame = (FFrame *)&NewStack;
             func->Invoke(obj, *frame, ReturnValueAddress);
-        #elif ENGINE_MINOR_VERSION > 21
+        #elif ENGINE_MINOR_VERSION > 21 && ENGINE_MINOR_VERSION < 25
             FFrame NewStack(obj, func, params, NULL, func->Children);
             NewStack.OutParms = nullptr;
             if (func->ReturnValueOffset != MAX_uint16) {

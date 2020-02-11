@@ -925,7 +925,7 @@ namespace NS_SLUA {
 	}
 }
 
-#if (!PLATFORM_WINDOWS) && (ENGINE_MINOR_VERSION>21)
+#if !PLATFORM_WINDOWS && ENGINE_MINOR_VERSION >= 23
 struct FNewFrame : public FOutputDevice
     {
     public:

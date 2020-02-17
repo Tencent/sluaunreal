@@ -60,6 +60,71 @@ namespace NS_SLUA {
 			, getter(getterf)
 			, setter(setterf) {}
 	};
+
+    #if ENGINE_MINOR_VERSION >= 23 && (PLATFORM_MAC || PLATFORM_IOS)
+    struct FNewFrame : public FOutputDevice
+        {
+        public:
+            // Variables.
+            UFunction* Node;
+            UObject* Object;
+            uint8* Code;
+            uint8* Locals;
+            
+            UProperty* MostRecentProperty;
+            uint8* MostRecentPropertyAddress;
+            
+            /** The execution flow stack for compiled Kismet code */
+            FlowStackType FlowStack;
+            
+            /** Previous frame on the stack */
+            FFrame* PreviousFrame;
+            
+            /** contains information on any out parameters */
+            FOutParmRec* OutParms;
+            
+            /** If a class is compiled in then this is set to the property chain for compiled-in functions. In that case, we follow the links to setup the args instead of executing by code. */
+            UField* PropertyChainForCompiledIn;
+            
+            /** Currently executed native function */
+            UFunction* CurrentNativeFunction;
+            
+            bool bArrayContextFailed;
+        public:
+            
+            // Constructors.
+            FNewFrame( UObject* InObject, UFunction* InNode, void* InLocals, FFrame* InPreviousFrame = NULL, UField* InPropertyChainForCompiledIn = NULL )
+            : Node(InNode)
+            , Object(InObject)
+            , Code(InNode->Script.GetData())
+            , Locals((uint8*)InLocals)
+            , MostRecentProperty(NULL)
+            , MostRecentPropertyAddress(NULL)
+            , PreviousFrame(InPreviousFrame)
+            , OutParms(NULL)
+            , PropertyChainForCompiledIn(InPropertyChainForCompiledIn)
+            , CurrentNativeFunction(NULL)
+            , bArrayContextFailed(false)
+            {
+        #if DO_BLUEPRINT_GUARD
+                FBlueprintExceptionTracker::Get().ScriptStack.Push((FFrame *)this);
+        #endif
+            }
+            
+            virtual ~FNewFrame()
+            {
+                #if DO_BLUEPRINT_GUARD
+                    FBlueprintExceptionTracker& BlueprintExceptionTracker = FBlueprintExceptionTracker::Get();
+                    if (BlueprintExceptionTracker.ScriptStack.Num())
+                    {
+                        BlueprintExceptionTracker.ScriptStack.Pop(false);
+                    }
+                #endif
+            }
+            
+            virtual void Serialize( const TCHAR* V, ELogVerbosity::Type Verbosity, const class FName& Category ) {};
+        };
+    #endif
     
     TMap< UClass*, TMap<FString, ExtensionField> > extensionMMap;
     TMap< UClass*, TMap<FString, ExtensionField> > extensionMMap_static;
@@ -495,9 +560,64 @@ namespace NS_SLUA {
 		// call rpc without outparams
 		const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
 		uint8* ReturnValueAddress = bHasReturnParam ? ((uint8*)params + func->ReturnValueOffset) : nullptr;
-		FFrame NewStack(obj, func, params, NULL, func->Children);
-		NewStack.OutParms = nullptr;
-		func->Invoke(obj, NewStack, ReturnValueAddress);
+        
+        #if ENGINE_MINOR_VERSION >= 23 && (PLATFORM_MAC || PLATFORM_IOS)
+            FNewFrame NewStack(obj, func, params, NULL, func->Children);
+        #else
+            FFrame NewStack(obj, func, params, NULL, func->Children);
+        #endif
+        
+        #if ENGINE_MINOR_VERSION < 25
+            if (func->ReturnValueOffset != MAX_uint16) {
+                UProperty* ReturnProperty = func->GetReturnProperty();
+                if (ensure(ReturnProperty)) {
+                    FOutParmRec* RetVal = (FOutParmRec*)FMemory_Alloca(sizeof(FOutParmRec));
+
+                    /* Our context should be that we're in a variable assignment to the return value, so ensure that we have a valid property to return to */
+                    RetVal->PropAddr = (uint8*)FMemory_Alloca(ReturnProperty->GetSize());
+                    RetVal->Property = ReturnProperty;
+                    NewStack.OutParms = RetVal;
+                }
+            }
+
+            NewStack.Locals = params;
+            FOutParmRec** LastOut = &NewStack.OutParms;
+
+            for (UProperty* Property = (UProperty*)func->Children; Property!=nullptr; Property = (UProperty*)Property->Next){
+                if (Property->PropertyFlags & CPF_OutParm){
+
+                    CA_SUPPRESS(6263)
+                        FOutParmRec* Out = (FOutParmRec*)FMemory_Alloca(sizeof(FOutParmRec));
+                    // set the address and property in the out param info
+                    // warning: Stack.MostRecentPropertyAddress could be NULL for optional out parameters
+                    // if that's the case, we use the extra memory allocated for the out param in the function's locals
+                    // so there's always a valid address
+                    Out->PropAddr = Property->ContainerPtrToValuePtr<uint8>(NewStack.Locals);
+                    Out->Property = Property;
+
+                    // add the new out param info to the stack frame's linked list
+                    if (*LastOut) {
+                        (*LastOut)->NextOutParm = Out;
+                        LastOut = &(*LastOut)->NextOutParm;
+                    } else {
+                        *LastOut = Out;
+                    }
+                } else {
+                    // copy the result of the expression for this parameter into the appropriate part of the local variable space
+                    uint8* Param = Property->ContainerPtrToValuePtr<uint8>(NewStack.Locals);
+                    Property->InitializeValue_InContainer(NewStack.Locals);
+                }
+            }
+        #else
+            NewStack.OutParms = nullptr;
+        #endif
+    
+        #if ENGINE_MINOR_VERSION >= 23 && (PLATFORM_MAC || PLATFORM_IOS)
+            FFrame *frame = (FFrame *)&NewStack;
+            func->Invoke(obj, *frame, ReturnValueAddress);
+        #else
+            func->Invoke(obj, NewStack, ReturnValueAddress);
+        #endif
 	}
 
 	void LuaObject::callUFunction(lua_State* L, UObject* obj, UFunction* func, uint8* params) {

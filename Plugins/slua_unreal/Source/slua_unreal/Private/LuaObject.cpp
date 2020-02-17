@@ -60,6 +60,71 @@ namespace NS_SLUA {
 			, getter(getterf)
 			, setter(setterf) {}
 	};
+
+    #if ENGINE_MINOR_VERSION >= 23 && (PLATFORM_MAC || PLATFORM_IOS)
+    struct FNewFrame : public FOutputDevice
+        {
+        public:
+            // Variables.
+            UFunction* Node;
+            UObject* Object;
+            uint8* Code;
+            uint8* Locals;
+            
+            UProperty* MostRecentProperty;
+            uint8* MostRecentPropertyAddress;
+            
+            /** The execution flow stack for compiled Kismet code */
+            FlowStackType FlowStack;
+            
+            /** Previous frame on the stack */
+            FFrame* PreviousFrame;
+            
+            /** contains information on any out parameters */
+            FOutParmRec* OutParms;
+            
+            /** If a class is compiled in then this is set to the property chain for compiled-in functions. In that case, we follow the links to setup the args instead of executing by code. */
+            UField* PropertyChainForCompiledIn;
+            
+            /** Currently executed native function */
+            UFunction* CurrentNativeFunction;
+            
+            bool bArrayContextFailed;
+        public:
+            
+            // Constructors.
+            FNewFrame( UObject* InObject, UFunction* InNode, void* InLocals, FFrame* InPreviousFrame = NULL, UField* InPropertyChainForCompiledIn = NULL )
+            : Node(InNode)
+            , Object(InObject)
+            , Code(InNode->Script.GetData())
+            , Locals((uint8*)InLocals)
+            , MostRecentProperty(NULL)
+            , MostRecentPropertyAddress(NULL)
+            , PreviousFrame(InPreviousFrame)
+            , OutParms(NULL)
+            , PropertyChainForCompiledIn(InPropertyChainForCompiledIn)
+            , CurrentNativeFunction(NULL)
+            , bArrayContextFailed(false)
+            {
+        #if DO_BLUEPRINT_GUARD
+                FBlueprintExceptionTracker::Get().ScriptStack.Push((FFrame *)this);
+        #endif
+            }
+            
+            virtual ~FNewFrame()
+            {
+                #if DO_BLUEPRINT_GUARD
+                    FBlueprintExceptionTracker& BlueprintExceptionTracker = FBlueprintExceptionTracker::Get();
+                    if (BlueprintExceptionTracker.ScriptStack.Num())
+                    {
+                        BlueprintExceptionTracker.ScriptStack.Pop(false);
+                    }
+                #endif
+            }
+            
+            virtual void Serialize( const TCHAR* V, ELogVerbosity::Type Verbosity, const class FName& Category ) {};
+        };
+    #endif
     
     TMap< UClass*, TMap<FString, ExtensionField> > extensionMMap;
     TMap< UClass*, TMap<FString, ExtensionField> > extensionMMap_static;
@@ -496,7 +561,7 @@ namespace NS_SLUA {
 		const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
 		uint8* ReturnValueAddress = bHasReturnParam ? ((uint8*)params + func->ReturnValueOffset) : nullptr;
         
-        #if ENGINE_MINOR_VERSION >= 23 && !PLATFORM_WINDOWS
+        #if ENGINE_MINOR_VERSION >= 23 && (PLATFORM_MAC || PLATFORM_IOS)
             FNewFrame NewStack(obj, func, params, NULL, func->Children);
         #else
             FFrame NewStack(obj, func, params, NULL, func->Children);
@@ -547,7 +612,7 @@ namespace NS_SLUA {
             NewStack.OutParms = nullptr;
         #endif
     
-        #if ENGINE_MINOR_VERSION >= 23 && !PLATFORM_WINDOWS
+        #if ENGINE_MINOR_VERSION >= 23 && (PLATFORM_MAC || PLATFORM_IOS)
             FFrame *frame = (FFrame *)&NewStack;
             func->Invoke(obj, *frame, ReturnValueAddress);
         #else

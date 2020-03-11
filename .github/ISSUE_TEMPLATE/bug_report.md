@@ -10,6 +10,9 @@ assignees: ''
 **Describe the bug**
 A clear and concise description of what the bug is.
 
+**Version**
+What version of slua you used?
+
 **To Reproduce**
 Steps to reproduce the behavior:
 1. Go to '...'

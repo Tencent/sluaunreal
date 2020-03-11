@@ -1099,7 +1099,7 @@ void SProfilerInspector::OnGetChildrenForTree(TSharedPtr<FunctionProfileInfo> Pa
 		}
 
 		// show the sibling node which has child nodes
-		for (size_t mergeIdx = 0; mergeIdx <  Parent->mergeIdxArray.Num(); mergeIdx++)
+		for (size_t mergeIdx = 0; mergeIdx < (size_t)(Parent->mergeIdxArray.Num()); mergeIdx++)
 		{
 			int pointIdx = Parent->mergeIdxArray[mergeIdx] + 1;
 			while (pointIdx < shownProfiler.Num() && shownProfiler[pointIdx]->layerIdx > Parent->layerIdx)
@@ -1143,7 +1143,7 @@ void SProfilerInspector::MergeSiblingNode(SluaProfiler &profiler, int begIdx, in
 	{
 		return;
 	}
-	for (size_t idx = mergeArrayIdx; idx<parentMergeArray.Num(); idx++)
+	for (size_t idx = mergeArrayIdx; idx < (size_t)parentMergeArray.Num(); idx++)
 	{
 		pointIdx = parentMergeArray[idx] + 1;
 		SearchSiblingNode(profiler, pointIdx, endIdx, node);

@@ -197,7 +197,7 @@ void Profiler::EndWatch(double nanoseconds)
 	TSharedPtr<FunctionProfileInfo> &funcInfo = curProfiler[idx - 1];
 	int64_t childCostTime = 0;
 	bool hasChild = false;
-	for (; idx < curProfiler.Num(); idx++)
+	for (; idx < (size_t)curProfiler.Num(); idx++)
 	{
 		TSharedPtr<FunctionProfileInfo> &nextFuncInfo = curProfiler[idx];
 		if (nextFuncInfo->layerIdx <= funcInfo->layerIdx)

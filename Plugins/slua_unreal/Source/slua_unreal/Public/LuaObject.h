@@ -15,6 +15,7 @@
 #define LUA_LIB
 #include "CoreMinimal.h"
 #include "lua/lua.hpp"
+#include "Misc/CoreMisc.h"
 #include "UObject/UnrealType.h"
 #include "UObject/WeakObjectPtr.h"
 #include "Blueprint/UserWidget.h"

@@ -502,10 +502,7 @@ namespace NS_SLUA {
 		// indicate ud had be free
 		ud->flag |= UD_HADFREE;
 		// remove cache
-		if(Object->IsValidLowLevel())
-			ensure(ud->ud == Object);
-		else
-			Log::Log("unlink a missing UObject %p",Object);
+		ensure(ud->ud == Object);
 		LuaObject::removeFromCache(L, (void*)Object);
 	}
 

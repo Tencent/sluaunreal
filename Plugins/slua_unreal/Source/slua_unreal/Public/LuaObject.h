@@ -244,7 +244,7 @@ namespace NS_SLUA {
 				auto wptr = (UserData<WeakUObjectUD*>*)ptr;
 				return wptr->ud->get();
 			}
-			else if (isUObjectValid(ptr->ud))
+			else if (isUObjectValid(ptr->ud) || !checkfree)
 				return ptr->ud;
 			return nullptr;
         }

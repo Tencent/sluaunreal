@@ -506,7 +506,7 @@ namespace NS_SLUA {
 			ensure(ud->ud == Object);
 		else
 			Log::Log("unlink a missing UObject %p",Object);
-		LuaObject::removeFromCache(L, ud->ud);
+		LuaObject::removeFromCache(L, (void*)Object);
 	}
 
 	void LuaState::AddReferencedObjects(FReferenceCollector & Collector)

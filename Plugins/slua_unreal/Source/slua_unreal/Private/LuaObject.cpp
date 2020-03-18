@@ -870,13 +870,14 @@ namespace NS_SLUA {
         else {
             // if ud isn't a uobject, get __name of metatable to cast it to string
             const void* ptr = lua_topointer(L,1);
-            luaL_getmetafield(L,1,"__name");
+            int tt = luaL_getmetafield(L,1,"__name");
             // should have __name field
-            if(lua_type(L,-1)==LUA_TSTRING) {
+            if(tt==LUA_TSTRING) {
                 const char* metaname = lua_tostring(L,-1);
                 snprintf(buffer, BufMax, "%s: %p", metaname,ptr);
             }
-            lua_pop(L,1);
+            if(tt!=LUA_TNIL)
+                lua_pop(L,1);
         }
 
 		lua_pushstring(L, buffer);
@@ -1127,13 +1128,14 @@ namespace NS_SLUA {
 	bool checkType(lua_State* L, int p, const char* tn) {
 		if (!lua_isuserdata(L, p))
 			return false;
-		luaL_getmetafield(L, p, "__name");
-		if (lua_isstring(L, -1) && strcmp(tn, lua_tostring(L, -1)) == 0)
+		int tt = luaL_getmetafield(L, p, "__name");
+		if (tt==LUA_TSTRING && strcmp(tn, lua_tostring(L, -1)) == 0)
 		{
 			lua_pop(L, 1);
 			return true;
 		}
-		lua_pop(L, 1);
+		if(tt!=LUA_TNIL)
+            lua_pop(L, 1);
 		return false;
 	}
 

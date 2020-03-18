@@ -213,7 +213,6 @@ namespace NS_SLUA {
 			if (!t && lua_isuserdata(L, p)) {
 				luaL_getmetafield(L, p, "__name");
 				if (lua_isnil(L, -1)) {
-					lua_pop(L, 1);
 					return t;
 				}
 				FString clsname(lua_tostring(L, -1));
@@ -365,10 +364,11 @@ namespace NS_SLUA {
             if(ret) return ret;
 
             const char *typearg = nullptr;
-            if (luaL_getmetafield(L, p, "__name") == LUA_TSTRING)
+            int tt = luaL_getmetafield(L, p, "__name");
+            if (tt == LUA_TSTRING)
                 typearg = lua_tostring(L, -1);
-                
-            lua_pop(L,1);
+
+            if(tt!=LUA_TNIL) lua_pop(L,1);
 
             if(checkfree && !typearg)
                 luaL_error(L,"expect userdata at %d, if you passed an UObject, maybe it's unreachable",p);

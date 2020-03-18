@@ -15,6 +15,7 @@
 #define LUA_LIB
 #include "CoreMinimal.h"
 #include "lua/lua.hpp"
+#include "Misc/CoreMisc.h"
 #include "UObject/UnrealType.h"
 #include "UObject/WeakObjectPtr.h"
 #include "Blueprint/UserWidget.h"
@@ -243,7 +244,7 @@ namespace NS_SLUA {
 				auto wptr = (UserData<WeakUObjectUD*>*)ptr;
 				return wptr->ud->get();
 			}
-			else if (isUObjectValid(ptr->ud))
+			else if (isUObjectValid(ptr->ud) || !checkfree)
 				return ptr->ud;
 			return nullptr;
         }

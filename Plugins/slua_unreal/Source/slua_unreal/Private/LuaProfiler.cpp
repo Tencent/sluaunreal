@@ -126,16 +126,19 @@ namespace NS_SLUA {
                     messageReader << emptyID;
                     messageReader << preSnapshotID;
                     messageReader << snapshotID;
+                    break;
                 }
                 case PHE_MEMORY_SNAPSHOT: {
                     messageReader << snapshotNum;
                     messageReader << emptyID;
                     messageReader << emptyID;
+                    break;
                 }
                 case PHE_SNAPSHOT_DELETE: {
                     messageReader << snapshotDeleteID;
                     messageReader << emptyID;
                     messageReader << emptyID;
+                    break;
                 }
             }
             return event;

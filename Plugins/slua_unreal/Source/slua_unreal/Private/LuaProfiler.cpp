@@ -56,7 +56,6 @@ namespace NS_SLUA {
         int preSnapshotID = 0;
         int snapshotNum = 0;
         int snapshotDeleteID = 0;
-        size_t lastReceived = 0;
 		LuaVar selfProfiler;
 		bool ignoreHook = false;
 		HookState currentHookState = HookState::UNHOOK;
@@ -75,7 +74,6 @@ namespace NS_SLUA {
                 err = io->recv(io->ctx, buf->data, BUF_SIZE, &got, tm);
                 buf->first = 0;
                 buf->last = got;
-                lastReceived = buf->received;
                 *count = buf->last - buf->first;
                 messageReader.Insert((uint8 *)(buf->data + buf->first), *count, buf->first);
             }

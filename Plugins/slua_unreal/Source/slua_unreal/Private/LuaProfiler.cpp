@@ -158,6 +158,7 @@ namespace NS_SLUA {
         }
     
         bool checkSocketRead() {
+            if(!tcpSocket) return false;
             int result;
             u_long nread = 0;
             t_socket fd = tcpSocket->sock;

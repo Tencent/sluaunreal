@@ -1,14 +1,14 @@
 // Tencent is pleased to support the open source community by making sluaunreal available.
 
 // Copyright (C) 2018 THL A29 Limited, a Tencent company. All rights reserved.
-// Licensed under the BSD 3-Clause License (the "License"); 
+// Licensed under the BSD 3-Clause License (the "License");
 // you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
 // https://opensource.org/licenses/BSD-3-Clause
 
-// Unless required by applicable law or agreed to in writing, 
-// software distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and limitations under the License.
 
 
@@ -81,6 +81,7 @@ function this.reGetSock()
     if pcall(function() sock = require("socket.core").tcp() end) then
         this.printToConsole("reGetSock success")
         sock:settimeout(ConnectTimeoutSec)
+        this.setSocket(nil)
     else
         this.printToConsole("[Error] reGetSock fail", 2)
     end
@@ -93,7 +94,7 @@ end
 
 -- 定时进行attach连接
 function this.reConnect()
-    
+
     if not connectHost then return end
 
     if os.time() - stopConnectTime < AttachInterval then
@@ -106,10 +107,11 @@ function this.reConnect()
     end
 
     local sockSuccess, status = sock:connect(connectHost, connectPort)
-	this.setSocket(sock)
+--	this.setSocket(sock)
     if sockSuccess == 1 or status == "already connected" then
         this.printToConsole("reconnect success")
         this.connectSuccess()
+        this.setSocket(sock)
     else
         this.printToConsole("reconnect failed . retCode:" .. tostring(sockSuccess) .. "  status:" .. status)
         stopConnectTime = os.time()

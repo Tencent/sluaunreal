@@ -110,8 +110,8 @@ function this.reConnect()
 --	this.setSocket(sock)
     if sockSuccess == 1 or status == "already connected" then
         this.printToConsole("reconnect success")
-        this.connectSuccess()
         this.setSocket(sock)
+        this.connectSuccess()
     else
         this.printToConsole("reconnect failed . retCode:" .. tostring(sockSuccess) .. "  status:" .. status)
         stopConnectTime = os.time()

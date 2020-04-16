@@ -106,7 +106,7 @@ namespace NS_SLUA {
         }
         
         int receieveMessage(size_t wanted) {
-            if(!tcpSocket) return false;
+            if(!tcpSocket || currentHookState == HookState::UNHOOK) return false;
             
             int event = 0;
             int emptyID = 0;
@@ -231,7 +231,7 @@ namespace NS_SLUA {
         }
 
 		size_t sendMessage(FArrayWriter& msg) {
-			if (!tcpSocket) return -1;
+			if (!tcpSocket || currentHookState == HookState::UNHOOK) return -1;
 			size_t sent;
 			int err = sendraw(&tcpSocket->buf, (const char*)msg.GetData(), msg.Num(), &sent);
 			if (err != IO_DONE) {
@@ -360,6 +360,7 @@ namespace NS_SLUA {
 
 	void LuaProfiler::init(lua_State* L)
 	{
+        currentHookState = HookState::UNHOOK;
 		auto ls = LuaState::get(L);
 		ensure(ls);
 		selfProfiler = ls->doBuffer((const uint8*)ProfilerScript,strlen(ProfilerScript), ChunkName);

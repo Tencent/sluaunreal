@@ -363,17 +363,20 @@ namespace NS_SLUA {
         currentHookState = HookState::UNHOOK;
 		auto ls = LuaState::get(L);
 		ensure(ls);
-		selfProfiler = ls->doBuffer((const uint8*)ProfilerScript,strlen(ProfilerScript), ChunkName);
-		ensure(selfProfiler.isValid());
-		selfProfiler.push(L);
-		lua_pushcfunction(L, changeHookState);
-		lua_setfield(L, -2, "changeHookState");
-		lua_pushcfunction(L, setSocket);
-		lua_setfield(L, -2, "setSocket");
-		// using native hook instead of lua hook for performance
-		// set selfProfiler to global as slua_profiler
-		lua_setglobal(L, "slua_profile");
-		ensure(lua_gettop(L) == 0);
+        if(!selfProfiler.isValid())
+        {
+            selfProfiler = ls->doBuffer((const uint8*)ProfilerScript,strlen(ProfilerScript), ChunkName);
+            ensure(selfProfiler.isValid());
+            selfProfiler.push(L);
+            lua_pushcfunction(L, changeHookState);
+            lua_setfield(L, -2, "changeHookState");
+            lua_pushcfunction(L, setSocket);
+            lua_setfield(L, -2, "setSocket");
+            // using native hook instead of lua hook for performance
+            // set selfProfiler to global as slua_profiler
+            lua_setglobal(L, "slua_profile");
+            ensure(lua_gettop(L) == 0);
+        }
 	}
 
 	void LuaProfiler::tick(lua_State* L)

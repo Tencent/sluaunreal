@@ -551,15 +551,32 @@ namespace NS_SLUA {
         
         UFunction* func = reinterpret_cast<UFunction*>(ud);
         
-		FStructOnScope params(func);
-		fillParam(L, offset, func, params.GetStructMemory());
+		uint8* params = (uint8*)FMemory_Alloca(func->ParmsSize);
+		FMemory::Memzero(params, func->ParmsSize);
+		for (TFieldIterator<UProperty> it(func); it && it->HasAnyPropertyFlags(CPF_Parm); ++it)
 		{
-			// FEditorScriptExecutionGuard scriptGuard;
+			UProperty* localProp = *it;
+			checkSlow(localProp);
+			if (!localProp->HasAnyPropertyFlags(CPF_ZeroConstructor))
+			{
+				localProp->InitializeValue_InContainer(params);
+			}
+		}
+    	
+		LuaObject::fillParam(L, offset, func, params);
+		{
 			// call function with params
-			obj->ProcessEvent(func, params.GetStructMemory());
+			obj->ProcessEvent(func, params);
 		}
 		// return value to push lua stack
-		return returnValue(L, func, params.GetStructMemory());
+		int outParamCount = LuaObject::returnValue(L, func, params);
+
+		for (TFieldIterator<UProperty> it(func); it && it->HasAnyPropertyFlags(CPF_Parm); ++it)
+		{
+			it->DestroyValue_InContainer(params);
+		}
+
+		return outParamCount;
     }
 
     // find ufunction from cache

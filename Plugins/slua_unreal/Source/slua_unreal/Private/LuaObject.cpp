@@ -623,7 +623,7 @@ namespace NS_SLUA {
 	void LuaObject::callUFunction(lua_State* L, UObject* obj, UFunction* func, uint8* params) {
 		auto ff = func->FunctionFlags;
 		// it's an RPC function
-		if (ff&FUNC_Net)
+		if (ff&FUNC_Net && !(ff&FUNC_Native))
 			LuaObject::callRpc(L, obj, func, params);
 		else
 		// it's a local function
@@ -691,13 +691,32 @@ namespace NS_SLUA {
         
         UFunction* func = reinterpret_cast<UFunction*>(ud);
         
-		FStructOnScope params(func);
-		LuaObject::fillParam(L, offset, func, params.GetStructMemory());
+		uint8* params = (uint8*)FMemory_Alloca(func->ParmsSize);
+		FMemory::Memzero(params, func->ParmsSize);
+		for (TFieldIterator<UProperty> it(func); it && it->HasAnyPropertyFlags(CPF_Parm); ++it)
 		{
-			LuaObject::callUFunction(L, obj, func, params.GetStructMemory());
+			UProperty* localProp = *it;
+			checkSlow(localProp);
+			if (!localProp->HasAnyPropertyFlags(CPF_ZeroConstructor))
+			{
+				localProp->InitializeValue_InContainer(params);
+			}
+		}
+    	
+		LuaObject::fillParam(L, offset, func, params);
+		{
+			// call function with params
+			LuaObject::callUFunction(L, obj, func, params);
 		}
 		// return value to push lua stack
-		return LuaObject::returnValue(L, func, params.GetStructMemory());
+		int outParamCount = LuaObject::returnValue(L, func, params);
+
+		for (TFieldIterator<UProperty> it(func); it && (it->HasAnyPropertyFlags(CPF_Parm)); ++it)
+		{
+			it->DestroyValue_InContainer(params);
+		}
+
+		return outParamCount;
     }
 
     // find ufunction from cache
@@ -1265,7 +1284,7 @@ namespace NS_SLUA {
 	}
 
     int LuaObject::gcObject(lua_State* L) {
-		CheckUDGC(UObject,L,1);
+		CheckUDGC(UClass, L, 1);
         removeRef(L,UD);
         return 0;
     }

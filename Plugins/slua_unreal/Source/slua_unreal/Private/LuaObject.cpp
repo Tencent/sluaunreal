@@ -623,7 +623,7 @@ namespace NS_SLUA {
 	void LuaObject::callUFunction(lua_State* L, UObject* obj, UFunction* func, uint8* params) {
 		auto ff = func->FunctionFlags;
 		// it's an RPC function
-		if (ff&FUNC_Net && !(ff&FUNC_Native))
+		if (ff&FUNC_Net)
 			LuaObject::callRpc(L, obj, func, params);
 		else
 		// it's a local function

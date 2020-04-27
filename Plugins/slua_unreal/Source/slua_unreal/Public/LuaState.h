@@ -101,7 +101,7 @@ namespace NS_SLUA {
          * if find fn and load successful, return buf of file content, otherwise return nullptr
          * you must delete[] buf returned by function for free memory.
          */
-		typedef uint8* (*LoadFileDelegate) (const char* fn, uint32& len, FString& filepath);
+        typedef TArray<uint8> (*LoadFileDelegate) (const char* fn, FString& filepath);
 		typedef void (*ErrorDelegate) (const char* err);
 
         inline static LuaState* get(lua_State* l=nullptr) {
@@ -219,7 +219,7 @@ namespace NS_SLUA {
     protected:
 		LoadFileDelegate loadFileDelegate;
 		ErrorDelegate errorDelegate;
-        uint8* loadFile(const char* fn,uint32& len,FString& filepath);
+        TArray<uint8> loadFile(const char* fn,FString& filepath);
 		static int loader(lua_State* L);
 		static int getStringFromMD5(lua_State* L);
 

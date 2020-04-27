@@ -124,7 +124,7 @@ namespace NS_SLUA {
 			luaL_error(L, "expect LuaBase table at arg 1");
 		lua_pop(L, 1);
 		UObject* obj = (UObject*)ud;
-		if (!slua::LuaObject::isUObjectValid(obj))
+		if (!NS_SLUA::LuaObject::isUObjectValid(obj))
 		{
 			return 0;
 		}

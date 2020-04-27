@@ -73,10 +73,10 @@ void ULuaUserWidget::InitLuaTable()
 	{
 		if (init(this, "LuaUserWidget", LuaStateName, LuaFilePath))
 		{
-			slua::LuaVar lfunc = luaSelfTable.getFromTable<slua::LuaVar>("Initialize", true);
+			NS_SLUA::LuaVar lfunc = luaSelfTable.getFromTable<NS_SLUA::LuaVar>("Initialize", true);
 			if (!lfunc.isFunction())
 			{
-				slua::Log::Error("Lua[%s] missing Initialize function", TCHAR_TO_UTF8(*LuaFilePath));
+				NS_SLUA::Log::Error("Lua[%s] missing Initialize function", TCHAR_TO_UTF8(*LuaFilePath));
 			}
 			lfunc.call(luaSelfTable);
 		}
@@ -106,10 +106,10 @@ void ULuaUserWidget::BeginDestroy()
 {
 	if (luaSelfTable.isValid())
 	{
-		slua::LuaVar lfunc = luaSelfTable.getFromTable<slua::LuaVar>("OnDestroy", true);
+		NS_SLUA::LuaVar lfunc = luaSelfTable.getFromTable<NS_SLUA::LuaVar>("OnDestroy", true);
 		if (!lfunc.isFunction())
 		{
-			slua::Log::Error("Lua[%s] missing OnDestroy function", TCHAR_TO_UTF8(*LuaFilePath));
+			NS_SLUA::Log::Error("Lua[%s] missing OnDestroy function", TCHAR_TO_UTF8(*LuaFilePath));
 		}
 		lfunc.call(luaSelfTable);
 	}

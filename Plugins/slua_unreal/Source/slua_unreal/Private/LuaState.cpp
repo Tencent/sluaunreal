@@ -508,6 +508,11 @@ namespace NS_SLUA {
 
 	void LuaState::AddReferencedObjects(FReferenceCollector & Collector)
 	{
+		if (latentDelegate)
+		{
+			Collector.AddReferencedObject(latentDelegate);
+		}
+
 		for (UObjectRefMap::TIterator it(objRefs); it; ++it)
 		{
 			UObject* item = it.Key();

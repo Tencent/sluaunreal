@@ -200,19 +200,19 @@ namespace NS_SLUA {
 	{
 		luaL_checktype(L, 1, LUA_TUSERDATA);
 		GenericUserData *gud = (GenericUserData*)lua_touserdata(L, 1);
-		bool isValid = !(gud->flag & UD_HADFREE);
-		if(!isValid)
-			return LuaObject::push(L, isValid);
+		bool bIsValid = !(gud->flag & UD_HADFREE);
+		if(!bIsValid)
+			return LuaObject::push(L, bIsValid);
 		// if this ud is boxed UObject
 		if (gud->flag & UD_UOBJECT) {
 			UObject* obj = LuaObject::checkUD<UObject>(L, 1, false);
-			isValid = LuaObject::isUObjectValid(obj);
+			bIsValid = LuaObject::isUObjectValid(obj);
 		}
 		else if (gud->flag&UD_WEAKUPTR) {
 			UserData<WeakUObjectUD*>* wud = (UserData<WeakUObjectUD*>*)gud;
-			isValid = wud->ud->isValid();
+			bIsValid = wud->ud->isValid();
 		}
-		return LuaObject::push(L, isValid);
+		return LuaObject::push(L, bIsValid);
 	}
 
 #if WITH_EDITOR

@@ -18,14 +18,13 @@
 void ULuaUserWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
-	init(this, "LuaUserWidget", LuaStateName, LuaFilePath);
+	InitLuaTable();
 }
 #endif
 
 void ULuaUserWidget::NativeConstruct()
 {
-	if (!LuaFilePath.IsEmpty() && !getSelfTable().isValid())
-		init(this,"LuaUserWidget", LuaStateName, LuaFilePath);
+	InitLuaTable();
 	Super::NativeConstruct();
 	if (getSelfTable().isValid()) {
 #if (ENGINE_MINOR_VERSION==18)
@@ -38,7 +37,6 @@ void ULuaUserWidget::NativeConstruct()
 
 void ULuaUserWidget::NativeDestruct() {
 	Super::NativeDestruct();
-	luaSelfTable.free();
 }
 
 void ULuaUserWidget::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)
@@ -68,6 +66,34 @@ void ULuaUserWidget::tick(float dt) {
 	tickFunction.call(luaSelfTable, &currentGeometry, dt);
 }
 
+
+void ULuaUserWidget::InitLuaTable()
+{
+	if (!LuaFilePath.IsEmpty() && !getSelfTable().isValid())
+	{
+		if (init(this, "LuaUserWidget", LuaStateName, LuaFilePath))
+		{
+			slua::LuaVar lfunc = luaSelfTable.getFromTable<slua::LuaVar>("Initialize", true);
+			if (!lfunc.isFunction())
+			{
+				slua::Log::Error("Lua[%s] missing Initialize function", TCHAR_TO_UTF8(*LuaFilePath));
+			}
+			lfunc.call(luaSelfTable);
+		}
+	}
+}
+
+bool ULuaUserWidget::Initialize()
+{
+	bool bIsInited = Super::Initialize();
+	if (bIsInited)
+	{
+		InitLuaTable();
+	}
+
+	return bIsInited;
+}
+
 void ULuaUserWidget::ProcessEvent(UFunction * func, void * params)
 {
 	if (luaImplemented(func, params))
@@ -75,6 +101,23 @@ void ULuaUserWidget::ProcessEvent(UFunction * func, void * params)
 	Super::ProcessEvent(func, params);
 }
 
+
+void ULuaUserWidget::BeginDestroy()
+{
+	if (luaSelfTable.isValid())
+	{
+		slua::LuaVar lfunc = luaSelfTable.getFromTable<slua::LuaVar>("OnDestroy", true);
+		if (!lfunc.isFunction())
+		{
+			slua::Log::Error("Lua[%s] missing OnDestroy function", TCHAR_TO_UTF8(*LuaFilePath));
+		}
+		lfunc.call(luaSelfTable);
+	}
+
+	Super::BeginDestroy();
+
+	dispose();
+}
 void ULuaUserWidget::superTick()
 {
 	Super::Tick(currentGeometry, deltaTime);

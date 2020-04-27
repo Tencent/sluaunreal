@@ -189,8 +189,14 @@ namespace NS_SLUA {
 		static T* maybeAnUDTable(lua_State* L, int p,bool checkfree) {
 			if(lua_istable(L, p)) {
                 AutoStack as(L);
-				lua_getfield(L, p, SLUA_CPPINST);
-				if (lua_type(L, -1) == LUA_TUSERDATA)
+				// use lua_rawget instead of lua_getfield to avoid __index loop!
+				lua_pushstring(L, SLUA_CPPINST);
+				lua_rawget(L, p);
+				if (lua_islightuserdata(L, -1)) {
+					void* ud = lua_touserdata(L, -1);
+					return (T*)ud;
+				}
+				else if (lua_type(L, -1) == LUA_TUSERDATA)
 					return checkUD<T>(L, lua_absindex(L, -1), checkfree);
 			}
 			return nullptr;

@@ -631,7 +631,7 @@ namespace NS_SLUA {
 	}
 
     // handle return value and out params
-    int LuaObject::returnValue(lua_State* L,UFunction* func,uint8* params) {
+    int LuaObject::returnValue(lua_State* L,UFunction* func,uint8* params,NewObjectRecorder* objRecorder) {
 
         // check is function has return value
 		const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
@@ -640,7 +640,7 @@ namespace NS_SLUA {
         int ret = 0;
         if(bHasReturnParam) {
             UProperty* p = func->GetReturnProperty();
-            ret += LuaObject::push(L,p,params+p->GetOffset_ForInternal());
+            ret += LuaObject::push(L,p,params+p->GetOffset_ForInternal(),objRecorder);
         }
 
 		bool isLatentFunction = false;
@@ -655,8 +655,9 @@ namespace NS_SLUA {
 			if (p->GetFName() == NAME_LatentInfo) {
 				isLatentFunction = true;
 			}
-            else if(IsRealOutParam(propflag)) // out params should be not const and not readonly
-                ret += LuaObject::push(L,p,params+p->GetOffset_ForInternal());
+			else if (IsRealOutParam(propflag)) { // out params should be not const and not readonly
+                ret += LuaObject::push(L,p,params+p->GetOffset_ForInternal(),objRecorder);
+			}
         }
         
 		if (isLatentFunction) {
@@ -691,6 +692,8 @@ namespace NS_SLUA {
         
         UFunction* func = reinterpret_cast<UFunction*>(ud);
         
+		NewObjectRecorder objectRecorder(L);
+
 		uint8* params = (uint8*)FMemory_Alloca(func->ParmsSize);
 		FMemory::Memzero(params, func->ParmsSize);
 		for (TFieldIterator<UProperty> it(func); it && it->HasAnyPropertyFlags(CPF_Parm); ++it)
@@ -709,7 +712,7 @@ namespace NS_SLUA {
 			LuaObject::callUFunction(L, obj, func, params);
 		}
 		// return value to push lua stack
-		int outParamCount = LuaObject::returnValue(L, func, params);
+		int outParamCount = LuaObject::returnValue(L, func, params, &objectRecorder);
 
 		for (TFieldIterator<UProperty> it(func); it && (it->HasAnyPropertyFlags(CPF_Parm)); ++it)
 		{
@@ -750,6 +753,7 @@ namespace NS_SLUA {
 			LuaObject::cacheProperty(L, cls, TCHAR_TO_UTF8(*(Property->GetName())), Property);
 		}
 	}
+
     int instanceIndex(lua_State* L) {
         UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
         const char* name = LuaObject::checkValue<const char*>(L, 2);
@@ -758,7 +762,7 @@ namespace NS_SLUA {
         UProperty* up = LuaObject::findCacheProperty(L, cls, name);
         if (up)
         {
-            return LuaObject::push(L, up, obj, false);
+            return LuaObject::push(L, up, obj, nullptr);
         }
 
         UFunction* func = LuaObject::findCacheFunction(L, cls, name);
@@ -775,7 +779,7 @@ namespace NS_SLUA {
 
 			up = LuaObject::findCacheProperty(L, cls, name);
             if (up) {
-                return LuaObject::push(L, up, obj, false);
+                return LuaObject::push(L, up, obj, nullptr);
             }
             
             // search extension method
@@ -847,7 +851,7 @@ namespace NS_SLUA {
         auto* cls = ls->uss;
         UProperty* up = FindStructPropertyByName(cls, name);
         if(!up) return 0;
-        return LuaObject::push(L,up,ls->buf+up->GetOffset_ForInternal(),false);
+        return LuaObject::push(L,up,ls->buf+up->GetOffset_ForInternal(),nullptr);
     }
 
     int newinstanceStructIndex(lua_State* L) {
@@ -941,13 +945,13 @@ namespace NS_SLUA {
 	}
 
     template<typename T>
-    int pushUProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
+    int pushUProperty(lua_State* L,UProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
         auto p=Cast<T>(prop);
         ensure(p);
         return LuaObject::push(L,p->GetPropertyValue(parms));
     }
 
-	int pushEnumProperty(lua_State* L, UProperty* prop, uint8* parms,bool ref) {
+	int pushEnumProperty(lua_State* L, UProperty* prop, uint8* parms,NewObjectRecorder* objRecorder) {
 		auto p = Cast<UEnumProperty>(prop);
 		ensure(p);
 		auto p2 = p->GetUnderlyingProperty();
@@ -956,21 +960,21 @@ namespace NS_SLUA {
 		return LuaObject::push(L, i);
 	}
 
-    int pushUArrayProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
+    int pushUArrayProperty(lua_State* L,UProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
         auto p = Cast<UArrayProperty>(prop);
         ensure(p);
         FScriptArray* v = p->GetPropertyValuePtr(parms);
 		return LuaArray::push(L, p->Inner, v);
     }
 
-    int pushUMapProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
+    int pushUMapProperty(lua_State* L,UProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
         auto p = Cast<UMapProperty>(prop);
         ensure(p);
 		FScriptMap* v = p->GetPropertyValuePtr(parms);
 		return LuaMap::push(L, p->KeyProp, p->ValueProp, v);
     }
 
-	int pushUWeakProperty(lua_State* L, UProperty* prop, uint8* parms,bool ref) {
+	int pushUWeakProperty(lua_State* L, UProperty* prop, uint8* parms,NewObjectRecorder* objRecorder) {
 		auto p = Cast<UWeakObjectProperty>(prop);
 		ensure(p);
 		FWeakObjectPtr v = p->GetPropertyValue(parms);
@@ -993,7 +997,7 @@ namespace NS_SLUA {
 		return 0;
 	}
 
-    int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
+    int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
         auto p = Cast<UStructProperty>(prop);
         ensure(p);
         auto uss = p->Struct;
@@ -1013,14 +1017,14 @@ namespace NS_SLUA {
 		return LuaObject::push(L, new LuaStruct(buf,size,uss));
     }  
 
-	int pushUDelegateProperty(lua_State* L, UProperty* prop, uint8* parms, bool ref) {
+	int pushUDelegateProperty(lua_State* L, UProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
 		auto p = Cast<UDelegateProperty>(prop);
 		ensure(p);
 		FScriptDelegate* delegate = p->GetPropertyValuePtr(parms);
 		return LuaDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
 	}
 
-    int pushUMulticastDelegateProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
+    int pushUMulticastDelegateProperty(lua_State* L,UProperty* prop,uint8* parms, NewObjectRecorder* objRecorder) {
         auto p = Cast<UMulticastDelegateProperty>(prop);
         ensure(p);
 #if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
@@ -1064,14 +1068,15 @@ namespace NS_SLUA {
         return 0;
     }
 	 
-    int pushUObjectProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
+    int pushUObjectProperty(lua_State* L,UProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
         auto p = Cast<UObjectProperty>(prop);
         ensure(p);   
         UObject* o = p->GetPropertyValue(parms);
         if(auto tr=Cast<UWidgetTree>(o))
             return LuaWidgetTree::push(L,tr);
-        else
-            return LuaObject::push(L,o,false,ref);
+		else {
+			return LuaObject::push(L, o, false, objRecorder);
+		}
     }
 
     template<typename T>
@@ -1130,7 +1135,7 @@ namespace NS_SLUA {
 		return 0;
     }
 	
-	int pushUClassProperty(lua_State* L, UProperty* prop, uint8* parms, bool ref) {
+	int pushUClassProperty(lua_State* L, UProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
 		auto p = Cast<UClassProperty>(prop);
 		ensure(p);
 		UClass* cls = Cast<UClass>(p->GetPropertyValue(parms));
@@ -1306,8 +1311,8 @@ namespace NS_SLUA {
 		deleteFGCObject(L,UD);
 		return 0;
 	}
-
-    int LuaObject::push(lua_State* L, UObject* obj, bool rawpush, bool ref) {
+	
+	int LuaObject::push(lua_State* L, UObject* obj, bool rawpush, NewObjectRecorder* objRecorder) {
 		if (!obj) return pushNil(L);
 		if (!rawpush) {
 			if (auto it = Cast<ILuaTableObjectInterface>(obj)) {
@@ -1320,8 +1325,10 @@ namespace NS_SLUA {
 			return pushClass(L, c);
 		else if (auto s = Cast<UScriptStruct>(obj))
 			return pushStruct(L, s);
-		else
-			return pushGCObject<UObject*>(L,obj,"UObject",setupInstanceMT,gcObject,ref);
+		else {
+			bool ref = objRecorder ? objRecorder->hasObject(obj) : false;
+			return pushGCObject<UObject*>(L, obj, "UObject", setupInstanceMT, gcObject, ref);
+		}
     }
 
 	int LuaObject::push(lua_State* L, FWeakObjectPtr ptr) {
@@ -1416,10 +1423,10 @@ namespace NS_SLUA {
         return 1;
     }
 
-    int LuaObject::push(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
+    int LuaObject::push(lua_State* L,UProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
         auto pusher = getPusher(prop);
         if (pusher)
-            return pusher(L,prop,parms,ref);
+            return pusher(L,prop,parms,objRecorder);
         else {
             FString name = prop->GetClass()->GetName();
             Log::Error("unsupport type %s to push",TCHAR_TO_UTF8(*name));
@@ -1427,7 +1434,7 @@ namespace NS_SLUA {
         }
     }
 
-	int LuaObject::push(lua_State* L, UProperty* up, UObject* obj, bool ref) {
+	int LuaObject::push(lua_State* L, UProperty* up, UObject* obj, NewObjectRecorder* objRecorder) {
 		auto cls = up->GetClass();
 		// if it's an UArrayProperty
 		if (cls==UArrayProperty::StaticClass())
@@ -1436,7 +1443,7 @@ namespace NS_SLUA {
         else if(cls==UMapProperty::StaticClass())
             return LuaMap::push(L,Cast<UMapProperty>(up),obj);
 		else
-			return push(L, up, up->ContainerPtrToValuePtr<uint8>(obj), ref);
+			return push(L, up, up->ContainerPtrToValuePtr<uint8>(obj), objRecorder);
 	}
 
 	int LuaObject::push(lua_State* L, LuaStruct* ls) {

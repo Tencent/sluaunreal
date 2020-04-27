@@ -113,7 +113,24 @@ namespace NS_SLUA {
 	}
     #endif
 
-    int LuaState::loader(lua_State* L) {
+	int LuaState::increaseCallStack()
+	{
+		newObjectsInCallStack.Push(ObjectSet());
+		return currentCallStack++;
+	}
+
+	void LuaState::decreaseCallStack()
+	{
+		currentCallStack--;
+		newObjectsInCallStack.Pop(false);
+	}
+
+	bool LuaState::hasObjectInStack(const UObject* obj, int stackLayer)
+	{
+		return newObjectsInCallStack[stackLayer].Contains(const_cast<UObject*>(obj));
+	}
+
+	int LuaState::loader(lua_State* L) {
         LuaState* state = LuaState::get(L);
         const char* fn = lua_tostring(L,1);
         uint32 len;
@@ -154,6 +171,7 @@ namespace NS_SLUA {
 		, stackCount(0)
 		, si(0)
 		, deadLoopCheck(nullptr)
+		, currentCallStack(0)
     {
         if(name) stateName=UTF8_TO_TCHAR(name);
 		this->pGI = gameInstance;
@@ -228,6 +246,7 @@ namespace NS_SLUA {
         
         if(L) {
             lua_close(L);
+			GUObjectArray.RemoveUObjectCreateListener(this);
 			GUObjectArray.RemoveUObjectDeleteListener(this);
 			FCoreUObjectDelegates::GetPostGarbageCollect().Remove(pgcHandler);
 			FWorldDelegates::OnWorldCleanup.Remove(wcHandler);
@@ -252,6 +271,7 @@ namespace NS_SLUA {
 		pgcHandler = FCoreUObjectDelegates::GetPostGarbageCollect().AddRaw(this, &LuaState::onEngineGC);
 		wcHandler = FWorldDelegates::OnWorldCleanup.AddRaw(this, &LuaState::onWorldCleanup);
 		GUObjectArray.AddUObjectDeleteListener(this);
+		GUObjectArray.AddUObjectCreateListener(this);
 
 		latentDelegate = NewObject<ULatentDelegate>((UObject*)GetTransientPackage(), ULatentDelegate::StaticClass());
 		latentDelegate->bindLuaState(this);
@@ -479,6 +499,28 @@ namespace NS_SLUA {
 	{
 		PROFILER_WATCHER(w1);
 		unlinkUObject((const UObject*)Object);
+		if (currentCallStack > 0)
+		{
+			ObjectSet objSet = newObjectsInCallStack.Last();
+			if (objSet.Contains(const_cast<UObjectBase*>(Object)))
+			{
+				objSet.Remove(const_cast<UObjectBase*>(Object));
+			}
+		}
+	}
+
+	void LuaState::NotifyUObjectCreated(const UObjectBase *Object, int32 Index)
+	{
+		if (!IsInGameThread())
+		{
+			return;
+		}
+
+		if (currentCallStack > 0)
+		{
+			ObjectSet objSet = newObjectsInCallStack.Last();
+			objSet.Add(const_cast<UObjectBase*>(Object));
+		}
 	}
 
 	void LuaState::unlinkUObject(const UObject * Object)
@@ -884,5 +926,21 @@ namespace NS_SLUA {
 	{
 		auto& item = cachePropMap.FindOrAdd(uclass);
 		item.Add(UTF8_TO_TCHAR(pname), prop);
+	}
+
+	NewObjectRecorder::NewObjectRecorder(lua_State* L_)
+		: luaState(LuaState::get(G(L_)->mainthread))
+	{
+		stackLayer = luaState->increaseCallStack();
+	}
+
+	NewObjectRecorder::~NewObjectRecorder()
+	{
+		luaState->decreaseCallStack();
+	}
+
+	bool NewObjectRecorder::hasObject(const UObject* obj) const
+	{
+		return luaState->hasObjectInStack(obj, stackLayer);
 	}
 }

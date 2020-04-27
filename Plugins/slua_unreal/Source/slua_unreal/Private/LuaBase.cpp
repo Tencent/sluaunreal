@@ -69,14 +69,34 @@ namespace NS_SLUA {
 		UObject* obj = context.Get();
 		if (!obj) return 0;
 
-		FStructOnScope params(func);
-		LuaObject::fillParam(L, 2, func, params.GetStructMemory());
+		NewObjectRecorder objectRecorder(L);
+
+		uint8* params = (uint8*)FMemory_Alloca(func->ParmsSize);
+		FMemory::Memzero(params, func->ParmsSize);
+		for (TFieldIterator<UProperty> it(func); it && it->HasAnyPropertyFlags(CPF_Parm); ++it)
+		{
+			UProperty* localProp = *it;
+			checkSlow(localProp);
+			if (!localProp->HasAnyPropertyFlags(CPF_ZeroConstructor))
+			{
+				localProp->InitializeValue_InContainer(params);
+			}
+		}
+
+		LuaObject::fillParam(L, 2, func, params);
 		{
 			// call function with params
-			LuaObject::callUFunction(L, obj, func, params.GetStructMemory());
+			LuaObject::callUFunction(L, obj, func, params);
 		}
 		// return value to push lua stack
-		return LuaObject::returnValue(L, func, params.GetStructMemory());
+		int outParamCount = LuaObject::returnValue(L, func, params, &objectRecorder);
+
+		for (TFieldIterator<UProperty> it(func); it && (it->HasAnyPropertyFlags(CPF_Parm)); ++it)
+		{
+			it->DestroyValue_InContainer(params);
+		}
+
+		return outParamCount;
 	}
 
 	void LuaBase::dispose()

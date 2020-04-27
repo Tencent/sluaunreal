@@ -67,10 +67,27 @@ namespace NS_SLUA {
 		static void scriptTimeout(lua_State *L, lua_Debug *ar);
 	};
 
+	typedef TSet<UObjectBase*> ObjectSet;
+
+	class NewObjectRecorder {
+	public:
+		NewObjectRecorder(lua_State* L);
+
+		~NewObjectRecorder();
+
+		bool hasObject(const UObject* obj) const;
+
+	protected:
+		class LuaState* luaState;
+
+		int stackLayer;
+	};
+
 	typedef TMap<UObject*, GenericUserData*> UObjectRefMap;
 
     class SLUA_UNREAL_API LuaState 
 		: public FUObjectArray::FUObjectDeleteListener
+		, public FUObjectArray::FUObjectCreateListener
 		, public FGCObject
 		, public FTickableGameObject
     {
@@ -174,6 +191,9 @@ namespace NS_SLUA {
 		// if obj be deleted, call this function
 		virtual void NotifyUObjectDeleted(const class UObjectBase *Object, int32 Index) override;
 
+		// if obj created, call this function
+		virtual void NotifyUObjectCreated(const class UObjectBase *Object, int32 Index) override;
+
 		// tell Engine which objs should be referenced
 		virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
         static int pushErrorHandler(lua_State* L);
@@ -205,6 +225,12 @@ namespace NS_SLUA {
 
 	public:
 		FLuaStateInitEvent onInitEvent;
+	protected:
+		friend class NewObjectRecorder;
+
+		int increaseCallStack();
+		void decreaseCallStack();
+		bool hasObjectInStack(const UObject* obj, int stackLayer);
 
     private:
         friend class LuaObject;
@@ -279,6 +305,9 @@ namespace NS_SLUA {
 		TMap<lua_State*, int> threadToRef;                                // coroutine -> ref
 		TMap<int, lua_State*> refToThread;                                // coroutine -> ref
 		ULatentDelegate* latentDelegate;
+		
+		int currentCallStack;
+		TArray<ObjectSet> newObjectsInCallStack;
 
     };
 }

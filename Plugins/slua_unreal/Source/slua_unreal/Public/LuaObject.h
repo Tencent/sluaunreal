@@ -61,6 +61,7 @@ class ULatentDelegate;
 namespace NS_SLUA {
 
     class LuaVar;
+	class NewObjectRecorder;
 
     struct AutoStack {
         AutoStack(lua_State* l) {
@@ -305,7 +306,7 @@ namespace NS_SLUA {
 
     public:
 
-        typedef int (*PushPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms,bool ref);
+        typedef int (*PushPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms,NewObjectRecorder* objRecorder);
         typedef int (*CheckPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms,int i);
 
         static CheckPropertyFunction getChecker(UClass* prop);
@@ -326,7 +327,7 @@ namespace NS_SLUA {
 		static void addOperator(lua_State* L, const char* name, lua_CFunction func);
 		static void finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc, lua_CFunction strHint=nullptr);
 		static void fillParam(lua_State* L, int i, UFunction* func, uint8* params);
-		static int returnValue(lua_State* L, UFunction* func, uint8* params);
+		static int returnValue(lua_State* L, UFunction* func, uint8* params, NewObjectRecorder* objRecorder);
 
 		// check UObject is valid
 		static bool isUObjectValid(UObject* obj) {
@@ -641,7 +642,7 @@ namespace NS_SLUA {
         static int pushClass(lua_State* L,UClass* cls);
         static int pushStruct(lua_State* L,UScriptStruct* cls);
 		static int pushEnum(lua_State* L, UEnum* e);
-		static int push(lua_State* L, UObject* obj, bool rawpush=false, bool ref=true);
+		static int push(lua_State* L, UObject* obj, bool rawpush=false, NewObjectRecorder* objRecorder = nullptr);
 		inline static int push(lua_State* L, const UObject* obj) {
 			return push(L, const_cast<UObject*>(obj));
 		}
@@ -667,8 +668,8 @@ namespace NS_SLUA {
 		static int push(lua_State* L, const LuaVar& v);
         static int push(lua_State* L, UFunction* func, UClass* cls=nullptr);
 		static int push(lua_State* L, const LuaLString& lstr);
-		static int push(lua_State* L, UProperty* up, uint8* parms, bool ref=true);
-		static int push(lua_State* L, UProperty* up, UObject* obj, bool ref=true);
+		static int push(lua_State* L, UProperty* up, uint8* parms, NewObjectRecorder* objRecorder = nullptr);
+		static int push(lua_State* L, UProperty* up, UObject* obj, NewObjectRecorder* objRecorder = nullptr);
 
         // check tn is base of base
         static bool isBaseTypeOf(lua_State* L,const char* tn,const char* base);

@@ -217,7 +217,7 @@ namespace NS_SLUA {
 		}
 
 #ifdef ENABLE_PROFILER
-		LuaProfiler::tick(L);
+		LuaProfiler::tick(this);
 #endif
 
 		PROFILER_WATCHER(w1);
@@ -255,6 +255,8 @@ namespace NS_SLUA {
 		freeDeferObject();
 		objRefs.Empty();
 		SafeDelete(deadLoopCheck);
+
+		LuaMemoryProfile::stop();
     }
 
 
@@ -356,7 +358,7 @@ namespace NS_SLUA {
         LuaArray::reg(L);
         LuaMap::reg(L);
 #ifdef ENABLE_PROFILER
-		LuaProfiler::init(L);
+		LuaProfiler::init(this);
 #endif
 		
 		onInitEvent.Broadcast();

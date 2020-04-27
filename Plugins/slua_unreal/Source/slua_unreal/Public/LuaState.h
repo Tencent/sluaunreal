@@ -239,6 +239,7 @@ namespace NS_SLUA {
 		friend class LuaScriptCallGuard;
         lua_State* L;
         int cacheObjRef;
+		int cacheFuncRef;
 		// init enums lua code
         int _pushErrorHandler(lua_State* L);
         static int _atPanic(lua_State* L);

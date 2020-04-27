@@ -166,6 +166,7 @@ namespace NS_SLUA {
 		, errorDelegate(nullptr)
 		, L(nullptr)
 		, cacheObjRef(LUA_NOREF)
+		, cacheFuncRef(LUA_NOREF)
 		, stackCount(0)
 		, si(0)
 		, deadLoopCheck(nullptr)
@@ -303,6 +304,15 @@ namespace NS_SLUA {
         lua_setmetatable(L,-2);
         // register it
         cacheObjRef = luaL_ref(L,LUA_REGISTRYINDEX);
+
+		// init func cache table
+		lua_newtable(L);
+		lua_newtable(L);
+		lua_pushstring(L, "kv");
+		lua_setfield(L, -2, "__mode");
+		lua_setmetatable(L, -2);
+		// register it
+		cacheFuncRef = luaL_ref(L, LUA_REGISTRYINDEX);
 
         ensure(lua_gettop(L)==0);
         
@@ -496,6 +506,8 @@ namespace NS_SLUA {
 	{
 		PROFILER_WATCHER(w1);
 		unlinkUObject((const UObject*)Object);
+		LuaObject::removeFuncCache(L, (UFunction*)Object);
+
 		if (currentCallStack > 0)
 		{
 			ObjectSet objSet = newObjectsInCallStack.Last();
@@ -542,7 +554,7 @@ namespace NS_SLUA {
 		ud->flag |= UD_HADFREE;
 		// remove cache
 		ensure(ud->ud == Object);
-		LuaObject::removeFromCache(L, (void*)Object);
+		LuaObject::removeObjCache(L, (void*)Object);
 	}
 
 	void LuaState::AddReferencedObjects(FReferenceCollector & Collector)

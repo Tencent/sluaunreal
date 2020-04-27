@@ -487,9 +487,18 @@ namespace NS_SLUA {
     int classIndex(lua_State* L) {
         UClass* cls = LuaObject::checkValue<UClass*>(L, 1);
         const char* name = LuaObject::checkValue<const char*>(L, 2);
-        // get blueprint member
-        UFunction* func = cls->FindFunctionByName(UTF8_TO_TCHAR(name));
-        if(func) return LuaObject::push(L,func,cls);
+        
+        UFunction* func = LuaObject::findCacheFunction(L, cls, name);;
+		if (func) {
+			return LuaObject::push(L, func, cls);
+		}
+
+		// get blueprint member
+		func = cls->FindFunctionByName(UTF8_TO_TCHAR(name));
+    	if (func) {
+			LuaObject::cacheFunction(L, cls, name, func);
+			return LuaObject::push(L, func, cls);
+    	}
         return searchExtensionMethod(L,cls,name,true);
     }
 
@@ -1164,7 +1173,7 @@ namespace NS_SLUA {
 	}
 
     // search obj from registry, push cached obj and return true if find it
-    bool LuaObject::getFromCache(lua_State* L,void* obj,const char* tn,bool check) {
+    bool LuaObject::getObjCache(lua_State* L,void* obj,const char* tn,bool check) {
         LuaState* ls = LuaState::get(L);
         ensure(ls->cacheObjRef!=LUA_NOREF);
         lua_geti(L,LUA_REGISTRYINDEX,ls->cacheObjRef);
@@ -1208,19 +1217,65 @@ namespace NS_SLUA {
 	}
 
     void LuaObject::cacheObj(lua_State* L,void* obj) {
-        LuaState* ls = LuaState::get(L);
-        lua_geti(L,LUA_REGISTRYINDEX,ls->cacheObjRef);
-        lua_pushlightuserdata(L,obj);
-        lua_pushvalue(L,-3); // obj userdata
-        lua_rawset(L,-3);
-        lua_pop(L,1); // pop cache table        
+		LuaState* ls = LuaState::get(L);
+		LuaObject::addCache(L, obj, ls->cacheObjRef);
     }
 
-	void LuaObject::removeFromCache(lua_State * L, void* obj)
+	void LuaObject::removeObjCache(lua_State * L, void* obj)
 	{
 		// get cache table
 		LuaState* ls = LuaState::get(L);
-		lua_geti(L, LUA_REGISTRYINDEX, ls->cacheObjRef);
+		LuaObject::removeCache(L, obj, ls->cacheObjRef);
+	}
+
+	bool LuaObject::getFuncCache(lua_State* L, const UFunction* func)
+	{
+		LuaState* ls = LuaState::get(L);
+		ensure(ls->cacheFuncRef != LUA_NOREF);
+		lua_geti(L, LUA_REGISTRYINDEX, ls->cacheFuncRef);
+		// should be a table
+		ensure(lua_type(L, -1) == LUA_TTABLE);
+		// push obj as key
+		lua_pushlightuserdata(L, (void*)func);
+		// get key from table
+		lua_rawget(L, -2);
+		lua_remove(L, -2); // remove cache table
+
+		if (lua_isnil(L, -1)) {
+			lua_pop(L, 1);
+			return false;
+		}
+    	
+		return 1;
+	}
+
+	void LuaObject::cacheFunc(lua_State* L, const UFunction* func)
+	{
+		LuaState* ls = LuaState::get(L);
+		LuaObject::addCache(L, (void*)func, ls->cacheFuncRef);
+	}
+
+	void LuaObject::removeFuncCache(lua_State* L, const UFunction* func)
+	{
+		LuaState* ls = LuaState::get(L);
+		LuaObject::removeCache(L, (void*)func, ls->cacheFuncRef);
+	}
+
+	void LuaObject::addCache(lua_State* L, void* obj, int ref)
+	{
+		LuaState* ls = LuaState::get(L);
+		lua_geti(L, LUA_REGISTRYINDEX, ref);
+		lua_pushlightuserdata(L, obj);
+		lua_pushvalue(L, -3); // obj userdata
+		lua_rawset(L, -3);
+		lua_pop(L, 1); // pop cache table
+	}
+
+	void LuaObject::removeCache(lua_State* L, void* obj, int ref)
+	{
+		// get cache table
+		LuaState* ls = LuaState::get(L);
+		lua_geti(L, LUA_REGISTRYINDEX, ref);
 		ensure(lua_type(L, -1) == LUA_TTABLE);
 		lua_pushlightuserdata(L, obj);
 		lua_pushnil(L);
@@ -1337,7 +1392,7 @@ namespace NS_SLUA {
 			return 1;
 		}
 		UObject* obj = ptr.Get();
-		if (getFromCache(L, obj, "UObject")) return 1;
+		if (getObjCache(L, obj, "UObject")) return 1;
 		int r = pushWeakType(L, new WeakUObjectUD(ptr));
 		if (r) cacheObj(L, obj);
 		return r;
@@ -1413,6 +1468,11 @@ namespace NS_SLUA {
     }
 
     int LuaObject::push(lua_State* L,UFunction* func,UClass* cls)  {
+		if (LuaObject::getFuncCache(L, func))
+		{
+			return 1;
+		}
+    	
         lua_pushlightuserdata(L, func);
         if(cls) {
             lua_pushlightuserdata(L, cls);
@@ -1420,6 +1480,8 @@ namespace NS_SLUA {
         }
         else
             lua_pushcclosure(L, ufuncClosure, 1);
+
+		LuaObject::cacheFunc(L, func);
         return 1;
     }
 

@@ -238,7 +238,7 @@ namespace NS_SLUA {
             return ret;
         }
 
-        bool toProperty(UProperty* p,uint8* ptr);
+        bool toProperty(FProperty* p,uint8* ptr);
         bool callByUFunction(UFunction* ufunc,uint8* parms,LuaVar* pSelf = nullptr,FOutParmRec* OutParms = nullptr);
 
 		// get associate state
@@ -339,7 +339,7 @@ namespace NS_SLUA {
         }
 
         int docall(int argn) const;
-        int pushArgByParms(UProperty* prop,uint8* parms);
+        int pushArgByParms(FProperty* prop,uint8* parms);
 
         void clone(const LuaVar& other);
         void move(LuaVar&& other);

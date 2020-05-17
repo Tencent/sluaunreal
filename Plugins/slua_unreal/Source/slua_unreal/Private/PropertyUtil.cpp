@@ -23,63 +23,63 @@ namespace NS_SLUA {
 		return propOuter.Get();
 	}
 
-    UProperty* PropertyProto::createProperty(const PropertyProto& proto) {
-		UProperty* p = nullptr;
-		UObject* outer = getPropertyOutter();
+    FProperty* PropertyProto::createProperty(const PropertyProto& proto) {
+		FProperty* p = nullptr;
+	/*	UObject* outer = getPropertyOutter();
 		switch (proto.type) {
 			case EPropertyClass::Byte:
-				p = NewObject<UProperty>(outer, UByteProperty::StaticClass());
+				p = NewObject<FProperty>(outer, FByteProperty::StaticClass());
                 break;
 			case EPropertyClass::Int8:
-				p = NewObject<UProperty>(outer, UInt8Property::StaticClass());
+				p = NewObject<FProperty>(outer, FInt8Property::StaticClass());
                 break;
 			case EPropertyClass::Int16:
-				p = NewObject<UProperty>(outer, UInt16Property::StaticClass());
+				p = NewObject<FProperty>(outer, FInt16Property::StaticClass());
                 break;
 			case EPropertyClass::Int:
-				p = NewObject<UProperty>(outer, UIntProperty::StaticClass());
+				p = NewObject<FProperty>(outer, FIntProperty::StaticClass());
                 break;
 			case EPropertyClass::Int64:
-				p = NewObject<UProperty>(outer, UInt64Property::StaticClass());
+				p = NewObject<FProperty>(outer, FInt64Property::StaticClass());
                 break;
 			case EPropertyClass::UInt16:
-				p = NewObject<UProperty>(outer, UUInt16Property::StaticClass());
+				p = NewObject<FProperty>(outer, FUInt16Property::StaticClass());
                 break;
 			case EPropertyClass::UInt32:
-				p = NewObject<UProperty>(outer, UUInt32Property::StaticClass());
+				p = NewObject<FProperty>(outer, FUInt32Property::StaticClass());
                 break;
 			case EPropertyClass::UInt64:
-				p = NewObject<UProperty>(outer, UUInt64Property::StaticClass());
+				p = NewObject<FProperty>(outer, FUInt64Property::StaticClass());
                 break;
 			case EPropertyClass::UnsizedInt:
-				p = NewObject<UProperty>(outer, UUInt64Property::StaticClass());
+				p = NewObject<FProperty>(outer, FUInt64Property::StaticClass());
                 break;
 			case EPropertyClass::UnsizedUInt:
-				p = NewObject<UProperty>(outer, UUInt64Property::StaticClass());
+				p = NewObject<FProperty>(outer, FUInt64Property::StaticClass());
                 break;
 			case EPropertyClass::Float:
-				p = NewObject<UProperty>(outer, UFloatProperty::StaticClass());
+				p = NewObject<FProperty>(outer, FFloatProperty::StaticClass());
                 break;
 			case EPropertyClass::Double:
-				p = NewObject<UProperty>(outer, UDoubleProperty::StaticClass());
+				p = NewObject<FProperty>(outer, FDoubleProperty::StaticClass());
                 break;
 			case EPropertyClass::Bool:
-				p = NewObject<UProperty>(outer, UBoolProperty::StaticClass());
+				p = NewObject<FProperty>(outer, FBoolProperty::StaticClass());
                 break;
 			case EPropertyClass::Object: {
-				auto op = NewObject<UObjectProperty>(outer, UObjectProperty::StaticClass());
+				auto op = NewObject<FObjectProperty>(outer, FObjectProperty::StaticClass());
 				op->SetPropertyClass(proto.cls);
 				p = op;
 				break;
 			}
 			case EPropertyClass::Str:
-				p = NewObject<UProperty>(outer, UStrProperty::StaticClass());
+				p = NewObject<FProperty>(outer, FStrProperty::StaticClass());
                 break;
 		}
 		if (p) {
 			FArchive ar;
 			p->LinkWithoutChangingOffset(ar);
-		}
+		}*/
 			
         return p;
 	}

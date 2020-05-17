@@ -859,7 +859,7 @@ namespace NS_SLUA {
 		return nullptr;
 	}
 
-	UProperty* LuaState::ClassCache::findProp(UClass* uclass, const char* pname)
+	FProperty* LuaState::ClassCache::findProp(UClass* uclass, const char* pname)
 	{
 		auto item = cachePropMap.Find(uclass);
 		if (!item) return nullptr;
@@ -875,7 +875,7 @@ namespace NS_SLUA {
 		item.Add(UTF8_TO_TCHAR(fname), func);
 	}
 
-	void LuaState::ClassCache::cacheProp(UClass* uclass, const char* pname, UProperty* prop)
+	void LuaState::ClassCache::cacheProp(UClass* uclass, const char* pname, FProperty* prop)
 	{
 		auto& item = cachePropMap.FindOrAdd(uclass);
 		item.Add(UTF8_TO_TCHAR(pname), prop);

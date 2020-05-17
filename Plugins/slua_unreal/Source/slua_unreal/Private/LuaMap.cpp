@@ -36,12 +36,12 @@ namespace NS_SLUA {
 		SluaUtil::reg(L, "Map", __ctor);
 	}
 
-	int LuaMap::push(lua_State* L, UProperty* keyProp, UProperty* valueProp, const FScriptMap* buf, bool frombp) {
+	int LuaMap::push(lua_State* L, FProperty* keyProp, FProperty* valueProp, const FScriptMap* buf, bool frombp) {
 		auto luaMap = new LuaMap(keyProp, valueProp, buf, frombp);
 		return LuaObject::pushType(L, luaMap, "LuaMap", setupMT, gc);
 	}
 
-	int LuaMap::push(lua_State* L, UMapProperty* prop, UObject* obj) {
+	int LuaMap::push(lua_State* L, FMapProperty* prop, UObject* obj) {
 		auto scriptMap = prop->ContainerPtrToValuePtr<FScriptMap>(obj);
 		if(LuaObject::getFromCache(L,scriptMap,"LuaMap")) return 1;
 		auto luaMap = new LuaMap(prop,obj);
@@ -50,7 +50,7 @@ namespace NS_SLUA {
 		return 1;
 	}
 
-	void LuaMap::clone(FScriptMap* dest,UProperty* keyProp, UProperty* valueProp,const FScriptMap* src) {
+	void LuaMap::clone(FScriptMap* dest,FProperty* keyProp, FProperty* valueProp,const FScriptMap* src) {
 		if(!src || src->Num()==0)
 			return;
 
@@ -66,7 +66,7 @@ namespace NS_SLUA {
 	}
 
 
-	LuaMap::LuaMap(UProperty* kp, UProperty* vp, const FScriptMap* buf, bool frombp) : 
+	LuaMap::LuaMap(FProperty* kp, FProperty* vp, const FScriptMap* buf, bool frombp) : 
 		map( new FScriptMap ),
 		keyProp(kp), 
 		valueProp(vp) ,
@@ -84,7 +84,7 @@ namespace NS_SLUA {
 		shouldFree = true;
 	} 
 
-	LuaMap::LuaMap(UMapProperty* p, UObject* obj) : 
+	LuaMap::LuaMap(FMapProperty* p, UObject* obj) : 
 		map( p->ContainerPtrToValuePtr<FScriptMap>(obj) ),
 		keyProp(p->KeyProp), 
 		valueProp(p->ValueProp) ,
@@ -211,7 +211,7 @@ namespace NS_SLUA {
 
 	// modified FScriptMapHelper::RemovePair function to call LuaMap::RemoveAt
 	bool LuaMap::removePair(const void* KeyPtr) {
-		UProperty* LocalKeyPropForCapture = keyProp;
+		FProperty* LocalKeyPropForCapture = keyProp;
 		if (uint8* Entry = map->FindValue(KeyPtr, helper.MapLayout,
 			[LocalKeyPropForCapture](const void* ElementKey) { return LocalKeyPropForCapture->GetValueTypeHash(ElementKey); },
 			[LocalKeyPropForCapture](const void* A, const void* B) { return LocalKeyPropForCapture->Identical(A, B); }

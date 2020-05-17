@@ -21,6 +21,7 @@
 #include <atomic>
 #include "HAL/Runnable.h"
 #include "Tickable.h"
+#include "UObject/WeakFieldPtr.h"
 
 #define SLUA_LUACODE "[sluacode]"
 #define SLUA_CPPINST "__cppinst"
@@ -236,13 +237,13 @@ namespace NS_SLUA {
 			typedef TMap<FString, TWeakObjectPtr<UFunction>> CacheFuncItem;
 			typedef TMap<TWeakObjectPtr<UClass>, CacheFuncItem> CacheFuncMap;
 
-			typedef TMap<FString, TWeakObjectPtr<UProperty>> CachePropItem;
+			typedef TMap<FString, TWeakFieldPtr<FProperty>> CachePropItem;
 			typedef TMap<TWeakObjectPtr<UClass>, CachePropItem> CachePropMap;
 			
 			UFunction* findFunc(UClass* uclass, const char* fname);
-			UProperty* findProp(UClass* uclass, const char* pname);
+			FProperty* findProp(UClass* uclass, const char* pname);
 			void cacheFunc(UClass* uclass, const char* fname, UFunction* func);
-			void cacheProp(UClass* uclass, const char* pname, UProperty* prop);
+			void cacheProp(UClass* uclass, const char* pname, FProperty* prop);
 			void clear() {
 				cacheFuncMap.Empty();
 				cachePropMap.Empty();

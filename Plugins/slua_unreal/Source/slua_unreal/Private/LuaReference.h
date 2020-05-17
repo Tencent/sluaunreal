@@ -21,6 +21,6 @@ namespace NS_SLUA {
 
 	namespace LuaReference{
 		void addRefByStruct(FReferenceCollector& collector, UStruct* us, void* base, bool container=true);
-		bool addRefByProperty(FReferenceCollector& collector, const UProperty* prop, void* ptr, bool container=true);
+		bool addRefByProperty(FReferenceCollector& collector, const FProperty* prop, void* ptr, bool container=true);
 	}
 }

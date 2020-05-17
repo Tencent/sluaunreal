@@ -580,7 +580,7 @@ namespace NS_SLUA {
         return lua_gettop(L)-top+1;
     }
 
-    int LuaVar::pushArgByParms(UProperty* prop,uint8* parms) {
+    int LuaVar::pushArgByParms(FProperty* prop,uint8* parms) {
         auto L = getState();
         if (LuaObject::push(L,prop,parms,false))
             return prop->ElementSize;
@@ -616,8 +616,8 @@ namespace NS_SLUA {
 			n++;
 		}
         // push arguments to lua state
-        for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
-            UProperty* prop = *it;
+        for(TFieldIterator<FProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
+            FProperty* prop = *it;
             uint64 propflag = prop->GetPropertyFlags();
             if((propflag&CPF_ReturnParm) || IsRealOutParam(propflag))
                 continue;
@@ -641,8 +641,8 @@ namespace NS_SLUA {
         }
 
 		// fill lua return value to blueprint stack if argument is out param
-		for (TFieldIterator<UProperty> it(func); remain >0 && it && (it->PropertyFlags&CPF_Parm); ++it) {
-			UProperty* prop = *it;
+		for (TFieldIterator<FProperty> it(func); remain >0 && it && (it->PropertyFlags&CPF_Parm); ++it) {
+			FProperty* prop = *it;
 			uint64 propflag = prop->GetPropertyFlags();
 			if (IsRealOutParam(propflag))
 			{
@@ -713,7 +713,7 @@ namespace NS_SLUA {
         other.vars = nullptr;
     }
 
-    bool LuaVar::toProperty(UProperty* p,uint8* ptr) {
+    bool LuaVar::toProperty(FProperty* p,uint8* ptr) {
 
         auto func = LuaObject::getChecker(p);
         if(func) {

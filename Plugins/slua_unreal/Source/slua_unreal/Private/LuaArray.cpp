@@ -26,7 +26,7 @@ namespace NS_SLUA {
         SluaUtil::reg(L,"Array",__ctor);
     }
 
-    void LuaArray::clone(FScriptArray* destArray, UProperty* p, const FScriptArray* srcArray) {
+    void LuaArray::clone(FScriptArray* destArray, FProperty* p, const FScriptArray* srcArray) {
         // blueprint stack will destroy the TArray
         // so deep-copy construct FScriptArray
         // it's very expensive
@@ -44,7 +44,7 @@ namespace NS_SLUA {
         }
     }
 
-	LuaArray::LuaArray(UProperty* p, FScriptArray* buf)
+	LuaArray::LuaArray(FProperty* p, FScriptArray* buf)
 		: inner(p)
 		, prop(nullptr)
 		, propObj(nullptr)
@@ -54,7 +54,7 @@ namespace NS_SLUA {
 		shouldFree = true;
     }
 
-	LuaArray::LuaArray(UArrayProperty* p, UObject* obj)
+	LuaArray::LuaArray(FArrayProperty* p, UObject* obj)
 		: inner(p->Inner)
 		, prop(p)
 		, propObj(obj)
@@ -164,12 +164,12 @@ namespace NS_SLUA {
 		}
     }
 
-    int LuaArray::push(lua_State* L,UProperty* inner,FScriptArray* data) {
+    int LuaArray::push(lua_State* L,FProperty* inner,FScriptArray* data) {
         LuaArray* luaArrray = new LuaArray(inner,data);
 		return LuaObject::pushType(L,luaArrray,"LuaArray",setupMT,gc);
     }
 
-	int LuaArray::push(lua_State* L, UArrayProperty* prop, UObject* obj) {
+	int LuaArray::push(lua_State* L, FArrayProperty* prop, UObject* obj) {
 		auto scriptArray = prop->ContainerPtrToValuePtr<FScriptArray>(obj);
 		if (LuaObject::getFromCache(L, scriptArray, "LuaArray")) return 1;
 		LuaArray* luaArray = new LuaArray(prop, obj);
@@ -195,7 +195,7 @@ namespace NS_SLUA {
     int LuaArray::Get(lua_State* L) {
         CheckUD(LuaArray,L,1);
         int i = LuaObject::checkValue<int>(L,2);
-        UProperty* element = UD->inner;
+        FProperty* element = UD->inner;
 		if (!UD->isValidIndex(i)) {
 			luaL_error(L, "Array get index %d out of range", i);
 			return 0;
@@ -208,7 +208,7 @@ namespace NS_SLUA {
 	{
 		CheckUD(LuaArray, L, 1);
 		int index = LuaObject::checkValue<int>(L, 2);
-		UProperty* element = UD->inner;
+		FProperty* element = UD->inner;
 		auto checker = LuaObject::getChecker(element);
 		if (checker) {
 			if (!UD->isValidIndex(index))
@@ -226,7 +226,7 @@ namespace NS_SLUA {
 	int LuaArray::Add(lua_State* L) {
         CheckUD(LuaArray,L,1);
         // get element property
-        UProperty* element = UD->inner;
+        FProperty* element = UD->inner;
         auto checker = LuaObject::getChecker(element);
         if(checker) {
             checker(L,element,UD->add(),2);
@@ -245,7 +245,7 @@ namespace NS_SLUA {
         int index = LuaObject::checkValue<int>(L,2);
         
         // get element property
-        UProperty* element = UD->inner;
+        FProperty* element = UD->inner;
         auto checker = LuaObject::getChecker(element);
         if(checker) {
 

@@ -41,8 +41,8 @@ namespace NS_SLUA {
 	static UScriptStruct* FPrimaryAssetIdStruct = nullptr;
 	static UScriptStruct* FDateTimeStruct = nullptr;
 
-	typedef void(*pushStructFunction)(lua_State* L, UStructProperty* p, uint8* parms);
-	typedef void(*checkStructFunction)(lua_State* L, UStructProperty* p, uint8* parms, int i);
+	typedef void(*pushStructFunction)(lua_State* L, FStructProperty* p, uint8* parms);
+	typedef void(*checkStructFunction)(lua_State* L, FStructProperty* p, uint8* parms, int i);
 
 	TMap<UScriptStruct*, pushStructFunction> _pushStructMap;
 	TMap<UScriptStruct*, checkStructFunction> _checkStructMap;
@@ -51,13 +51,13 @@ namespace NS_SLUA {
 		return new FSlateFontInfo();
 	}
 
-	static void __pushFSlateFontInfo(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFSlateFontInfo(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFSlateFontInfo();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FSlateFontInfo>(L, "FSlateFontInfo", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFSlateFontInfo(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFSlateFontInfo(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FSlateFontInfo*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FSlateFontInfo nil value");
@@ -70,13 +70,13 @@ namespace NS_SLUA {
 		return new FSlateBrush();
 	}
 
-	static void __pushFSlateBrush(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFSlateBrush(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFSlateBrush();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FSlateBrush>(L, "FSlateBrush", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFSlateBrush(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFSlateBrush(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FSlateBrush*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FSlateBrush nil value");
@@ -89,13 +89,13 @@ namespace NS_SLUA {
 		return new FMargin();
 	}
 
-	static void __pushFMargin(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFMargin(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFMargin();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FMargin>(L, "FMargin", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFMargin(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFMargin(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FMargin*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FMargin nil value");
@@ -108,13 +108,13 @@ namespace NS_SLUA {
 		return new FGeometry();
 	}
 
-	static void __pushFGeometry(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFGeometry(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFGeometry();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FGeometry>(L, "FGeometry", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFGeometry(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFGeometry(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FGeometry*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FGeometry nil value");
@@ -127,13 +127,13 @@ namespace NS_SLUA {
 		return new FSlateColor();
 	}
 
-	static void __pushFSlateColor(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFSlateColor(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFSlateColor();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FSlateColor>(L, "FSlateColor", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFSlateColor(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFSlateColor(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FSlateColor*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FSlateColor nil value");
@@ -146,13 +146,13 @@ namespace NS_SLUA {
 		return new FRotator();
 	}
 
-	static void __pushFRotator(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFRotator(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFRotator();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FRotator>(L, "FRotator", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFRotator(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFRotator(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FRotator*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FRotator nil value");
@@ -165,13 +165,13 @@ namespace NS_SLUA {
 		return new FTransform();
 	}
 
-	static void __pushFTransform(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFTransform(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFTransform();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FTransform>(L, "FTransform", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFTransform(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFTransform(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FTransform*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FTransform nil value");
@@ -184,13 +184,13 @@ namespace NS_SLUA {
 		return new FLinearColor();
 	}
 
-	static void __pushFLinearColor(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFLinearColor(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFLinearColor();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FLinearColor>(L, "FLinearColor", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFLinearColor(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFLinearColor(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FLinearColor*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FLinearColor nil value");
@@ -203,13 +203,13 @@ namespace NS_SLUA {
 		return new FColor();
 	}
 
-	static void __pushFColor(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFColor(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFColor();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FColor>(L, "FColor", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFColor(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFColor(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FColor*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FColor nil value");
@@ -222,13 +222,13 @@ namespace NS_SLUA {
 		return new FVector();
 	}
 
-	static void __pushFVector(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFVector(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFVector();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FVector>(L, "FVector", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFVector(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFVector(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FVector*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FVector nil value");
@@ -241,13 +241,13 @@ namespace NS_SLUA {
 		return new FVector2D();
 	}
 
-	static void __pushFVector2D(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFVector2D(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFVector2D();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FVector2D>(L, "FVector2D", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFVector2D(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFVector2D(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FVector2D*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FVector2D nil value");
@@ -260,13 +260,13 @@ namespace NS_SLUA {
 		return new FRandomStream();
 	}
 
-	static void __pushFRandomStream(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFRandomStream(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFRandomStream();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FRandomStream>(L, "FRandomStream", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFRandomStream(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFRandomStream(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FRandomStream*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FRandomStream nil value");
@@ -279,13 +279,13 @@ namespace NS_SLUA {
 		return new FGuid();
 	}
 
-	static void __pushFGuid(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFGuid(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFGuid();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FGuid>(L, "FGuid", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFGuid(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFGuid(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FGuid*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FGuid nil value");
@@ -298,13 +298,13 @@ namespace NS_SLUA {
 		return new FBox2D();
 	}
 
-	static void __pushFBox2D(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFBox2D(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFBox2D();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FBox2D>(L, "FBox2D", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFBox2D(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFBox2D(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FBox2D*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FBox2D nil value");
@@ -317,13 +317,13 @@ namespace NS_SLUA {
 		return new FFloatRangeBound();
 	}
 
-	static void __pushFFloatRangeBound(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFFloatRangeBound(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFFloatRangeBound();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFFloatRangeBound(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFFloatRangeBound(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FFloatRangeBound*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FFloatRangeBound nil value");
@@ -336,13 +336,13 @@ namespace NS_SLUA {
 		return new FFloatRange();
 	}
 
-	static void __pushFFloatRange(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFFloatRange(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFFloatRange();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FFloatRange>(L, "FFloatRange", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFFloatRange(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFFloatRange(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FFloatRange*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FFloatRange nil value");
@@ -355,13 +355,13 @@ namespace NS_SLUA {
 		return new FInt32RangeBound();
 	}
 
-	static void __pushFInt32RangeBound(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFInt32RangeBound(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFInt32RangeBound();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFInt32RangeBound(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFInt32RangeBound(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FInt32RangeBound*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FInt32RangeBound nil value");
@@ -374,13 +374,13 @@ namespace NS_SLUA {
 		return new FInt32Range();
 	}
 
-	static void __pushFInt32Range(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFInt32Range(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFInt32Range();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FInt32Range>(L, "FInt32Range", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFInt32Range(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFInt32Range(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FInt32Range*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FInt32Range nil value");
@@ -393,13 +393,13 @@ namespace NS_SLUA {
 		return new FFloatInterval();
 	}
 
-	static void __pushFFloatInterval(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFFloatInterval(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFFloatInterval();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FFloatInterval>(L, "FFloatInterval", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFFloatInterval(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFFloatInterval(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FFloatInterval*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FFloatInterval nil value");
@@ -412,13 +412,13 @@ namespace NS_SLUA {
 		return new FInt32Interval();
 	}
 
-	static void __pushFInt32Interval(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFInt32Interval(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFInt32Interval();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FInt32Interval>(L, "FInt32Interval", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFInt32Interval(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFInt32Interval(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FInt32Interval*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FInt32Interval nil value");
@@ -431,13 +431,13 @@ namespace NS_SLUA {
 		return new FPrimaryAssetType();
 	}
 
-	static void __pushFPrimaryAssetType(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFPrimaryAssetType(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFPrimaryAssetType();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FPrimaryAssetType>(L, "FPrimaryAssetType", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFPrimaryAssetType(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFPrimaryAssetType(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FPrimaryAssetType*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FPrimaryAssetType nil value");
@@ -450,13 +450,13 @@ namespace NS_SLUA {
 		return new FPrimaryAssetId();
 	}
 
-	static void __pushFPrimaryAssetId(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFPrimaryAssetId(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFPrimaryAssetId();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFPrimaryAssetId(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFPrimaryAssetId(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FPrimaryAssetId*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FPrimaryAssetId nil value");
@@ -469,13 +469,13 @@ namespace NS_SLUA {
 		return new FDateTime();
 	}
 
-	static void __pushFDateTime(lua_State* L, UStructProperty* p, uint8* parms) {
+	static void __pushFDateTime(lua_State* L, FStructProperty* p, uint8* parms) {
 		auto ptr = __newFDateTime();
 		p->CopyCompleteValue(ptr, parms);
 		LuaObject::push<FDateTime>(L, "FDateTime", ptr, UD_AUTOGC);
 	}
 
-	static void __checkFDateTime(lua_State* L, UStructProperty* p, uint8* parms, int i) {
+	static void __checkFDateTime(lua_State* L, FStructProperty* p, uint8* parms, int i) {
 		auto v = LuaObject::checkValue<FDateTime*>(L, i);
 		if (!v) {
 			luaL_error(L, "check FDateTime nil value");
@@ -7920,7 +7920,7 @@ namespace NS_SLUA {
 
 	};
 
-	int LuaWrapper::pushValue(lua_State* L, UStructProperty* p, UScriptStruct* uss, uint8* parms) {
+	int LuaWrapper::pushValue(lua_State* L, FStructProperty* p, UScriptStruct* uss, uint8* parms) {
 		auto vptr = _pushStructMap.Find(uss);
 		if (vptr != nullptr) {
 			(*vptr)(L, p, parms);
@@ -7930,7 +7930,7 @@ namespace NS_SLUA {
 		}
 	}
 
-	int LuaWrapper::checkValue(lua_State* L, UStructProperty* p, UScriptStruct* uss, uint8* parms, int i) {
+	int LuaWrapper::checkValue(lua_State* L, FStructProperty* p, UScriptStruct* uss, uint8* parms, int i) {
 		auto vptr = _checkStructMap.Find(uss);
 		if (vptr != nullptr) {
 			(*vptr)(L, p, parms, i);

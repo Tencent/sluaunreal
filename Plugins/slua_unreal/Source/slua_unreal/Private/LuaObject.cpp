@@ -39,8 +39,8 @@
 namespace NS_SLUA { 
 	static const FName NAME_LatentInfo = TEXT("LatentInfo");
 
-	TMap<UClass*,LuaObject::PushPropertyFunction> pusherMap;
-	TMap<UClass*,LuaObject::CheckPropertyFunction> checkerMap;
+	TMap<FFieldClass*,LuaObject::PushPropertyFunction> pusherMap;
+	TMap<FFieldClass*,LuaObject::CheckPropertyFunction> checkerMap;
 
 	struct ExtensionField {
 		bool isFunction = true;
@@ -71,7 +71,7 @@ namespace NS_SLUA {
             uint8* Code;
             uint8* Locals;
             
-            UProperty* MostRecentProperty;
+            FProperty* MostRecentProperty;
             uint8* MostRecentPropertyAddress;
             
             /** The execution flow stack for compiled Kismet code */
@@ -397,35 +397,35 @@ namespace NS_SLUA {
 		else return strcmp(name,tn)==0;
 	}
 
-    LuaObject::PushPropertyFunction LuaObject::getPusher(UClass* cls) {
+    LuaObject::PushPropertyFunction LuaObject::getPusher(FFieldClass* cls) {
         auto it = pusherMap.Find(cls);
         if(it!=nullptr)
             return *it;
         return nullptr;
     }
 
-    LuaObject::CheckPropertyFunction LuaObject::getChecker(UClass* cls) {
+    LuaObject::CheckPropertyFunction LuaObject::getChecker(FFieldClass* cls) {
         auto it = checkerMap.Find(cls);
         if(it!=nullptr)
             return *it;
         return nullptr;
     }
 
-    LuaObject::PushPropertyFunction LuaObject::getPusher(UProperty* prop) {
+    LuaObject::PushPropertyFunction LuaObject::getPusher(FProperty* prop) {
         return getPusher(prop->GetClass());
     }
 
-    LuaObject::CheckPropertyFunction LuaObject::getChecker(UProperty* prop) {
+    LuaObject::CheckPropertyFunction LuaObject::getChecker(FProperty* prop) {
         return getChecker(prop->GetClass());        
     }
 
     
 
-    void regPusher(UClass* cls,LuaObject::PushPropertyFunction func) {
+    void regPusher(FFieldClass* cls,LuaObject::PushPropertyFunction func) {
 		pusherMap.Add(cls, func);
     }
 
-    void regChecker(UClass* cls,LuaObject::CheckPropertyFunction func) {
+    void regChecker(FFieldClass* cls,LuaObject::CheckPropertyFunction func) {
 		checkerMap.Add(cls, func);
     }
 
@@ -507,7 +507,7 @@ namespace NS_SLUA {
         return 0;
     }
 
-    int fillParamFromState(lua_State* L,UProperty* prop,uint8* params,int i) {
+    int fillParamFromState(lua_State* L,FProperty* prop,uint8* params,int i) {
 
         // if is out param, can accept nil
         uint64 propflag = prop->GetPropertyFlags();
@@ -529,8 +529,8 @@ namespace NS_SLUA {
 
     void LuaObject::fillParam(lua_State* L,int i,UFunction* func,uint8* params) {
 		auto funcFlag = func->FunctionFlags;
-        for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
-            UProperty* prop = *it;
+        for(TFieldIterator<FProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
+            FProperty* prop = *it;
             uint64 propflag = prop->GetPropertyFlags();
 			if (funcFlag & EFunctionFlags::FUNC_Native) {
 				if ((propflag&CPF_ReturnParm))
@@ -557,67 +557,67 @@ namespace NS_SLUA {
     }
 
 	void LuaObject::callRpc(lua_State* L, UObject* obj, UFunction* func, uint8* params) {
-		// call rpc without outparams
-		const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
-		uint8* ReturnValueAddress = bHasReturnParam ? ((uint8*)params + func->ReturnValueOffset) : nullptr;
-        
-        #if ENGINE_MINOR_VERSION >= 23 && (PLATFORM_MAC || PLATFORM_IOS)
-            FNewFrame NewStack(obj, func, params, NULL, func->Children);
-        #else
-            FFrame NewStack(obj, func, params, NULL, func->Children);
-        #endif
-        
-        #if ENGINE_MINOR_VERSION < 25
-            if (func->ReturnValueOffset != MAX_uint16) {
-                UProperty* ReturnProperty = func->GetReturnProperty();
-                if (ensure(ReturnProperty)) {
-                    FOutParmRec* RetVal = (FOutParmRec*)FMemory_Alloca(sizeof(FOutParmRec));
+		//// call rpc without outparams
+		//const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
+		//uint8* ReturnValueAddress = bHasReturnParam ? ((uint8*)params + func->ReturnValueOffset) : nullptr;
+  //      
+  //      #if ENGINE_MINOR_VERSION >= 23 && (PLATFORM_MAC || PLATFORM_IOS)
+  //          FNewFrame NewStack(obj, func, params, NULL, func->Children);
+  //      #else
+  //          FFrame NewStack(obj, func, params, NULL, func->Children);
+  //      #endif
+  //      
+  //      #if ENGINE_MINOR_VERSION < 25
+  //          if (func->ReturnValueOffset != MAX_uint16) {
+  //              FProperty* ReturnProperty = func->GetReturnProperty();
+  //              if (ensure(ReturnProperty)) {
+  //                  FOutParmRec* RetVal = (FOutParmRec*)FMemory_Alloca(sizeof(FOutParmRec));
 
-                    /* Our context should be that we're in a variable assignment to the return value, so ensure that we have a valid property to return to */
-                    RetVal->PropAddr = (uint8*)FMemory_Alloca(ReturnProperty->GetSize());
-                    RetVal->Property = ReturnProperty;
-                    NewStack.OutParms = RetVal;
-                }
-            }
+  //                  /* Our context should be that we're in a variable assignment to the return value, so ensure that we have a valid property to return to */
+  //                  RetVal->PropAddr = (uint8*)FMemory_Alloca(ReturnProperty->GetSize());
+  //                  RetVal->Property = ReturnProperty;
+  //                  NewStack.OutParms = RetVal;
+  //              }
+  //          }
 
-            NewStack.Locals = params;
-            FOutParmRec** LastOut = &NewStack.OutParms;
+  //          NewStack.Locals = params;
+  //          FOutParmRec** LastOut = &NewStack.OutParms;
 
-            for (UProperty* Property = (UProperty*)func->Children; Property!=nullptr; Property = (UProperty*)Property->Next){
-                if (Property->PropertyFlags & CPF_OutParm){
+  //          for (FProperty* Property = (FProperty*)func->Children; Property!=nullptr; Property = (FProperty*)Property->Next){
+  //              if (Property->PropertyFlags & CPF_OutParm){
 
-                    CA_SUPPRESS(6263)
-                        FOutParmRec* Out = (FOutParmRec*)FMemory_Alloca(sizeof(FOutParmRec));
-                    // set the address and property in the out param info
-                    // warning: Stack.MostRecentPropertyAddress could be NULL for optional out parameters
-                    // if that's the case, we use the extra memory allocated for the out param in the function's locals
-                    // so there's always a valid address
-                    Out->PropAddr = Property->ContainerPtrToValuePtr<uint8>(NewStack.Locals);
-                    Out->Property = Property;
+  //                  CA_SUPPRESS(6263)
+  //                      FOutParmRec* Out = (FOutParmRec*)FMemory_Alloca(sizeof(FOutParmRec));
+  //                  // set the address and property in the out param info
+  //                  // warning: Stack.MostRecentPropertyAddress could be NULL for optional out parameters
+  //                  // if that's the case, we use the extra memory allocated for the out param in the function's locals
+  //                  // so there's always a valid address
+  //                  Out->PropAddr = Property->ContainerPtrToValuePtr<uint8>(NewStack.Locals);
+  //                  Out->Property = Property;
 
-                    // add the new out param info to the stack frame's linked list
-                    if (*LastOut) {
-                        (*LastOut)->NextOutParm = Out;
-                        LastOut = &(*LastOut)->NextOutParm;
-                    } else {
-                        *LastOut = Out;
-                    }
-                } else {
-                    // copy the result of the expression for this parameter into the appropriate part of the local variable space
-                    uint8* Param = Property->ContainerPtrToValuePtr<uint8>(NewStack.Locals);
-                    Property->InitializeValue_InContainer(NewStack.Locals);
-                }
-            }
-        #else
-            NewStack.OutParms = nullptr;
-        #endif
-    
-        #if ENGINE_MINOR_VERSION >= 23 && (PLATFORM_MAC || PLATFORM_IOS)
-            FFrame *frame = (FFrame *)&NewStack;
-            func->Invoke(obj, *frame, ReturnValueAddress);
-        #else
-            func->Invoke(obj, NewStack, ReturnValueAddress);
-        #endif
+  //                  // add the new out param info to the stack frame's linked list
+  //                  if (*LastOut) {
+  //                      (*LastOut)->NextOutParm = Out;
+  //                      LastOut = &(*LastOut)->NextOutParm;
+  //                  } else {
+  //                      *LastOut = Out;
+  //                  }
+  //              } else {
+  //                  // copy the result of the expression for this parameter into the appropriate part of the local variable space
+  //                  uint8* Param = Property->ContainerPtrToValuePtr<uint8>(NewStack.Locals);
+  //                  Property->InitializeValue_InContainer(NewStack.Locals);
+  //              }
+  //          }
+  //      #else
+  //          NewStack.OutParms = nullptr;
+  //      #endif
+  //  
+  //      #if ENGINE_MINOR_VERSION >= 23 && (PLATFORM_MAC || PLATFORM_IOS)
+  //          FFrame *frame = (FFrame *)&NewStack;
+  //          func->Invoke(obj, *frame, ReturnValueAddress);
+  //      #else
+  //          func->Invoke(obj, NewStack, ReturnValueAddress);
+  //      #endif
 	}
 
 	void LuaObject::callUFunction(lua_State* L, UObject* obj, UFunction* func, uint8* params) {
@@ -639,14 +639,14 @@ namespace NS_SLUA {
 		// put return value as head
         int ret = 0;
         if(bHasReturnParam) {
-            UProperty* p = func->GetReturnProperty();
+            FProperty* p = func->GetReturnProperty();
             ret += LuaObject::push(L,p,params+p->GetOffset_ForInternal());
         }
 
 		bool isLatentFunction = false;
         // push out parms
-        for(TFieldIterator<UProperty> it(func);it;++it) {
-            UProperty* p = *it;
+        for(TFieldIterator<FProperty> it(func);it;++it) {
+            FProperty* p = *it;
             uint64 propflag = p->GetPropertyFlags();
             // skip return param
             if(propflag&CPF_ReturnParm)
@@ -693,9 +693,9 @@ namespace NS_SLUA {
         
 		uint8* params = (uint8*)FMemory_Alloca(func->ParmsSize);
 		FMemory::Memzero(params, func->ParmsSize);
-		for (TFieldIterator<UProperty> it(func); it && it->HasAnyPropertyFlags(CPF_Parm); ++it)
+		for (TFieldIterator<FProperty> it(func); it && it->HasAnyPropertyFlags(CPF_Parm); ++it)
 		{
-			UProperty* localProp = *it;
+			FProperty* localProp = *it;
 			checkSlow(localProp);
 			if (!localProp->HasAnyPropertyFlags(CPF_ZeroConstructor))
 			{
@@ -711,7 +711,7 @@ namespace NS_SLUA {
 		// return value to push lua stack
 		int outParamCount = LuaObject::returnValue(L, func, params);
 
-		for (TFieldIterator<UProperty> it(func); it && (it->HasAnyPropertyFlags(CPF_Parm)); ++it)
+		for (TFieldIterator<FProperty> it(func); it && (it->HasAnyPropertyFlags(CPF_Parm)); ++it)
 		{
 			it->DestroyValue_InContainer(params);
 		}
@@ -731,13 +731,13 @@ namespace NS_SLUA {
         state->classMap.cacheFunc(cls,fname,func);
     }
 
-    UProperty* LuaObject::findCacheProperty(lua_State* L, UClass* cls, const char* pname)
+    FProperty* LuaObject::findCacheProperty(lua_State* L, UClass* cls, const char* pname)
     {
 		auto state = LuaState::get(L);
 		return state->classMap.findProp(cls, pname);
     }
 
-    void LuaObject::cacheProperty(lua_State* L, UClass* cls, const char* pname, UProperty* property)
+    void LuaObject::cacheProperty(lua_State* L, UClass* cls, const char* pname, FProperty* property)
     {
 		auto state = LuaState::get(L);
 		state->classMap.cacheProp(cls, pname, property);
@@ -746,7 +746,7 @@ namespace NS_SLUA {
 	// cache class property's
 	void cachePropertys(lua_State* L, UClass* cls) {
 		auto PropertyLink = cls->PropertyLink;
-		for (UProperty* Property = PropertyLink; Property != NULL; Property = Property->PropertyLinkNext) {
+		for (FProperty* Property = PropertyLink; Property != NULL; Property = Property->PropertyLinkNext) {
 			LuaObject::cacheProperty(L, cls, TCHAR_TO_UTF8(*(Property->GetName())), Property);
 		}
 	}
@@ -755,7 +755,7 @@ namespace NS_SLUA {
         const char* name = LuaObject::checkValue<const char*>(L, 2);
 
 		UClass* cls = obj->GetClass();
-        UProperty* up = LuaObject::findCacheProperty(L, cls, name);
+        FProperty* up = LuaObject::findCacheProperty(L, cls, name);
         if (up)
         {
             return LuaObject::push(L, up, obj, false);
@@ -791,7 +791,7 @@ namespace NS_SLUA {
         UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
         const char* name = LuaObject::checkValue<const char*>(L, 2);
         UClass* cls = obj->GetClass();
-		UProperty* up = LuaObject::findCacheProperty(L, cls, name);
+		FProperty* up = LuaObject::findCacheProperty(L, cls, name);
 		if (!up)
 		{
 			cachePropertys(L, cls);
@@ -808,7 +808,7 @@ namespace NS_SLUA {
         return 0;
     }
 
-	UProperty* FindStructPropertyByName(UScriptStruct* scriptStruct, const char* name)
+	FProperty* FindStructPropertyByName(UScriptStruct* scriptStruct, const char* name)
 	{
 		if (scriptStruct->IsNative())
 		{
@@ -816,7 +816,7 @@ namespace NS_SLUA {
 		}
 
 		FString propName = UTF8_TO_TCHAR(name);
-		for (UProperty* Property = scriptStruct->PropertyLink; Property != nullptr; Property = Property->PropertyLinkNext)
+		for (FProperty* Property = scriptStruct->PropertyLink; Property != nullptr; Property = Property->PropertyLinkNext)
 		{
 			FString fieldName = Property->GetName();
 			if (fieldName.StartsWith(propName, ESearchCase::CaseSensitive))
@@ -845,7 +845,7 @@ namespace NS_SLUA {
         const char* name = LuaObject::checkValue<const char*>(L, 2);
         
         auto* cls = ls->uss;
-        UProperty* up = FindStructPropertyByName(cls, name);
+        FProperty* up = FindStructPropertyByName(cls, name);
         if(!up) return 0;
         return LuaObject::push(L,up,ls->buf+up->GetOffset_ForInternal(),false);
     }
@@ -855,7 +855,7 @@ namespace NS_SLUA {
         const char* name = LuaObject::checkValue<const char*>(L, 2);
 
         auto* cls = ls->uss;
-        UProperty* up = FindStructPropertyByName(cls, name);
+        FProperty* up = FindStructPropertyByName(cls, name);
         if (!up) luaL_error(L, "Can't find property named %s", name);
         if (up->GetPropertyFlags() & CPF_BlueprintReadOnly)
             luaL_error(L, "Property %s is readonly", name);
@@ -941,14 +941,14 @@ namespace NS_SLUA {
 	}
 
     template<typename T>
-    int pushUProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
-        auto p=Cast<T>(prop);
+    int pushUProperty(lua_State* L,FProperty* prop,uint8* parms,bool ref) {
+        auto p = CastFieldChecked<T>(prop);
         ensure(p);
         return LuaObject::push(L,p->GetPropertyValue(parms));
     }
 
-	int pushEnumProperty(lua_State* L, UProperty* prop, uint8* parms,bool ref) {
-		auto p = Cast<UEnumProperty>(prop);
+	int pushEnumProperty(lua_State* L, FProperty* prop, uint8* parms,bool ref) {
+		auto p = CastFieldChecked<FEnumProperty>(prop);
 		ensure(p);
 		auto p2 = p->GetUnderlyingProperty();
 		ensure(p2);
@@ -956,45 +956,45 @@ namespace NS_SLUA {
 		return LuaObject::push(L, i);
 	}
 
-    int pushUArrayProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
-        auto p = Cast<UArrayProperty>(prop);
+    int pushUArrayProperty(lua_State* L,FProperty* prop,uint8* parms,bool ref) {
+        auto p = CastFieldChecked<FArrayProperty>(prop);
         ensure(p);
         FScriptArray* v = p->GetPropertyValuePtr(parms);
 		return LuaArray::push(L, p->Inner, v);
     }
 
-    int pushUMapProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
-        auto p = Cast<UMapProperty>(prop);
+    int pushUMapProperty(lua_State* L,FProperty* prop,uint8* parms,bool ref) {
+        auto p = CastFieldChecked<FMapProperty>(prop);
         ensure(p);
 		FScriptMap* v = p->GetPropertyValuePtr(parms);
 		return LuaMap::push(L, p->KeyProp, p->ValueProp, v);
     }
 
-	int pushUWeakProperty(lua_State* L, UProperty* prop, uint8* parms,bool ref) {
-		auto p = Cast<UWeakObjectProperty>(prop);
+	int pushUWeakProperty(lua_State* L, FProperty* prop, uint8* parms,bool ref) {
+		auto p = CastFieldChecked<FWeakObjectProperty>(prop);
 		ensure(p);
 		FWeakObjectPtr v = p->GetPropertyValue(parms);
 		return LuaObject::push(L, v);
 	}
 
-    int checkUArrayProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
-        auto p = Cast<UArrayProperty>(prop);
+    int checkUArrayProperty(lua_State* L,FProperty* prop,uint8* parms,int i) {
+        auto p = CastFieldChecked<FArrayProperty>(prop);
         ensure(p);
         CheckUD(LuaArray,L,i);
         LuaArray::clone((FScriptArray*)parms,p->Inner,UD->get());
         return 0;
     }
 
-	int checkUMapProperty(lua_State* L, UProperty* prop, uint8* parms, int i) {
-		auto p = Cast<UMapProperty>(prop);
+	int checkUMapProperty(lua_State* L, FProperty* prop, uint8* parms, int i) {
+		auto p = CastFieldChecked<FMapProperty>(prop);
 		ensure(p);
 		CheckUD(LuaMap, L, i);
         LuaMap::clone((FScriptMap*)parms,p->KeyProp,p->ValueProp,UD->get());
 		return 0;
 	}
 
-    int pushUStructProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
-        auto p = Cast<UStructProperty>(prop);
+    int pushUStructProperty(lua_State* L,FProperty* prop,uint8* parms,bool ref) {
+        auto p = CastFieldChecked<FStructProperty>(prop);
         ensure(p);
         auto uss = p->Struct;
 
@@ -1013,59 +1013,51 @@ namespace NS_SLUA {
 		return LuaObject::push(L, new LuaStruct(buf,size,uss));
     }  
 
-	int pushUDelegateProperty(lua_State* L, UProperty* prop, uint8* parms, bool ref) {
-		auto p = Cast<UDelegateProperty>(prop);
-		ensure(p);
-		FScriptDelegate* delegate = p->GetPropertyValuePtr(parms);
-		return LuaDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
-	}
+	//int pushUDelegateProperty(lua_State* L, FProperty* prop, uint8* parms, bool ref) {
+	//	auto p = Cast<UDelegateProperty>(prop);
+	//	ensure(p);
+	//	FScriptDelegate* delegate = p->GetPropertyValuePtr(parms);
+	//	return LuaDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
+	//}
 
-    int pushUMulticastDelegateProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
-        auto p = Cast<UMulticastDelegateProperty>(prop);
+    int pushUMulticastDelegateProperty(lua_State* L,FProperty* prop,uint8* parms,bool ref) {
+        auto p = CastFieldChecked<FMulticastDelegateProperty>(prop);
         ensure(p);
-#if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
 		FMulticastScriptDelegate* delegate = const_cast<FMulticastScriptDelegate*>(p->GetMulticastDelegate(parms));
-#else
-        FMulticastScriptDelegate* delegate = p->GetPropertyValuePtr(parms);
-#endif
 		return LuaMultiDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
     }
 
-#if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
-	int pushUMulticastInlineDelegateProperty(lua_State* L, UProperty* prop, uint8* parms, bool ref) {
-		auto p = Cast<UMulticastInlineDelegateProperty>(prop);
+	int pushUMulticastInlineDelegateProperty(lua_State* L, FProperty* prop, uint8* parms, bool ref) {
+		auto p = CastFieldChecked<FMulticastInlineDelegateProperty>(prop);
 		ensure(p);
 		FMulticastScriptDelegate* delegate = const_cast<FMulticastScriptDelegate*>(p->GetMulticastDelegate(parms));
 		return LuaMultiDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
 	}
-#endif
 
-#if (ENGINE_MINOR_VERSION>=24) && (ENGINE_MAJOR_VERSION>=4)
-	int pushUMulticastSparseDelegateProperty(lua_State* L, UProperty* prop, uint8* parms, bool ref) {
-		auto p = Cast<UMulticastSparseDelegateProperty>(prop);
+	int pushUMulticastSparseDelegateProperty(lua_State* L, FProperty* prop, uint8* parms, bool ref) {
+		auto p = CastFieldChecked<FMulticastSparseDelegateProperty>(prop);
 		ensure(p);
 		FMulticastScriptDelegate* delegate = const_cast<FMulticastScriptDelegate*>(p->GetMulticastDelegate(parms));
 		return LuaMultiDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
 	}
-#endif
 
-    int checkUDelegateProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
-        auto p = Cast<UDelegateProperty>(prop);
-        ensure(p);
-        CheckUD(UObject,L,i);
-        // bind SignatureFunction
-        if(auto dobj=Cast<ULuaDelegate>(UD)) dobj->bindFunction(p->SignatureFunction);
-        else luaL_error(L,"arg 1 expect an UDelegateObject");
+    //int checkUDelegateProperty(lua_State* L,FProperty* prop,uint8* parms,int i) {
+    //    auto p = Cast<UDelegateProperty>(prop);
+    //    ensure(p);
+    //    CheckUD(UObject,L,i);
+    //    // bind SignatureFunction
+    //    if(auto dobj=Cast<ULuaDelegate>(UD)) dobj->bindFunction(p->SignatureFunction);
+    //    else luaL_error(L,"arg 1 expect an UDelegateObject");
 
-        FScriptDelegate d;
-        d.BindUFunction(UD, TEXT("EventTrigger"));
+    //    FScriptDelegate d;
+    //    d.BindUFunction(UD, TEXT("EventTrigger"));
 
-        p->SetPropertyValue(parms,d);
-        return 0;
-    }
+    //    p->SetPropertyValue(parms,d);
+    //    return 0;
+    //}
 	 
-    int pushUObjectProperty(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
-        auto p = Cast<UObjectProperty>(prop);
+    int pushUObjectProperty(lua_State* L,FProperty* prop,uint8* parms,bool ref) {
+        auto p = CastFieldChecked<FObjectProperty>(prop);
         ensure(p);   
         UObject* o = p->GetPropertyValue(parms);
         if(auto tr=Cast<UWidgetTree>(o))
@@ -1075,16 +1067,16 @@ namespace NS_SLUA {
     }
 
     template<typename T>
-    int checkUProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
-        auto p = Cast<T>(prop);
+    int checkUProperty(lua_State* L,FProperty* prop,uint8* parms,int i) {
+        auto p = CastFieldChecked<T>(prop);
         ensure(p);
         p->SetPropertyValue(parms,LuaObject::checkValue<typename T::TCppType>(L,i));
         return 0;
     }
 
     template<>
-	int checkUProperty<UEnumProperty>(lua_State* L, UProperty* prop, uint8* parms, int i) {
-		auto p = Cast<UEnumProperty>(prop);
+	int checkUProperty<FEnumProperty>(lua_State* L, FProperty* prop, uint8* parms, int i) {
+		auto p = CastFieldChecked<FEnumProperty>(prop);
 		ensure(p);
 		auto v = (int64)LuaObject::checkValue<int>(L, i);
 		p->CopyCompleteValue(parms, &v);
@@ -1092,8 +1084,8 @@ namespace NS_SLUA {
 	}
 
 	template<>
-	int checkUProperty<UObjectProperty>(lua_State* L, UProperty* prop, uint8* parms, int i) {
-		auto p = Cast<UObjectProperty>(prop);
+	int checkUProperty<FObjectProperty>(lua_State* L, FProperty* prop, uint8* parms, int i) {
+		auto p = CastFieldChecked<FObjectProperty>(prop);
 		ensure(p);
 		UObject* arg = LuaObject::checkValue<UObject*>(L, i);
 		if (arg && arg->GetClass() != p->PropertyClass && !arg->GetClass()->IsChildOf(p->PropertyClass))
@@ -1105,8 +1097,8 @@ namespace NS_SLUA {
 		return LuaObject::push(L, arg);
 	}
 
-    int checkUStructProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {
-        auto p = Cast<UStructProperty>(prop);
+    int checkUStructProperty(lua_State* L,FProperty* prop,uint8* parms,int i) {
+        auto p = CastFieldChecked<FStructProperty>(prop);
         ensure(p);
         auto uss = p->Struct;
 
@@ -1130,15 +1122,15 @@ namespace NS_SLUA {
 		return 0;
     }
 	
-	int pushUClassProperty(lua_State* L, UProperty* prop, uint8* parms, bool ref) {
-		auto p = Cast<UClassProperty>(prop);
+	int pushUClassProperty(lua_State* L, FProperty* prop, uint8* parms, bool ref) {
+		auto p = CastFieldChecked<FClassProperty>(prop);
 		ensure(p);
 		UClass* cls = Cast<UClass>(p->GetPropertyValue(parms));
 		return LuaObject::pushClass(L, cls);
 	}
 
-	int checkUClassProperty(lua_State* L, UProperty* prop, uint8* parms, int i) {
-		auto p = Cast<UClassProperty>(prop);
+	int checkUClassProperty(lua_State* L, FProperty* prop, uint8* parms, int i) {
+		auto p = CastFieldChecked<FClassProperty>(prop);
 		ensure(p);
 		p->SetPropertyValue(parms, LuaObject::checkValue<UClass*>(L, i));
 		return 0;
@@ -1347,59 +1339,55 @@ namespace NS_SLUA {
     }
 
     void LuaObject::init(lua_State* L) {
-		regPusher<UIntProperty>();
-		regPusher<UUInt32Property>();
-        regPusher<UInt64Property>();
-        regPusher<UUInt64Property>();
-		regPusher<UInt16Property>();
-		regPusher<UUInt16Property>();
-		regPusher<UInt8Property>();
-		regPusher<UByteProperty>(); // uint8
-		regPusher<UFloatProperty>();
-		regPusher<UDoubleProperty>();
-        regPusher<UBoolProperty>();
-        regPusher<UTextProperty>();
-        regPusher<UStrProperty>();
-        regPusher<UNameProperty>();
+		regPusher<FIntProperty>();
+		regPusher<FUInt32Property>();
+        regPusher<FInt64Property>();
+        regPusher<FUInt64Property>();
+		regPusher<FInt16Property>();
+		regPusher<FUInt16Property>();
+		regPusher<FInt8Property>();
+		regPusher<FByteProperty>(); // uint8
+		regPusher<FFloatProperty>();
+		regPusher<FDoubleProperty>();
+        regPusher<FBoolProperty>();
+        regPusher<FTextProperty>();
+        regPusher<FStrProperty>();
+        regPusher<FNameProperty>();
 		
-		regPusher(UDelegateProperty::StaticClass(), pushUDelegateProperty);
-        regPusher(UMulticastDelegateProperty::StaticClass(),pushUMulticastDelegateProperty);
-#if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
-		regPusher(UMulticastInlineDelegateProperty::StaticClass(), pushUMulticastInlineDelegateProperty);
-#endif
-#if (ENGINE_MINOR_VERSION>=24) && (ENGINE_MAJOR_VERSION>=4)
-		regPusher(UMulticastSparseDelegateProperty::StaticClass(), pushUMulticastSparseDelegateProperty);
-#endif
-        regPusher(UObjectProperty::StaticClass(),pushUObjectProperty);
-        regPusher(UArrayProperty::StaticClass(),pushUArrayProperty);
-        regPusher(UMapProperty::StaticClass(),pushUMapProperty);
-        regPusher(UStructProperty::StaticClass(),pushUStructProperty);
-		regPusher(UEnumProperty::StaticClass(), pushEnumProperty);
-		regPusher(UClassProperty::StaticClass(), pushUClassProperty);
-		regPusher(UWeakObjectProperty::StaticClass(), pushUWeakProperty);
+		//regPusher(UDelegateProperty::StaticClass(), pushUDelegateProperty);
+        regPusher(FMulticastDelegateProperty::StaticClass(),pushUMulticastDelegateProperty);
+		regPusher(FMulticastInlineDelegateProperty::StaticClass(), pushUMulticastInlineDelegateProperty);
+		regPusher(FMulticastSparseDelegateProperty::StaticClass(), pushUMulticastSparseDelegateProperty);
+        regPusher(FObjectProperty::StaticClass(),pushUObjectProperty);
+        regPusher(FArrayProperty::StaticClass(),pushUArrayProperty);
+        regPusher(FMapProperty::StaticClass(),pushUMapProperty);
+        regPusher(FStructProperty::StaticClass(),pushUStructProperty);
+		regPusher(FEnumProperty::StaticClass(), pushEnumProperty);
+		regPusher(FClassProperty::StaticClass(), pushUClassProperty);
+		regPusher(FWeakObjectProperty::StaticClass(), pushUWeakProperty);
 		
-		regChecker<UIntProperty>();
-		regChecker<UUInt32Property>();
-        regChecker<UInt64Property>();
-        regChecker<UUInt64Property>();
-		regChecker<UInt16Property>();
-		regChecker<UUInt16Property>();
-		regChecker<UInt8Property>();
-		regChecker<UByteProperty>(); // uint8
-		regChecker<UFloatProperty>();
-		regChecker<UDoubleProperty>();
-		regChecker<UBoolProperty>();
-        regChecker<UNameProperty>();
-        regChecker<UTextProperty>();
-		regChecker<UObjectProperty>();
-        regChecker<UStrProperty>();
-        regChecker<UEnumProperty>();
+		regChecker<FIntProperty>();
+		regChecker<FUInt32Property>();
+        regChecker<FInt64Property>();
+        regChecker<FUInt64Property>();
+		regChecker<FInt16Property>();
+		regChecker<FUInt16Property>();
+		regChecker<FInt8Property>();
+		regChecker<FByteProperty>(); // uint8
+		regChecker<FFloatProperty>();
+		regChecker<FDoubleProperty>();
+		regChecker<FBoolProperty>();
+        regChecker<FNameProperty>();
+        regChecker<FTextProperty>();
+		regChecker<FObjectProperty>();
+        regChecker<FStrProperty>();
+        regChecker<FEnumProperty>();
 
-        regChecker(UArrayProperty::StaticClass(),checkUArrayProperty);
-        regChecker(UMapProperty::StaticClass(),checkUMapProperty);
-        regChecker(UDelegateProperty::StaticClass(),checkUDelegateProperty);
-        regChecker(UStructProperty::StaticClass(),checkUStructProperty);
-		regChecker(UClassProperty::StaticClass(), checkUClassProperty);
+        regChecker(FArrayProperty::StaticClass(),checkUArrayProperty);
+        regChecker(FMapProperty::StaticClass(),checkUMapProperty);
+        //regChecker(UDelegateProperty::StaticClass(),checkUDelegateProperty);
+        regChecker(FStructProperty::StaticClass(),checkUStructProperty);
+		regChecker(FClassProperty::StaticClass(), checkUClassProperty);
 		
 		LuaWrapper::init(L);
         ExtensionMethod::init();
@@ -1416,7 +1404,7 @@ namespace NS_SLUA {
         return 1;
     }
 
-    int LuaObject::push(lua_State* L,UProperty* prop,uint8* parms,bool ref) {
+    int LuaObject::push(lua_State* L,FProperty* prop,uint8* parms,bool ref) {
         auto pusher = getPusher(prop);
         if (pusher)
             return pusher(L,prop,parms,ref);
@@ -1427,14 +1415,14 @@ namespace NS_SLUA {
         }
     }
 
-	int LuaObject::push(lua_State* L, UProperty* up, UObject* obj, bool ref) {
+	int LuaObject::push(lua_State* L, FProperty* up, UObject* obj, bool ref) {
 		auto cls = up->GetClass();
-		// if it's an UArrayProperty
-		if (cls==UArrayProperty::StaticClass())
-			return LuaArray::push(L, Cast<UArrayProperty>(up), obj);
-        // if it's an UMapProperty
-        else if(cls==UMapProperty::StaticClass())
-            return LuaMap::push(L,Cast<UMapProperty>(up),obj);
+		// if it's an FArrayProperty
+		if (cls==FArrayProperty::StaticClass())
+			return LuaArray::push(L, CastFieldChecked<FArrayProperty>(up), obj);
+        // if it's an FMapProperty
+        else if(cls==FMapProperty::StaticClass())
+            return LuaMap::push(L, CastFieldChecked<FMapProperty>(up),obj);
 		else
 			return push(L, up, up->ContainerPtrToValuePtr<uint8>(obj), ref);
 	}

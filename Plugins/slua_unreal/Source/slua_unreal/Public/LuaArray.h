@@ -24,19 +24,19 @@ namespace NS_SLUA {
     class SLUA_UNREAL_API LuaArray : public FGCObject {
     public:
         static void reg(lua_State* L);
-        static void clone(FScriptArray* destArray, UProperty* p, const FScriptArray* srcArray);
-		static int push(lua_State* L, UProperty* prop, FScriptArray* array);
-		static int push(lua_State* L, UArrayProperty* prop, UObject* obj);
+        static void clone(FScriptArray* destArray, FProperty* p, const FScriptArray* srcArray);
+		static int push(lua_State* L, FProperty* prop, FScriptArray* array);
+		static int push(lua_State* L, FArrayProperty* prop, UObject* obj);
 
 		template<typename T>
 		static int push(lua_State* L, const TArray<T>& v) {
-			UProperty* prop = PropertyProto::createProperty(PropertyProto::get<T>());
+			FProperty* prop = PropertyProto::createProperty(PropertyProto::get<T>());
 			auto array = reinterpret_cast<const FScriptArray*>(&v);
 			return push(L, prop, const_cast<FScriptArray*>(array));
 		}
 
-		LuaArray(UProperty* prop, FScriptArray* buf);
-		LuaArray(UArrayProperty* prop, UObject* obj);
+		LuaArray(FProperty* prop, FScriptArray* buf);
+		LuaArray(FArrayProperty* prop, UObject* obj);
         ~LuaArray();
 
         const FScriptArray* get() {
@@ -73,9 +73,9 @@ namespace NS_SLUA {
 		static int Enumerable(lua_State* L);
 
     private:
-        UProperty* inner;
+        FProperty* inner;
         FScriptArray* array;
-		UArrayProperty* prop;
+		FArrayProperty* prop;
 		UObject* propObj;
 		bool shouldFree;
 

@@ -32,7 +32,7 @@
 #define CheckUD(Type,L,P) auto UD = LuaObject::checkUD<Type>(L,P);
 // UD may be freed by Engine, so skip it in gc phase
 #define CheckUDGC(Type,L,P) auto UD = LuaObject::checkUD<Type>(L,P,false); \
-	if(!UD) return 0;
+	ensure(UD!=nullptr);
 
 #define RegMetaMethodByName(L,NAME,METHOD) \
     lua_pushcfunction(L,METHOD); \
@@ -299,13 +299,13 @@ namespace NS_SLUA {
 
     public:
 
-        typedef int (*PushPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms,bool ref);
-        typedef int (*CheckPropertyFunction)(lua_State* L,UProperty* prop,uint8* parms,int i);
+        typedef int (*PushPropertyFunction)(lua_State* L,FProperty* prop,uint8* parms,bool ref);
+        typedef int (*CheckPropertyFunction)(lua_State* L,FProperty* prop,uint8* parms,int i);
 
-        static CheckPropertyFunction getChecker(UClass* prop);
-        static PushPropertyFunction getPusher(UProperty* prop);
-        static CheckPropertyFunction getChecker(UProperty* cls);
-        static PushPropertyFunction getPusher(UClass* cls);
+        static CheckPropertyFunction getChecker(FFieldClass* prop);
+        static PushPropertyFunction getPusher(FProperty* prop);
+        static CheckPropertyFunction getChecker(FProperty* cls);
+        static PushPropertyFunction getPusher(FFieldClass* cls);
 
 		static bool matchType(lua_State* L, int p, const char* tn, bool noprefix=false);
 
@@ -661,8 +661,8 @@ namespace NS_SLUA {
 		static int push(lua_State* L, const LuaVar& v);
         static int push(lua_State* L, UFunction* func, UClass* cls=nullptr);
 		static int push(lua_State* L, const LuaLString& lstr);
-		static int push(lua_State* L, UProperty* up, uint8* parms, bool ref=true);
-		static int push(lua_State* L, UProperty* up, UObject* obj, bool ref=true);
+		static int push(lua_State* L, FProperty* up, uint8* parms, bool ref=true);
+		static int push(lua_State* L, FProperty* up, UObject* obj, bool ref=true);
 
         // check tn is base of base
         static bool isBaseTypeOf(lua_State* L,const char* tn,const char* base);
@@ -757,8 +757,8 @@ namespace NS_SLUA {
         static UFunction* findCacheFunction(lua_State* L,UClass* cls,const char* fname);
         static void cacheFunction(lua_State* L, UClass* cls,const char* fame,UFunction* func);
 
-        static UProperty* findCacheProperty(lua_State* L, UClass* cls, const char* pname);
-        static void cacheProperty(lua_State* L, UClass* cls, const char* pname, UProperty* property);
+        static FProperty* findCacheProperty(lua_State* L, UClass* cls, const char* pname);
+        static void cacheProperty(lua_State* L, UClass* cls, const char* pname, FProperty* property);
 
         static bool getFromCache(lua_State* L, void* obj, const char* tn, bool check = true);
 		static void cacheObj(lua_State* L, void* obj);

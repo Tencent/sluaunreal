@@ -49,7 +49,7 @@ namespace NS_SLUA {
             clone(other);
         }
         LuaVar(LuaVar&& other):LuaVar() {
-            move(std::move(other));
+            move(MoveTemp(other));
         }
 
         void operator=(const LuaVar& other) {
@@ -58,7 +58,7 @@ namespace NS_SLUA {
         }
         void operator=(LuaVar&& other) {
             free();
-            move(std::move(other));
+            move(MoveTemp(other));
         }
 
         virtual ~LuaVar();
@@ -120,7 +120,7 @@ namespace NS_SLUA {
             push(L);
             R r = ArgOperatorOpt::readArg<typename remove_cr<R>::type>(L,-1);
             lua_pop(L,1);
-            return std::move(r);
+            return MoveTemp(r);
         }
 
 

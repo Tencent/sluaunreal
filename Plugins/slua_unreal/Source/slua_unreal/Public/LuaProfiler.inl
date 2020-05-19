@@ -22,6 +22,9 @@ local sock -- tcp socket
 local connectHost
 local connectPort
 local stopConnectTime = 0
+local currentHookState
+local coroutinePool = setmetatable({}, {__mode = "v"})
+local coroutineCreate = nil
 
 local RunState = {
     DISCONNECT = 0,
@@ -41,6 +44,7 @@ function this.start(host, port)
         this.printToConsole("[Warning] Profiler已经启动，请不要再次调用start()" , 1)
         return
     end
+    this.setSocket(nil)
 
     --尝试初次连接
     this.changeRunState(RunState.DISCONNECT)
@@ -50,7 +54,7 @@ function this.start(host, port)
     local sockSuccess = sock and sock:connect(connectHost, connectPort)
     if sockSuccess ~= nil then
         this.printToConsole("first connect success!")
-		this.setSocket(sock)
+        this.setSocket(sock)
         this.connectSuccess()
     else
         this.printToConsole("first connect failed!")
@@ -136,6 +140,31 @@ function this.disconnect()
     end
     this.reGetSock()
 end
+
+function this.changeCoroutinesHookState()
+	for k, co in pairs(coroutinePool) do
+        if coroutine.status(co) == "dead" then
+			coroutinePool[k] = nil
+        else
+            this.changeCoroutineHookState(co)
+        end
+    end
+end
+
+local function replaceCoroutineFuncs()
+    if coroutineCreate == nil and type(coroutine.create) == "function" then
+        this.printToConsole("change coroutine.resume")
+        coroutineCreate = coroutine.create
+        coroutine.create = function (...)
+            local co = coroutineCreate(...)
+            table.insert(coroutinePool, co)
+            this.changeCoroutineHookState(co, true)
+            return co
+        end
+    end
+end
+
+replaceCoroutineFuncs()
 
 return this
 )code";

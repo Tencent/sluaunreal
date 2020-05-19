@@ -18,14 +18,13 @@
 void ULuaUserWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
-	init(this, "LuaUserWidget", LuaStateName, LuaFilePath);
+	InitLuaTable();
 }
 #endif
 
 void ULuaUserWidget::NativeConstruct()
 {
-	if (!LuaFilePath.IsEmpty() && !getSelfTable().isValid())
-		init(this,"LuaUserWidget", LuaStateName, LuaFilePath);
+	InitLuaTable();
 	Super::NativeConstruct();
 	if (getSelfTable().isValid()) {
 #if (ENGINE_MINOR_VERSION==18)
@@ -38,7 +37,6 @@ void ULuaUserWidget::NativeConstruct()
 
 void ULuaUserWidget::NativeDestruct() {
 	Super::NativeDestruct();
-	luaSelfTable.free();
 }
 
 void ULuaUserWidget::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)
@@ -68,6 +66,34 @@ void ULuaUserWidget::tick(float dt) {
 	tickFunction.call(luaSelfTable, &currentGeometry, dt);
 }
 
+
+void ULuaUserWidget::InitLuaTable()
+{
+	if (!LuaFilePath.IsEmpty() && !getSelfTable().isValid())
+	{
+		if (init(this, "LuaUserWidget", LuaStateName, LuaFilePath))
+		{
+			NS_SLUA::LuaVar lfunc = luaSelfTable.getFromTable<NS_SLUA::LuaVar>("Initialize", true);
+			if (!lfunc.isFunction())
+			{
+				NS_SLUA::Log::Error("Lua[%s] missing Initialize function", TCHAR_TO_UTF8(*LuaFilePath));
+			}
+			lfunc.call(luaSelfTable);
+		}
+	}
+}
+
+bool ULuaUserWidget::Initialize()
+{
+	bool bIsInited = Super::Initialize();
+	if (bIsInited)
+	{
+		InitLuaTable();
+	}
+
+	return bIsInited;
+}
+
 void ULuaUserWidget::ProcessEvent(UFunction * func, void * params)
 {
 	if (luaImplemented(func, params))
@@ -75,6 +101,23 @@ void ULuaUserWidget::ProcessEvent(UFunction * func, void * params)
 	Super::ProcessEvent(func, params);
 }
 
+
+void ULuaUserWidget::BeginDestroy()
+{
+	if (luaSelfTable.isValid())
+	{
+		NS_SLUA::LuaVar lfunc = luaSelfTable.getFromTable<NS_SLUA::LuaVar>("OnDestroy", true);
+		if (!lfunc.isFunction())
+		{
+			NS_SLUA::Log::Error("Lua[%s] missing OnDestroy function", TCHAR_TO_UTF8(*LuaFilePath));
+		}
+		lfunc.call(luaSelfTable);
+	}
+
+	Super::BeginDestroy();
+
+	dispose();
+}
 void ULuaUserWidget::superTick()
 {
 	Super::Tick(currentGeometry, deltaTime);

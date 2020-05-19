@@ -13,10 +13,17 @@
 
 
 #include "LuaBase.h"
+#include "Script.h"
+#include "LuaState.h"
+#include "StructOnScope.h"
 #include "LuaUserWidget.h"
 #include "LuaActor.h"
 
+#if ((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))
 extern uint8 GRegisterNative(int32 NativeBytecodeIndex, const FNativeFuncPtr& Func);
+#else
+extern uint8 GRegisterNative(int32 NativeBytecodeIndex, const Native& Func);
+#endif
 #define Ex_LuaHook (EX_Max-1)
 
 ULuaTableObjectInterface::ULuaTableObjectInterface(const class FObjectInitializer& OI)
@@ -62,22 +69,67 @@ namespace NS_SLUA {
 		UObject* obj = context.Get();
 		if (!obj) return 0;
 
-		FStructOnScope params(func);
-		LuaObject::fillParam(L, 2, func, params.GetStructMemory());
+		NewObjectRecorder objectRecorder(L);
+
+		uint8* params = (uint8*)FMemory_Alloca(func->ParmsSize);
+		FMemory::Memzero(params, func->ParmsSize);
+		for (TFieldIterator<UProperty> it(func); it && it->HasAnyPropertyFlags(CPF_Parm); ++it)
+		{
+			UProperty* localProp = *it;
+			checkSlow(localProp);
+			if (!localProp->HasAnyPropertyFlags(CPF_ZeroConstructor))
+			{
+				localProp->InitializeValue_InContainer(params);
+			}
+		}
+
+		LuaObject::fillParam(L, 2, func, params);
 		{
 			// call function with params
-			LuaObject::callUFunction(L, obj, func, params.GetStructMemory());
+			LuaObject::callUFunction(L, obj, func, params);
 		}
 		// return value to push lua stack
-		return LuaObject::returnValue(L, func, params.GetStructMemory());
+		int outParamCount = LuaObject::returnValue(L, func, params, &objectRecorder);
+
+		for (TFieldIterator<UProperty> it(func); it && (it->HasAnyPropertyFlags(CPF_Parm)); ++it)
+		{
+			it->DestroyValue_InContainer(params);
+		}
+
+		return outParamCount;
+	}
+
+	void LuaBase::dispose()
+	{
+		if (!luaSelfTable.isValid())
+		{
+			return;
+		}
+		auto* L = luaSelfTable.getState();
+
+		luaSelfTable.push(L);
+		lua_pushnil(L);
+		lua_setfield(L, -2, SLUA_CPPINST);
+		lua_pop(L, 1);
+
+		luaSelfTable.free();
 	}
 
 	int LuaBase::__index(NS_SLUA::lua_State * L)
 	{
 		lua_pushstring(L, SLUA_CPPINST);
 		lua_rawget(L, 1);
-		if (!lua_isuserdata(L, -1))
+		void* ud = lua_touserdata(L, -1);
+		if (!ud)
 			luaL_error(L, "expect LuaBase table at arg 1");
+		lua_pop(L, 1);
+		UObject* obj = (UObject*)ud;
+		if (!NS_SLUA::LuaObject::isUObjectValid(obj))
+		{
+			return 0;
+		}
+		LuaObject::push(L, obj, true);
+
 		// push key
 		lua_pushvalue(L, 2);
 		// get field from real actor
@@ -95,8 +147,11 @@ namespace NS_SLUA {
 	{
 		lua_pushstring(L, SLUA_CPPINST);
 		lua_rawget(L, 1);
-		if (!lua_isuserdata(L, -1))
+		void* ud = lua_touserdata(L, -1);
+		if (!ud)
 			luaL_error(L, "expect LuaBase table at arg 1");
+		lua_pop(L, 1);
+		LuaObject::push(L, (UObject*)ud, false);
 
 		lua_pushcfunction(L, setParent);
 		// push cpp inst
@@ -118,7 +173,11 @@ namespace NS_SLUA {
 		return 0;
 	}
 
+#if ((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))
 	void LuaBase::hookBpScript(UFunction* func, FNativeFuncPtr hookfunc) {
+#else
+	void LuaBase::hookBpScript(UFunction* func, Native hookfunc) {
+#endif
 		static bool regExCode = false;
 		if (!regExCode) {
 			GRegisterNative(Ex_LuaHook, hookfunc);
@@ -158,7 +217,11 @@ namespace NS_SLUA {
 			return nullptr;
 	}
 
+#if ((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))
 	DEFINE_FUNCTION(LuaBase::luaOverrideFunc)
+#else
+	void LuaBase::luaOverrideFunc(FFrame& Stack, RESULT_DECL)
+#endif
 	{
 		UFunction* func = Stack.Node;
 		ensure(func);
@@ -207,7 +270,11 @@ namespace NS_SLUA {
 			if (!(it->FunctionFlags&availableFlag))
 				continue;
 			if (luaSelfTable.getFromTable<LuaVar>(it->GetName(), true).isFunction()) {
+#if ((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))
 				hookBpScript(*it, (FNativeFuncPtr)&luaOverrideFunc);
+#else
+				hookBpScript(*it, (Native)&LuaBase::luaOverrideFunc);
+#endif
 			}
 		}
 	}

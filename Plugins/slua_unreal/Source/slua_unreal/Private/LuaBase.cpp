@@ -128,7 +128,7 @@ namespace NS_SLUA {
 		{
 			return 0;
 		}
-		LuaObject::push(L, obj, false);
+		LuaObject::push(L, obj, true);
 
 		// push key
 		lua_pushvalue(L, 2);

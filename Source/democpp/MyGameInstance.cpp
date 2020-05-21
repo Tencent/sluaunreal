@@ -50,11 +50,12 @@ void UMyGameInstance::Init()
 
 			FFileHelper::LoadFileToArray(Content, *fullPath);
 			if (Content.Num() > 0) {
-				return Content;
+				filepath = fullPath;
+				return MoveTemp(Content);
 			}
 		}
 
-		return Content;
+		return MoveTemp(Content);
 	});
 }
 

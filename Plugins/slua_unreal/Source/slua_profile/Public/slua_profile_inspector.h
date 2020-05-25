@@ -22,7 +22,7 @@
 #include "Widgets/Input/SCheckBox.h"
 #include "Widgets/Notifications/SProgressBar.h"
 #include "slua_remote_profile.h"
-#include "slua_unreal/Private/LuaMemoryProfile.h"
+#include "LuaMemoryProfile.h"
 
 #define IsMemoryProfiler (m_stdLineVisibility.Get() != EVisibility::Visible)
 

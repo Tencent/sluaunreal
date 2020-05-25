@@ -115,7 +115,7 @@ namespace NS_SLUA {
 		onStart();
 	}
 
-	void LuaMemoryProfile::onStart()
+	void LuaMemoryProfile::onStart() 
 	{
 		memoryRecord.Empty();
 		memoryIncreaseThisFrame.Empty();

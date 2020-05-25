@@ -41,7 +41,7 @@ namespace NS_SLUA {
 	typedef TMap<void*, LuaMemInfo> MemoryDetail;
 //#endif
 
-    class SLUA_UNREAL_API LuaMemoryProfile { 
+    class LuaMemoryProfile {
     public:
         static void* alloc (void *ud, void *ptr, size_t osize, size_t nsize);
 		static size_t total();

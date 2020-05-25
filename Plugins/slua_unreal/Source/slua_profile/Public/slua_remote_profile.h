@@ -17,7 +17,7 @@
 #include "HAL/Runnable.h"
 #include "Containers/Queue.h"
 #include "Interfaces/IPv4/IPv4Endpoint.h"
-#include "slua_unreal/Private/LuaMemoryProfile.h"
+#include "LuaMemoryProfile.h"
 #include "SharedPointer.h"
 #include "ArrayWriter.h"
 #include "ArrayReader.h"

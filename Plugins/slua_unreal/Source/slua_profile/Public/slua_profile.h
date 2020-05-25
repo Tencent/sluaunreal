@@ -18,7 +18,7 @@
 #include "ModuleManager.h"
 #include "Commands.h"
 #include "slua_profile_inspector.h"
-#include "slua_unreal/Private/LuaMemoryProfile.h"
+#include "LuaMemoryProfile.h"
 
 /** Declares a log category for this module. */
 DECLARE_LOG_CATEGORY_EXTERN(LogSluaProfile, Log, All);

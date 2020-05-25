@@ -54,6 +54,12 @@
 		luaL_error(L, "checkValue error, obj parent has been freed"); \
 	auto self = udptr->ud
 
+#define CheckSelfSafe(T) \
+	auto udptr = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, 1)); \
+	if(!udptr) return 0; \
+	if (udptr->flag & UD_HADFREE) return 0; \
+	auto self = udptr->ud
+
 #define IsRealOutParam(propflag) ((propflag&CPF_OutParm) && !(propflag&CPF_ConstParm) && !(propflag&CPF_BlueprintReadOnly))
 
 class ULatentDelegate;

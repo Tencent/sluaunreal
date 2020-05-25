@@ -25,6 +25,7 @@
 
 #include "slua_remote_profile.h"
 #include "LuaProfiler.h"
+#include "LuaMemoryProfile.h"
 
 DEFINE_LOG_CATEGORY(LogSluaProfile)
 #define LOCTEXT_NAMESPACE "Fslua_profileModule"
@@ -126,6 +127,7 @@ bool Fslua_profileModule::Tick(float DeltaTime)
 
 TSharedRef<class SDockTab> Fslua_profileModule::OnSpawnPluginTab(const FSpawnTabArgs & SpawnTabArgs)
 {
+	NS_SLUA::LuaMemoryProfile::start();
 	if (sluaProfilerInspector.IsValid())
 	{
 		sluaProfilerInspector->StartChartRolling();
@@ -274,6 +276,7 @@ void Fslua_profileModule::OnTabClosed(TSharedRef<SDockTab>)
 //        sluaProfilerInspector->ProfileServer = nullptr;
 //    }
 	tabOpened = false;
+	NS_SLUA::LuaMemoryProfile::stop();
 }
 
 void Fslua_profileModule::debug_hook_c(NS_SLUA::FProfileMessagePtr Message)

@@ -412,7 +412,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FRotator);
+			CheckSelfSafe(FRotator);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -995,7 +995,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FTransform);
+			CheckSelfSafe(FTransform);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -2009,7 +2009,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FLinearColor);
+			CheckSelfSafe(FLinearColor);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -2636,7 +2636,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FColor);
+			CheckSelfSafe(FColor);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -3002,7 +3002,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FVector);
+			CheckSelfSafe(FVector);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -4402,7 +4402,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FVector2D);
+			CheckSelfSafe(FVector2D);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -4970,7 +4970,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FRandomStream);
+			CheckSelfSafe(FRandomStream);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -5213,7 +5213,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FGuid);
+			CheckSelfSafe(FGuid);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -5418,7 +5418,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FBox2D);
+			CheckSelfSafe(FBox2D);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -5731,7 +5731,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FFloatRangeBound);
+			CheckSelfSafe(FFloatRangeBound);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -5896,7 +5896,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FFloatRange);
+			CheckSelfSafe(FFloatRange);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -5985,7 +5985,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FInt32RangeBound);
+			CheckSelfSafe(FInt32RangeBound);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -6150,7 +6150,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FInt32Range);
+			CheckSelfSafe(FInt32Range);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -6239,7 +6239,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FFloatInterval);
+			CheckSelfSafe(FFloatInterval);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -6274,7 +6274,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FInt32Interval);
+			CheckSelfSafe(FInt32Interval);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -6309,7 +6309,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FPrimaryAssetType);
+			CheckSelfSafe(FPrimaryAssetType);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -6383,7 +6383,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FPrimaryAssetId);
+			CheckSelfSafe(FPrimaryAssetId);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -6500,7 +6500,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FDateTime);
+			CheckSelfSafe(FDateTime);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;

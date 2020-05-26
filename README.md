@@ -196,3 +196,5 @@ slua-unreal依赖dot-clang做c++静态代码生成的工具稍后开源，目前
 [更完整的demo](https://github.com/IriskaDev/slua_unreal_demo)
 
 ![](https://github.com/IriskaDev/slua_unreal_demo/raw/master/Documents/1551258203207.png)
+
+QQ技术支持群：15647305，需要提交具体问题issue后申请入群，谢绝hr和为技术人员进入。

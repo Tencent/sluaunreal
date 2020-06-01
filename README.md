@@ -1,6 +1,6 @@
 ## What's slua-unreal?
 
-slua-unreal is unreal4 plugin, you can use lua language to develop game login and hot fix your lua code via this plugin, slua-unreal give you 3 way to wrap your c++ interface for lua, including reflection(by blueprint), c++ template and static code generation by a tool, meanwhile you can communicate with blueprint, call lua from blueprint, vice versa.
+slua-unreal is unreal4 plugin, you can use lua language to develop game logic and hot fix your lua code via this plugin, slua-unreal give you 3 way to wrap your c++ interface for lua, including reflection(by blueprint), c++ template and static code generation by a tool, meanwhile you can communicate with blueprint, call lua from blueprint, vice versa.
 
 # slua-unreal 是什么 
 
@@ -197,4 +197,4 @@ slua-unreal依赖dot-clang做c++静态代码生成的工具稍后开源，目前
 
 ![](https://github.com/IriskaDev/slua_unreal_demo/raw/master/Documents/1551258203207.png)
 
-QQ技术支持群：15647305，需要提交具体问题issue后申请入群，谢绝hr和为技术人员进入。
+QQ技术支持群：15647305，需要提交具体问题issue后申请入群，谢绝hr和非技术人员进入。

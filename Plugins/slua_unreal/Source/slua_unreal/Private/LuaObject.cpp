@@ -1344,7 +1344,7 @@ namespace NS_SLUA {
 	}
 
     int LuaObject::gcObject(lua_State* L) {
-		CheckUDGC(UClass, L, 1);
+		CheckUDGC(UObject,L, 1);
         removeRef(L,UD);
         return 0;
     }

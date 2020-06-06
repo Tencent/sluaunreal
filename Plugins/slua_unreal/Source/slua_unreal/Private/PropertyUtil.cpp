@@ -17,69 +17,86 @@
 
 namespace NS_SLUA {
 
+	const FName DefaultLuaPropertyName = "TransientLuaProperty";
+
     UObject* getPropertyOutter() {
 		static TStrongObjectPtr<UStruct> propOuter;
 		if (!propOuter.IsValid()) propOuter.Reset(NewObject<UStruct>((UObject*)GetTransientPackage()));
 		return propOuter.Get();
 	}
 
+	template<typename FP = FProperty>
+	FP* newProperty(UObject* outter, FFieldClass* cls)
+    {
+		FP* prop = CastFieldChecked<FP>(cls->Construct(outter, DefaultLuaPropertyName, RF_NoFlags));
+    	if(prop)
+    	{
+			prop->ArrayDim = 1;
+			return prop;
+    	}
+		return nullptr;
+    }
+
     FProperty* PropertyProto::createProperty(const PropertyProto& proto) {
 		FProperty* p = nullptr;
-	/*	UObject* outer = getPropertyOutter();
+		UObject* outer = getPropertyOutter();
 		switch (proto.type) {
 			case EPropertyClass::Byte:
-				p = NewObject<FProperty>(outer, FByteProperty::StaticClass());
+				p = newProperty(outer, FByteProperty::StaticClass());
                 break;
 			case EPropertyClass::Int8:
-				p = NewObject<FProperty>(outer, FInt8Property::StaticClass());
+				p = newProperty(outer, FInt8Property::StaticClass());
                 break;
 			case EPropertyClass::Int16:
-				p = NewObject<FProperty>(outer, FInt16Property::StaticClass());
+				p = newProperty(outer, FInt16Property::StaticClass());
                 break;
 			case EPropertyClass::Int:
-				p = NewObject<FProperty>(outer, FIntProperty::StaticClass());
+				p = newProperty(outer, FIntProperty::StaticClass());
                 break;
 			case EPropertyClass::Int64:
-				p = NewObject<FProperty>(outer, FInt64Property::StaticClass());
+				p = newProperty(outer, FInt64Property::StaticClass());
                 break;
 			case EPropertyClass::UInt16:
-				p = NewObject<FProperty>(outer, FUInt16Property::StaticClass());
+				p = newProperty(outer, FUInt16Property::StaticClass());
                 break;
 			case EPropertyClass::UInt32:
-				p = NewObject<FProperty>(outer, FUInt32Property::StaticClass());
+				p = newProperty(outer, FUInt32Property::StaticClass());
                 break;
 			case EPropertyClass::UInt64:
-				p = NewObject<FProperty>(outer, FUInt64Property::StaticClass());
+				p = newProperty(outer, FUInt64Property::StaticClass());
                 break;
 			case EPropertyClass::UnsizedInt:
-				p = NewObject<FProperty>(outer, FUInt64Property::StaticClass());
+				p = newProperty(outer, FUInt64Property::StaticClass());
                 break;
 			case EPropertyClass::UnsizedUInt:
-				p = NewObject<FProperty>(outer, FUInt64Property::StaticClass());
+				p = newProperty(outer, FUInt64Property::StaticClass());
                 break;
 			case EPropertyClass::Float:
-				p = NewObject<FProperty>(outer, FFloatProperty::StaticClass());
+				p = newProperty(outer, FFloatProperty::StaticClass());
                 break;
 			case EPropertyClass::Double:
-				p = NewObject<FProperty>(outer, FDoubleProperty::StaticClass());
+				p = newProperty(outer, FDoubleProperty::StaticClass());
                 break;
-			case EPropertyClass::Bool:
-				p = NewObject<FProperty>(outer, FBoolProperty::StaticClass());
-                break;
+			case EPropertyClass::Bool: {
+				auto op = newProperty<FBoolProperty>(outer, FBoolProperty::StaticClass());
+				op->SetBoolSize(sizeof(bool), true);
+				p = op;
+				break;
+			}
 			case EPropertyClass::Object: {
-				auto op = NewObject<FObjectProperty>(outer, FObjectProperty::StaticClass());
+				auto op = newProperty<FObjectPropertyBase>(outer, FObjectProperty::StaticClass());
 				op->SetPropertyClass(proto.cls);
 				p = op;
 				break;
 			}
 			case EPropertyClass::Str:
-				p = NewObject<FProperty>(outer, FStrProperty::StaticClass());
+				p = newProperty(outer, FStrProperty::StaticClass());
                 break;
 		}
 		if (p) {
 			FArchive ar;
 			p->LinkWithoutChangingOffset(ar);
-		}*/
+		}
 			
         return p;
 	}

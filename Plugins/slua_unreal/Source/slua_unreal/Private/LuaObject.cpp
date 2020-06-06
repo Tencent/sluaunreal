@@ -1013,12 +1013,12 @@ namespace NS_SLUA {
 		return LuaObject::push(L, new LuaStruct(buf,size,uss));
     }  
 
-	//int pushUDelegateProperty(lua_State* L, FProperty* prop, uint8* parms, bool ref) {
-	//	auto p = Cast<UDelegateProperty>(prop);
-	//	ensure(p);
-	//	FScriptDelegate* delegate = p->GetPropertyValuePtr(parms);
-	//	return LuaDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
-	//}
+	int pushUDelegateProperty(lua_State* L, FProperty* prop, uint8* parms, bool ref) {
+		auto p = CastFieldChecked<FDelegateProperty>(prop);
+		ensure(p);
+		FScriptDelegate* delegate = p->GetPropertyValuePtr(parms);
+		return LuaDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
+	}
 
     int pushUMulticastDelegateProperty(lua_State* L,FProperty* prop,uint8* parms,bool ref) {
         auto p = CastFieldChecked<FMulticastDelegateProperty>(prop);
@@ -1041,20 +1041,20 @@ namespace NS_SLUA {
 		return LuaMultiDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
 	}
 
-    //int checkUDelegateProperty(lua_State* L,FProperty* prop,uint8* parms,int i) {
-    //    auto p = Cast<UDelegateProperty>(prop);
-    //    ensure(p);
-    //    CheckUD(UObject,L,i);
-    //    // bind SignatureFunction
-    //    if(auto dobj=Cast<ULuaDelegate>(UD)) dobj->bindFunction(p->SignatureFunction);
-    //    else luaL_error(L,"arg 1 expect an UDelegateObject");
+    int checkUDelegateProperty(lua_State* L,FProperty* prop,uint8* parms,int i) {
+        auto p = CastFieldChecked<FDelegateProperty>(prop);
+        ensure(p);
+        CheckUD(UObject,L,i);
+        // bind SignatureFunction
+        if(auto dobj=Cast<ULuaDelegate>(UD)) dobj->bindFunction(p->SignatureFunction);
+        else luaL_error(L,"arg 1 expect an UDelegateObject");
 
-    //    FScriptDelegate d;
-    //    d.BindUFunction(UD, TEXT("EventTrigger"));
+        FScriptDelegate d;
+        d.BindUFunction(UD, TEXT("EventTrigger"));
 
-    //    p->SetPropertyValue(parms,d);
-    //    return 0;
-    //}
+        p->SetPropertyValue(parms,d);
+        return 0;
+    }
 	 
     int pushUObjectProperty(lua_State* L,FProperty* prop,uint8* parms,bool ref) {
         auto p = CastFieldChecked<FObjectProperty>(prop);
@@ -1354,7 +1354,7 @@ namespace NS_SLUA {
         regPusher<FStrProperty>();
         regPusher<FNameProperty>();
 		
-		//regPusher(UDelegateProperty::StaticClass(), pushUDelegateProperty);
+		regPusher(FDelegateProperty::StaticClass(), pushUDelegateProperty);
         regPusher(FMulticastDelegateProperty::StaticClass(),pushUMulticastDelegateProperty);
 		regPusher(FMulticastInlineDelegateProperty::StaticClass(), pushUMulticastInlineDelegateProperty);
 		regPusher(FMulticastSparseDelegateProperty::StaticClass(), pushUMulticastSparseDelegateProperty);
@@ -1385,7 +1385,7 @@ namespace NS_SLUA {
 
         regChecker(FArrayProperty::StaticClass(),checkUArrayProperty);
         regChecker(FMapProperty::StaticClass(),checkUMapProperty);
-        //regChecker(UDelegateProperty::StaticClass(),checkUDelegateProperty);
+        regChecker(FDelegateProperty::StaticClass(),checkUDelegateProperty);
         regChecker(FStructProperty::StaticClass(),checkUStructProperty);
 		regChecker(FClassProperty::StaticClass(), checkUClassProperty);
 		

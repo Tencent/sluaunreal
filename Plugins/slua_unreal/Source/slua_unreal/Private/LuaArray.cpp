@@ -46,7 +46,6 @@ namespace NS_SLUA {
 
 	LuaArray::LuaArray(FProperty* p, FScriptArray* buf)
 		: inner(TPropOnScope<FProperty>::ExternalReference(p))
-		, prop(nullptr)
 		, propObj(nullptr)
     {
 		array = new FScriptArray();
@@ -56,7 +55,7 @@ namespace NS_SLUA {
 
 	LuaArray::LuaArray(FArrayProperty* p, UObject* obj)
 		: inner(TPropOnScope<FProperty>::ExternalReference(p->Inner))
-		, prop(p)
+		, prop(TPropOnScope<FArrayProperty>::ExternalReference(p))
 		, propObj(obj)
 	{
 		array = prop->ContainerPtrToValuePtr<FScriptArray>(obj);
@@ -91,7 +90,7 @@ namespace NS_SLUA {
     void LuaArray::AddReferencedObjects( FReferenceCollector& Collector )
     {
         if (inner) inner->AddReferencedObjects(Collector);
-		if (prop) Collector.AddReferencedObject(prop);
+		if (prop) prop->AddReferencedObjects(Collector);
 		if (propObj) Collector.AddReferencedObject(propObj);
 
         // if empty or owner object had been collected

@@ -75,7 +75,7 @@ namespace NS_SLUA {
     private:
         TPropOnScope<FProperty> inner;
         FScriptArray* array;
-		FArrayProperty* prop;
+        TPropOnScope<FArrayProperty> prop;
 		UObject* propObj;
 		bool shouldFree;
 

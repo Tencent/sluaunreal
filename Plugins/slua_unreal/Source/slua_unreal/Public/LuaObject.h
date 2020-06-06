@@ -32,7 +32,7 @@
 #define CheckUD(Type,L,P) auto UD = LuaObject::checkUD<Type>(L,P);
 // UD may be freed by Engine, so skip it in gc phase
 #define CheckUDGC(Type,L,P) auto UD = LuaObject::checkUD<Type>(L,P,false); \
-	ensure(UD!=nullptr);
+	if(!UD) return 0;
 
 #define RegMetaMethodByName(L,NAME,METHOD) \
     lua_pushcfunction(L,METHOD); \

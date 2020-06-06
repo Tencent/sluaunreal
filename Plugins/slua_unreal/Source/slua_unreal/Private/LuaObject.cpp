@@ -93,7 +93,7 @@ namespace NS_SLUA {
         public:
             
             // Constructors.
-            FNewFrame( UObject* InObject, UFunction* InNode, void* InLocals, FFrame* InPreviousFrame = NULL, UField* InPropertyChainForCompiledIn = NULL )
+            FNewFrame( UObject* InObject, UFunction* InNode, void* InLocals, FFrame* InPreviousFrame = NULL, FField* InPropertyChainForCompiledIn = NULL )
             : Node(InNode)
             , Object(InObject)
             , Code(InNode->Script.GetData())
@@ -558,66 +558,66 @@ namespace NS_SLUA {
 
 	void LuaObject::callRpc(lua_State* L, UObject* obj, UFunction* func, uint8* params) {
 		//// call rpc without outparams
-		//const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
-		//uint8* ReturnValueAddress = bHasReturnParam ? ((uint8*)params + func->ReturnValueOffset) : nullptr;
-  //      
-  //      #if ENGINE_MINOR_VERSION >= 23 && (PLATFORM_MAC || PLATFORM_IOS)
-  //          FNewFrame NewStack(obj, func, params, NULL, func->Children);
-  //      #else
-  //          FFrame NewStack(obj, func, params, NULL, func->Children);
-  //      #endif
-  //      
-  //      #if ENGINE_MINOR_VERSION < 25
-  //          if (func->ReturnValueOffset != MAX_uint16) {
-  //              FProperty* ReturnProperty = func->GetReturnProperty();
-  //              if (ensure(ReturnProperty)) {
-  //                  FOutParmRec* RetVal = (FOutParmRec*)FMemory_Alloca(sizeof(FOutParmRec));
+		const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
+		uint8* ReturnValueAddress = bHasReturnParam ? ((uint8*)params + func->ReturnValueOffset) : nullptr;
+        
+        #if ENGINE_MINOR_VERSION >= 23 && (PLATFORM_MAC || PLATFORM_IOS)
+            FNewFrame NewStack(obj, func, params, NULL, func->ChildProperties);
+        #else
+            FFrame NewStack(obj, func, params, NULL, func->ChildProperties);
+        #endif
+        
+        #if ENGINE_MINOR_VERSION < 25
+            if (func->ReturnValueOffset != MAX_uint16) {
+                FProperty* ReturnProperty = func->GetReturnProperty();
+                if (ensure(ReturnProperty)) {
+                    FOutParmRec* RetVal = (FOutParmRec*)FMemory_Alloca(sizeof(FOutParmRec));
 
-  //                  /* Our context should be that we're in a variable assignment to the return value, so ensure that we have a valid property to return to */
-  //                  RetVal->PropAddr = (uint8*)FMemory_Alloca(ReturnProperty->GetSize());
-  //                  RetVal->Property = ReturnProperty;
-  //                  NewStack.OutParms = RetVal;
-  //              }
-  //          }
+                    /* Our context should be that we're in a variable assignment to the return value, so ensure that we have a valid property to return to */
+                    RetVal->PropAddr = (uint8*)FMemory_Alloca(ReturnProperty->GetSize());
+                    RetVal->Property = ReturnProperty;
+                    NewStack.OutParms = RetVal;
+                }
+            }
 
-  //          NewStack.Locals = params;
-  //          FOutParmRec** LastOut = &NewStack.OutParms;
+            NewStack.Locals = params;
+            FOutParmRec** LastOut = &NewStack.OutParms;
 
-  //          for (FProperty* Property = (FProperty*)func->Children; Property!=nullptr; Property = (FProperty*)Property->Next){
-  //              if (Property->PropertyFlags & CPF_OutParm){
+            for (FProperty* Property = (FProperty*)func->Children; Property!=nullptr; Property = (FProperty*)Property->Next){
+                if (Property->PropertyFlags & CPF_OutParm){
 
-  //                  CA_SUPPRESS(6263)
-  //                      FOutParmRec* Out = (FOutParmRec*)FMemory_Alloca(sizeof(FOutParmRec));
-  //                  // set the address and property in the out param info
-  //                  // warning: Stack.MostRecentPropertyAddress could be NULL for optional out parameters
-  //                  // if that's the case, we use the extra memory allocated for the out param in the function's locals
-  //                  // so there's always a valid address
-  //                  Out->PropAddr = Property->ContainerPtrToValuePtr<uint8>(NewStack.Locals);
-  //                  Out->Property = Property;
+                    CA_SUPPRESS(6263)
+                        FOutParmRec* Out = (FOutParmRec*)FMemory_Alloca(sizeof(FOutParmRec));
+                    // set the address and property in the out param info
+                    // warning: Stack.MostRecentPropertyAddress could be NULL for optional out parameters
+                    // if that's the case, we use the extra memory allocated for the out param in the function's locals
+                    // so there's always a valid address
+                    Out->PropAddr = Property->ContainerPtrToValuePtr<uint8>(NewStack.Locals);
+                    Out->Property = Property;
 
-  //                  // add the new out param info to the stack frame's linked list
-  //                  if (*LastOut) {
-  //                      (*LastOut)->NextOutParm = Out;
-  //                      LastOut = &(*LastOut)->NextOutParm;
-  //                  } else {
-  //                      *LastOut = Out;
-  //                  }
-  //              } else {
-  //                  // copy the result of the expression for this parameter into the appropriate part of the local variable space
-  //                  uint8* Param = Property->ContainerPtrToValuePtr<uint8>(NewStack.Locals);
-  //                  Property->InitializeValue_InContainer(NewStack.Locals);
-  //              }
-  //          }
-  //      #else
-  //          NewStack.OutParms = nullptr;
-  //      #endif
-  //  
-  //      #if ENGINE_MINOR_VERSION >= 23 && (PLATFORM_MAC || PLATFORM_IOS)
-  //          FFrame *frame = (FFrame *)&NewStack;
-  //          func->Invoke(obj, *frame, ReturnValueAddress);
-  //      #else
-  //          func->Invoke(obj, NewStack, ReturnValueAddress);
-  //      #endif
+                    // add the new out param info to the stack frame's linked list
+                    if (*LastOut) {
+                        (*LastOut)->NextOutParm = Out;
+                        LastOut = &(*LastOut)->NextOutParm;
+                    } else {
+                        *LastOut = Out;
+                    }
+                } else {
+                    // copy the result of the expression for this parameter into the appropriate part of the local variable space
+                    uint8* Param = Property->ContainerPtrToValuePtr<uint8>(NewStack.Locals);
+                    Property->InitializeValue_InContainer(NewStack.Locals);
+                }
+            }
+        #else
+            NewStack.OutParms = nullptr;
+        #endif
+    
+        #if ENGINE_MINOR_VERSION >= 23 && (PLATFORM_MAC || PLATFORM_IOS)
+            FFrame *frame = (FFrame *)&NewStack;
+            func->Invoke(obj, *frame, ReturnValueAddress);
+        #else
+            func->Invoke(obj, NewStack, ReturnValueAddress);
+        #endif
 	}
 
 	void LuaObject::callUFunction(lua_State* L, UObject* obj, UFunction* func, uint8* params) {
@@ -1276,7 +1276,7 @@ namespace NS_SLUA {
 	}
 
     int LuaObject::gcObject(lua_State* L) {
-		CheckUDGC(UClass, L, 1);
+		CheckUDGC(UObject, L, 1);
         removeRef(L,UD);
         return 0;
     }

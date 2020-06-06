@@ -155,25 +155,25 @@ namespace NS_SLUA {
 
 		bool addRefByProperty(FReferenceCollector& collector, const FProperty* prop, void* base, bool container) {
 			
-			if (auto p = CastFieldChecked<FObjectProperty>(prop)) {
+			if (auto p = CastField<FObjectProperty>(prop)) {
 				return addRef(p, base, collector, container);
 			}
-			if (auto p = CastFieldChecked<FArrayProperty>(prop))
+			if (auto p = CastField<FArrayProperty>(prop))
 			{
 				return addRef(p, base, collector, container);
 			}
-			if (auto p = CastFieldChecked<FStructProperty>(prop)) {
+			if (auto p = CastField<FStructProperty>(prop)) {
 				return addRef(p, base, collector, container);
 			}
-			if (auto p = CastFieldChecked<FMapProperty>(prop))
+			if (auto p = CastField<FMapProperty>(prop))
 			{
 				return addRef(p, base, collector, container);
 			}
-			if (auto p = CastFieldChecked<FSetProperty>(prop))
+			if (auto p = CastField<FSetProperty>(prop))
 			{
 				return addRef(p, base, collector, container);
 			}
-			if (auto p = CastFieldChecked<FMulticastDelegateProperty>(prop))
+			if (auto p = CastField<FMulticastDelegateProperty>(prop))
 			{
 				return addRef(p, base, collector, container);
 			}

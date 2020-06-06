@@ -96,5 +96,136 @@ namespace NS_SLUA {
         static FProperty* createProperty(const PropertyProto& p);
     }; 
 
+
+	/** Helper to manage a property pointer that may be potentially owned by a wrapper or stack instance */
+	template <typename TPropType>
+	class TPropOnScope
+	{
+		static_assert(TIsDerivedFrom<TPropType, FProperty>::IsDerived, "TPropType must be a FProperty-based type!");
+
+	public:
+		static TPropOnScope OwnedReference(TPropType* InProp)
+		{
+			return TPropOnScope(InProp, true);
+		}
+
+		static TPropOnScope ExternalReference(TPropType* InProp)
+		{
+			return TPropOnScope(InProp, false);
+		}
+
+		TPropOnScope() = default;
+
+		~TPropOnScope()
+		{
+			Reset();
+		}
+
+		TPropOnScope(const TPropOnScope&) = delete;
+		TPropOnScope& operator=(const TPropOnScope&) = delete;
+
+		template <
+			typename TOtherPropType,
+			typename = decltype(ImplicitConv<TPropType*>((TOtherPropType*)nullptr))
+		>
+			TPropOnScope(TPropOnScope<TOtherPropType>&& Other)
+		{
+			bOwnsProp = Other.OwnsProp();
+			Prop = Other.Release();
+
+			Other.Reset();
+		}
+
+		template <
+			typename TOtherPropType,
+			typename = decltype(ImplicitConv<TPropType*>((TOtherPropType*)nullptr))
+		>
+			TPropOnScope& operator=(TPropOnScope<TOtherPropType>&& Other)
+		{
+			if (this != (void*)&Other)
+			{
+				Reset();
+
+				bOwnsProp = Other.OwnsProp();
+				Prop = Other.Release();
+
+				Other.Reset();
+			}
+			return *this;
+		}
+
+		explicit operator bool() const
+		{
+			return IsValid();
+		}
+
+		bool IsValid() const
+		{
+			return Prop != nullptr;
+		}
+
+		operator TPropType* () const
+		{
+			return Prop;
+		}
+
+		TPropType& operator*() const
+		{
+			check(Prop);
+			return *Prop;
+		}
+
+		TPropType* operator->() const
+		{
+			check(Prop);
+			return Prop;
+		}
+
+		TPropType* Get() const
+		{
+			return Prop;
+		}
+
+		bool OwnsProp() const
+		{
+			return bOwnsProp;
+		}
+
+		TPropType* Release()
+		{
+			TPropType* LocalProp = Prop;
+			Prop = nullptr;
+			bOwnsProp = false;
+			return LocalProp;
+		}
+
+		void Reset()
+		{
+			if (bOwnsProp)
+			{
+				delete Prop;
+			}
+			Prop = nullptr;
+			bOwnsProp = false;
+		}
+
+		void AddReferencedObjects(FReferenceCollector& Collector)
+		{
+			if (Prop)
+			{
+				((typename TRemoveConst<TPropType>::Type*)Prop)->AddReferencedObjects(Collector);
+			}
+		}
+
+	private:
+		TPropOnScope(TPropType* InProp, const bool InOwnsProp)
+			: Prop(InProp)
+			, bOwnsProp(InOwnsProp)
+		{
+		}
+
+		TPropType* Prop = nullptr;
+		bool bOwnsProp = false;
+	};
     
 }

@@ -73,7 +73,7 @@ namespace NS_SLUA {
 		static int Enumerable(lua_State* L);
 
     private:
-        FProperty* inner;
+        TPropOnScope<FProperty> inner;
         FScriptArray* array;
 		FArrayProperty* prop;
 		UObject* propObj;

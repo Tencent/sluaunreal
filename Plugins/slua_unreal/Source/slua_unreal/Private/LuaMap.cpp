@@ -68,9 +68,8 @@ namespace NS_SLUA {
 
 	LuaMap::LuaMap(FProperty* kp, FProperty* vp, const FScriptMap* buf, bool frombp) : 
 		map( new FScriptMap ),
-		keyProp(kp), 
-		valueProp(vp) ,
-		prop(nullptr),
+		keyProp(TPropOnScope<FProperty>::ExternalReference(kp)),
+		valueProp(TPropOnScope<FProperty>::ExternalReference(vp)),
 		propObj(nullptr),
 		helper(FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, map)) 
 	{
@@ -86,9 +85,9 @@ namespace NS_SLUA {
 
 	LuaMap::LuaMap(FMapProperty* p, UObject* obj) : 
 		map( p->ContainerPtrToValuePtr<FScriptMap>(obj) ),
-		keyProp(p->KeyProp), 
-		valueProp(p->ValueProp) ,
-		prop(p),
+		keyProp(TPropOnScope<FProperty>::ExternalReference(p->KeyProp)),
+		valueProp(TPropOnScope<FProperty>::ExternalReference(p->ValueProp)),
+		prop(TPropOnScope<FMapProperty>::ExternalReference(p)),
 		propObj(obj),
 		helper(prop, map),
 		createdByBp(false),
@@ -102,16 +101,14 @@ namespace NS_SLUA {
 			ensure(map);
 			SafeDelete(map);
 		}
-		keyProp = valueProp = nullptr;
-		prop = nullptr;
 		propObj = nullptr;
 	}
 
 	void LuaMap::AddReferencedObjects( FReferenceCollector& Collector )
     {
-        if(keyProp) Collector.AddReferencedObject(keyProp);
-        if(valueProp) Collector.AddReferencedObject(valueProp);
-		if(prop) Collector.AddReferencedObject(prop);
+		if (keyProp) keyProp->AddReferencedObjects(Collector);
+        if(valueProp) valueProp->AddReferencedObjects(Collector);
+		if(prop) prop->AddReferencedObjects(Collector);
 		if(propObj) Collector.AddReferencedObject(propObj);
 
 		// if empty or owner object had been collected
@@ -269,7 +266,7 @@ namespace NS_SLUA {
 
 		auto valuePtr = UD->helper.FindValueFromHash(keyPtr);
 		if (valuePtr) {
-			LuaObject::push(L, UD->valueProp, valuePtr);
+			LuaObject::push(L, UD->valueProp.Get(), valuePtr);
 			LuaObject::push(L, true);
 		} else {
 			LuaObject::pushNil(L);
@@ -332,8 +329,8 @@ namespace NS_SLUA {
 				auto pairPtr = helper.GetPairPtr(UD->index);
 				auto keyPtr = map->getKeyPtr(pairPtr);
 				auto valuePtr = map->getValuePtr(pairPtr);
-				LuaObject::push(L, map->keyProp, keyPtr);
-				LuaObject::push(L, map->valueProp, valuePtr);
+				LuaObject::push(L, map->keyProp.Get(), keyPtr);
+				LuaObject::push(L, map->valueProp.Get(), valuePtr);
 				UD->index += 1;
 				UD->num -= 1;
 				return 2;

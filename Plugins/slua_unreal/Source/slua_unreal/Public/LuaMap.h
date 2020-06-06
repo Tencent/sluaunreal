@@ -111,9 +111,9 @@ namespace NS_SLUA {
 
 	private:
 		FScriptMap* map;
-		FProperty* keyProp;
-		FProperty* valueProp;
-		FMapProperty* prop;
+		TPropOnScope<FProperty> keyProp;
+		TPropOnScope<FProperty> valueProp;
+		TPropOnScope<FMapProperty> prop;
 		UObject* propObj;
 		FScriptMapHelper helper;
 		bool createdByBp;

@@ -45,7 +45,7 @@ namespace NS_SLUA {
     }
 
 	LuaArray::LuaArray(FProperty* p, FScriptArray* buf)
-		: inner(p)
+		: inner(TPropOnScope<FProperty>::ExternalReference(p))
 		, prop(nullptr)
 		, propObj(nullptr)
     {
@@ -55,7 +55,7 @@ namespace NS_SLUA {
     }
 
 	LuaArray::LuaArray(FArrayProperty* p, UObject* obj)
-		: inner(p->Inner)
+		: inner(TPropOnScope<FProperty>::ExternalReference(p->Inner))
 		, prop(p)
 		, propObj(obj)
 	{
@@ -72,7 +72,6 @@ namespace NS_SLUA {
 			SafeDelete(array);
 		}
 		
-		inner = nullptr;
 		propObj = nullptr;
     }
 
@@ -91,7 +90,7 @@ namespace NS_SLUA {
 
     void LuaArray::AddReferencedObjects( FReferenceCollector& Collector )
     {
-        if (inner) Collector.AddReferencedObject(inner);
+        if (inner) inner->AddReferencedObjects(Collector);
 		if (prop) Collector.AddReferencedObject(prop);
 		if (propObj) Collector.AddReferencedObject(propObj);
 
@@ -296,7 +295,7 @@ namespace NS_SLUA {
 		CheckUD(LuaArray::Enumerator, L, 1);
 		auto arr = UD->arr;
 		if (arr->isValidIndex(UD->index)) {
-			auto element = arr->inner;
+			auto element = arr->inner.Get();
 			auto es = element->ElementSize;
 			auto parms = ((uint8*)arr->array->GetData()) + UD->index * es;
 			LuaObject::push(L, UD->index);

@@ -73,9 +73,9 @@ namespace NS_SLUA {
 		static int Enumerable(lua_State* L);
 
     private:
-        TPropOnScope<FProperty> inner;
+        FProperty* inner;
         FScriptArray* array;
-        TPropOnScope<FArrayProperty> prop;
+        FArrayProperty* prop;
 		UObject* propObj;
 		bool shouldFree;
 

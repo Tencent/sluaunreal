@@ -1045,7 +1045,7 @@ namespace NS_SLUA {
     }
 
 #if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
-	int pushUMulticastInlineDelegateProperty(lua_State* L, UProperty* prop, uint8* parms, bool ref) {
+	int pushUMulticastInlineDelegateProperty(lua_State* L, UProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
 		auto p = Cast<UMulticastInlineDelegateProperty>(prop);
 		ensure(p);
 		FMulticastScriptDelegate* delegate = const_cast<FMulticastScriptDelegate*>(p->GetMulticastDelegate(parms));
@@ -1054,7 +1054,7 @@ namespace NS_SLUA {
 #endif
 
 #if (ENGINE_MINOR_VERSION>=24) && (ENGINE_MAJOR_VERSION>=4)
-	int pushUMulticastSparseDelegateProperty(lua_State* L, UProperty* prop, uint8* parms, bool ref) {
+	int pushUMulticastSparseDelegateProperty(lua_State* L, UProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
 		auto p = Cast<UMulticastSparseDelegateProperty>(prop);
 		ensure(p);
 		FMulticastScriptDelegate* delegate = const_cast<FMulticastScriptDelegate*>(p->GetMulticastDelegate(parms));

@@ -582,7 +582,7 @@ namespace NS_SLUA {
 
     int LuaVar::pushArgByParms(UProperty* prop,uint8* parms) {
         auto L = getState();
-        if (LuaObject::push(L,prop,parms,false))
+        if (LuaObject::push(L,prop,parms,nullptr))
             return prop->ElementSize;
         return 0;
     }

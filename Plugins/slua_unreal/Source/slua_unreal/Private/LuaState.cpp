@@ -113,17 +113,32 @@ namespace NS_SLUA {
 	}
     #endif
 
-    int LuaState::loader(lua_State* L) {
+	int LuaState::increaseCallStack()
+	{
+		newObjectsInCallStack.Push(ObjectSet());
+		return currentCallStack++;
+	}
+
+	void LuaState::decreaseCallStack()
+	{
+		currentCallStack--;
+		newObjectsInCallStack.Pop(false);
+	}
+
+	bool LuaState::hasObjectInStack(const UObject* obj, int stackLayer)
+	{
+		return newObjectsInCallStack[stackLayer].Contains(const_cast<UObject*>(obj));
+	}
+
+	int LuaState::loader(lua_State* L) {
         LuaState* state = LuaState::get(L);
         const char* fn = lua_tostring(L,1);
-        uint32 len;
         FString filepath;
-        if(uint8* buf = state->loadFile(fn,len,filepath)) {
-            AutoDeleteArray<uint8> defer(buf);
-
+		TArray<uint8> buf = state->loadFile(fn, filepath);
+        if(buf.Num() > 0) {
             char chunk[256];
             snprintf(chunk,256,"@%s",TCHAR_TO_UTF8(*filepath));
-            if(luaL_loadbuffer(L,(const char*)buf,len,chunk)==0) {
+            if(luaL_loadbuffer(L,(const char*)buf.GetData(),buf.Num(),chunk)==0) {
                 return 1;
             }
             else {
@@ -137,9 +152,9 @@ namespace NS_SLUA {
         return 0;
     }
     
-    uint8* LuaState::loadFile(const char* fn,uint32& len,FString& filepath) {
-        if(loadFileDelegate) return loadFileDelegate(fn,len,filepath);
-        return nullptr;
+	TArray<uint8> LuaState::loadFile(const char* fn,FString& filepath) {
+        if(loadFileDelegate) return loadFileDelegate(fn,filepath);
+        return TArray<uint8>();
     }
 
     LuaState* LuaState::mainState = nullptr;
@@ -151,9 +166,11 @@ namespace NS_SLUA {
 		, errorDelegate(nullptr)
 		, L(nullptr)
 		, cacheObjRef(LUA_NOREF)
+		, cacheFuncRef(LUA_NOREF)
 		, stackCount(0)
 		, si(0)
 		, deadLoopCheck(nullptr)
+		, currentCallStack(0)
     {
         if(name) stateName=UTF8_TO_TCHAR(name);
 		this->pGI = gameInstance;
@@ -200,7 +217,7 @@ namespace NS_SLUA {
 		}
 
 #ifdef ENABLE_PROFILER
-		LuaProfiler::tick(L);
+		LuaProfiler::tick(this);
 #endif
 
 		PROFILER_WATCHER(w1);
@@ -228,6 +245,7 @@ namespace NS_SLUA {
         
         if(L) {
             lua_close(L);
+			GUObjectArray.RemoveUObjectCreateListener(this);
 			GUObjectArray.RemoveUObjectDeleteListener(this);
 			FCoreUObjectDelegates::GetPostGarbageCollect().Remove(pgcHandler);
 			FWorldDelegates::OnWorldCleanup.Remove(wcHandler);
@@ -237,6 +255,8 @@ namespace NS_SLUA {
 		freeDeferObject();
 		objRefs.Empty();
 		SafeDelete(deadLoopCheck);
+
+		LuaMemoryProfile::stop();
     }
 
 
@@ -252,6 +272,7 @@ namespace NS_SLUA {
 		pgcHandler = FCoreUObjectDelegates::GetPostGarbageCollect().AddRaw(this, &LuaState::onEngineGC);
 		wcHandler = FWorldDelegates::OnWorldCleanup.AddRaw(this, &LuaState::onWorldCleanup);
 		GUObjectArray.AddUObjectDeleteListener(this);
+		GUObjectArray.AddUObjectCreateListener(this);
 
 		latentDelegate = NewObject<ULatentDelegate>((UObject*)GetTransientPackage(), ULatentDelegate::StaticClass());
 		latentDelegate->bindLuaState(this);
@@ -285,6 +306,15 @@ namespace NS_SLUA {
         lua_setmetatable(L,-2);
         // register it
         cacheObjRef = luaL_ref(L,LUA_REGISTRYINDEX);
+
+		// init func cache table
+		lua_newtable(L);
+		lua_newtable(L);
+		lua_pushstring(L, "kv");
+		lua_setfield(L, -2, "__mode");
+		lua_setmetatable(L, -2);
+		// register it
+		cacheFuncRef = luaL_ref(L, LUA_REGISTRYINDEX);
 
         ensure(lua_gettop(L)==0);
         
@@ -328,7 +358,7 @@ namespace NS_SLUA {
         LuaArray::reg(L);
         LuaMap::reg(L);
 #ifdef ENABLE_PROFILER
-		LuaProfiler::init(L);
+		LuaProfiler::init(this);
 #endif
 		
 		onInitEvent.Broadcast();
@@ -462,14 +492,13 @@ namespace NS_SLUA {
     }
 
     LuaVar LuaState::doFile(const char* fn, LuaVar* pEnv) {
-        uint32 len;
         FString filepath;
-        if(uint8* buf=loadFile(fn,len,filepath)) {
+		TArray<uint8> buf = loadFile(fn, filepath);
+        if (buf.Num() > 0) {
             char chunk[256];
             snprintf(chunk,256,"@%s",TCHAR_TO_UTF8(*filepath));
 
-            LuaVar r = doBuffer( buf,len,chunk,pEnv );
-            delete[] buf;
+            LuaVar r = doBuffer(buf.GetData(),buf.Num(),chunk,pEnv );
             return r;
         }
         return LuaVar();
@@ -479,6 +508,30 @@ namespace NS_SLUA {
 	{
 		PROFILER_WATCHER(w1);
 		unlinkUObject((const UObject*)Object);
+		LuaObject::removeFuncCache(L, (UFunction*)Object);
+
+		if (currentCallStack > 0)
+		{
+			ObjectSet objSet = newObjectsInCallStack.Last();
+			if (objSet.Contains(const_cast<UObjectBase*>(Object)))
+			{
+				objSet.Remove(const_cast<UObjectBase*>(Object));
+			}
+		}
+	}
+
+	void LuaState::NotifyUObjectCreated(const UObjectBase *Object, int32 Index)
+	{
+		if (!IsInGameThread())
+		{
+			return;
+		}
+
+		if (currentCallStack > 0)
+		{
+			ObjectSet objSet = newObjectsInCallStack.Last();
+			objSet.Add(const_cast<UObjectBase*>(Object));
+		}
 	}
 
 	void LuaState::unlinkUObject(const UObject * Object)
@@ -503,11 +556,16 @@ namespace NS_SLUA {
 		ud->flag |= UD_HADFREE;
 		// remove cache
 		ensure(ud->ud == Object);
-		LuaObject::removeFromCache(L, (void*)Object);
+		LuaObject::removeObjCache(L, (void*)Object);
 	}
 
 	void LuaState::AddReferencedObjects(FReferenceCollector & Collector)
 	{
+		if (latentDelegate)
+		{
+			Collector.AddReferencedObject(latentDelegate);
+		}
+
 		for (UObjectRefMap::TIterator it(objRefs); it; ++it)
 		{
 			UObject* item = it.Key();
@@ -879,5 +937,21 @@ namespace NS_SLUA {
 	{
 		auto& item = cachePropMap.FindOrAdd(uclass);
 		item.Add(UTF8_TO_TCHAR(pname), prop);
+	}
+
+	NewObjectRecorder::NewObjectRecorder(lua_State* L_)
+		: luaState(LuaState::get(G(L_)->mainthread))
+	{
+		stackLayer = luaState->increaseCallStack();
+	}
+
+	NewObjectRecorder::~NewObjectRecorder()
+	{
+		luaState->decreaseCallStack();
+	}
+
+	bool NewObjectRecorder::hasObject(const UObject* obj) const
+	{
+		return luaState->hasObjectInStack(obj, stackLayer);
 	}
 }

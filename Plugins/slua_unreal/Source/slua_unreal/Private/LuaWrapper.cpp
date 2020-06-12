@@ -17,11 +17,6 @@
 
 namespace NS_SLUA {
 
-	static UScriptStruct* FSlateFontInfoStruct = nullptr;
-	static UScriptStruct* FSlateBrushStruct = nullptr;
-	static UScriptStruct* FMarginStruct = nullptr;
-	static UScriptStruct* FGeometryStruct = nullptr;
-	static UScriptStruct* FSlateColorStruct = nullptr;
 	static UScriptStruct* FRotatorStruct = nullptr;
 	static UScriptStruct* FTransformStruct = nullptr;
 	static UScriptStruct* FLinearColorStruct = nullptr;
@@ -46,101 +41,6 @@ namespace NS_SLUA {
 
 	TMap<UScriptStruct*, pushStructFunction> _pushStructMap;
 	TMap<UScriptStruct*, checkStructFunction> _checkStructMap;
-
-	static inline FSlateFontInfo* __newFSlateFontInfo() {
-		return new FSlateFontInfo();
-	}
-
-	static void __pushFSlateFontInfo(lua_State* L, UStructProperty* p, uint8* parms) {
-		auto ptr = __newFSlateFontInfo();
-		p->CopyCompleteValue(ptr, parms);
-		LuaObject::push<FSlateFontInfo>(L, "FSlateFontInfo", ptr, UD_AUTOGC);
-	}
-
-	static void __checkFSlateFontInfo(lua_State* L, UStructProperty* p, uint8* parms, int i) {
-		auto v = LuaObject::checkValue<FSlateFontInfo*>(L, i);
-		if (!v) {
-			luaL_error(L, "check FSlateFontInfo nil value");
-			return;
-		}
-		p->CopyCompleteValue(parms, v);
-	}
-
-	static inline FSlateBrush* __newFSlateBrush() {
-		return new FSlateBrush();
-	}
-
-	static void __pushFSlateBrush(lua_State* L, UStructProperty* p, uint8* parms) {
-		auto ptr = __newFSlateBrush();
-		p->CopyCompleteValue(ptr, parms);
-		LuaObject::push<FSlateBrush>(L, "FSlateBrush", ptr, UD_AUTOGC);
-	}
-
-	static void __checkFSlateBrush(lua_State* L, UStructProperty* p, uint8* parms, int i) {
-		auto v = LuaObject::checkValue<FSlateBrush*>(L, i);
-		if (!v) {
-			luaL_error(L, "check FSlateBrush nil value");
-			return;
-		}
-		p->CopyCompleteValue(parms, v);
-	}
-
-	static inline FMargin* __newFMargin() {
-		return new FMargin();
-	}
-
-	static void __pushFMargin(lua_State* L, UStructProperty* p, uint8* parms) {
-		auto ptr = __newFMargin();
-		p->CopyCompleteValue(ptr, parms);
-		LuaObject::push<FMargin>(L, "FMargin", ptr, UD_AUTOGC);
-	}
-
-	static void __checkFMargin(lua_State* L, UStructProperty* p, uint8* parms, int i) {
-		auto v = LuaObject::checkValue<FMargin*>(L, i);
-		if (!v) {
-			luaL_error(L, "check FMargin nil value");
-			return;
-		}
-		p->CopyCompleteValue(parms, v);
-	}
-
-	static inline FGeometry* __newFGeometry() {
-		return new FGeometry();
-	}
-
-	static void __pushFGeometry(lua_State* L, UStructProperty* p, uint8* parms) {
-		auto ptr = __newFGeometry();
-		p->CopyCompleteValue(ptr, parms);
-		LuaObject::push<FGeometry>(L, "FGeometry", ptr, UD_AUTOGC);
-	}
-
-	static void __checkFGeometry(lua_State* L, UStructProperty* p, uint8* parms, int i) {
-		auto v = LuaObject::checkValue<FGeometry*>(L, i);
-		if (!v) {
-			luaL_error(L, "check FGeometry nil value");
-			return;
-		}
-		p->CopyCompleteValue(parms, v);
-	}
-
-	static inline FSlateColor* __newFSlateColor() {
-		return new FSlateColor();
-	}
-
-	static void __pushFSlateColor(lua_State* L, UStructProperty* p, uint8* parms) {
-		auto ptr = __newFSlateColor();
-		p->CopyCompleteValue(ptr, parms);
-		LuaObject::push<FSlateColor>(L, "FSlateColor", ptr, UD_AUTOGC);
-	}
-
-	static void __checkFSlateColor(lua_State* L, UStructProperty* p, uint8* parms, int i) {
-		auto v = LuaObject::checkValue<FSlateColor*>(L, i);
-		if (!v) {
-			luaL_error(L, "check FSlateColor nil value");
-			return;
-		}
-		p->CopyCompleteValue(parms, v);
-	}
 
 	static inline FRotator* __newFRotator() {
 		return new FRotator();
@@ -484,846 +384,6 @@ namespace NS_SLUA {
 		p->CopyCompleteValue(parms, v);
 	}
 
-	struct FSlateFontInfoWrapper {
-
-		static int __ctor(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				auto self = new FSlateFontInfo();
-				LuaObject::push<FSlateFontInfo>(L, "FSlateFontInfo", self, UD_AUTOGC);
-				return 1;
-			}
-			if (argc == 4) {
-				auto InFontName = LuaObject::checkValue<const char*>(L, 2);
-				auto InSize = LuaObject::checkValue<int>(L, 3);
-				auto InSizeVal = (unsigned short)InSize;
-				auto InHinting = LuaObject::checkValue<int>(L, 4);
-				auto InHintingVal = (EFontHinting)InHinting;
-				auto self = new FSlateFontInfo(InFontName, InSizeVal, InHintingVal);
-				LuaObject::push<FSlateFontInfo>(L, "FSlateFontInfo", self, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FSlateFontInfo() error, argc=%d", argc);
-			return 0;
-		}
-
-		static int __gc(lua_State* L) {
-			CheckSelf(FSlateFontInfo);
-			LuaObject::releaseLink(L, udptr);
-			if (udptr->flag & UD_AUTOGC) delete self;
-			return 0;
-		}
-
-		static int __eq(lua_State* L) {
-			CheckSelf(FSlateFontInfo);
-			if (LuaObject::matchType(L, 2, "FSlateFontInfo")) {
-				auto Other = LuaObject::checkValue<FSlateFontInfo*>(L, 2);
-				auto& OtherRef = *Other;
-				auto ret = (*self == OtherRef);
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			LuaObject::push(L, false);
-			return 1;
-		}
-
-		static int get_Size(lua_State* L) {
-			CheckSelf(FSlateFontInfo);
-			auto& Size = self->Size;
-			LuaObject::push(L, Size);
-			return 1;
-		}
-
-		static int set_Size(lua_State* L) {
-			CheckSelf(FSlateFontInfo);
-			auto& Size = self->Size;
-			auto SizeIn = LuaObject::checkValue<int32>(L, 2);
-			Size = SizeIn;
-			LuaObject::push(L, SizeIn);
-			return 1;
-		}
-
-		static int get_FontFallback(lua_State* L) {
-			CheckSelf(FSlateFontInfo);
-			auto& FontFallback = self->FontFallback;
-			LuaObject::push(L, static_cast<int>(FontFallback));
-			return 1;
-		}
-
-		static int set_FontFallback(lua_State* L) {
-			CheckSelf(FSlateFontInfo);
-			auto& FontFallback = self->FontFallback;
-			auto FontFallbackIn = LuaObject::checkValue<int>(L, 2);
-			FontFallback = (EFontFallback)FontFallbackIn;
-			LuaObject::push(L, FontFallbackIn);
-			return 1;
-		}
-
-		static int HasValidFont(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				CheckSelf(FSlateFontInfo);
-				auto ret = self->HasValidFont();
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			luaL_error(L, "call FSlateFontInfo::HasValidFont error, argc=%d", argc);
-			return 0;
-		}
-
-		static void bind(lua_State* L) {
-			AutoStack autoStack(L);
-			LuaObject::newType(L, "FSlateFontInfo");
-			LuaObject::addOperator(L, "__eq", __eq);
-			LuaObject::addField(L, "Size", get_Size, set_Size, true);
-			LuaObject::addField(L, "FontFallback", get_FontFallback, set_FontFallback, true);
-			LuaObject::addMethod(L, "HasValidFont", HasValidFont, true);
-			LuaObject::finishType(L, "FSlateFontInfo", __ctor, __gc);
-		}
-
-	};
-
-	struct FSlateBrushWrapper {
-
-		static int __ctor(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				auto self = new FSlateBrush();
-				LuaObject::push<FSlateBrush>(L, "FSlateBrush", self, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FSlateBrush() error, argc=%d", argc);
-			return 0;
-		}
-
-		static int __gc(lua_State* L) {
-			CheckSelf(FSlateBrush);
-			LuaObject::releaseLink(L, udptr);
-			if (udptr->flag & UD_AUTOGC) delete self;
-			return 0;
-		}
-
-		static int __eq(lua_State* L) {
-			CheckSelf(FSlateBrush);
-			if (LuaObject::matchType(L, 2, "FSlateBrush")) {
-				auto Other = LuaObject::checkValue<FSlateBrush*>(L, 2);
-				auto& OtherRef = *Other;
-				auto ret = (*self == OtherRef);
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			LuaObject::push(L, false);
-			return 1;
-		}
-
-		static int get_ImageSize(lua_State* L) {
-			CheckSelf(FSlateBrush);
-			auto& ImageSize = self->ImageSize;
-			LuaObject::pushAndLink<FVector2D>(L, udptr, "FVector2D", &ImageSize);
-			return 1;
-		}
-
-		static int set_ImageSize(lua_State* L) {
-			CheckSelf(FSlateBrush);
-			auto& ImageSize = self->ImageSize;
-			auto ImageSizeIn = LuaObject::checkValue<FVector2D*>(L, 2);
-			ImageSize = *ImageSizeIn;
-			LuaObject::push<FVector2D>(L, "FVector2D", ImageSizeIn);
-			return 1;
-		}
-
-		static int get_Margin(lua_State* L) {
-			CheckSelf(FSlateBrush);
-			auto& Margin = self->Margin;
-			LuaObject::pushAndLink<FMargin>(L, udptr, "FMargin", &Margin);
-			return 1;
-		}
-
-		static int set_Margin(lua_State* L) {
-			CheckSelf(FSlateBrush);
-			auto& Margin = self->Margin;
-			auto MarginIn = LuaObject::checkValue<FMargin*>(L, 2);
-			Margin = *MarginIn;
-			LuaObject::push<FMargin>(L, "FMargin", MarginIn);
-			return 1;
-		}
-
-		static int get_TintColor(lua_State* L) {
-			CheckSelf(FSlateBrush);
-			auto& TintColor = self->TintColor;
-			LuaObject::pushAndLink<FSlateColor>(L, udptr, "FSlateColor", &TintColor);
-			return 1;
-		}
-
-		static int set_TintColor(lua_State* L) {
-			CheckSelf(FSlateBrush);
-			auto& TintColor = self->TintColor;
-			auto TintColorIn = LuaObject::checkValue<FSlateColor*>(L, 2);
-			TintColor = *TintColorIn;
-			LuaObject::push<FSlateColor>(L, "FSlateColor", TintColorIn);
-			return 1;
-		}
-
-		static int HasUObject(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				CheckSelf(FSlateBrush);
-				auto ret = self->HasUObject();
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			luaL_error(L, "call FSlateBrush::HasUObject error, argc=%d", argc);
-			return 0;
-		}
-
-		static int IsDynamicallyLoaded(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				CheckSelf(FSlateBrush);
-				auto ret = self->IsDynamicallyLoaded();
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			luaL_error(L, "call FSlateBrush::IsDynamicallyLoaded error, argc=%d", argc);
-			return 0;
-		}
-
-		static int GetUVRegion(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				CheckSelf(FSlateBrush);
-				auto ret = __newFBox2D();
-				*ret = self->GetUVRegion();
-				LuaObject::push<FBox2D>(L, "FBox2D", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FSlateBrush::GetUVRegion error, argc=%d", argc);
-			return 0;
-		}
-
-		static int SetUVRegion(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 2) {
-				CheckSelf(FSlateBrush);
-				auto InUVRegion = LuaObject::checkValue<FBox2D*>(L, 2);
-				auto& InUVRegionRef = *InUVRegion;
-				self->SetUVRegion(InUVRegionRef);
-				return 0;
-			}
-			luaL_error(L, "call FSlateBrush::SetUVRegion error, argc=%d", argc);
-			return 0;
-		}
-
-		static int UTextureIdentifier(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 0) {
-				auto ret = FSlateBrush::UTextureIdentifier();
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			luaL_error(L, "call FSlateBrush::UTextureIdentifier error, argc=%d", argc);
-			return 0;
-		}
-
-		static void bind(lua_State* L) {
-			AutoStack autoStack(L);
-			LuaObject::newType(L, "FSlateBrush");
-			LuaObject::addOperator(L, "__eq", __eq);
-			LuaObject::addField(L, "ImageSize", get_ImageSize, set_ImageSize, true);
-			LuaObject::addField(L, "Margin", get_Margin, set_Margin, true);
-			LuaObject::addField(L, "TintColor", get_TintColor, set_TintColor, true);
-			LuaObject::addMethod(L, "HasUObject", HasUObject, true);
-			LuaObject::addMethod(L, "IsDynamicallyLoaded", IsDynamicallyLoaded, true);
-			LuaObject::addMethod(L, "GetUVRegion", GetUVRegion, true);
-			LuaObject::addMethod(L, "SetUVRegion", SetUVRegion, true);
-			LuaObject::addMethod(L, "UTextureIdentifier", UTextureIdentifier, false);
-			LuaObject::finishType(L, "FSlateBrush", __ctor, __gc);
-		}
-
-	};
-
-	struct FMarginWrapper {
-
-		static int __ctor(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				auto self = new FMargin();
-				LuaObject::push<FMargin>(L, "FMargin", self, UD_AUTOGC);
-				return 1;
-			}
-			if (argc == 2) {
-				auto UniformMargin = LuaObject::checkValue<float>(L, 2);
-				auto self = new FMargin(UniformMargin);
-				LuaObject::push<FMargin>(L, "FMargin", self, UD_AUTOGC);
-				return 1;
-			}
-			if (argc == 3) {
-				auto Horizontal = LuaObject::checkValue<float>(L, 2);
-				auto Vertical = LuaObject::checkValue<float>(L, 3);
-				auto self = new FMargin(Horizontal, Vertical);
-				LuaObject::push<FMargin>(L, "FMargin", self, UD_AUTOGC);
-				return 1;
-			}
-			if (argc == 5) {
-				auto InLeft = LuaObject::checkValue<float>(L, 2);
-				auto InTop = LuaObject::checkValue<float>(L, 3);
-				auto InRight = LuaObject::checkValue<float>(L, 4);
-				auto InBottom = LuaObject::checkValue<float>(L, 5);
-				auto self = new FMargin(InLeft, InTop, InRight, InBottom);
-				LuaObject::push<FMargin>(L, "FMargin", self, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FMargin() error, argc=%d", argc);
-			return 0;
-		}
-
-		static int __gc(lua_State* L) {
-			CheckSelf(FMargin);
-			LuaObject::releaseLink(L, udptr);
-			if (udptr->flag & UD_AUTOGC) delete self;
-			return 0;
-		}
-
-		static int __mul(lua_State* L) {
-			CheckSelf(FMargin);
-			if (lua_isnumber(L, 2)) {
-				auto Scale = LuaObject::checkValue<float>(L, 2);
-				auto ret = __newFMargin();
-				*ret = (*self * Scale);
-				LuaObject::push<FMargin>(L, "FMargin", ret, UD_AUTOGC);
-				return 1;
-			}
-			if (LuaObject::matchType(L, 2, "FMargin")) {
-				auto InScale = LuaObject::checkValue<FMargin*>(L, 2);
-				auto& InScaleRef = *InScale;
-				auto ret = __newFMargin();
-				*ret = (*self * InScaleRef);
-				LuaObject::push<FMargin>(L, "FMargin", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "FMargin operator__mul error, arg=%d", lua_typename(L, 2));
-			return 0;
-		}
-
-		static int __add(lua_State* L) {
-			CheckSelf(FMargin);
-			if (LuaObject::matchType(L, 2, "FMargin")) {
-				auto InDelta = LuaObject::checkValue<FMargin*>(L, 2);
-				auto& InDeltaRef = *InDelta;
-				auto ret = __newFMargin();
-				*ret = (*self + InDeltaRef);
-				LuaObject::push<FMargin>(L, "FMargin", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "FMargin operator__add error, arg=%d", lua_typename(L, 2));
-			return 0;
-		}
-
-		static int __sub(lua_State* L) {
-			CheckSelf(FMargin);
-			if (LuaObject::matchType(L, 2, "FMargin")) {
-				auto Other = LuaObject::checkValue<FMargin*>(L, 2);
-				auto& OtherRef = *Other;
-				auto ret = __newFMargin();
-				*ret = (*self - OtherRef);
-				LuaObject::push<FMargin>(L, "FMargin", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "FMargin operator__sub error, arg=%d", lua_typename(L, 2));
-			return 0;
-		}
-
-		static int __eq(lua_State* L) {
-			CheckSelf(FMargin);
-			if (LuaObject::matchType(L, 2, "FMargin")) {
-				auto Other = LuaObject::checkValue<FMargin*>(L, 2);
-				auto& OtherRef = *Other;
-				auto ret = (*self == OtherRef);
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			LuaObject::push(L, false);
-			return 1;
-		}
-
-		static int get_Left(lua_State* L) {
-			CheckSelf(FMargin);
-			auto& Left = self->Left;
-			LuaObject::push(L, Left);
-			return 1;
-		}
-
-		static int set_Left(lua_State* L) {
-			CheckSelf(FMargin);
-			auto& Left = self->Left;
-			auto LeftIn = LuaObject::checkValue<float>(L, 2);
-			Left = LeftIn;
-			LuaObject::push(L, LeftIn);
-			return 1;
-		}
-
-		static int get_Top(lua_State* L) {
-			CheckSelf(FMargin);
-			auto& Top = self->Top;
-			LuaObject::push(L, Top);
-			return 1;
-		}
-
-		static int set_Top(lua_State* L) {
-			CheckSelf(FMargin);
-			auto& Top = self->Top;
-			auto TopIn = LuaObject::checkValue<float>(L, 2);
-			Top = TopIn;
-			LuaObject::push(L, TopIn);
-			return 1;
-		}
-
-		static int get_Right(lua_State* L) {
-			CheckSelf(FMargin);
-			auto& Right = self->Right;
-			LuaObject::push(L, Right);
-			return 1;
-		}
-
-		static int set_Right(lua_State* L) {
-			CheckSelf(FMargin);
-			auto& Right = self->Right;
-			auto RightIn = LuaObject::checkValue<float>(L, 2);
-			Right = RightIn;
-			LuaObject::push(L, RightIn);
-			return 1;
-		}
-
-		static int get_Bottom(lua_State* L) {
-			CheckSelf(FMargin);
-			auto& Bottom = self->Bottom;
-			LuaObject::push(L, Bottom);
-			return 1;
-		}
-
-		static int set_Bottom(lua_State* L) {
-			CheckSelf(FMargin);
-			auto& Bottom = self->Bottom;
-			auto BottomIn = LuaObject::checkValue<float>(L, 2);
-			Bottom = BottomIn;
-			LuaObject::push(L, BottomIn);
-			return 1;
-		}
-
-		static int GetDesiredSize(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				CheckSelf(FMargin);
-				auto ret = __newFVector2D();
-				*ret = self->GetDesiredSize();
-				LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FMargin::GetDesiredSize error, argc=%d", argc);
-			return 0;
-		}
-
-		static void bind(lua_State* L) {
-			AutoStack autoStack(L);
-			LuaObject::newType(L, "FMargin");
-			LuaObject::addOperator(L, "__mul", __mul);
-			LuaObject::addOperator(L, "__add", __add);
-			LuaObject::addOperator(L, "__sub", __sub);
-			LuaObject::addOperator(L, "__eq", __eq);
-			LuaObject::addField(L, "Left", get_Left, set_Left, true);
-			LuaObject::addField(L, "Top", get_Top, set_Top, true);
-			LuaObject::addField(L, "Right", get_Right, set_Right, true);
-			LuaObject::addField(L, "Bottom", get_Bottom, set_Bottom, true);
-			LuaObject::addMethod(L, "GetDesiredSize", GetDesiredSize, true);
-			LuaObject::finishType(L, "FMargin", __ctor, __gc);
-		}
-
-	};
-
-	struct FGeometryWrapper {
-
-		static int __ctor(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				auto self = new FGeometry();
-				LuaObject::push<FGeometry>(L, "FGeometry", self, UD_AUTOGC);
-				return 1;
-			}
-			if (argc == 5) {
-				auto OffsetFromParent = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto& OffsetFromParentRef = *OffsetFromParent;
-				auto ParentAbsolutePosition = LuaObject::checkValue<FVector2D*>(L, 3);
-				auto& ParentAbsolutePositionRef = *ParentAbsolutePosition;
-				auto InLocalSize = LuaObject::checkValue<FVector2D*>(L, 4);
-				auto& InLocalSizeRef = *InLocalSize;
-				auto InScale = LuaObject::checkValue<float>(L, 5);
-				auto self = new FGeometry(OffsetFromParentRef, ParentAbsolutePositionRef, InLocalSizeRef, InScale);
-				LuaObject::push<FGeometry>(L, "FGeometry", self, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FGeometry() error, argc=%d", argc);
-			return 0;
-		}
-
-		static int __gc(lua_State* L) {
-			CheckSelf(FGeometry);
-			LuaObject::releaseLink(L, udptr);
-			if (udptr->flag & UD_AUTOGC) delete self;
-			return 0;
-		}
-
-		static int __eq(lua_State* L) {
-			CheckSelf(FGeometry);
-			if (LuaObject::matchType(L, 2, "FGeometry")) {
-				auto Other = LuaObject::checkValue<FGeometry*>(L, 2);
-				auto& OtherRef = *Other;
-				auto ret = (*self == OtherRef);
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			LuaObject::push(L, false);
-			return 1;
-		}
-
-		static int get_Size(lua_State* L) {
-			CheckSelf(FGeometry);
-			auto& Size = self->Size;
-			LuaObject::pushAndLink<FVector2D>(L, udptr, "FVector2D", &Size);
-			return 1;
-		}
-
-		static int get_Scale(lua_State* L) {
-			CheckSelf(FGeometry);
-			auto& Scale = self->Scale;
-			LuaObject::push(L, Scale);
-			return 1;
-		}
-
-		static int get_AbsolutePosition(lua_State* L) {
-			CheckSelf(FGeometry);
-			auto& AbsolutePosition = self->AbsolutePosition;
-			LuaObject::pushAndLink<FVector2D>(L, udptr, "FVector2D", &AbsolutePosition);
-			return 1;
-		}
-
-		static int get_Position(lua_State* L) {
-			CheckSelf(FGeometry);
-			auto& Position = self->Position;
-			LuaObject::pushAndLink<FVector2D>(L, udptr, "FVector2D", &Position);
-			return 1;
-		}
-
-		static int MakeChild(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 4) {
-				CheckSelf(FGeometry);
-				auto ChildOffset = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto& ChildOffsetRef = *ChildOffset;
-				auto InLocalSize = LuaObject::checkValue<FVector2D*>(L, 3);
-				auto& InLocalSizeRef = *InLocalSize;
-				auto ChildScale = LuaObject::checkValue<float>(L, 4);
-				auto ret = __newFGeometry();
-				*ret = self->MakeChild(ChildOffsetRef, InLocalSizeRef, ChildScale);
-				LuaObject::push<FGeometry>(L, "FGeometry", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FGeometry::MakeChild error, argc=%d", argc);
-			return 0;
-		}
-
-		static int IsUnderLocation(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 2) {
-				CheckSelf(FGeometry);
-				auto AbsoluteCoordinate = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto& AbsoluteCoordinateRef = *AbsoluteCoordinate;
-				auto ret = self->IsUnderLocation(AbsoluteCoordinateRef);
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			luaL_error(L, "call FGeometry::IsUnderLocation error, argc=%d", argc);
-			return 0;
-		}
-
-		static int AbsoluteToLocal(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 2) {
-				CheckSelf(FGeometry);
-				auto AbsoluteCoordinate = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto AbsoluteCoordinateVal = *AbsoluteCoordinate;
-				auto ret = __newFVector2D();
-				*ret = self->AbsoluteToLocal(AbsoluteCoordinateVal);
-				LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FGeometry::AbsoluteToLocal error, argc=%d", argc);
-			return 0;
-		}
-
-		static int LocalToAbsolute(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 2) {
-				CheckSelf(FGeometry);
-				auto LocalCoordinate = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto LocalCoordinateVal = *LocalCoordinate;
-				auto ret = __newFVector2D();
-				*ret = self->LocalToAbsolute(LocalCoordinateVal);
-				LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FGeometry::LocalToAbsolute error, argc=%d", argc);
-			return 0;
-		}
-
-		static int LocalToRoundedLocal(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 2) {
-				CheckSelf(FGeometry);
-				auto LocalCoordinate = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto LocalCoordinateVal = *LocalCoordinate;
-				auto ret = __newFVector2D();
-				*ret = self->LocalToRoundedLocal(LocalCoordinateVal);
-				LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FGeometry::LocalToRoundedLocal error, argc=%d", argc);
-			return 0;
-		}
-
-		static int ToString(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				CheckSelf(FGeometry);
-				auto ret = self->ToString();
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			luaL_error(L, "call FGeometry::ToString error, argc=%d", argc);
-			return 0;
-		}
-
-		static int GetDrawSize(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				CheckSelf(FGeometry);
-				auto ret = __newFVector2D();
-				*ret = self->GetDrawSize();
-				LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FGeometry::GetDrawSize error, argc=%d", argc);
-			return 0;
-		}
-
-		static int GetLocalSize(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				CheckSelf(FGeometry);
-				auto ret = __newFVector2D();
-				*ret = self->GetLocalSize();
-				LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FGeometry::GetLocalSize error, argc=%d", argc);
-			return 0;
-		}
-
-		static int GetAbsolutePosition(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				CheckSelf(FGeometry);
-				auto ret = __newFVector2D();
-				*ret = self->GetAbsolutePosition();
-				LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FGeometry::GetAbsolutePosition error, argc=%d", argc);
-			return 0;
-		}
-
-		static int GetAbsoluteSize(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				CheckSelf(FGeometry);
-				auto ret = __newFVector2D();
-				*ret = self->GetAbsoluteSize();
-				LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FGeometry::GetAbsoluteSize error, argc=%d", argc);
-			return 0;
-		}
-
-		static int GetAbsolutePositionAtCoordinates(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 2) {
-				CheckSelf(FGeometry);
-				auto NormalCoordinates = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto& NormalCoordinatesRef = *NormalCoordinates;
-				auto ret = __newFVector2D();
-				*ret = self->GetAbsolutePositionAtCoordinates(NormalCoordinatesRef);
-				LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FGeometry::GetAbsolutePositionAtCoordinates error, argc=%d", argc);
-			return 0;
-		}
-
-		static int GetLocalPositionAtCoordinates(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 2) {
-				CheckSelf(FGeometry);
-				auto NormalCoordinates = LuaObject::checkValue<FVector2D*>(L, 2);
-				auto& NormalCoordinatesRef = *NormalCoordinates;
-				auto ret = __newFVector2D();
-				*ret = self->GetLocalPositionAtCoordinates(NormalCoordinatesRef);
-				LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FGeometry::GetLocalPositionAtCoordinates error, argc=%d", argc);
-			return 0;
-		}
-
-		static int HasRenderTransform(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				CheckSelf(FGeometry);
-				auto ret = self->HasRenderTransform();
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			luaL_error(L, "call FGeometry::HasRenderTransform error, argc=%d", argc);
-			return 0;
-		}
-
-		static void bind(lua_State* L) {
-			AutoStack autoStack(L);
-			LuaObject::newType(L, "FGeometry");
-			LuaObject::addOperator(L, "__eq", __eq);
-			LuaObject::addField(L, "Size", get_Size, nullptr, true);
-			LuaObject::addField(L, "Scale", get_Scale, nullptr, true);
-			LuaObject::addField(L, "AbsolutePosition", get_AbsolutePosition, nullptr, true);
-			LuaObject::addField(L, "Position", get_Position, nullptr, true);
-			LuaObject::addMethod(L, "MakeChild", MakeChild, true);
-			LuaObject::addMethod(L, "IsUnderLocation", IsUnderLocation, true);
-			LuaObject::addMethod(L, "AbsoluteToLocal", AbsoluteToLocal, true);
-			LuaObject::addMethod(L, "LocalToAbsolute", LocalToAbsolute, true);
-			LuaObject::addMethod(L, "LocalToRoundedLocal", LocalToRoundedLocal, true);
-			LuaObject::addMethod(L, "ToString", ToString, true);
-			LuaObject::addMethod(L, "GetDrawSize", GetDrawSize, true);
-			LuaObject::addMethod(L, "GetLocalSize", GetLocalSize, true);
-			LuaObject::addMethod(L, "GetAbsolutePosition", GetAbsolutePosition, true);
-			LuaObject::addMethod(L, "GetAbsoluteSize", GetAbsoluteSize, true);
-			LuaObject::addMethod(L, "GetAbsolutePositionAtCoordinates", GetAbsolutePositionAtCoordinates, true);
-			LuaObject::addMethod(L, "GetLocalPositionAtCoordinates", GetLocalPositionAtCoordinates, true);
-			LuaObject::addMethod(L, "HasRenderTransform", HasRenderTransform, true);
-			LuaObject::finishType(L, "FGeometry", __ctor, __gc);
-		}
-
-	};
-
-	struct FSlateColorWrapper {
-
-		static int __ctor(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				auto self = new FSlateColor();
-				LuaObject::push<FSlateColor>(L, "FSlateColor", self, UD_AUTOGC);
-				return 1;
-			}
-			if (argc == 2) {
-				auto InColor = LuaObject::checkValue<FLinearColor*>(L, 2);
-				auto& InColorRef = *InColor;
-				auto self = new FSlateColor(InColorRef);
-				LuaObject::push<FSlateColor>(L, "FSlateColor", self, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FSlateColor() error, argc=%d", argc);
-			return 0;
-		}
-
-		static int __gc(lua_State* L) {
-			CheckSelf(FSlateColor);
-			LuaObject::releaseLink(L, udptr);
-			if (udptr->flag & UD_AUTOGC) delete self;
-			return 0;
-		}
-
-		static int __eq(lua_State* L) {
-			CheckSelf(FSlateColor);
-			if (LuaObject::matchType(L, 2, "FSlateColor")) {
-				auto Other = LuaObject::checkValue<FSlateColor*>(L, 2);
-				auto& OtherRef = *Other;
-				auto ret = (*self == OtherRef);
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			LuaObject::push(L, false);
-			return 1;
-		}
-
-		static int GetSpecifiedColor(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				CheckSelf(FSlateColor);
-				auto ret = __newFLinearColor();
-				*ret = self->GetSpecifiedColor();
-				LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FSlateColor::GetSpecifiedColor error, argc=%d", argc);
-			return 0;
-		}
-
-		static int IsColorSpecified(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 1) {
-				CheckSelf(FSlateColor);
-				auto ret = self->IsColorSpecified();
-				LuaObject::push(L, ret);
-				return 1;
-			}
-			luaL_error(L, "call FSlateColor::IsColorSpecified error, argc=%d", argc);
-			return 0;
-		}
-
-		static int UseForeground(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 0) {
-				auto ret = __newFSlateColor();
-				*ret = FSlateColor::UseForeground();
-				LuaObject::push<FSlateColor>(L, "FSlateColor", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FSlateColor::UseForeground error, argc=%d", argc);
-			return 0;
-		}
-
-		static int UseSubduedForeground(lua_State* L) {
-			auto argc = lua_gettop(L);
-			if (argc == 0) {
-				auto ret = __newFSlateColor();
-				*ret = FSlateColor::UseSubduedForeground();
-				LuaObject::push<FSlateColor>(L, "FSlateColor", ret, UD_AUTOGC);
-				return 1;
-			}
-			luaL_error(L, "call FSlateColor::UseSubduedForeground error, argc=%d", argc);
-			return 0;
-		}
-
-		static void bind(lua_State* L) {
-			AutoStack autoStack(L);
-			LuaObject::newType(L, "FSlateColor");
-			LuaObject::addOperator(L, "__eq", __eq);
-			LuaObject::addMethod(L, "GetSpecifiedColor", GetSpecifiedColor, true);
-			LuaObject::addMethod(L, "IsColorSpecified", IsColorSpecified, true);
-			LuaObject::addMethod(L, "UseForeground", UseForeground, false);
-			LuaObject::addMethod(L, "UseSubduedForeground", UseSubduedForeground, false);
-			LuaObject::finishType(L, "FSlateColor", __ctor, __gc);
-		}
-
-	};
-
 	struct FRotatorWrapper {
 
 		static int __ctor(lua_State* L) {
@@ -1352,7 +412,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FRotator);
+			CheckSelfSafe(FRotator);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -1935,7 +995,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FTransform);
+			CheckSelfSafe(FTransform);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -2949,7 +2009,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FLinearColor);
+			CheckSelfSafe(FLinearColor);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -3576,7 +2636,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FColor);
+			CheckSelfSafe(FColor);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -3942,7 +3002,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FVector);
+			CheckSelfSafe(FVector);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -5342,7 +4402,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FVector2D);
+			CheckSelfSafe(FVector2D);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -5910,7 +4970,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FRandomStream);
+			CheckSelfSafe(FRandomStream);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -6153,7 +5213,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FGuid);
+			CheckSelfSafe(FGuid);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -6358,7 +5418,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FBox2D);
+			CheckSelfSafe(FBox2D);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -6671,7 +5731,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FFloatRangeBound);
+			CheckSelfSafe(FFloatRangeBound);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -6836,7 +5896,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FFloatRange);
+			CheckSelfSafe(FFloatRange);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -6925,7 +5985,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FInt32RangeBound);
+			CheckSelfSafe(FInt32RangeBound);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -7090,7 +6150,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FInt32Range);
+			CheckSelfSafe(FInt32Range);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -7179,7 +6239,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FFloatInterval);
+			CheckSelfSafe(FFloatInterval);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -7214,7 +6274,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FInt32Interval);
+			CheckSelfSafe(FInt32Interval);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -7249,7 +6309,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FPrimaryAssetType);
+			CheckSelfSafe(FPrimaryAssetType);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -7323,7 +6383,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FPrimaryAssetId);
+			CheckSelfSafe(FPrimaryAssetId);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -7440,7 +6500,7 @@ namespace NS_SLUA {
 		}
 
 		static int __gc(lua_State* L) {
-			CheckSelf(FDateTime);
+			CheckSelfSafe(FDateTime);
 			LuaObject::releaseLink(L, udptr);
 			if (udptr->flag & UD_AUTOGC) delete self;
 			return 0;
@@ -7942,31 +7002,6 @@ namespace NS_SLUA {
 
 	void LuaWrapper::init(lua_State* L) {
 		AutoStack autoStack(L);
-		FSlateFontInfoStruct = FSlateFontInfo::StaticStruct();
-		_pushStructMap.Add(FSlateFontInfoStruct, __pushFSlateFontInfo);
-		_checkStructMap.Add(FSlateFontInfoStruct, __checkFSlateFontInfo);
-		FSlateFontInfoWrapper::bind(L);
-
-		FSlateBrushStruct = FSlateBrush::StaticStruct();
-		_pushStructMap.Add(FSlateBrushStruct, __pushFSlateBrush);
-		_checkStructMap.Add(FSlateBrushStruct, __checkFSlateBrush);
-		FSlateBrushWrapper::bind(L);
-
-		FMarginStruct = FMargin::StaticStruct();
-		_pushStructMap.Add(FMarginStruct, __pushFMargin);
-		_checkStructMap.Add(FMarginStruct, __checkFMargin);
-		FMarginWrapper::bind(L);
-
-		FGeometryStruct = FGeometry::StaticStruct();
-		_pushStructMap.Add(FGeometryStruct, __pushFGeometry);
-		_checkStructMap.Add(FGeometryStruct, __checkFGeometry);
-		FGeometryWrapper::bind(L);
-
-		FSlateColorStruct = FSlateColor::StaticStruct();
-		_pushStructMap.Add(FSlateColorStruct, __pushFSlateColor);
-		_checkStructMap.Add(FSlateColorStruct, __checkFSlateColor);
-		FSlateColorWrapper::bind(L);
-
 		FRotatorStruct = TBaseStructure<FRotator>::Get();
 		_pushStructMap.Add(FRotatorStruct, __pushFRotator);
 		_checkStructMap.Add(FRotatorStruct, __checkFRotator);

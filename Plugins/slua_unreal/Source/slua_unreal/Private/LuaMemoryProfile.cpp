@@ -16,6 +16,7 @@
 #include "LuaState.h"
 #include "Log.h"
 #include "lua/lstate.h"
+#include "LuaProfiler.h"
 namespace NS_SLUA {
 
 	// only calc memory alloc from lua script
@@ -23,41 +24,62 @@ namespace NS_SLUA {
 	size_t totalMemory;
 	
     bool memTrack = false;
-	MemoryDetail memoryRecord;
+	TMap<LuaState*, MemoryDetail> memoryRecord;
+	TMap<LuaState*, TArray<LuaMemInfo>> memoryIncreaseThisFrame;
 
-	int LuaMemInfo::push(lua_State * L) const
+	bool getMemInfo(LuaState* ls, size_t size, LuaMemInfo& info);
+
+	MemoryDetail* TryGetMemoryRecord(LuaState* LS)
 	{
-		lua_newtable(L);
-		lua_pushinteger(L, size);
-		lua_setfield(L, -2, "size");
-		lua_pushstring(L, TCHAR_TO_UTF8(*hint));
-		lua_setfield(L, -2, "hint");
-		lua_pushlightuserdata(L, ptr);
-		lua_setfield(L, -2, "address");
-		return 1;
+		auto* memoryRecordDetail = memoryRecord.Find(LS);
+		if (!memoryRecordDetail)
+		{
+			memoryRecordDetail = &memoryRecord.Add(LS);
+		}
+		return memoryRecordDetail;
 	}
 
-	bool getMemInfo(lua_State* L, void* ptr, size_t size, LuaMemInfo& info);
+	TArray<LuaMemInfo>* TryGetMemoryIncrease(LuaState* LS)
+	{
+		auto* memoryIncrease = memoryIncreaseThisFrame.Find(LS);
+		if (!memoryIncrease)
+		{
+			memoryIncrease = &memoryIncreaseThisFrame.Add(LS);
+		}
+		return memoryIncrease;
+	}
 
-	inline void addRecord(LuaState* LS, void* ptr, size_t size) {
+	inline void addRecord(LuaState* LS, void* ptr, size_t size, LuaMemInfo &memInfo) {
 		if (!memTrack) return;
 		// skip if lua_State is null, lua_State hadn't binded to LS
 		lua_State* L = LS->getLuaState();
 		if (!L) return;
 
-		LuaMemInfo memInfo;
-		if (getMemInfo(L, ptr, size, memInfo)) {
-			// Log::Log("alloc memory %d from %s",size,TCHAR_TO_UTF8(*memInfo.hint));
-			memoryRecord.Add(ptr, memInfo);
-			totalMemory += size;
-		}
+		// Log::Log("alloc memory %d from %s",size,TCHAR_TO_UTF8(*memInfo.hint));
+		memInfo.ptr = (int64)ptr;
+		memInfo.bAlloc = true;
+
+		auto* memoryRecordDetail = TryGetMemoryRecord(LS);
+		memoryRecordDetail->Add(ptr, memInfo);
+
+		auto* memoryIncrease = TryGetMemoryIncrease(LS);
+		memoryIncrease->Add(memInfo);
+		totalMemory += size;
 	}
 
 	inline void removeRecord(LuaState* LS, void* ptr, size_t osize) {
 		if (!memTrack) return;
-		// if ptr record 
-		if (memoryRecord.Remove(ptr)) {
+		// if ptr record
+
+		auto* memoryRecordDetail = TryGetMemoryRecord(LS);
+		
+		auto memInfoPtr = memoryRecordDetail->Find(ptr);
+		if (memInfoPtr) {
+			memInfoPtr->bAlloc = false;
+			TryGetMemoryIncrease(LS)->Add(*memInfoPtr);
+			memoryRecordDetail->Remove(ptr);
 			// Log::Log("free memory %p size %d", ptr, osize);
+			
 			totalMemory -= osize;
 		}
 	}
@@ -71,8 +93,13 @@ namespace NS_SLUA {
         }
         else {
 			if(ptr) removeRecord(ls, ptr, osize);
+			
+			LuaMemInfo memInfo;
+        	// get stack before realloc to avoid luaD_reallocstack crash!
+			bool bHasStack = getMemInfo(ls, nsize, memInfo);
             ptr = FMemory::Realloc(ptr,nsize);
-            addRecord(ls,ptr,nsize);
+        	if (bHasStack)
+				addRecord(ls,ptr,nsize,memInfo);
             return ptr;
         }
     }
@@ -85,6 +112,13 @@ namespace NS_SLUA {
 	void LuaMemoryProfile::start()
 	{
         memTrack = true;
+		onStart();
+	}
+
+	void LuaMemoryProfile::onStart() 
+	{
+		memoryRecord.Empty();
+		memoryIncreaseThisFrame.Empty();
 	}
 
 	void LuaMemoryProfile::stop()
@@ -92,41 +126,103 @@ namespace NS_SLUA {
 		memTrack = false;
 	}
 
-	const MemoryDetail& LuaMemoryProfile::memDetail()
+	void LuaMemoryProfile::tick(LuaState* LS)
 	{
-		return memoryRecord;
+		auto *memoryIncrease = TryGetMemoryIncrease(LS);
+		memoryIncrease->Empty();
 	}
 
-    bool getMemInfo(lua_State* L, void* ptr, size_t size, LuaMemInfo& info) {
-        lua_Debug ar;
+	const MemoryDetail& LuaMemoryProfile::memDetail(LuaState* LS)
+	{
+		auto *memoryRecordDetail = TryGetMemoryRecord(LS);
+		return *memoryRecordDetail;
+	}
+
+	TArray<LuaMemInfo>& LuaMemoryProfile::memIncreaceThisFrame(LuaState* LS)
+	{
+		auto *memoryIncrease = TryGetMemoryIncrease(LS);
+		return *memoryIncrease;
+	}
+
+	bool isCoroutineAlive(lua_State* co)
+	{
+		switch (lua_status(co)) {
+		case LUA_YIELD:
+			return false;
+			break;
+		case LUA_OK: {
+			lua_Debug ar;
+			if (lua_getstack(co, 0, &ar) > 0)
+				return true;
+			break;
+		}
+		default:
+			break;
+		}
+		
+		return false;
+	}
+
+    bool getMemInfo(LuaState* ls, size_t size, LuaMemInfo& info) {
+		if (!memTrack) return false;
+		// skip if lua_State is null, lua_State hadn't binded to LS
+		lua_State* L = ls->getLuaState();
+		if (!L) return false;
+
+		info.ptr = 0;
+		
+		FString firstCName = TEXT("C");
+		
 		for (int i = 0;;i++) {
+			lua_Debug ar;
 			if (lua_getstack(L, i, &ar) && lua_getinfo(L, "nSl", &ar)) {
-				CallInfo* ci = (CallInfo*)ar.i_ci;
-                if (!isLua(ci))
-					continue;
+				if (strcmp(ar.what, "C") == 0) {
+					if (ar.name) {
+						firstCName += UTF8_TO_TCHAR(ar.name);
+						
+						if (strcmp(ar.name, "coroutine") == 0) {
+							if (lua_isthread(L, 1)) {
+								lua_State* L1 = lua_tothread(L, 1);
+								if (isCoroutineAlive(L1)) {
+									L = L1;
+									i = -1;
+									continue;
+								}
+							}
+						}
+					}
+				}
     
                 if (strcmp(ar.source, SLUA_LUACODE) == 0)
                     continue;
+
+				if (strcmp(ar.source, LuaProfiler::ChunkName) == 0)
+					return false;
                 
 				if (strcmp(ar.what, "Lua") == 0 || strcmp(ar.what, "main") == 0) {
-					info.ptr = ptr;
 					info.size = size;
-					info.hint = FString::Printf(TEXT("%s:%d"), UTF8_TO_TCHAR(ar.source), ar.currentline);
+					info.hint = UTF8_TO_TCHAR(ar.source);
+					info.lineNumber = ar.currentline;
 					return true;
 				}
 			}
             else break;
 		}
-		return false;
+
+		info.size = size;
+		info.hint = FString::Printf(TEXT("%s"), *firstCName);
+		info.lineNumber = 0;
+		return true;
     }
 
-#if WITH_EDITOR
 	void dumpMemoryDetail()
 	{
 		Log::Log("Total memory alloc %d bytes", totalMemory);
 		for (auto& it : memoryRecord) {
-			auto& memInfo = it.Value;
-			Log::Log("Memory alloc %d from %s", memInfo.size, TCHAR_TO_UTF8(*memInfo.hint));
+			for (auto& itMemInfo : it.Value) {
+				auto& memInfo = itMemInfo.Value;
+				Log::Log("Memory alloc %d from %s:%d", memInfo.size, TCHAR_TO_UTF8(*memInfo.hint), memInfo.lineNumber);
+			}
 		}
 	}
 
@@ -147,6 +243,4 @@ namespace NS_SLUA {
 		TEXT("Start track memory info"),
 		FConsoleCommandDelegate::CreateStatic(LuaMemoryProfile::start),
 		ECVF_Cheat);
-#endif
-
 }

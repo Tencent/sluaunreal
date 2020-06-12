@@ -24,8 +24,8 @@
 #endif
 
 #include "slua_remote_profile.h"
-#include "SluaUtil.h"
 #include "LuaProfiler.h"
+#include "LuaMemoryProfile.h"
 
 DEFINE_LOG_CATEGORY(LogSluaProfile)
 #define LOCTEXT_NAMESPACE "Fslua_profileModule"
@@ -37,11 +37,19 @@ namespace {
 	static const FString CoroutineName(TEXT("coroutine"));
 	SluaProfiler curProfiler;
 	
-    TArray<NS_SLUA::LuaMemInfo> memoryInfo;
-	TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe> curProfilersArray = MakeShareable(new TArray<SluaProfiler>());
-	TQueue<TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe>, EQueueMode::Mpsc> profilerArrayQueue;
+	typedef TMap<int64, NS_SLUA::LuaMemInfo> LuaMemInfoMap;
+	LuaMemInfoMap memoryInfo;
+	typedef TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe> ProfilerArrayPtr;
+	typedef TQueue<ProfilerArrayPtr, EQueueMode::Mpsc> ProfilerArrayQueue;
+	ProfilerArrayQueue profilerArrayQueue;
+	ProfilerArrayPtr currentProfilersArray = MakeShareable(new TArray<SluaProfiler>());
 
-	uint32_t currentLayer = 0;
+	typedef TQueue<MemoryFramePtr, EQueueMode::Mpsc> MemoryFrameQueue;
+	MemoryFrameQueue memoryQueue;
+	MemoryFramePtr currentMemory = MakeShareable(new MemoryFrame());
+
+	int32 currentLayer = 0;
+	TArray<int32> coroutineLayers;
 }
 
 void Fslua_profileModule::StartupModule()
@@ -105,9 +113,13 @@ bool Fslua_profileModule::Tick(float DeltaTime)
 
 	while (!profilerArrayQueue.IsEmpty())
 	{
-		TSharedPtr<TArray<SluaProfiler>, ESPMode::ThreadSafe> profilesArray;
+		ProfilerArrayPtr profilesArray;
 		profilerArrayQueue.Dequeue(profilesArray);
-		sluaProfilerInspector->Refresh(*profilesArray.Get(), memoryInfo);
+
+		MemoryFramePtr memoryFrame;
+		memoryQueue.Dequeue(memoryFrame);
+
+		sluaProfilerInspector->Refresh(*profilesArray.Get(), memoryInfo, memoryFrame);
 	}
 
 	return true;
@@ -115,6 +127,7 @@ bool Fslua_profileModule::Tick(float DeltaTime)
 
 TSharedRef<class SDockTab> Fslua_profileModule::OnSpawnPluginTab(const FSpawnTabArgs & SpawnTabArgs)
 {
+	NS_SLUA::LuaMemoryProfile::start();
 	if (sluaProfilerInspector.IsValid())
 	{
 		sluaProfilerInspector->StartChartRolling();
@@ -122,9 +135,9 @@ TSharedRef<class SDockTab> Fslua_profileModule::OnSpawnPluginTab(const FSpawnTab
 		 
 		tab->SetOnTabClosed(SDockTab::FOnTabClosedCallback::CreateRaw(this, &Fslua_profileModule::OnTabClosed));
 
-        sluaProfilerInspector->ProfileServer = MakeShareable(new slua::FProfileServer());
-		sluaProfilerInspector->ProfileServer->OnProfileMessageRecv().BindLambda([this](slua::FProfileMessagePtr Message) {
-			this->debug_hook_c(Message->Event, Message->Time, Message->Linedefined, Message->Name, Message->ShortSrc,  Message->memoryInfoList);
+        sluaProfilerInspector->ProfileServer = MakeShareable(new NS_SLUA::FProfileServer());
+		sluaProfilerInspector->ProfileServer->OnProfileMessageRecv().BindLambda([this](NS_SLUA::FProfileMessagePtr Message) {
+			this->debug_hook_c(Message);
 		});
         
 		tabOpened = true;
@@ -156,7 +169,6 @@ void Profiler::BeginWatch(const FString& funcName, double nanoseconds)
 {
 	TSharedPtr<FunctionProfileInfo> funcInfo = MakeShareable(new FunctionProfileInfo);
 	funcInfo->functionName = funcName;
-	FDateTime Time = FDateTime::Now();
 	funcInfo->begTime = nanoseconds;
 	funcInfo->endTime = -1;
 	funcInfo->costTime = 0;
@@ -225,9 +237,15 @@ void Profiler::EndWatch(double nanoseconds)
 		curProfiler.Add(otherFuncInfo);
 	}
 	currentLayer--;
+	if (coroutineLayers.Num())
+	{
+		int32 lastCoroutineLayer = coroutineLayers[coroutineLayers.Num() - 1];
+		currentLayer = FMath::Max(lastCoroutineLayer, currentLayer);
+	}
+
 	if (currentLayer == 0)
 	{
-		curProfilersArray->Add(curProfiler);
+		currentProfilersArray->Add(curProfiler);
 		curProfiler.Empty();
 	}
 }
@@ -235,8 +253,12 @@ void Profiler::EndWatch(double nanoseconds)
 void Fslua_profileModule::ClearCurProfiler()
 {
 	currentLayer = 0;
-
-	curProfilersArray = MakeShareable(new TArray<SluaProfiler>());
+	curProfiler.Empty();
+	
+	coroutineLayers.Empty();
+	currentProfilersArray = MakeShareable(new TArray<SluaProfiler>());
+	currentMemory = MakeShareable(new MemoryFrame());
+	currentMemory->bMemoryTick = false;
 }
 
 void Fslua_profileModule::AddMenuExtension(FMenuBuilder & Builder)
@@ -254,10 +276,18 @@ void Fslua_profileModule::OnTabClosed(TSharedRef<SDockTab>)
 //        sluaProfilerInspector->ProfileServer = nullptr;
 //    }
 	tabOpened = false;
+	NS_SLUA::LuaMemoryProfile::stop();
 }
 
-void Fslua_profileModule::debug_hook_c(int event, double nanoseconds, int linedefined, const FString& name, const FString& short_src, TArray<NS_SLUA::LuaMemInfo> memoryInfoList)
+void Fslua_profileModule::debug_hook_c(NS_SLUA::FProfileMessagePtr Message)
 {
+	//int event, double nanoseconds, int linedefined, const FString& name, const FString& short_src, TArray<NS_SLUA::LuaMemInfo> memoryInfoList
+	int event = Message->Event;
+	double nanoseconds = Message->Time;
+	int linedefined = Message->Linedefined;
+	const FString& name = Message->Name;
+	const FString& short_src = Message->ShortSrc;
+
 	if (event == NS_SLUA::ProfilerHookEvent::PHE_CALL)
 	{
 		if (linedefined == -1 && name.IsEmpty())
@@ -286,14 +316,60 @@ void Fslua_profileModule::debug_hook_c(int event, double nanoseconds, int linede
 	}
 	else if (event == NS_SLUA::ProfilerHookEvent::PHE_TICK)
 	{
-		profilerArrayQueue.Enqueue(curProfilersArray);
+		if (curProfiler.Num() > 0)
+		{
+			for (int layer = currentLayer; layer > 0; layer--)
+			{
+				PROFILER_END_WATCHER(short_src, nanoseconds)
+			}
+			
+			currentProfilersArray->Add(curProfiler);
+			curProfiler.Empty();
+		}
+		profilerArrayQueue.Enqueue(currentProfilersArray);
+		memoryQueue.Enqueue(currentMemory);
 
 		ClearCurProfiler();
 	}
     else if (event == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK)
     {
-        memoryInfo = memoryInfoList;
+		currentMemory->memoryInfoList = Message->memoryInfoList;
+		currentMemory->bMemoryTick = true;
     }
+	else if (event == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_INCREACE)
+	{
+		currentMemory->memoryIncrease = Message->memoryIncrease;
+	}
+	else if (event == NS_SLUA::ProfilerHookEvent::PHE_ENTER_COROUTINE)
+	{
+		coroutineLayers.Add(currentLayer);
+
+		FString functionName = TEXT("coroutine.resume");
+		functionName += ":";
+		functionName += FString::FromInt(linedefined);
+		functionName += " ";
+		functionName += name;
+		PROFILER_BEGIN_WATCHER_WITH_FUNC_NAME(functionName, nanoseconds)
+	}
+	else if (event == NS_SLUA::ProfilerHookEvent::PHE_EXIT_COROUTINE)
+	{
+		FString functionName = TEXT("coroutine.resume");
+		functionName += ":";
+		functionName += FString::FromInt(linedefined);
+		functionName += " ";
+		functionName += name;
+		PROFILER_END_WATCHER(functionName, nanoseconds)
+
+		if (coroutineLayers.Num())
+		{
+			int lastCoroutineLayer = coroutineLayers.Pop();
+			for (int layer = currentLayer; layer > lastCoroutineLayer; layer--)
+			{
+				PROFILER_END_WATCHER(functionName, nanoseconds)
+			}
+			currentLayer = lastCoroutineLayer;
+		}
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

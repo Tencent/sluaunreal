@@ -97,8 +97,6 @@ namespace slua
 				{
 					OnProfileMessageDelegate.ExecuteIfBound(Message);
 				}
-                
-				break;
 			}
 
 			FPlatformProcess::Sleep(ActiveConnections > 0 ? 0.01f : 1.f);
@@ -359,11 +357,15 @@ namespace slua
 		FArrayReader& MessageReader = Message.ToSharedRef().Get();
 
 		MessageReader << Event;
-        if(Event == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK)
-        {
-            MessageReader << memoryInfoList;
-            return true;
-        }
+		switch (Event)
+		{
+		case NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK:
+			MessageReader << memoryInfoList;
+			return true;
+		case NS_SLUA::ProfilerHookEvent::PHE_MEMORY_INCREACE:
+			MessageReader << memoryIncrease;
+			return true;
+		}
         
 		MessageReader << Time;
 		MessageReader << Linedefined;

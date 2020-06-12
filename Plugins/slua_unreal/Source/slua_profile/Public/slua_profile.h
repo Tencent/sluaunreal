@@ -15,12 +15,10 @@
 
 #include "CoreMinimal.h"
 #include "Containers/Ticker.h"
-#include "InputCoreTypes.h"
 #include "ModuleManager.h"
 #include "Commands.h"
 #include "slua_profile_inspector.h"
-#include "slua_unreal/Private/LuaMemoryProfile.h"
-#include "Framework/Commands/Commands.h"
+#include "LuaMemoryProfile.h"
 
 /** Declares a log category for this module. */
 DECLARE_LOG_CATEGORY_EXTERN(LogSluaProfile, Log, All);
@@ -64,7 +62,7 @@ private:
 	void ClearCurProfiler();
 	void AddMenuExtension(FMenuBuilder& Builder);
 	
-    void debug_hook_c(int event, double nanoseconds, int linedefined, const FString& name, const FString& short_src, TArray<NS_SLUA::LuaMemInfo> memoryInfoList);
+    void debug_hook_c(NS_SLUA::FProfileMessagePtr Message);
 };
 
 struct SLUA_PROFILE_API FunctionProfileInfo
@@ -81,6 +79,14 @@ struct SLUA_PROFILE_API FunctionProfileInfo
 	bool beMerged;
 	bool isDuplicated = false;
 	TArray<int> mergeIdxArray;
+};
+
+struct SLUA_PROFILE_API MemoryFrame
+{
+	bool bMemoryTick;
+	TArray<NS_SLUA::LuaMemInfo> memoryInfoList;
+	TArray<NS_SLUA::LuaMemInfo> memoryIncrease;
+	TArray<NS_SLUA::LuaMemInfo> memoryDecrease;
 };
 
 #if WITH_EDITOR

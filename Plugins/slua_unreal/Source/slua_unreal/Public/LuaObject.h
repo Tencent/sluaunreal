@@ -503,7 +503,7 @@ namespace NS_SLUA {
 
 		template<class T>
 		static int push(lua_State* L, const char* fn, const T* v, uint32 flag = UD_NOFLAG) {
-            if(getObjCache(L,void_cast(v),fn)) return 1;
+            if(!(flag & UD_VALUETYPE) && getObjCache(L,void_cast(v),fn)) return 1;
             luaL_getmetatable(L,fn);
 			// if v is the UnrealType
 			UScriptStruct* uss = nullptr;

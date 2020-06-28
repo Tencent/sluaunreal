@@ -213,7 +213,7 @@ namespace NS_SLUA {
 		int top = lua_gettop(L);
 		if (top != stackCount) {
 			stackCount = top;
-			Log::Error("Error: lua stack count should be zero , now is %d", top);
+			Log::Error("Error: lua stack count should be zero , now is %d, top is %s", top, luaL_typename(L,-1));
 		}
 
 #ifdef ENABLE_PROFILER

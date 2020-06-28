@@ -78,7 +78,8 @@ void ULuaUserWidget::InitLuaTable()
 			{
 				NS_SLUA::Log::Error("Lua[%s] missing Initialize function", TCHAR_TO_UTF8(*LuaFilePath));
 			}
-			lfunc.call(luaSelfTable);
+			else
+				lfunc.call(luaSelfTable);
 		}
 	}
 }
@@ -111,7 +112,8 @@ void ULuaUserWidget::BeginDestroy()
 		{
 			NS_SLUA::Log::Error("Lua[%s] missing OnDestroy function", TCHAR_TO_UTF8(*LuaFilePath));
 		}
-		lfunc.call(luaSelfTable);
+		else
+			lfunc.call(luaSelfTable);
 	}
 
 	Super::BeginDestroy();
@@ -120,7 +122,7 @@ void ULuaUserWidget::BeginDestroy()
 }
 void ULuaUserWidget::superTick()
 {
-	Super::Tick(currentGeometry, deltaTime);
+	UUserWidget::Tick(currentGeometry, deltaTime);
 }
 
 void ULuaUserWidget::superTick(NS_SLUA::lua_State* L)

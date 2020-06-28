@@ -1159,8 +1159,10 @@ namespace NS_SLUA {
 	}
 
 	bool checkType(lua_State* L, int p, const char* tn) {
-		if (!lua_isuserdata(L, p))
+		if (!lua_isuserdata(L, p)) {
+			lua_pop(L, 1);
 			return false;
+		}
 		int tt = luaL_getmetafield(L, p, "__name");
 		if (tt==LUA_TSTRING && strcmp(tn, lua_tostring(L, -1)) == 0)
 		{

@@ -33,7 +33,7 @@ namespace NS_SLUA {
 
 	bool LuaBase::luaImplemented(UFunction * func, void * params)
 	{
-		if (indexFlag!=IF_NONE && func==currentFunction) return false;
+		if (indexFlag!=IF_NONE && (func==currentFunction || currentFunction==nullptr)) return false;
 
 		if (!func->HasAnyFunctionFlags(EFunctionFlags::FUNC_BlueprintEvent))
 			return false;

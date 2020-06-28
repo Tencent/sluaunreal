@@ -110,6 +110,7 @@ namespace NS_SLUA {
 	#define UD_USTRUCT 1<<7 // flag it's an UStruct
 	#define UD_WEAKUPTR 1<<8 // flag it's a weak UObject ptr
 	#define UD_REFERENCE 1<<9
+	#define UD_VALUETYPE 1<<10 // flag it's a valuetype, don't cache value by ptr
 
 	struct UDBase {
 		uint32 flag;
@@ -520,7 +521,8 @@ namespace NS_SLUA {
 			lua_pushvalue(L, -2);
 			lua_setmetatable(L, -2);
 			lua_remove(L, -2); // remove metatable of fn
-            cacheObj(L,void_cast(v));
+            if(!(flag & UD_VALUETYPE)) 
+				cacheObj(L,void_cast(v));
             return 1;
 		}
 

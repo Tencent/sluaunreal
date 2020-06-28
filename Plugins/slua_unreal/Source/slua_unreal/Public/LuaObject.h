@@ -392,7 +392,7 @@ namespace NS_SLUA {
 				return udptr->ud;
 			}
             if(checkfree) 
-				luaL_error(L,"expect userdata %s, but got %s, if you passed an UObject, maybe it's unreachable",TypeName<T>::value().c_str(),typearg);
+				luaL_error(L,"expect userdata %s at %d, but got %s, if you passed an UObject, maybe it's unreachable",TypeName<T>::value().c_str(), p, typearg);
             return nullptr;
         }
 

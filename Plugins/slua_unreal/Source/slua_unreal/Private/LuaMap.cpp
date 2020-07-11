@@ -102,6 +102,8 @@ namespace NS_SLUA {
 			ensure(map);
 			SafeDelete(map);
 		}
+        keyProp = valueProp = nullptr;
+		prop = nullptr;
 		propObj = nullptr;
 	}
 

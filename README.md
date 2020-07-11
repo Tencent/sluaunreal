@@ -15,6 +15,12 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 
 ![icon_logo](https://user-images.githubusercontent.com/6227270/59747641-db6e1b80-92ab-11e9-81b6-7ca7ebfd6c0e.png)![logo](https://user-images.githubusercontent.com/6227270/59747461-80d4bf80-92ab-11e9-989b-44809d5b780c.png)
 
+## What's new?
+
+[Release 1.3.1](https://github.com/Tencent/sluaunreal/releases/tag/1.3.1)
+
+Add [a branch](https://github.com/Tencent/sluaunreal/tree/for_4.25) to support UE 4.25 or later
+
 ## Feature
 
 * call reflection method exported by blueprint

@@ -127,7 +127,7 @@ namespace NS_SLUA {
 				bool keyChanged = LuaReference::addRefByProperty(Collector, keyProp, keyPtr, false);
 				bool valuesChanged = LuaReference::addRefByProperty(Collector, valueProp, valuePtr, false);
 				// if key auto null, we remove pair
-				if (keyChanged || keyChanged) {
+				if (keyChanged || valuesChanged) {
 					removeAt(index);
 					rehash = true;
 				}

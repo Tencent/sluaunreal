@@ -15,7 +15,7 @@
 
 #include "CoreMinimal.h"
 #include "Containers/Ticker.h"
-#include "ModuleManager.h"
+#include "Modules/ModuleManager.h"
 #include "Commands.h"
 #include "slua_profile_inspector.h"
 #include "LuaMemoryProfile.h"

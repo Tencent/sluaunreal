@@ -512,7 +512,7 @@ namespace NS_SLUA {
 
 		if (currentCallStack > 0)
 		{
-			ObjectSet objSet = newObjectsInCallStack.Last();
+			ObjectSet& objSet = newObjectsInCallStack.Last();
 			if (objSet.Contains(const_cast<UObjectBase*>(Object)))
 			{
 				objSet.Remove(const_cast<UObjectBase*>(Object));
@@ -529,7 +529,7 @@ namespace NS_SLUA {
 
 		if (currentCallStack > 0)
 		{
-			ObjectSet objSet = newObjectsInCallStack.Last();
+			ObjectSet& objSet = newObjectsInCallStack.Last();
 			objSet.Add(const_cast<UObjectBase*>(Object));
 		}
 	}

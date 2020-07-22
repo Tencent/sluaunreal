@@ -225,8 +225,8 @@ namespace NS_SLUA {
 			else t = ptr?Cast<T>(ptr->ud):nullptr;
 
 			if (!t && lua_isuserdata(L, p)) {
-				luaL_getmetafield(L, p, "__name");
-				if (lua_isnil(L, -1)) {
+				int tt = luaL_getmetafield(L, p, "__name");
+				if (tt == LUA_TNIL) {
 					return t;
 				}
 				FString clsname(lua_tostring(L, -1));

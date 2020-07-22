@@ -51,7 +51,7 @@
 	auto udptr = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, 1)); \
 	if(!udptr) luaL_error(L, "self ptr missing"); \
 	if (udptr->flag & UD_HADFREE) \
-		luaL_error(L, "checkValue error, obj parent has been freed"); \
+		luaL_error(L, #T" checkValue error, obj parent has been freed"); \
 	auto self = udptr->ud
 
 #define CheckSelfSafe(T) \

@@ -41,7 +41,11 @@ public class slua_unreal : ModuleRules
         }
         else if (Target.Platform == UnrealTargetPlatform.Android)
         {
-#if UE_4_24_OR_LATER
+#if UE_4_25_OR_LATER
+            PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Android/armeabi-v7a/liblua.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Android/armeabi-arm64/liblua.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Android/x86/liblua.a"));
+#elif UE_4_24_OR_LATER
             PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Android/armeabi-arm64/liblua.a"));
             PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Android/armeabi-v7a/liblua.a"));
             PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Android/x86/liblua.a"));

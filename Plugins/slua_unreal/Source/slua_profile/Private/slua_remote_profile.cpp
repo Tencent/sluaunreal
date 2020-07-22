@@ -14,7 +14,7 @@
 #include "slua_remote_profile.h"
 #include "slua_profile.h"
 #include "Common/TcpListener.h"
-#include "SharedPointer.h"
+#include "Templates/SharedPointer.h"
 #include "SocketSubsystem.h"
 #include "SluaUtil.h"
 #include "LuaProfiler.h"

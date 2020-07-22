@@ -14,13 +14,14 @@
 #include "LuaProfiler.h"
 #include "Log.h"
 #include "LuaState.h"
-#include "ArrayWriter.h"
-#include "ArrayReader.h"
+#include "Serialization/ArrayWriter.h"
+#include "Serialization/ArrayReader.h"
 #include "LuaMemoryProfile.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "luasocket/auxiliar.h"
 #include "luasocket/buffer.h"
 #include "lua/lua.hpp"
+#include "Stats/Stats2.h"
 
 #if PLATFORM_WINDOWS
 #ifdef TEXT
@@ -39,7 +40,6 @@
 namespace NS_SLUA {
 
 	#include "LuaProfiler.inl"
-	#include "Stats2.h"
 
 	enum class HookState {
 		UNHOOK=0,

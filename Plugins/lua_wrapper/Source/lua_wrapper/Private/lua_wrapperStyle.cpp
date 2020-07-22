@@ -3,8 +3,8 @@
 #include "lua_wrapperStyle.h"
 #include "Styling/SlateStyleRegistry.h"
 #include "Framework/Application/SlateApplication.h"
-#include "SlateGameResources.h"
-#include "IPluginManager.h"
+#include "Slate/SlateGameResources.h"
+#include "Interfaces/IPluginManager.h"
 
 TSharedPtr< FSlateStyleSet > Flua_wrapperStyle::StyleInstance = NULL;
 

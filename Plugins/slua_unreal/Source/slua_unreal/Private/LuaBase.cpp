@@ -13,9 +13,9 @@
 
 
 #include "LuaBase.h"
-#include "Script.h"
+#include "UObject/Script.h"
 #include "LuaState.h"
-#include "StructOnScope.h"
+#include "UObject/StructOnScope.h"
 #include "LuaUserWidget.h"
 #include "LuaActor.h"
 

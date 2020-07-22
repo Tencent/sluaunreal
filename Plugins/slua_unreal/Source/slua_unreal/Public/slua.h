@@ -14,7 +14,7 @@
 #pragma once
 #include "lua/lua.hpp"
 #include "Log.h"
-#include "SLuaUtil.h"
+#include "SluaUtil.h"
 #include "LuaObject.h"
 #include "LuaState.h"
 #include "LuaVar.h"

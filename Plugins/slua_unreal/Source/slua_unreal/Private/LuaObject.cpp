@@ -84,7 +84,7 @@ namespace NS_SLUA {
             FOutParmRec* OutParms;
             
             /** If a class is compiled in then this is set to the property chain for compiled-in functions. In that case, we follow the links to setup the args instead of executing by code. */
-            UField* PropertyChainForCompiledIn;
+            FField* PropertyChainForCompiledIn;
             
             /** Currently executed native function */
             UFunction* CurrentNativeFunction;

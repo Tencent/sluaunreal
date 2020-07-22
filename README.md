@@ -17,6 +17,8 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 
 ## What's new?
 
+[Release 1.3.2](https://github.com/Tencent/sluaunreal/releases/tag/1.3.2), fix building error on UE 4.24
+
 [Release 1.3.1](https://github.com/Tencent/sluaunreal/releases/tag/1.3.1)
 
 Add [a branch](https://github.com/Tencent/sluaunreal/tree/for_4.25) to support UE 4.25 or later

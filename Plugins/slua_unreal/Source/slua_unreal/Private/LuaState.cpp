@@ -33,7 +33,7 @@
 #include "LatentDelegate.h"
 #include "LuaActor.h"
 #include "LuaProfiler.h"
-#include "Stats.h"
+#include "Stats/Stats.h"
 
 namespace NS_SLUA {
 

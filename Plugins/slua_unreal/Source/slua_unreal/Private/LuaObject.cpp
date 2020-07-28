@@ -616,7 +616,7 @@ namespace NS_SLUA {
             FFrame *frame = (FFrame *)&NewStack;
             func->Invoke(obj, *frame, ReturnValueAddress);
         #else
-            func->Invoke(obj, NewStack, ReturnValueAddress);
+    		obj->CallRemoteFunction(func, params, NewStack.OutParms, &NewStack);
         #endif
 	}
 

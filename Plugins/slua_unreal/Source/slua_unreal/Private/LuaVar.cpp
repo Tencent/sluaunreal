@@ -619,7 +619,11 @@ namespace NS_SLUA {
         for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
             UProperty* prop = *it;
             uint64 propflag = prop->GetPropertyFlags();
-            if((propflag&CPF_ReturnParm) || IsRealOutParam(propflag))
+            if (func->HasAnyFunctionFlags(FUNC_Native)) {
+                if ((propflag & CPF_ReturnParm))
+                    continue;
+            }
+            else if (IsRealOutParam(propflag))
                 continue;
 
             pushArgByParms(prop,parms+prop->GetOffset_ForInternal());

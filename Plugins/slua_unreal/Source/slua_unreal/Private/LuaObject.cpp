@@ -1116,7 +1116,7 @@ namespace NS_SLUA {
 				arg->GetClass() ? TCHAR_TO_UTF8(*arg->GetClass()->GetName()) : "");
 
 		p->SetPropertyValue(parms, arg);
-		return LuaObject::push(L, arg);
+		return 0;
 	}
 
     int checkUStructProperty(lua_State* L,UProperty* prop,uint8* parms,int i) {

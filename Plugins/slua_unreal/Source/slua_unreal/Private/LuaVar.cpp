@@ -651,16 +651,18 @@ namespace NS_SLUA {
 		for (TFieldIterator<UProperty> it(func); remain >0 && it && (it->PropertyFlags&CPF_Parm); ++it) {
 			UProperty* prop = *it;
 			uint64 propflag = prop->GetPropertyFlags();
-			if (IsRealOutParam(propflag))
-			{
-				auto checkder = prop ? LuaObject::getChecker(prop) : nullptr;
-				uint8* outParam = outParams ? outParams->PropAddr : parms + prop->GetOffset_ForInternal();
-				if (checkder) {
-					(*checkder)(L, prop, outParam, lua_absindex(L, -remain));
-				}
-				if (outParams) outParams = outParams->NextOutParm;
-				remain--;
-			}
+            if (IsRealOutParam(propflag)) {
+                auto checker = LuaObject::getChecker(prop);
+                FOutParmRec* out = outParams;
+                while (out && out->Property != prop) {
+                    out = out->NextOutParm;
+                }
+                uint8* outParam = out ? out->PropAddr : parms + prop->GetOffset_ForInternal();
+                if (checker) {
+                    (*checker)(L, prop, outParam, lua_absindex(L, -remain));
+                }
+                remain--;
+            }
 		}
         // pop returned value
         lua_pop(L, retCount);

@@ -1383,7 +1383,7 @@ namespace NS_SLUA {
 		else if (auto s = Cast<UScriptStruct>(obj))
 			return pushStruct(L, s);
 		else {
-			bool ref = objRecorder ? objRecorder->hasObject(obj) : false;
+			bool ref = objRecorder ? objRecorder->hasObject(obj) : true;
 			return pushGCObject<UObject*>(L, obj, "UObject", setupInstanceMT, gcObject, ref);
 		}
     }

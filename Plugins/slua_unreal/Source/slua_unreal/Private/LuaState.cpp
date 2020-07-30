@@ -244,6 +244,9 @@ namespace NS_SLUA {
 		cleanupThreads();
         
         if(L) {
+ #ifdef ENABLE_PROFILER
+ 			LuaProfiler::clean(this);
+ #endif
             lua_close(L);
 			GUObjectArray.RemoveUObjectCreateListener(this);
 			GUObjectArray.RemoveUObjectDeleteListener(this);

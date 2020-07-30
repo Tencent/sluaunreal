@@ -587,7 +587,7 @@ namespace NS_SLUA {
         return 0;
     }
 
-    bool LuaVar::callByUFunction(UFunction* func,uint8* parms, LuaVar* pSelf, FOutParmRec* OutParms) {
+    bool LuaVar::callByUFunction(UFunction* func,uint8* parms,FOutParmRec *outParams,RESULT_DECL,LuaVar* pSelf) {
         
         if(!func) return false;
 
@@ -640,6 +640,9 @@ namespace NS_SLUA {
             auto checkder = prop?LuaObject::getChecker(prop):nullptr;
             if (checkder) {
                 (*checkder)(L, prop, parms+prop->GetOffset_ForInternal(), lua_absindex(L, -remain));
+                if (RESULT_PARAM) {
+                    prop->CopyCompleteValue(RESULT_PARAM, prop->ContainerPtrToValuePtr<uint8>(parms));
+                }
             }
 			remain--;
         }
@@ -651,11 +654,11 @@ namespace NS_SLUA {
 			if (IsRealOutParam(propflag))
 			{
 				auto checkder = prop ? LuaObject::getChecker(prop) : nullptr;
-				uint8* outPamams = OutParms ? OutParms->PropAddr : parms + prop->GetOffset_ForInternal();
+				uint8* outParam = outParams ? outParams->PropAddr : parms + prop->GetOffset_ForInternal();
 				if (checkder) {
-					(*checkder)(L, prop, outPamams, lua_absindex(L, -remain));
+					(*checkder)(L, prop, outParam, lua_absindex(L, -remain));
 				}
-				if(OutParms) OutParms = OutParms->NextOutParm;
+				if (outParams) outParams = outParams->NextOutParm;
 				remain--;
 			}
 		}

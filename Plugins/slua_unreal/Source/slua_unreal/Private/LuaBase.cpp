@@ -44,7 +44,7 @@ namespace NS_SLUA {
 		NS_SLUA::LuaVar lfunc = luaSelfTable.getFromTable<NS_SLUA::LuaVar>((const char*)TCHAR_TO_UTF8(*func->GetName()), true);
 		if (!lfunc.isValid()) return false;
 
-		return lfunc.callByUFunction(func, (uint8*)params, &luaSelfTable);
+		return lfunc.callByUFunction(func, (uint8*)params, nullptr, nullptr, &luaSelfTable);
 	}
 
 	// Called every frame
@@ -246,7 +246,7 @@ namespace NS_SLUA {
 		LuaVar& luaSelfTable = lb->luaSelfTable;
 		NS_SLUA::LuaVar lfunc = luaSelfTable.getFromTable<NS_SLUA::LuaVar>(func->GetName(), true);
 		if (lfunc.isValid()) {
-			lfunc.callByUFunction(func, (uint8*)params, &luaSelfTable, Stack.OutParms);
+			lfunc.callByUFunction(func, (uint8*)params, Stack.OutParms, nullptr, &luaSelfTable);
 			*(bool*)RESULT_PARAM = true;
 		}
 		else {

@@ -369,8 +369,7 @@ namespace NS_SLUA {
         // return the pointer of class, otherwise return nullptr
         template<typename T>
         static T* checkUD(lua_State* L,int p,bool checkfree=true) {
-			if (lua_isnil(L, p))
-			{
+			if (lua_isnoneornil(L, p)) {
 				return nullptr;
 			}
 

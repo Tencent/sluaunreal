@@ -170,6 +170,7 @@ namespace NS_SLUA {
 		, stackCount(0)
 		, si(0)
 		, deadLoopCheck(nullptr)
+		, latentDelegate(nullptr)
 		, currentCallStack(0)
     {
         if(name) stateName=UTF8_TO_TCHAR(name);

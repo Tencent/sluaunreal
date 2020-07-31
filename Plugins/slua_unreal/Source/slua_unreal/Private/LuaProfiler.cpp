@@ -357,6 +357,22 @@ namespace NS_SLUA {
 		LuaMemoryProfile::tick(LS);
 		ignoreHook = false;
 	}
+
+	void LuaProfiler::clean(LuaState* LS)
+	{
+		lua_State* L = LS->getLuaState();
+		ensure(L);
+		auto& profiler = selfProfiler.FindChecked(LS);
+		if (profiler.isValid())
+		{
+			profiler.callField("stop", profiler);
+			selfProfiler.Remove(LS);
+		}
+		tcpSocket = nullptr;
+		ignoreHook = false;
+		currentHookState = HookState::UNHOOK;
+		profileTotalCost = 0;
+	}
     
 
 	LuaProfiler::LuaProfiler(const char* funcName)

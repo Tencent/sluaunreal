@@ -649,7 +649,7 @@ namespace NS_SLUA {
         static int pushClass(lua_State* L,UClass* cls);
         static int pushStruct(lua_State* L,UScriptStruct* cls);
 		static int pushEnum(lua_State* L, UEnum* e);
-		static int push(lua_State* L, UObject* obj, bool rawpush=false, NewObjectRecorder* objRecorder = nullptr);
+		static int push(lua_State* L, UObject* obj, bool rawpush=false, bool ref=true, NewObjectRecorder* objRecorder = nullptr);
 		inline static int push(lua_State* L, const UObject* obj) {
 			return push(L, const_cast<UObject*>(obj));
 		}

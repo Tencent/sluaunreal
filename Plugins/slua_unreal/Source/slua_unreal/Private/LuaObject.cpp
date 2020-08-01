@@ -1084,7 +1084,7 @@ namespace NS_SLUA {
         if(auto tr=Cast<UWidgetTree>(o))
             return LuaWidgetTree::push(L,tr);
 		else {
-			return LuaObject::push(L, o, false, objRecorder);
+			return LuaObject::push(L, o, false, true, objRecorder);
 		}
     }
 
@@ -1369,7 +1369,7 @@ namespace NS_SLUA {
 		return 0;
 	}
 	
-	int LuaObject::push(lua_State* L, UObject* obj, bool rawpush, NewObjectRecorder* objRecorder) {
+	int LuaObject::push(lua_State* L, UObject* obj, bool rawpush, bool ref, NewObjectRecorder* objRecorder) {
 		if (!obj) return pushNil(L);
 		if (!rawpush) {
 			if (auto it = Cast<ILuaTableObjectInterface>(obj)) {
@@ -1383,7 +1383,7 @@ namespace NS_SLUA {
 		else if (auto s = Cast<UScriptStruct>(obj))
 			return pushStruct(L, s);
 		else {
-			bool ref = objRecorder ? objRecorder->hasObject(obj) : false;
+			ref = objRecorder ? objRecorder->hasObject(obj) : ref;
 			return pushGCObject<UObject*>(L, obj, "UObject", setupInstanceMT, gcObject, ref);
 		}
     }

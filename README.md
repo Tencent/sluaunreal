@@ -33,7 +33,7 @@ Add [a branch](https://github.com/Tencent/sluaunreal/tree/for_4.25) to support U
 * auto code generation to wrap your normal c++ fucntion to lua
 * support enum, FVector etc
 * support operator overload in FVector or other struct class
-* support extension method to add a non-blueprint function to uobject for lua use(extent bluepirnt function)
+* support extension method to add a non-blueprint function to uobject for lua use(extent blueprint function)
 * call lua function from blueprint, vise versa
 * detect dead loop code, report error if happen dead loop
 * support multi state for isolate lua runtime

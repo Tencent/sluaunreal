@@ -538,7 +538,7 @@ namespace NS_SLUA {
 		}
 	}
 
-	void LuaState::unlinkUObject(const UObject * Object)
+	void LuaState::unlinkUObject(const UObject * Object,void* userdata/*=nullptr*/)
 	{
 		// find Object from objRefs, maybe nothing
 		auto udptr = objRefs.Find(Object);
@@ -548,6 +548,9 @@ namespace NS_SLUA {
 		}
 
 		GenericUserData* ud = *udptr;
+		if (userdata && userdata != (void*)ud) {
+			return;
+		}
 
 		// remove should put here avoid ud is invalid
 		// remove ref, Object must be an UObject in slua

@@ -186,7 +186,7 @@ namespace NS_SLUA {
 		// add obj to ref, tell Engine don't collect this obj
 		void addRef(UObject* obj,void* ud,bool ref);
 		// unlink UObject, flag Object had been free, and remove from cache and objRefs
-		void unlinkUObject(const UObject * Object);
+		void unlinkUObject(const UObject * Object,void* userdata=nullptr);
 
 		// if obj be deleted, call this function
 		virtual void NotifyUObjectDeleted(const class UObjectBase *Object, int32 Index) override;

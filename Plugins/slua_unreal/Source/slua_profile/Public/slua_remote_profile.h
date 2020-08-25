@@ -26,7 +26,7 @@
 class FSocket;
 class FTcpListener;
 
-namespace slua {
+namespace NS_SLUA {
 	class FProfileConnection;
 	class FProfileMessage;
     

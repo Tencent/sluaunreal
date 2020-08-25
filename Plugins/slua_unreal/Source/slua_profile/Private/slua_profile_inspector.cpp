@@ -129,7 +129,6 @@ void SProfilerInspector::RestartMemoryStatistis()
 	tempLuaMemNodeChartList.Empty();
 	shownFileInfo.Empty();
 	shownParentFileName.Empty();
-	lastLuaMemNode.Reset();
 	luaTotalMemSize = 0.0f;
 	lastLuaTotalMemSize = 0.0f;
 	maxLuaMemory = 0.0f;
@@ -979,7 +978,8 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateRowForList(TSharedPtr<Functi
 	return
 	SNew(STableRow< TSharedPtr<FString> >, OwnerTable)
 	.Padding(2.0f).Visibility_Lambda([=]() {
-		if (Item->functionName.IsEmpty() || Item->beMerged == true || shownProfiler[Item->globalIdx]->beMerged == true)
+		if (Item->functionName.IsEmpty() || Item->beMerged == true || 
+				(shownProfiler.Num() > Item->globalIdx && shownProfiler[Item->globalIdx]->beMerged == true))
 			return EVisibility::Hidden;
 		else
 			return EVisibility::Visible;
@@ -1272,6 +1272,7 @@ void SProfilerInspector::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& mem
 	if (memoryFrame->bMemoryTick)
 	{
 		memoryInfoMap.Empty();
+		lastLuaMemNode.Reset();
 		RestartMemoryStatistis();
 		
 		for (auto &memoInfo : memoryFrame->memoryInfoList)

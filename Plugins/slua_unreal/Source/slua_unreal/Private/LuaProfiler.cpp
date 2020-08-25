@@ -249,7 +249,8 @@ namespace NS_SLUA {
 
 			int event = ar->event;
 			if (ar->what && strcmp(ar->what, "C") == 0) {
-				if (ar->name && strcmp(ar->name, "coroutine") == 0) {
+				StkId o = L->ci ? L->ci->func : nullptr;
+				if (ttislcf(o) && fvalue(o) == LuaProfiler::resumeFunc) {
 					if (lua_isthread(L, 1)) {
 						// coroutine enter/exit
 						event += PHE_ENTER_COROUTINE;
@@ -316,6 +317,8 @@ namespace NS_SLUA {
 		}
 	}
 
+	lua_CFunction LuaProfiler::resumeFunc = nullptr;
+	
 	void LuaProfiler::init(LuaState* LS)
 	{
 		lua_State* L = LS->getLuaState();
@@ -333,6 +336,11 @@ namespace NS_SLUA {
 		// using native hook instead of lua hook for performance
 		// set selfProfiler to global as slua_profiler
 		lua_setglobal(L, "slua_profile");
+
+		lua_getglobal(L, "coroutine");
+		lua_getfield(L, -1, "resume");
+		resumeFunc = lua_tocfunction(L, -1);
+		lua_pop(L, 2);
 		ensure(lua_gettop(L) == 0);
 	}
 

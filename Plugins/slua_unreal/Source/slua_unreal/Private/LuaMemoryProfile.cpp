@@ -175,12 +175,13 @@ namespace NS_SLUA {
 		
 		for (int i = 0;;i++) {
 			lua_Debug ar;
-			if (lua_getstack(L, i, &ar) && lua_getinfo(L, "nSl", &ar)) {
+			AutoStack as(L);
+			if (lua_getstack(L, i, &ar) && lua_getinfo(L, "nSlf", &ar)) {
 				if (strcmp(ar.what, "C") == 0) {
 					if (ar.name) {
 						firstCName += UTF8_TO_TCHAR(ar.name);
-						
-						if (strcmp(ar.name, "coroutine") == 0) {
+						lua_CFunction cfunc = lua_tocfunction(L, -1);
+						if (cfunc == LuaProfiler::resumeFunc) {
 							if (lua_isthread(L, 1)) {
 								lua_State* L1 = lua_tothread(L, 1);
 								if (isCoroutineAlive(L1)) {

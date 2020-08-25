@@ -620,7 +620,7 @@ namespace NS_SLUA {
 		}
 
         static void addRef(lua_State* L,UObject* obj, void* ud, bool ref);
-        static void removeRef(lua_State* L,UObject* obj);
+        static void removeRef(lua_State* L,UObject* obj,void* ud=nullptr);
 
         template<typename T>
         static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt,lua_CFunction gc,bool ref) {

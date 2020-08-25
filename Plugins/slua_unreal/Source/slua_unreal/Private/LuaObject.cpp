@@ -439,7 +439,7 @@ namespace NS_SLUA {
         if(cls) {
             UObject* obj = NewObject<UObject>(outter,cls,name);
             if(obj) {
-                LuaObject::push(L,obj);
+                LuaObject::push(L,obj,false,true);
                 return 1;
             }
         }
@@ -1110,6 +1110,9 @@ namespace NS_SLUA {
 		auto p = Cast<UObjectProperty>(prop);
 		ensure(p);
 		UObject* arg = LuaObject::checkValue<UObject*>(L, i);
+    	if (arg && !LuaObject::isUObjectValid(arg))
+			luaL_error(L, "arg %d is invalid UObject!", i);
+    	
 		if (arg && arg->GetClass() != p->PropertyClass && !arg->GetClass()->IsChildOf(p->PropertyClass))
 			luaL_error(L, "arg %d expect %s, but got %s", i,
 				p->PropertyClass ? TCHAR_TO_UTF8(*p->PropertyClass->GetName()) : "", 
@@ -1203,9 +1206,9 @@ namespace NS_SLUA {
     }
 
 
-    void LuaObject::removeRef(lua_State* L,UObject* obj) {
+    void LuaObject::removeRef(lua_State* L,UObject* obj,void* ud/*=nullptr*/) {
         auto sl = LuaState::get(L);
-        sl->unlinkUObject(obj);
+        sl->unlinkUObject(obj,ud);
     }
 
 	void LuaObject::releaseLink(lua_State* L, void* prop) {
@@ -1346,20 +1349,23 @@ namespace NS_SLUA {
 	}
 
     int LuaObject::gcObject(lua_State* L) {
-		CheckUDGC(UObject,L, 1);
-        removeRef(L,UD);
+		void* userdata = lua_touserdata(L, 1);
+		CheckUDGC(UObject,L,1);
+        removeRef(L,UD,userdata);
         return 0;
     }
 
     int LuaObject::gcClass(lua_State* L) {
+		void* userdata = lua_touserdata(L, 1);
 		CheckUDGC(UClass,L,1);
-        removeRef(L,UD);
+        removeRef(L,UD,userdata);
         return 0;
     }
 
     int LuaObject::gcStructClass(lua_State* L) {
+		void* userdata = lua_touserdata(L, 1);
 		CheckUDGC(UScriptStruct,L,1);
-        removeRef(L,UD);
+        removeRef(L,UD,userdata);
         return 0;
     }
 

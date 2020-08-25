@@ -31,7 +31,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogSluaProfile, Log, All);
 #define PROFILER_END_WATCHER(functionName)
 #endif
 
-namespace slua
+namespace NS_SLUA
 {
 	class FProfileServer;
 }

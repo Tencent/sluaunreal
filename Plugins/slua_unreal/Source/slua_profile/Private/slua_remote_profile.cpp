@@ -19,7 +19,7 @@
 #include "SluaUtil.h"
 #include "LuaProfiler.h"
 
-namespace slua
+namespace NS_SLUA
 {
 	FProfileServer::FProfileServer()
 		: Thread(nullptr)

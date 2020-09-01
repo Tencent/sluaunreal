@@ -325,6 +325,7 @@ namespace NS_SLUA {
 
 		static int classIndex(lua_State* L);
 		static int classNewindex(lua_State* L);
+		static int objectIndex(lua_State* L, UObject* obj, const char* name);
 
 		static void newType(lua_State* L, const char* tn);
         static void newTypeWithBase(lua_State* L, const char* tn, std::initializer_list<const char*> bases);
@@ -334,7 +335,7 @@ namespace NS_SLUA {
 		static void addOperator(lua_State* L, const char* name, lua_CFunction func);
 		static void finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc, lua_CFunction strHint=nullptr);
 		static void fillParam(lua_State* L, int i, UFunction* func, uint8* params);
-		static int returnValue(lua_State* L, UFunction* func, uint8* params, NewObjectRecorder* objRecorder);
+		static int returnValue(lua_State* L, UFunction* func, uint8* params, NewObjectRecorder* objRecorder, bool &isLatentFunction);
 
 		// check UObject is valid
 		static bool isUObjectValid(UObject* obj) {
@@ -649,9 +650,9 @@ namespace NS_SLUA {
         static int pushClass(lua_State* L,UClass* cls);
         static int pushStruct(lua_State* L,UScriptStruct* cls);
 		static int pushEnum(lua_State* L, UEnum* e);
-		static int push(lua_State* L, UObject* obj, bool rawpush=false, bool ref=true, NewObjectRecorder* objRecorder = nullptr);
-		inline static int push(lua_State* L, const UObject* obj) {
-			return push(L, const_cast<UObject*>(obj));
+		static int push(lua_State* L, UObject* obj, bool ref=false, NewObjectRecorder* objRecorder = nullptr);
+		inline static int push(lua_State* L, const UObject* obj, bool ref = false, NewObjectRecorder* objRecorder = nullptr) {
+			return push(L, const_cast<UObject*>(obj), ref, objRecorder);
 		}
 		static int push(lua_State* L, FWeakObjectPtr ptr);
 		static int push(lua_State* L, FScriptDelegate* obj);
@@ -772,7 +773,6 @@ namespace NS_SLUA {
         static void cacheFunction(lua_State* L, UClass* cls,const char* fame,UFunction* func);
 
         static UProperty* findCacheProperty(lua_State* L, UClass* cls, const char* pname);
-        static void cacheProperty(lua_State* L, UClass* cls, const char* pname, UProperty* property);
 
         static bool getObjCache(lua_State* L, void* obj, const char* tn, bool check = true);
 		static void cacheObj(lua_State* L, void* obj);
@@ -782,6 +782,7 @@ namespace NS_SLUA {
 		static void cacheFunc(lua_State* L, const UFunction* func);
 		static void removeFuncCache(lua_State* L, const UFunction* func);
 
+		static bool getCache(lua_State* L, void* obj, int ref);
 		static void addCache(lua_State* L, void* obj, int ref);
 		static void removeCache(lua_State* L, void* obj, int ref);
     	

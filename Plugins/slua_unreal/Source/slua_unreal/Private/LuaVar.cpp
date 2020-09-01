@@ -633,37 +633,48 @@ namespace NS_SLUA {
 		auto L = getState();
         int retCount = docall(n);
 		int remain = retCount;
+
+        auto checkOutputValue = [&](UProperty *prop) {
+            auto checker = LuaObject::getChecker(prop);
+            FOutParmRec* out = outParams;
+            while (out && out->Property != prop) {
+                out = out->NextOutParm;
+            }
+            uint8* outParam = out ? out->PropAddr : parms + prop->GetOffset_ForInternal();
+            if (checker) {
+                (*checker)(L, prop, outParam, lua_absindex(L, -remain));
+            }
+            remain--;
+        };
+
         // if lua return value
         // we only handle first lua return value
-        if(remain >0 && bHasReturnParam) {
+        if (remain > 0 && bHasReturnParam) {
             auto prop = func->GetReturnProperty();
-            auto checkder = prop?LuaObject::getChecker(prop):nullptr;
-            if (checkder) {
-                (*checkder)(L, prop, parms+prop->GetOffset_ForInternal(), lua_absindex(L, -remain));
-                if (RESULT_PARAM) {
-                    prop->CopyCompleteValue(RESULT_PARAM, prop->ContainerPtrToValuePtr<uint8>(parms));
-                }
+            checkOutputValue(prop);
+        }
+        
+        // fill lua return value to blueprint stack if argument is out param
+        for (TFieldIterator<UProperty> it(func); remain > 0 && it && (it->PropertyFlags & CPF_Parm); ++it) {
+            UProperty* prop = *it;
+            uint64 propflag = prop->GetPropertyFlags();
+            if (IsRealOutParam(propflag)) {
+                checkOutputValue(prop);
             }
-			remain--;
         }
 
-		// fill lua return value to blueprint stack if argument is out param
-		for (TFieldIterator<UProperty> it(func); remain >0 && it && (it->PropertyFlags&CPF_Parm); ++it) {
-			UProperty* prop = *it;
-			uint64 propflag = prop->GetPropertyFlags();
-            if (IsRealOutParam(propflag)) {
-                auto checker = LuaObject::getChecker(prop);
-                FOutParmRec* out = outParams;
-                while (out && out->Property != prop) {
-                    out = out->NextOutParm;
-                }
-                uint8* outParam = out ? out->PropAddr : parms + prop->GetOffset_ForInternal();
-                if (checker) {
-                    (*checker)(L, prop, outParam, lua_absindex(L, -remain));
-                }
-                remain--;
-            }
+		if (bHasReturnParam && RESULT_PARAM) {
+            auto prop = func->GetReturnProperty();
+			FOutParmRec* out = outParams;
+			while (out && out->Property != prop) {
+				out = out->NextOutParm;
+			}
+			uint8* outParam = out ? out->PropAddr : parms + prop->GetOffset_ForInternal();
+			if (RESULT_PARAM != outParam) {
+				prop->CopyCompleteValueToScriptVM(RESULT_PARAM, outParam);
+			}
 		}
+
         // pop returned value
         lua_pop(L, retCount);
 		return true;

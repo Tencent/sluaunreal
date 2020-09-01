@@ -31,11 +31,12 @@
 #include "HAL/RunnableThread.h"
 #include "GameDelegates.h"
 #include "LatentDelegate.h"
-#include "LuaActor.h"
+#include "LuaOverrider.h"
 #include "LuaProfiler.h"
 #include "Stats/Stats.h"
 
 namespace NS_SLUA {
+	FLuaStateInitEvent LuaState::onInitEvent;
 
 	const int MaxLuaExecTime = 5; // in second
 
@@ -95,6 +96,16 @@ namespace NS_SLUA {
 		else Log::Error("%s", err);
 	}
 
+	int newCacheTable(lua_State* L) {
+		lua_newtable(L);
+		lua_newtable(L);
+		lua_pushstring(L, "kv");
+		lua_setfield(L, -2, "__mode");
+		lua_setmetatable(L, -2);
+		// register it
+		return luaL_ref(L, LUA_REGISTRYINDEX);
+    }
+	
      #if WITH_EDITOR
      // used for debug
 	int LuaState::getStringFromMD5(lua_State* L) {
@@ -167,6 +178,7 @@ namespace NS_SLUA {
 		, L(nullptr)
 		, cacheObjRef(LUA_NOREF)
 		, cacheFuncRef(LUA_NOREF)
+		, cacheEnumRef(LUA_NOREF)
 		, stackCount(0)
 		, si(0)
 		, deadLoopCheck(nullptr)
@@ -238,6 +250,7 @@ namespace NS_SLUA {
 
 		latentDelegate = nullptr;
 
+		SafeDelete(overrider);
 		freeDeferObject();
 
 		releaseAllLink();
@@ -281,6 +294,8 @@ namespace NS_SLUA {
 		latentDelegate = NewObject<ULatentDelegate>((UObject*)GetTransientPackage(), ULatentDelegate::StaticClass());
 		latentDelegate->bindLuaState(this);
 
+		overrider = new LuaOverrider(this);
+
         stackCount = 0;
         si = ++StateIndex;
 
@@ -303,22 +318,14 @@ namespace NS_SLUA {
         stateMapFromIndex.Add(si,this);
 
         // init obj cache table
-        lua_newtable(L);
-        lua_newtable(L);
-        lua_pushstring(L,"kv");
-        lua_setfield(L,-2,"__mode");
-        lua_setmetatable(L,-2);
-        // register it
-        cacheObjRef = luaL_ref(L,LUA_REGISTRYINDEX);
-
+		cacheObjRef = newCacheTable(L);
+        
 		// init func cache table
+		cacheFuncRef = newCacheTable(L);
+
+		// init enum cache table
 		lua_newtable(L);
-		lua_newtable(L);
-		lua_pushstring(L, "kv");
-		lua_setfield(L, -2, "__mode");
-		lua_setmetatable(L, -2);
-		// register it
-		cacheFuncRef = luaL_ref(L, LUA_REGISTRYINDEX);
+		cacheEnumRef = luaL_ref(L, LUA_REGISTRYINDEX);
 
         ensure(lua_gettop(L)==0);
         
@@ -364,13 +371,13 @@ namespace NS_SLUA {
 #ifdef ENABLE_PROFILER
 		LuaProfiler::init(this);
 #endif
-		
-		onInitEvent.Broadcast();
 
 		// disable gc in main thread
 		if (enableMultiThreadGC) lua_gc(L, LUA_GCSTOP, 0);
 
         lua_settop(L,0);
+
+		onInitEvent.Broadcast(L);
 
         return true;
     }
@@ -507,6 +514,22 @@ namespace NS_SLUA {
         }
         return LuaVar();
     }
+
+	LuaVar LuaState::requireModule(const char* fn, LuaVar* pEnv) {
+		int top = LuaState::pushErrorHandler(L);
+		lua_getglobal(L, "require");
+		lua_pushstring(L, fn);
+		
+		if (lua_pcall(L, 1, 1, top))
+			lua_pop(L, 1);
+
+		lua_remove(L, top);
+
+		int retCount = lua_gettop(L) - top + 1;
+		LuaVar luaModule(L, -retCount);
+		lua_pop(L, retCount);
+		return MoveTemp(luaModule);
+	}
 
 	void LuaState::NotifyUObjectDeleted(const UObjectBase * Object, int32 Index)
 	{
@@ -712,6 +735,11 @@ namespace NS_SLUA {
 	ULatentDelegate* LuaState::getLatentDelegate() const
 	{
 		return latentDelegate;
+	}
+
+	void LuaState::hookObject(const UObjectBaseUtility* obj, bool bIsPostLoad/* = false*/)
+	{
+		overrider->tryHook(obj, bIsPostLoad);
 	}
 
 	int LuaState::_pushErrorHandler(lua_State* state) {
@@ -927,7 +955,14 @@ namespace NS_SLUA {
 	UProperty* LuaState::ClassCache::findProp(UClass* uclass, const char* pname)
 	{
 		auto item = cachePropMap.Find(uclass);
-		if (!item) return nullptr;
+		if (!item) {
+			// cache class property's
+			item = &cachePropMap.Add(uclass);
+			auto PropertyLink = uclass->PropertyLink;
+			for (UProperty* Property = PropertyLink; Property != NULL; Property = Property->PropertyLinkNext) {
+				item->Add(Property->GetName(), Property);
+			}
+		}
 		auto prop = item->Find(UTF8_TO_TCHAR(pname));
 		if (prop != nullptr)
 			return prop->IsValid() ? prop->Get() : nullptr;
@@ -938,12 +973,6 @@ namespace NS_SLUA {
 	{
 		auto& item = cacheFuncMap.FindOrAdd(uclass);
 		item.Add(UTF8_TO_TCHAR(fname), func);
-	}
-
-	void LuaState::ClassCache::cacheProp(UClass* uclass, const char* pname, UProperty* prop)
-	{
-		auto& item = cachePropMap.FindOrAdd(uclass);
-		item.Add(UTF8_TO_TCHAR(pname), prop);
 	}
 
 	NewObjectRecorder::NewObjectRecorder(lua_State* L_)

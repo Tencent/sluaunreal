@@ -149,15 +149,14 @@ namespace NS_SLUA {
 			widget = CreateWidget<UUserWidget>(GameInstance, uclass);
 		}
 
-		
-        return LuaObject::push(L,widget);
+        return LuaObject::push(L,widget,true);
     }
 
     int SluaUtil::createDelegate(lua_State* L) {
         luaL_checktype(L,1,LUA_TFUNCTION);
         auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(),ULuaDelegate::StaticClass());
         obj->bindFunction(L,1);
-        return LuaObject::push(L,obj);
+        return LuaObject::push(L,obj,true);
     }
 
 	int SluaUtil::setTickFunction(lua_State* L)
@@ -198,7 +197,10 @@ namespace NS_SLUA {
 
 	int SluaUtil::isValid(lua_State * L)
 	{
-		luaL_checktype(L, 1, LUA_TUSERDATA);
+		if (lua_type(L, 1) != LUA_TUSERDATA) {
+			return LuaObject::push(L, false);
+		}
+
 		GenericUserData *gud = (GenericUserData*)lua_touserdata(L, 1);
 		bool bIsValid = !(gud->flag & UD_HADFREE);
 		if(!bIsValid)

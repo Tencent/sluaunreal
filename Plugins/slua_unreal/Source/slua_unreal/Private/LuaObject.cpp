@@ -778,15 +778,18 @@ namespace NS_SLUA {
 		UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
 		const char* name = LuaObject::checkValue<const char*>(L, 2);
 		
-		auto* table = ULuaOverrider::getObjectTable(obj, L);
-		if (table && table->getState() == G(L)->mainthread) {
-			table->push(L);
-			if (lua_getfield(L, -1, name) == LUA_TFUNCTION) {
-				lua_pushcclosure(L, luaFuncClosure, 2);
-				return 1;
+		int ret = LuaObject::objectIndex(L, obj, name);
+		if (!ret) {
+			auto* table = ULuaOverrider::getObjectTable(obj);
+			if (table && table->getState() == G(L)->mainthread) {
+				table->push(L);
+				if (lua_getfield(L, -1, name) == LUA_TFUNCTION) {
+					lua_pushcclosure(L, luaFuncClosure, 2);
+					return 1;
+				}
 			}
 		}
-		return LuaObject::objectIndex(L, obj, name);
+		return ret;
 	}
 
 	int LuaObject::objectIndex(lua_State* L, UObject* obj, const char* name) {

@@ -21,6 +21,7 @@
 #include "Blueprint/BlueprintSupport.h"
 #include "LuaState.h"
 #include "Internationalization/Internationalization.h"
+#include "LuaOverriderInterface.h"
 
 namespace {
     const FName GetVarOutOfBoundsWarning = FName("GetVarOutOfBoundsWarning");    
@@ -81,6 +82,24 @@ FLuaBPVar ULuaBlueprintLibrary::CallToLua(UObject* WorldContextObject, FString f
         return LuaVar();
     }
     return f.callWithNArg(0);
+}
+
+FLuaBPVar ULuaBlueprintLibrary::CallToLuaMember(TScriptInterface<ILuaOverriderInterface> LuaObject, FString FunctionName, const TArray<FLuaBPVar>& Args) {
+	using namespace NS_SLUA;
+	const LuaVar& selfTable = LuaObject->GetSelfTable();
+	LuaVar f = selfTable.getFromTable<LuaVar>(FunctionName);
+	if (!f.isFunction()) {
+		Log::Error("Can't find lua member function named %s to call", TCHAR_TO_UTF8(*FunctionName));
+		return LuaVar();
+	}
+
+	// push selfTable as self
+	selfTable.push(selfTable.getState());
+
+	for (auto& arg : Args) {
+		arg.value.push(selfTable.getState());
+	}
+	return f.callWithNArg(Args.Num()+1);
 }
 
 

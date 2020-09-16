@@ -48,6 +48,9 @@ public:
 	UFUNCTION(BlueprintCallable, meta=( DisplayName="Call To Lua", WorldContext = "WorldContextObject"), Category="slua")
 	static FLuaBPVar CallToLua(UObject* WorldContextObject, FString FunctionName,FString StateName);
 
+	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Call To Lua Member", WorldContext = "WorldContextObject"), Category = "slua")
+	static FLuaBPVar CallToLuaMember(TScriptInterface<ILuaOverriderInterface> LuaObject, FString FunctionName, const TArray<FLuaBPVar>& Args);
+
 	UFUNCTION(BlueprintCallable, Category="slua")
 	static FLuaBPVar CreateVarFromInt(int Value);
 

@@ -109,8 +109,9 @@ void ULuaOverrider::removeObjectTable(UObject* obj)
 		{
 			auto* L = Table->getState();
 			Table->push(L);
+			lua_pushstring(L, SLUA_CPPINST);
 			lua_pushnil(L);
-			lua_setfield(L, -2, SLUA_CPPINST);
+			lua_rawset(L, -3);
 			lua_pop(L, 1);
 
 			tableMap.Remove(obj);
@@ -226,6 +227,7 @@ namespace NS_SLUA
 
 	bool LuaOverrider::tryHook(const UObjectBaseUtility* obj, bool bIsPostLoad/* = false*/)
 	{
+		NS_SLUA::Log::Log("LuaOverrider::NotifyUObjectCreated %s, %p", TCHAR_TO_UTF8(*obj->GetFName().ToString()), obj);
 		if (isHookable(obj))
 		{
 			if (IsInGameThread() && !bIsPostLoad)
@@ -404,8 +406,9 @@ namespace NS_SLUA
 		// setup __cppinst
 		// we use rawpush to bind objptr and SLUA_CPPINST
 		luaSelfTable.push(L);
+		lua_pushstring(L, SLUA_CPPINST);
 		lua_pushlightuserdata(L, objPtr);
-		lua_setfield(L, -2, SLUA_CPPINST);
+		lua_rawset(L, -3);
 
 		LuaObject::pushType(L, new LuaSuperOrRpc((UObject*)objPtr), "LuaSuperOrRpc", LuaSuperOrRpc::setupMetatable, LuaSuperOrRpc::genericGC<LuaSuperOrRpc>);
 		lua_setfield(L, -2, "Super");

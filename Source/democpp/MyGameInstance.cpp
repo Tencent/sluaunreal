@@ -27,11 +27,6 @@ static uint8* ReadFile(IPlatformFile& PlatformFile, FString path, uint32& len) {
 }
 
 UMyGameInstance::UMyGameInstance() :state("main",this) {
-
-}
-
-void UMyGameInstance::Init()
-{
 	NS_SLUA::LuaState::onInitEvent.AddUObject(this, &UMyGameInstance::LuaStateInitCallback);
 	state.init();
 
@@ -57,6 +52,11 @@ void UMyGameInstance::Init()
 
 		return MoveTemp(Content);
 	});
+}
+
+void UMyGameInstance::Init()
+{
+	
 }
 
 void UMyGameInstance::Shutdown()

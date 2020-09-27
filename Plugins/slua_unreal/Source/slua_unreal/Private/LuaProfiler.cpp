@@ -24,14 +24,13 @@
 #include "Stats/Stats2.h"
 
 #if PLATFORM_WINDOWS
-#ifdef TEXT
-#undef TEXT
-#endif
+#pragma push_macro("TEXT")
 #endif
 #include "luasocket/tcp.h"
 
 #if PLATFORM_WINDOWS
 #include <winsock2.h>
+#pragma pop_macro("TEXT")
 #else
 #include <sys/ioctl.h>
 #endif

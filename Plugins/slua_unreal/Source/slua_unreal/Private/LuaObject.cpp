@@ -985,6 +985,19 @@ namespace NS_SLUA {
         return LuaObject::push(L,p->GetPropertyValue(parms));
     }
 
+	// treat uint8* as string
+	int pushUByteProperty(lua_State* L, UProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
+		auto p = Cast<UByteProperty>(prop);
+		ensure(p);
+		if (p->ArrayDim > 1 ) {
+			uint8* ptr = p->GetPropertyValuePtr(parms);
+			lua_pushlstring(L, (char*) ptr, p->ArrayDim);
+			return 1;
+		}
+		else
+			return LuaObject::push(L, p->GetPropertyValue(parms));
+	}
+
 	int pushEnumProperty(lua_State* L, UProperty* prop, uint8* parms,NewObjectRecorder* objRecorder) {
 		auto p = Cast<UEnumProperty>(prop);
 		ensure(p);
@@ -1563,13 +1576,15 @@ namespace NS_SLUA {
 		regPusher<UInt16Property>();
 		regPusher<UUInt16Property>();
 		regPusher<UInt8Property>();
-		regPusher<UByteProperty>(); // uint8
+		// regPusher<UByteProperty>(); // uint8
 		regPusher<UFloatProperty>();
 		regPusher<UDoubleProperty>();
         regPusher<UBoolProperty>();
         regPusher<UTextProperty>();
         regPusher<UStrProperty>();
         regPusher<UNameProperty>();
+
+		regPusher(UByteProperty::StaticClass(), pushUByteProperty);
 		
 		regPusher(UDelegateProperty::StaticClass(), pushUDelegateProperty);
         regPusher(UMulticastDelegateProperty::StaticClass(),pushUMulticastDelegateProperty);

@@ -234,6 +234,7 @@ namespace NS_SLUA {
 				// skip first char may be 'U' or 'A'
 				if (clsname.Find(T::StaticClass()->GetName()) == 1) {
 					UserData<T*>* tptr = (UserData<T*>*) lua_touserdata(L, p);
+					CHECK_UD_VALID(tptr);
 					t = tptr ? tptr->ud : nullptr;
 				}
 			}

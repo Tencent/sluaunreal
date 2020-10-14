@@ -263,7 +263,10 @@ namespace NS_SLUA {
 
 		int changeHookState(lua_State* L) {
 			HookState state = (HookState)lua_tointeger(L, 1);
+
+			if (state == currentHookState) return 0;
 			currentHookState = state;
+
 			if (state == HookState::UNHOOK) {
 //                LuaMemoryProfile::stop();
 				lua_sethook(L, nullptr, 0, 0);

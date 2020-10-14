@@ -3,6 +3,10 @@ local WBL = import("WidgetBlueprintLibrary")
 
 local panel ={}
 
+function panel:Initialize() 
+
+end
+
 function panel:Construct()
     print"panel:Construct"
     self.bHasScriptImplementedTick = true
@@ -48,6 +52,9 @@ function panel:Tick(geom,dt)
     for k,v in pairs(m) do
         print("over",k,v)
     end
+end
+
+function panel:OnDestroy()
 end
 
 function panel:OnKeyDown(Geometry,Event)

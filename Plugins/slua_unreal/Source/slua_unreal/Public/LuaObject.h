@@ -51,7 +51,13 @@
 	auto udptr = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, 1)); \
 	if(!udptr) luaL_error(L, "self ptr missing"); \
 	if (udptr->flag & UD_HADFREE) \
-		luaL_error(L, "checkValue error, obj parent has been freed"); \
+		luaL_error(L, #T" checkValue error, obj parent has been freed"); \
+	auto self = udptr->ud
+
+#define CheckSelfSafe(T) \
+	auto udptr = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, 1)); \
+	if(!udptr) return 0; \
+	if (udptr->flag & UD_HADFREE) return 0; \
 	auto self = udptr->ud
 
 #define IsRealOutParam(propflag) ((propflag&CPF_OutParm) && !(propflag&CPF_ConstParm) && !(propflag&CPF_BlueprintReadOnly))
@@ -61,6 +67,7 @@ class ULatentDelegate;
 namespace NS_SLUA {
 
     class LuaVar;
+	class NewObjectRecorder;
 
     struct AutoStack {
         AutoStack(lua_State* l) {
@@ -103,6 +110,7 @@ namespace NS_SLUA {
 	#define UD_USTRUCT 1<<7 // flag it's an UStruct
 	#define UD_WEAKUPTR 1<<8 // flag it's a weak UObject ptr
 	#define UD_REFERENCE 1<<9
+	#define UD_VALUETYPE 1<<10 // flag it's a valuetype, don't cache value by ptr
 
 	struct UDBase {
 		uint32 flag;
@@ -189,8 +197,14 @@ namespace NS_SLUA {
 		static T* maybeAnUDTable(lua_State* L, int p,bool checkfree) {
 			if(lua_istable(L, p)) {
                 AutoStack as(L);
-				lua_getfield(L, p, SLUA_CPPINST);
-				if (lua_type(L, -1) == LUA_TUSERDATA)
+				// use lua_rawget instead of lua_getfield to avoid __index loop!
+				lua_pushstring(L, SLUA_CPPINST);
+				lua_rawget(L, p);
+				if (lua_islightuserdata(L, -1)) {
+					void* ud = lua_touserdata(L, -1);
+					return (T*)ud;
+				}
+				else if (lua_type(L, -1) == LUA_TUSERDATA)
 					return checkUD<T>(L, lua_absindex(L, -1), checkfree);
 			}
 			return nullptr;
@@ -211,8 +225,8 @@ namespace NS_SLUA {
 			else t = ptr?Cast<T>(ptr->ud):nullptr;
 
 			if (!t && lua_isuserdata(L, p)) {
-				luaL_getmetafield(L, p, "__name");
-				if (lua_isnil(L, -1)) {
+				int tt = luaL_getmetafield(L, p, "__name");
+				if (tt == LUA_TNIL) {
 					return t;
 				}
 				FString clsname(lua_tostring(L, -1));
@@ -299,7 +313,7 @@ namespace NS_SLUA {
 
     public:
 
-        typedef int (*PushPropertyFunction)(lua_State* L,FProperty* prop,uint8* parms,bool ref);
+        typedef int (*PushPropertyFunction)(lua_State* L,FProperty* prop,uint8* parms,NewObjectRecorder* objRecorder);
         typedef int (*CheckPropertyFunction)(lua_State* L,FProperty* prop,uint8* parms,int i);
 
         static CheckPropertyFunction getChecker(FFieldClass* prop);
@@ -320,7 +334,7 @@ namespace NS_SLUA {
 		static void addOperator(lua_State* L, const char* name, lua_CFunction func);
 		static void finishType(lua_State* L, const char* tn, lua_CFunction ctor, lua_CFunction gc, lua_CFunction strHint=nullptr);
 		static void fillParam(lua_State* L, int i, UFunction* func, uint8* params);
-		static int returnValue(lua_State* L, UFunction* func, uint8* params);
+		static int returnValue(lua_State* L, UFunction* func, uint8* params, NewObjectRecorder* objRecorder);
 
 		// check UObject is valid
 		static bool isUObjectValid(UObject* obj) {
@@ -355,8 +369,7 @@ namespace NS_SLUA {
         // return the pointer of class, otherwise return nullptr
         template<typename T>
         static T* checkUD(lua_State* L,int p,bool checkfree=true) {
-			if (lua_isnil(L, p))
-			{
+			if (lua_isnoneornil(L, p)) {
 				return nullptr;
 			}
 
@@ -379,7 +392,7 @@ namespace NS_SLUA {
 				return udptr->ud;
 			}
             if(checkfree) 
-				luaL_error(L,"expect userdata %s, but got %s, if you passed an UObject, maybe it's unreachable",TypeName<T>::value().c_str(),typearg);
+				luaL_error(L,"expect userdata %s at %d, but got %s, if you passed an UObject, maybe it's unreachable",TypeName<T>::value().c_str(), p, typearg);
             return nullptr;
         }
 
@@ -489,7 +502,7 @@ namespace NS_SLUA {
 
 		template<class T>
 		static int push(lua_State* L, const char* fn, const T* v, uint32 flag = UD_NOFLAG) {
-            if(getFromCache(L,void_cast(v),fn)) return 1;
+            if(!(flag & UD_VALUETYPE) && getObjCache(L,void_cast(v),fn)) return 1;
             luaL_getmetatable(L,fn);
 			// if v is the UnrealType
 			UScriptStruct* uss = nullptr;
@@ -507,7 +520,8 @@ namespace NS_SLUA {
 			lua_pushvalue(L, -2);
 			lua_setmetatable(L, -2);
 			lua_remove(L, -2); // remove metatable of fn
-            cacheObj(L,void_cast(v));
+            if(!(flag & UD_VALUETYPE)) 
+				cacheObj(L,void_cast(v));
             return 1;
 		}
 
@@ -516,7 +530,7 @@ namespace NS_SLUA {
 
 		template<class T>
 		static int pushAndLink(lua_State* L, const void* parent, const char* tn, const T* v) {
-			if (getFromCache(L, void_cast(v), tn)) return 1;
+			if (getObjCache(L, void_cast(v), tn)) return 1;
 			NewUD(T, v, UD_NOFLAG);
 			luaL_getmetatable(L, tn);
 			lua_setmetatable(L, -2);
@@ -606,11 +620,11 @@ namespace NS_SLUA {
 		}
 
         static void addRef(lua_State* L,UObject* obj, void* ud, bool ref);
-        static void removeRef(lua_State* L,UObject* obj);
+        static void removeRef(lua_State* L,UObject* obj,void* ud=nullptr);
 
         template<typename T>
         static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt,lua_CFunction gc,bool ref) {
-            if(getFromCache(L,obj,tn)) return 1;
+            if(getObjCache(L,obj,tn)) return 1;
             lua_pushcclosure(L,gc,0);
             int f = lua_gettop(L);
             int r = pushType<T>(L,obj,tn,setupmt,f);
@@ -624,7 +638,7 @@ namespace NS_SLUA {
 
         template<typename T>
         static int pushObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt=nullptr) {
-            if(getFromCache(L,obj,tn)) return 1;
+            if(getObjCache(L,obj,tn)) return 1;
             int r = pushType<T>(L,obj,tn,setupmt,nullptr);
             if(r) cacheObj(L,obj);
             return r;
@@ -635,7 +649,7 @@ namespace NS_SLUA {
         static int pushClass(lua_State* L,UClass* cls);
         static int pushStruct(lua_State* L,UScriptStruct* cls);
 		static int pushEnum(lua_State* L, UEnum* e);
-		static int push(lua_State* L, UObject* obj, bool rawpush=false, bool ref=true);
+		static int push(lua_State* L, UObject* obj, bool rawpush=false, bool ref=true, NewObjectRecorder* objRecorder = nullptr);
 		inline static int push(lua_State* L, const UObject* obj) {
 			return push(L, const_cast<UObject*>(obj));
 		}
@@ -661,8 +675,8 @@ namespace NS_SLUA {
 		static int push(lua_State* L, const LuaVar& v);
         static int push(lua_State* L, UFunction* func, UClass* cls=nullptr);
 		static int push(lua_State* L, const LuaLString& lstr);
-		static int push(lua_State* L, FProperty* up, uint8* parms, bool ref=true);
-		static int push(lua_State* L, FProperty* up, UObject* obj, bool ref=true);
+		static int push(lua_State* L, FProperty* up, uint8* parms, NewObjectRecorder* objRecorder = nullptr);
+		static int push(lua_State* L, FProperty* up, UObject* obj, NewObjectRecorder* objRecorder = nullptr);
 
         // check tn is base of base
         static bool isBaseTypeOf(lua_State* L,const char* tn,const char* base);
@@ -706,7 +720,7 @@ namespace NS_SLUA {
 			T* rawptr = ptr.Get();
 			// get typename 
 			auto tn = TypeName<T>::value();
-			if (getFromCache(L, rawptr, tn.c_str())) return 1;
+			if (getObjCache(L, rawptr, tn.c_str())) return 1;
 			int r = pushType<T>(L, new SharedPtrUD<T, mode>(ptr), tn.c_str());
 			if (r) cacheObj(L, rawptr);
 			return r;
@@ -718,7 +732,7 @@ namespace NS_SLUA {
 			T& rawref = ref.Get();
 			// get typename 
 			auto tn = TypeName<T>::value();
-			if (getFromCache(L, &rawref, tn.c_str())) return 1;
+			if (getObjCache(L, &rawref, tn.c_str())) return 1;
 			int r = pushType<T>(L, new SharedRefUD<T, mode>(ref), tn.c_str());
 			if (r) cacheObj(L, &rawref);
 			return r;
@@ -760,9 +774,17 @@ namespace NS_SLUA {
         static FProperty* findCacheProperty(lua_State* L, UClass* cls, const char* pname);
         static void cacheProperty(lua_State* L, UClass* cls, const char* pname, FProperty* property);
 
-        static bool getFromCache(lua_State* L, void* obj, const char* tn, bool check = true);
+        static bool getObjCache(lua_State* L, void* obj, const char* tn, bool check = true);
 		static void cacheObj(lua_State* L, void* obj);
-		static void removeFromCache(lua_State* L, void* obj);
+		static void removeObjCache(lua_State* L, void* obj);
+
+		static bool getFuncCache(lua_State* L, const UFunction* func);
+		static void cacheFunc(lua_State* L, const UFunction* func);
+		static void removeFuncCache(lua_State* L, const UFunction* func);
+
+		static void addCache(lua_State* L, void* obj, int ref);
+		static void removeCache(lua_State* L, void* obj, int ref);
+    	
 		static ULatentDelegate* getLatentDelegate(lua_State* L);
 		static void deleteFGCObject(lua_State* L,FGCObject* obj);
     private:

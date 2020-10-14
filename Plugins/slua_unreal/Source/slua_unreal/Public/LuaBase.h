@@ -101,7 +101,7 @@ namespace NS_SLUA {
 			// setup __cppinst
 			// we use rawpush to bind objptr and SLUA_CPPINST
 			luaSelfTable.push(L);
-			LuaObject::push(L, ptrT, true);
+			lua_pushlightuserdata(L, ptrT);
 			lua_setfield(L, -2, SLUA_CPPINST);
 
 			LuaObject::pushType(L, new LuaSuper(this) , "LuaSuper", supermt, genericGC<LuaSuper>);
@@ -131,8 +131,13 @@ namespace NS_SLUA {
 			lua_pop(L, 1);
 			return true;
 		}
-		
+
+		void dispose();
+#if ((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))
 		static void hookBpScript(UFunction* func, FNativeFuncPtr hookfunc);
+#else
+		static void hookBpScript(UFunction* func, Native hookfunc);
+#endif
 		void bindOverrideFunc(UObject* obj);
 		DECLARE_FUNCTION(luaOverrideFunc);
 

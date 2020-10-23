@@ -26,7 +26,7 @@ struct SLUA_UNREAL_API FLuaBPVar {
 	GENERATED_USTRUCT_BODY()
 public:
 	FLuaBPVar(const NS_SLUA::LuaVar& v) :value(v) {}
-	FLuaBPVar(NS_SLUA::LuaVar&& v) :value(std::move(v)) {}
+	FLuaBPVar(NS_SLUA::LuaVar&& v) :value(MoveTemp(v)) {}
 	FLuaBPVar() {}
 
 	NS_SLUA::LuaVar value;

@@ -14,23 +14,23 @@
 #include "LuaProfiler.h"
 #include "Log.h"
 #include "LuaState.h"
-#include "ArrayWriter.h"
-#include "ArrayReader.h"
+#include "Serialization/ArrayWriter.h"
+#include "Serialization/ArrayReader.h"
 #include "LuaMemoryProfile.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "luasocket/auxiliar.h"
 #include "luasocket/buffer.h"
 #include "lua/lua.hpp"
+#include "Stats/Stats2.h"
 
 #if PLATFORM_WINDOWS
-#ifdef TEXT
-#undef TEXT
-#endif
+#pragma push_macro("TEXT")
 #endif
 #include "luasocket/tcp.h"
 
 #if PLATFORM_WINDOWS
 #include <winsock2.h>
+#pragma pop_macro("TEXT")
 #else
 #include <sys/ioctl.h>
 #endif
@@ -50,21 +50,22 @@ namespace NS_SLUA {
 		CONNECTED = 1,
 	};
 
+	const char* LuaProfiler::ChunkName = "[ProfilerScript]";
+
 	namespace {
 
-		LuaVar selfProfiler;
+		TMap<LuaState*, LuaVar> selfProfiler;
 		bool ignoreHook = false;
 		HookState currentHookState = HookState::UNHOOK;
 		int64 profileTotalCost = 0;
 		p_tcp tcpSocket = nullptr;
-		const char* ChunkName = "[ProfilerScript]";
         
         // copy code from buffer.cpp in luasocket
         int buffer_get(p_buffer buf, size_t *count, FArrayReader& messageReader) {
             int err = IO_DONE;
             p_io io = buf->io;
             p_timeout tm = buf->tm;
-            if (buffer_isempty(buf)) {
+            if (buf->first >= buf->last) {
                 size_t got;
                 err = io->recv(io->ctx, buf->data, BUF_SIZE, &got, tm);
                 buf->first = 0;
@@ -79,7 +80,7 @@ namespace NS_SLUA {
         void buffer_skip(p_buffer buf, size_t count) {
             buf->received += count;
             buf->first += count;
-            if (buffer_isempty(buf))
+            if (buf->first >= buf->last)
                 buf->first = buf->last = 0;
         }
         
@@ -112,7 +113,7 @@ namespace NS_SLUA {
             }
             
             messageReader << event;
-            return event == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_GC;
+            return event == PHE_MEMORY_GC;
         }
         
         void memoryGC(lua_State* L) {
@@ -167,7 +168,7 @@ namespace NS_SLUA {
         }
 
         void makeMemoryProfilePackage(FArrayWriter& messageWriter,
-                                int hookEvent, TArray<LuaMemInfo> memInfoList)
+                                int hookEvent, TArray<LuaMemInfo>& memInfoList)
         {
             uint32 packageSize = 0;
 
@@ -201,34 +202,40 @@ namespace NS_SLUA {
             return err;
         }
 
-		void sendMessage(FArrayWriter& msg) {
+		void sendMessage(FArrayWriter& msg, lua_State* L) {
+			QUICK_SCOPE_CYCLE_COUNTER(LuaProfiler_sendMessage)
 			if (!tcpSocket) return;
 			size_t sent;
 			int err = sendraw(&tcpSocket->buf, (const char*)msg.GetData(), msg.Num(), &sent);
 			if (err != IO_DONE) {
-				selfProfiler.callField("disconnect");
+				auto& profiler = selfProfiler.FindChecked(LuaState::get(L));
+				profiler.callField("disconnect");
 			}
 		}
 
-		void takeSample(int event,int line,const char* funcname,const char* shortsrc) {
+		void takeSample(int event,int line,const char* funcname,const char* shortsrc, int64 startTime, lua_State* L) {
+			QUICK_SCOPE_CYCLE_COUNTER(LuaProfiler_takeSample)
 			// clear writer;
 			static FArrayWriter s_messageWriter;
 			s_messageWriter.Empty();
 			s_messageWriter.Seek(0);
-			makeProfilePackage(s_messageWriter, event, getTime(), line, funcname, shortsrc);
-			sendMessage(s_messageWriter);
+			makeProfilePackage(s_messageWriter, event, startTime - profileTotalCost, line, funcname, shortsrc);
+			sendMessage(s_messageWriter, L);
 		}
 
-        void takeMemorySample(int event, TArray<LuaMemInfo> memoryInfoList) {
+        void takeMemorySample(int event, TArray<LuaMemInfo>& memoryDetail, lua_State* L) {
+			QUICK_SCOPE_CYCLE_COUNTER(LuaProfiler_takeMemorySample)
             // clear writer;
             static FArrayWriter s_memoryMessageWriter;
             s_memoryMessageWriter.Empty();
             s_memoryMessageWriter.Seek(0);
-            makeMemoryProfilePackage(s_memoryMessageWriter, event, memoryInfoList);
-            sendMessage(s_memoryMessageWriter);
+            makeMemoryProfilePackage(s_memoryMessageWriter, event, memoryDetail);
+            sendMessage(s_memoryMessageWriter, L);
         }
 
 		void debug_hook(lua_State* L, lua_Debug* ar) {
+			int64 start = getTime();
+
 			if (ignoreHook) return;
 			
 			lua_getinfo(L, "nSl", ar);
@@ -236,25 +243,68 @@ namespace NS_SLUA {
 			// we don't care about LUA_HOOKLINE, LUA_HOOKCOUNT and LUA_HOOKTAILCALL
 			if (ar->event > 1) 
 				return;
-			if (strstr(ar->short_src, ChunkName)) 
+			if (strstr(ar->short_src, LuaProfiler::ChunkName)) 
 				return;
 
-            takeSample(ar->event,ar->linedefined, ar->name ? ar->name : "", ar->short_src);
+			int event = ar->event;
+			if (ar->what && strcmp(ar->what, "C") == 0) {
+				StkId o = L->ci ? L->ci->func : nullptr;
+				if (ttislcf(o) && fvalue(o) == LuaProfiler::resumeFunc) {
+					if (lua_isthread(L, 1)) {
+						// coroutine enter/exit
+						event += PHE_ENTER_COROUTINE;
+					}
+				}
+			}
+
+			takeSample(event, ar->linedefined, ar->name ? ar->name : "", ar->short_src, start, L);
+			profileTotalCost = profileTotalCost + (getTime() - start);
 		}
 
 		int changeHookState(lua_State* L) {
 			HookState state = (HookState)lua_tointeger(L, 1);
+
+			if (state == currentHookState) return 0;
 			currentHookState = state;
+
 			if (state == HookState::UNHOOK) {
 //                LuaMemoryProfile::stop();
 				lua_sethook(L, nullptr, 0, 0);
 			}
 			else if (state == HookState::HOOKED) {
-                LuaMemoryProfile::start();
+				profileTotalCost = 0;
+                LuaMemoryProfile::onStart();
+
+				auto& memoryDetail = LuaMemoryProfile::memDetail(LuaState::get(L));
+				TArray<LuaMemInfo> memoryInfoList;
+				memoryInfoList.Reserve(memoryDetail.Num());
+				for (auto& memInfo : memoryDetail) {
+					memoryInfoList.Add(memInfo.Value);
+				}
+				takeMemorySample(PHE_MEMORY_TICK, memoryInfoList, L);
+
 				lua_sethook(L, debug_hook, LUA_MASKRET | LUA_MASKCALL, 0);
 			}
 			else
 				luaL_error(L, "Set error value to hook state");
+
+			auto& profiler = selfProfiler.FindChecked(LuaState::get(L));
+			profiler.callField("changeCoroutinesHookState", profiler);
+			return 0;
+		}
+
+		int changeCoroutineHookState(lua_State* L)
+		{
+			lua_settop(L, 2);
+
+			lua_State* co = lua_tothread(L, 1);
+			bool bCreated = !!lua_toboolean(L, 2);
+			if (currentHookState == HookState::UNHOOK && !bCreated) {
+				lua_sethook(co, nullptr, 0, 0);
+			}
+			else if (currentHookState == HookState::HOOKED) {
+				lua_sethook(co, debug_hook, LUA_MASKRET | LUA_MASKCALL, 0);
+			}
 			return 0;
 		}
 
@@ -263,61 +313,86 @@ namespace NS_SLUA {
 				tcpSocket = nullptr;
 				return 0;
 			}
-			tcpSocket = (p_tcp)auxiliar_checkclass(L, "tcp{client}", 1);
+			tcpSocket = (p_tcp)luaL_checkudata(L, 1, "tcp{client}");
 			if (!tcpSocket) luaL_error(L, "Set invalid socket");
 			return 0;
 		}
 	}
 
-	void LuaProfiler::init(lua_State* L)
+	lua_CFunction LuaProfiler::resumeFunc = nullptr;
+	
+	void LuaProfiler::init(LuaState* LS)
 	{
-		auto ls = LuaState::get(L);
-		ensure(ls);
-		selfProfiler = ls->doBuffer((const uint8*)ProfilerScript,strlen(ProfilerScript), ChunkName);
-		ensure(selfProfiler.isValid());
-		selfProfiler.push(L);
+		lua_State* L = LS->getLuaState();
+		ensure(L);
+		auto& profiler = selfProfiler.Add(LS);
+		profiler = LS->doBuffer((const uint8*)ProfilerScript,strlen(ProfilerScript), ChunkName);
+		ensure(profiler.isValid());
+		profiler.push(L);
 		lua_pushcfunction(L, changeHookState);
 		lua_setfield(L, -2, "changeHookState");
+		lua_pushcfunction(L, changeCoroutineHookState);
+		lua_setfield(L, -2, "changeCoroutineHookState");
 		lua_pushcfunction(L, setSocket);
 		lua_setfield(L, -2, "setSocket");
 		// using native hook instead of lua hook for performance
 		// set selfProfiler to global as slua_profiler
 		lua_setglobal(L, "slua_profile");
+
+		lua_getglobal(L, "coroutine");
+		lua_getfield(L, -1, "resume");
+		resumeFunc = lua_tocfunction(L, -1);
+		lua_pop(L, 2);
 		ensure(lua_gettop(L) == 0);
 	}
 
-	void LuaProfiler::tick(lua_State* L)
+	void LuaProfiler::tick(LuaState *LS)
 	{
+		QUICK_SCOPE_CYCLE_COUNTER(LuaProfiler_Tick)
+		lua_State* L = LS->getLuaState();
 		ignoreHook = true;
+		auto& profiler = selfProfiler.FindChecked(LS);
 		if (currentHookState == HookState::UNHOOK) {
-			selfProfiler.callField("reConnect", selfProfiler);
+			profiler.callField("reConnect", profiler);
             ignoreHook = false;
 			return;
 		}
         
-		RunState currentRunState = (RunState)selfProfiler.getFromTable<int>("currentRunState");
-		if (currentRunState == RunState::CONNECTED) {
-            TArray<LuaMemInfo> memoryInfoList;
-            for(auto& memInfo : NS_SLUA::LuaMemoryProfile::memDetail()) {
-                memoryInfoList.Add(memInfo.Value);
-            }
-            
+		RunState currentRunState = (RunState)profiler.getFromTable<int>("currentRunState");
+		if (currentRunState == RunState::CONNECTED) {          
             if(checkSocketRead()) memoryGC(L);
-            takeMemorySample(NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK, memoryInfoList);
-            takeSample(NS_SLUA::ProfilerHookEvent::PHE_TICK, -1, "", "");
+            takeMemorySample(PHE_MEMORY_INCREACE, LuaMemoryProfile::memIncreaceThisFrame(LS), L);
+            takeSample(PHE_TICK, -1, "", "", getTime(), L);
 		}
+		LuaMemoryProfile::tick(LS);
 		ignoreHook = false;
+	}
+
+	void LuaProfiler::clean(LuaState* LS)
+	{
+		lua_State* L = LS->getLuaState();
+		ensure(L);
+		auto& profiler = selfProfiler.FindChecked(LS);
+		if (profiler.isValid())
+		{
+			profiler.callField("stop", profiler);
+			selfProfiler.Remove(LS);
+		}
+		tcpSocket = nullptr;
+		ignoreHook = false;
+		currentHookState = HookState::UNHOOK;
+		profileTotalCost = 0;
 	}
     
 
 	LuaProfiler::LuaProfiler(const char* funcName)
 	{
-        takeSample(ProfilerHookEvent::PHE_CALL, 0, funcName, "");
+        takeSample(PHE_CALL, 0, funcName, "", getTime(), *LuaState::get());
 	}
 
 	LuaProfiler::~LuaProfiler()
 	{
-        takeSample(ProfilerHookEvent::PHE_RETURN, 0, "", "");
+        takeSample(PHE_RETURN, 0, "", "", getTime(), *LuaState::get());
 	}
 
 }

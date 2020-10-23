@@ -68,10 +68,27 @@ namespace NS_SLUA {
 		static void scriptTimeout(lua_State *L, lua_Debug *ar);
 	};
 
+	typedef TSet<UObjectBase*> ObjectSet;
+
+	class NewObjectRecorder {
+	public:
+		NewObjectRecorder(lua_State* L);
+
+		~NewObjectRecorder();
+
+		bool hasObject(const UObject* obj) const;
+
+	protected:
+		class LuaState* luaState;
+
+		int stackLayer;
+	};
+
 	typedef TMap<UObject*, GenericUserData*> UObjectRefMap;
 
     class SLUA_UNREAL_API LuaState 
 		: public FUObjectArray::FUObjectDeleteListener
+		, public FUObjectArray::FUObjectCreateListener
 		, public FGCObject
 		, public FTickableGameObject
     {
@@ -85,7 +102,7 @@ namespace NS_SLUA {
          * if find fn and load successful, return buf of file content, otherwise return nullptr
          * you must delete[] buf returned by function for free memory.
          */
-		typedef uint8* (*LoadFileDelegate) (const char* fn, uint32& len, FString& filepath);
+        typedef TArray<uint8> (*LoadFileDelegate) (const char* fn, FString& filepath);
 		typedef void (*ErrorDelegate) (const char* err);
 
         inline static LuaState* get(lua_State* l=nullptr) {
@@ -170,10 +187,13 @@ namespace NS_SLUA {
 		// add obj to ref, tell Engine don't collect this obj
 		void addRef(UObject* obj,void* ud,bool ref);
 		// unlink UObject, flag Object had been free, and remove from cache and objRefs
-		void unlinkUObject(const UObject * Object);
+		void unlinkUObject(const UObject * Object,void* userdata=nullptr);
 
 		// if obj be deleted, call this function
 		virtual void NotifyUObjectDeleted(const class UObjectBase *Object, int32 Index) override;
+
+		// if obj created, call this function
+		virtual void NotifyUObjectCreated(const class UObjectBase *Object, int32 Index) override;
 
 		// tell Engine which objs should be referenced
 		virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
@@ -200,12 +220,18 @@ namespace NS_SLUA {
     protected:
 		LoadFileDelegate loadFileDelegate;
 		ErrorDelegate errorDelegate;
-        uint8* loadFile(const char* fn,uint32& len,FString& filepath);
+        TArray<uint8> loadFile(const char* fn,FString& filepath);
 		static int loader(lua_State* L);
 		static int getStringFromMD5(lua_State* L);
 
 	public:
 		FLuaStateInitEvent onInitEvent;
+	protected:
+		friend class NewObjectRecorder;
+
+		int increaseCallStack();
+		void decreaseCallStack();
+		bool hasObjectInStack(const UObject* obj, int stackLayer);
 
     private:
         friend class LuaObject;
@@ -214,6 +240,7 @@ namespace NS_SLUA {
 		friend class LuaScriptCallGuard;
         lua_State* L;
         int cacheObjRef;
+		int cacheFuncRef;
 		// init enums lua code
         int _pushErrorHandler(lua_State* L);
         static int _atPanic(lua_State* L);
@@ -280,6 +307,9 @@ namespace NS_SLUA {
 		TMap<lua_State*, int> threadToRef;                                // coroutine -> ref
 		TMap<int, lua_State*> refToThread;                                // coroutine -> ref
 		ULatentDelegate* latentDelegate;
+		
+		int currentCallStack;
+		TArray<ObjectSet> newObjectsInCallStack;
 
     };
 }

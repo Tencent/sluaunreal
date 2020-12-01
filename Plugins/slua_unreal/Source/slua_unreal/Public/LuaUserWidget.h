@@ -34,9 +34,9 @@ protected:
 public:	
 	// below UPROPERTY and UFUNCTION can't be put to macro LUABASE_BODY
 	// so copy & paste them
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "slua")
 	FString LuaFilePath;
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "slua")
 	FString LuaStateName;
 	UFUNCTION(BlueprintCallable, Category = "slua")
 	FLuaBPVar CallLuaMember(FString FunctionName, const TArray<FLuaBPVar>& Args) {

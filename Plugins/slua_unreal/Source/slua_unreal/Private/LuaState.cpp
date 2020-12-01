@@ -719,25 +719,33 @@ namespace NS_SLUA {
         return lua_gettop(state);
     }
 
-    LuaVar LuaState::get(const char* key) {
-        // push global table
-        lua_pushglobaltable(L);
+	LuaVar LuaState::get(const char* key) {
+		// push global table
+		lua_pushglobaltable(L);
 
-        FString path(key);
-        FString left,right;
-        LuaVar rt;
-        while(strSplit(path,".",&left,&right)) {
-            if(lua_type(L,-1)!=LUA_TTABLE) break;
-            lua_pushstring(L,TCHAR_TO_UTF8(*left));
-            lua_gettable(L,-2);
-            rt.set(L,-1);
-            lua_remove(L,-2);
-            if(rt.isNil()) break;
-            path = right;
-        }
-        lua_pop(L,1);
-        return rt;
-    }
+		FString path(key);
+		FString left, right;
+		LuaVar rt;
+		bool found = false;
+		while (strSplit(path, ".", &left, &right)) {
+			if (lua_type(L, -1) != LUA_TTABLE) break;
+			lua_pushstring(L, TCHAR_TO_UTF8(*left));
+			lua_gettable(L, -2);
+			lua_remove(L, -2);
+			found = true;
+			if (lua_type(L, -1) == LUA_TNIL)
+			{
+				break;
+			}
+			path = right;
+		}
+		if (found)
+		{
+			rt.set(L, -1);
+		}
+		lua_pop(L, 1);
+		return rt;
+	}
 
 	bool LuaState::set(const char * key, LuaVar v)
 	{

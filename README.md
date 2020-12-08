@@ -184,7 +184,7 @@ slua-unreal提供3中技术绑定lua接口，包括：
 
 ### Performance
 
-unit in second, 10,00,000 call to c++ interface from lua, compared reflection and cppbinding, (both reflection and cppbinding support by slua-unreal).
+unit in second, 1,000,000 call to c++ interface from lua, compared reflection and cppbinding, (both reflection and cppbinding support by slua-unreal).
 
 Test machine, MacOSX, Unreal 4.18 develop building, CPU i7 4GHz, test case can find in TestPerf.lua
 

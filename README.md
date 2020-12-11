@@ -1,6 +1,6 @@
 ## What's slua-unreal?
 
-slua-unreal is unreal4 plugin, you can use lua language to develop game login and hot fix your lua code via this plugin, slua-unreal give you 3 way to wrap your c++ interface for lua, including reflection(by blueprint), c++ template and static code generation by a tool, meanwhile you can communicate with blueprint, call lua from blueprint, vice versa.
+slua-unreal is unreal4 plugin, you can use lua language to develop game logic and hot fix your lua code via this plugin, slua-unreal give you 3 way to wrap your c++ interface for lua, including reflection(by blueprint), c++ template and static code generation by a tool, meanwhile you can communicate with blueprint, call lua from blueprint, vice versa.
 
 # slua-unreal 是什么 
 
@@ -15,6 +15,16 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 
 ![icon_logo](https://user-images.githubusercontent.com/6227270/59747641-db6e1b80-92ab-11e9-81b6-7ca7ebfd6c0e.png)![logo](https://user-images.githubusercontent.com/6227270/59747461-80d4bf80-92ab-11e9-989b-44809d5b780c.png)
 
+## What's new?
+
+[Release 1.3.3](https://github.com/Tencent/sluaunreal/releases/tag/1.3.3), fix a crash bug, more stable
+
+[Release 1.3.2](https://github.com/Tencent/sluaunreal/releases/tag/1.3.2), fix building error on UE 4.24
+
+[Release 1.3.1](https://github.com/Tencent/sluaunreal/releases/tag/1.3.1)
+
+Add [a branch](https://github.com/Tencent/sluaunreal/tree/for_4.25) to support UE 4.25 or later
+
 ## Feature
 
 * call reflection method exported by blueprint
@@ -25,7 +35,7 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 * auto code generation to wrap your normal c++ fucntion to lua
 * support enum, FVector etc
 * support operator overload in FVector or other struct class
-* support extension method to add a non-blueprint function to uobject for lua use(extent bluepirnt function)
+* support extension method to add a non-blueprint function to uobject for lua use(extent blueprint function)
 * call lua function from blueprint, vise versa
 * detect dead loop code, report error if happen dead loop
 * support multi state for isolate lua runtime
@@ -60,9 +70,9 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 
 # Debugger Support
 
-我们开发了专门的vs code调试插件，支持真机调试，断点，查看变量值，代码智能提示等功能。
+我们开发了专门的vs code调试插件，支持真机调试，断点，查看变量值，代码智能提示等功能。调试器自动识别可以使用的UE UFunction蓝图函数和CppBinding导出的接口函数，不需要额外导出静态数据。
 
-We developed a tool integrated with VsCode to support debug in device, breakpoint, watch variant and code intellisence.
+We developed a tool integrated with VsCode to support debug in device, breakpoint, watch variant and code intellisence. Debugger will auto generate intellisense data for UE UFunction and exported cpp function with CppBinding.
 
 ![](https://user-images.githubusercontent.com/6227270/69936013-7fbde480-1511-11ea-8cb8-f1eb8d1bd9f2.gif)
 
@@ -196,3 +206,5 @@ slua-unreal依赖dot-clang做c++静态代码生成的工具稍后开源，目前
 [更完整的demo](https://github.com/IriskaDev/slua_unreal_demo)
 
 ![](https://github.com/IriskaDev/slua_unreal_demo/raw/master/Documents/1551258203207.png)
+
+QQ技术支持群：15647305，需要提交具体问题issue后申请入群，谢绝hr和非技术人员进入。

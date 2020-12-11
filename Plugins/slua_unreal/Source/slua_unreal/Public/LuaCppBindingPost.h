@@ -37,7 +37,7 @@ namespace NS_SLUA
 			return [=](ArgTypes&& ... args) -> ReturnType
 			{
 				LuaVar result = func.call(std::forward<ArgTypes>(args) ...);
-				return resultCast<ReturnType>(std::move(result));
+				return resultCast<ReturnType>(MoveTemp(result));
 			};
 		}
 		else

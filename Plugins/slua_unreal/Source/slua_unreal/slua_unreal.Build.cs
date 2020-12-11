@@ -37,36 +37,36 @@ public class slua_unreal : ModuleRules
 
         if (Target.Platform == UnrealTargetPlatform.IOS)
         {
-            PublicLibraryPaths.Add(Path.Combine(externalLib, "iOS"));
-            PublicAdditionalLibraries.Add("lua");
+            PublicAdditionalLibraries.Add(Path.Combine(externalLib, "iOS/liblua.a"));
         }
         else if (Target.Platform == UnrealTargetPlatform.Android)
         {
+#if UE_4_24_OR_LATER
+            PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Android/armeabi-arm64/liblua.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Android/armeabi-v7a/liblua.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Android/x86/liblua.a"));
+#else
             PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/armeabi-arm64"));
             PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/armeabi-v7a"));
             PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/x86"));
             PublicAdditionalLibraries.Add("lua");
+#endif
         }
         else if (Target.Platform == UnrealTargetPlatform.Win32 )
         {
-            PublicLibraryPaths.Add(Path.Combine(externalLib, "Win32"));
-            PublicAdditionalLibraries.Add("lua.lib");
+            PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Win32/lua.lib"));
         }
         else if (Target.Platform == UnrealTargetPlatform.Win64)
         {
-            PublicLibraryPaths.Add(Path.Combine(externalLib, "Win64"));
-            PublicAdditionalLibraries.Add("lua.lib");
+            PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Win64/lua.lib"));
         }
         else if (Target.Platform == UnrealTargetPlatform.Mac)
         {
-            // Unreal ignores PublicLibraryPaths on Mac. But why? 
-            // PublicLibraryPaths.Add(Path.Combine(externalLib, "Mac"));
             PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Mac/liblua.a"));
         }
         else if (Target.Platform == UnrealTargetPlatform.Linux)
         {
-            PublicLibraryPaths.Add(Path.Combine(externalLib, "Linux"));
-            PublicAdditionalLibraries.Add("lua");
+            PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Linux/liblua.a"));
         }
 
     PublicDependencyModuleNames.AddRange(

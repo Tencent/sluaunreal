@@ -13,10 +13,10 @@
 
 #pragma once
 #include "LuaObject.h"
-#include "Margin.h"
-#include "SlateColor.h"
-#include "SlateBrush.h"
-#include "SlateFontInfo.h"
+#include "Layout/Margin.h"
+#include "Styling/SlateColor.h"
+#include "Styling/SlateBrush.h"
+#include "Fonts/SlateFontInfo.h"
 #include "Log.h"
 
 #define LUA_WRAPPER_DEBUG

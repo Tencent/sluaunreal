@@ -4,11 +4,6 @@
             "{ue4_dir}/Engine/Source/Runtime/CoreUObject/Public/UObject/Class.h"
         ],
         "Customs": {
-            "FSlateFontInfo": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Fonts/SlateFontInfo.h",
-            "FSlateBrush": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Styling/SlateBrush.h",
-            "FMargin": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Layout/Margin.h",
-            "FGeometry": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Layout/Geometry.h",
-            "FSlateColor": "{ue4_dir}/Engine/Source/Runtime/SlateCore/Public/Styling/SlateColor.h"
         }
     },
     "filter": [

@@ -35,7 +35,7 @@ void UMyGameInstance::Init()
 	state.onInitEvent.AddUObject(this, &UMyGameInstance::LuaStateInitCallback);
 	state.init();
 
-	state.setLoadFileDelegate([](const char* fn, uint32& len, FString& filepath)->uint8* {
+	state.setLoadFileDelegate([](const char* fn, FString& filepath)->TArray<uint8> {
 
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 		FString path = FPaths::ProjectContentDir();
@@ -43,18 +43,19 @@ void UMyGameInstance::Init()
 		path /= "Lua";
 		path /= filename.Replace(TEXT("."), TEXT("/"));
 
+		TArray<uint8> Content;
 		TArray<FString> luaExts = { UTF8_TO_TCHAR(".lua"), UTF8_TO_TCHAR(".luac") };
 		for (auto& it : luaExts) {
 			auto fullPath = path + *it;
-			auto buf = ReadFile(PlatformFile, fullPath, len);
-			if (buf) {
-				fullPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*fullPath);
+
+			FFileHelper::LoadFileToArray(Content, *fullPath);
+			if (Content.Num() > 0) {
 				filepath = fullPath;
-				return buf;
+				return MoveTemp(Content);
 			}
 		}
 
-		return nullptr;
+		return MoveTemp(Content);
 	});
 }
 

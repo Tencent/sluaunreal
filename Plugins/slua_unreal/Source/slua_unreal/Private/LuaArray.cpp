@@ -171,7 +171,7 @@ namespace NS_SLUA {
 
 	int LuaArray::push(lua_State* L, UArrayProperty* prop, UObject* obj) {
 		auto scriptArray = prop->ContainerPtrToValuePtr<FScriptArray>(obj);
-		if (LuaObject::getFromCache(L, scriptArray, "LuaArray")) return 1;
+		if (LuaObject::getObjCache(L, scriptArray, "LuaArray")) return 1;
 		LuaArray* luaArray = new LuaArray(prop, obj);
 		int r = LuaObject::pushType(L, luaArray, "LuaArray", setupMT, gc);
         if(r) LuaObject::cacheObj(L, luaArray->array);

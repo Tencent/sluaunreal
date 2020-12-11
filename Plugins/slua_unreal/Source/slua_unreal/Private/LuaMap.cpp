@@ -43,7 +43,7 @@ namespace NS_SLUA {
 
 	int LuaMap::push(lua_State* L, UMapProperty* prop, UObject* obj) {
 		auto scriptMap = prop->ContainerPtrToValuePtr<FScriptMap>(obj);
-		if(LuaObject::getFromCache(L,scriptMap,"LuaMap")) return 1;
+		if(LuaObject::getObjCache(L,scriptMap,"LuaMap")) return 1;
 		auto luaMap = new LuaMap(prop,obj);
 		int r = LuaObject::pushType(L, luaMap, "LuaMap", setupMT, gc);
 		if(r) LuaObject::cacheObj(L,luaMap->map);
@@ -129,7 +129,7 @@ namespace NS_SLUA {
 				bool keyChanged = LuaReference::addRefByProperty(Collector, keyProp, keyPtr, false);
 				bool valuesChanged = LuaReference::addRefByProperty(Collector, valueProp, valuePtr, false);
 				// if key auto null, we remove pair
-				if (keyChanged || keyChanged) {
+				if (keyChanged || valuesChanged) {
 					removeAt(index);
 					rehash = true;
 				}

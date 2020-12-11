@@ -9,15 +9,15 @@
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Input/SEditableTextBox.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
-#include "FileManager.h"
+#include "HAL/FileManager.h"
 #include "Engine/GameEngine.h"
 
 
 #ifdef _MSC_VER
 #define WIN32_LEAN_AND_MEAN
-#include "AllowWindowsPlatformTypes.h"
+#include "Windows/AllowWindowsPlatformTypes.h"
 #include "Windows.h"
-#include "HideWindowsPlatformTypes.h"
+#include "Windows/HideWindowsPlatformTypes.h"
 #else
 #include <iostream>
 #include <stdexcept>

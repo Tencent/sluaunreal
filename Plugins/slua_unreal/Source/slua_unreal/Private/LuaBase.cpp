@@ -151,7 +151,7 @@ namespace NS_SLUA {
 		if (!ud)
 			luaL_error(L, "expect LuaBase table at arg 1");
 		lua_pop(L, 1);
-		LuaObject::push(L, (UObject*)ud, false);
+		LuaObject::push(L, (UObject*)ud, true);
 
 		lua_pushcfunction(L, setParent);
 		// push cpp inst

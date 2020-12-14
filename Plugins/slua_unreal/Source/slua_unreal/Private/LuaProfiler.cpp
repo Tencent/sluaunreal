@@ -24,14 +24,13 @@
 #include "Stats/Stats2.h"
 
 #if PLATFORM_WINDOWS
-#ifdef TEXT
-#undef TEXT
-#endif
+#pragma push_macro("TEXT")
 #endif
 #include "luasocket/tcp.h"
 
 #if PLATFORM_WINDOWS
 #include <winsock2.h>
+#pragma pop_macro("TEXT")
 #else
 #include <sys/ioctl.h>
 #endif
@@ -249,7 +248,8 @@ namespace NS_SLUA {
 
 			int event = ar->event;
 			if (ar->what && strcmp(ar->what, "C") == 0) {
-				if (ar->name && strcmp(ar->name, "coroutine") == 0) {
+				StkId o = L->ci ? L->ci->func : nullptr;
+				if (ttislcf(o) && fvalue(o) == LuaProfiler::resumeFunc) {
 					if (lua_isthread(L, 1)) {
 						// coroutine enter/exit
 						event += PHE_ENTER_COROUTINE;
@@ -263,6 +263,8 @@ namespace NS_SLUA {
 
 		int changeHookState(lua_State* L) {
 			HookState state = (HookState)lua_tointeger(L, 1);
+
+			if (state == currentHookState) return 0;
 			currentHookState = state;
 			if (state == HookState::UNHOOK) {
 //                LuaMemoryProfile::stop();
@@ -316,6 +318,8 @@ namespace NS_SLUA {
 		}
 	}
 
+	lua_CFunction LuaProfiler::resumeFunc = nullptr;
+	
 	void LuaProfiler::init(LuaState* LS)
 	{
 		lua_State* L = LS->getLuaState();
@@ -333,6 +337,11 @@ namespace NS_SLUA {
 		// using native hook instead of lua hook for performance
 		// set selfProfiler to global as slua_profiler
 		lua_setglobal(L, "slua_profile");
+
+		lua_getglobal(L, "coroutine");
+		lua_getfield(L, -1, "resume");
+		resumeFunc = lua_tocfunction(L, -1);
+		lua_pop(L, 2);
 		ensure(lua_gettop(L) == 0);
 	}
 
@@ -356,6 +365,22 @@ namespace NS_SLUA {
 		}
 		LuaMemoryProfile::tick(LS);
 		ignoreHook = false;
+	}
+
+	void LuaProfiler::clean(LuaState* LS)
+	{
+		lua_State* L = LS->getLuaState();
+		ensure(L);
+		auto& profiler = selfProfiler.FindChecked(LS);
+		if (profiler.isValid())
+		{
+			profiler.callField("stop", profiler);
+			selfProfiler.Remove(LS);
+		}
+		tcpSocket = nullptr;
+		ignoreHook = false;
+		currentHookState = HookState::UNHOOK;
+		profileTotalCost = 0;
 	}
     
 

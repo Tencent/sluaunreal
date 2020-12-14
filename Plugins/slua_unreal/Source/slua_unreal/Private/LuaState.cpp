@@ -170,6 +170,7 @@ namespace NS_SLUA {
 		, stackCount(0)
 		, si(0)
 		, deadLoopCheck(nullptr)
+		, latentDelegate(nullptr)
 		, currentCallStack(0)
     {
         if(name) stateName=UTF8_TO_TCHAR(name);
@@ -244,6 +245,9 @@ namespace NS_SLUA {
 		cleanupThreads();
         
         if(L) {
+ #ifdef ENABLE_PROFILER
+ 			LuaProfiler::clean(this);
+ #endif
             lua_close(L);
 			GUObjectArray.RemoveUObjectCreateListener(this);
 			GUObjectArray.RemoveUObjectDeleteListener(this);
@@ -534,7 +538,7 @@ namespace NS_SLUA {
 		}
 	}
 
-	void LuaState::unlinkUObject(const UObject * Object)
+	void LuaState::unlinkUObject(const UObject * Object,void* userdata/*=nullptr*/)
 	{
 		// find Object from objRefs, maybe nothing
 		auto udptr = objRefs.Find(Object);
@@ -544,6 +548,9 @@ namespace NS_SLUA {
 		}
 
 		GenericUserData* ud = *udptr;
+		if (userdata && userdata != (void*)ud) {
+			return;
+		}
 
 		// remove should put here avoid ud is invalid
 		// remove ref, Object must be an UObject in slua
@@ -712,25 +719,32 @@ namespace NS_SLUA {
         return lua_gettop(state);
     }
 
-    LuaVar LuaState::get(const char* key) {
-        // push global table
-        lua_pushglobaltable(L);
-
-        FString path(key);
-        FString left,right;
-        LuaVar rt;
-        while(strSplit(path,".",&left,&right)) {
-            if(lua_type(L,-1)!=LUA_TTABLE) break;
-            lua_pushstring(L,TCHAR_TO_UTF8(*left));
-            lua_gettable(L,-2);
-            rt.set(L,-1);
-            lua_remove(L,-2);
-            if(rt.isNil()) break;
-            path = right;
-        }
-        lua_pop(L,1);
-        return rt;
-    }
+	LuaVar LuaState::get(const char* key) {
+		// push global table
+		lua_pushglobaltable(L);
+		FString path(key);
+		FString left, right;
+		LuaVar rt;
+		bool found = false;
+		while (strSplit(path, ".", &left, &right)) {
+			if (lua_type(L, -1) != LUA_TTABLE) break;
+			lua_pushstring(L, TCHAR_TO_UTF8(*left));
+			lua_gettable(L, -2);
+			lua_remove(L, -2);
+			found = true;
+			if (lua_type(L, -1) == LUA_TNIL)
+			{
+				break;
+			}
+			path = right;
+		}
+		if (found)
+		{
+			rt.set(L, -1);
+		}
+		lua_pop(L, 1);
+		return rt;
+	}
 
 	bool LuaState::set(const char * key, LuaVar v)
 	{

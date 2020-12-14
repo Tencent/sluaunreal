@@ -11,9 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 
-#include "LuaObject.h"
-#include "LuaVar.h"
 #include "LuaDelegate.h"
+#include "LuaObject.h"
+#include "LuaState.h"
+#include "LuaVar.h"
 
 ULuaDelegate::ULuaDelegate(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -107,13 +108,13 @@ namespace NS_SLUA {
         if(!lua_islightuserdata(L,2))
             luaL_error(L,"arg 2 expect ULuaDelegate");
         auto obj =  reinterpret_cast<ULuaDelegate*>(lua_touserdata(L,2));
-		if (!obj->IsValidLowLevel())
+
+    	auto *luaState = LuaState::get(L);
+    	auto &map = luaState->cacheSet();
+    	
+		if (!map.Contains(obj) || !obj->IsValidLowLevel())
 		{
-#if UE_BUILD_DEVELOPMENT
 			luaL_error(L, "Invalid ULuaDelegate!");
-#else
-			return 0;
-#endif
 		}
 
         FScriptDelegate Delegate;

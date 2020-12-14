@@ -127,18 +127,23 @@ function this.connectSuccess()
 end
 
 function this.disconnect()
+    this.stop()
+    
+    this.reGetSock()
+end
+
+function this.stop()
     this.printToConsole("Profiler disconnect", 1)
 
     this.changeHookState( HookState.UNHOOK )
     stopConnectTime = os.time()
     this.changeRunState(RunState.DISCONNECT)
 
-	this.setSocket(nil)
+    this.setSocket(nil)
 
     if sock ~= nil then
         sock:close()
     end
-    this.reGetSock()
 end
 
 function this.changeCoroutinesHookState()

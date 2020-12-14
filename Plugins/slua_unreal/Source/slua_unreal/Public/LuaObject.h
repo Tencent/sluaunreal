@@ -234,6 +234,7 @@ namespace NS_SLUA {
 				// skip first char may be 'U' or 'A'
 				if (clsname.Find(T::StaticClass()->GetName()) == 1) {
 					UserData<T*>* tptr = (UserData<T*>*) lua_touserdata(L, p);
+					CHECK_UD_VALID(tptr);
 					t = tptr ? tptr->ud : nullptr;
 				}
 			}
@@ -369,8 +370,7 @@ namespace NS_SLUA {
         // return the pointer of class, otherwise return nullptr
         template<typename T>
         static T* checkUD(lua_State* L,int p,bool checkfree=true) {
-			if (lua_isnil(L, p))
-			{
+			if (lua_isnoneornil(L, p)) {
 				return nullptr;
 			}
 
@@ -621,7 +621,7 @@ namespace NS_SLUA {
 		}
 
         static void addRef(lua_State* L,UObject* obj, void* ud, bool ref);
-        static void removeRef(lua_State* L,UObject* obj);
+        static void removeRef(lua_State* L,UObject* obj,void* ud=nullptr);
 
         template<typename T>
         static int pushGCObject(lua_State* L,T obj,const char* tn,lua_CFunction setupmt,lua_CFunction gc,bool ref) {
@@ -650,7 +650,7 @@ namespace NS_SLUA {
         static int pushClass(lua_State* L,UClass* cls);
         static int pushStruct(lua_State* L,UScriptStruct* cls);
 		static int pushEnum(lua_State* L, UEnum* e);
-		static int push(lua_State* L, UObject* obj, bool rawpush=false, NewObjectRecorder* objRecorder = nullptr);
+		static int push(lua_State* L, UObject* obj, bool rawpush=false, bool ref=true, NewObjectRecorder* objRecorder = nullptr);
 		inline static int push(lua_State* L, const UObject* obj) {
 			return push(L, const_cast<UObject*>(obj));
 		}

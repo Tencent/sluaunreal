@@ -85,7 +85,7 @@ public:
 private:
     const static int sampleNum = cMaxSampleNum;
     const static int fixRowWidth = 300;
-    const static int refreshInterval = 50;
+    const static int refreshInterval = 1;
     const float perMilliSec = 1000.0f;
     const static int maxMemoryFile = 30;
 

@@ -39,8 +39,10 @@ namespace NS_SLUA {
 		
 		static void init(class LuaState* LS);
 		static void tick(class LuaState* LS);
+		static void clean(class LuaState* LS);
 
 		static const char* ChunkName;
+		static lua_CFunction resumeFunc;
 	};
 
 #ifdef ENABLE_PROFILER

@@ -17,6 +17,8 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 
 ## What's new?
 
+[Release 1.3.3](https://github.com/Tencent/sluaunreal/releases/tag/1.3.3), fix a crash bug, more stable
+
 [Release 1.3.2](https://github.com/Tencent/sluaunreal/releases/tag/1.3.2), fix building error on UE 4.24
 
 [Release 1.3.1](https://github.com/Tencent/sluaunreal/releases/tag/1.3.1)
@@ -33,7 +35,7 @@ Add [a branch](https://github.com/Tencent/sluaunreal/tree/for_4.25) to support U
 * auto code generation to wrap your normal c++ fucntion to lua
 * support enum, FVector etc
 * support operator overload in FVector or other struct class
-* support extension method to add a non-blueprint function to uobject for lua use(extent bluepirnt function)
+* support extension method to add a non-blueprint function to uobject for lua use(extent blueprint function)
 * call lua function from blueprint, vise versa
 * detect dead loop code, report error if happen dead loop
 * support multi state for isolate lua runtime

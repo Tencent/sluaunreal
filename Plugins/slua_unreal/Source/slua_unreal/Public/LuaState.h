@@ -25,7 +25,7 @@
 #define SLUA_LUACODE "[sluacode]"
 #define SLUA_CPPINST "__cppinst"
 
-DECLARE_MULTICAST_DELEGATE(FLuaStateInitEvent);
+DECLARE_MULTICAST_DELEGATE_OneParam(FLuaStateInitEvent, NS_SLUA::lua_State*);
 
 class ULatentDelegate;
 
@@ -97,9 +97,7 @@ namespace NS_SLUA {
 
         /*
          * fn, lua file to load, fn may be a short filename
-         * if find fn to load, return file size to len and file full path fo filepath arguments
-         * if find fn and load successful, return buf of file content, otherwise return nullptr
-         * you must delete[] buf returned by function for free memory.
+         * if find fn to load, return file size to len and file full path fo filepath arguments.
          */
         typedef TArray<uint8> (*LoadFileDelegate) (const char* fn, FString& filepath);
 		typedef void (*ErrorDelegate) (const char* err);
@@ -118,6 +116,10 @@ namespace NS_SLUA {
         // get LuaState from name
         static LuaState* get(const FString& name);
 
+		UGameInstance* getGameInstance() const {
+			return pGI;
+		}
+    	
         // return specified index is valid state index
         inline static bool isValid(int index)  {
             return get(index)!=nullptr;
@@ -143,6 +145,8 @@ namespace NS_SLUA {
         // file how to loading depend on load delegation
         // see setLoadFileDelegate function
         LuaVar doFile(const char* fn, LuaVar* pEnv = nullptr);
+		// require a module
+		LuaVar requireModule(const char* fn, LuaVar* pEnv = nullptr);
 
        
         // call function that specified by key
@@ -216,6 +220,9 @@ namespace NS_SLUA {
 
 		// call this function on script error
 		void onError(const char* err);
+		
+    	void hookObject(const class UObjectBaseUtility* obj, bool bIsPostLoad = false);
+
     protected:
 		LoadFileDelegate loadFileDelegate;
 		ErrorDelegate errorDelegate;
@@ -224,7 +231,7 @@ namespace NS_SLUA {
 		static int getStringFromMD5(lua_State* L);
 
 	public:
-		FLuaStateInitEvent onInitEvent;
+		static FLuaStateInitEvent onInitEvent;
 	protected:
 		friend class NewObjectRecorder;
 
@@ -240,7 +247,8 @@ namespace NS_SLUA {
         lua_State* L;
         int cacheObjRef;
 		int cacheFuncRef;
-		// init enums lua code
+		int cacheEnumRef;
+
         int _pushErrorHandler(lua_State* L);
         static int _atPanic(lua_State* L);
 		void linkProp(void* parent, void* prop);
@@ -269,7 +277,6 @@ namespace NS_SLUA {
 			UFunction* findFunc(UClass* uclass, const char* fname);
 			UProperty* findProp(UClass* uclass, const char* pname);
 			void cacheFunc(UClass* uclass, const char* fname, UFunction* func);
-			void cacheProp(UClass* uclass, const char* pname, UProperty* prop);
 			void clear() {
 				cacheFuncMap.Empty();
 				cachePropMap.Empty();
@@ -292,7 +299,7 @@ namespace NS_SLUA {
 
 		FDelegateHandle pgcHandler;
 		FDelegateHandle wcHandler;
-
+		class LuaOverrider* overrider;
 		bool enableMultiThreadGC;
 		LuaVar stateTickFunc;
 

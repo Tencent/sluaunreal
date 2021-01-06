@@ -32,7 +32,7 @@ UMyGameInstance::UMyGameInstance() :state("main",this) {
 
 void UMyGameInstance::Init()
 {
-	state.onInitEvent.AddUObject(this, &UMyGameInstance::LuaStateInitCallback);
+	NS_SLUA::LuaState::onInitEvent.AddUObject(this, &UMyGameInstance::LuaStateInitCallback);
 	state.init();
 
 	state.setLoadFileDelegate([](const char* fn, FString& filepath)->TArray<uint8> {
@@ -74,9 +74,8 @@ static int32 PrintLog(NS_SLUA::lua_State *L)
 	return 0;
 }
 
-void UMyGameInstance::LuaStateInitCallback()
+void UMyGameInstance::LuaStateInitCallback(NS_SLUA::lua_State* L)
 {
-	NS_SLUA::lua_State *L = state.getLuaState();
 	lua_pushcfunction(L, PrintLog);
 	lua_setglobal(L, "PrintLog");
 }

@@ -13,4 +13,82 @@
 
 #include "LuaActor.h"
 
-// nothing
+ALuaActor::ALuaActor(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+}
+
+FString ALuaActor::GetLuaFilePath_Implementation() const
+{
+	return LuaFilePath;
+}
+
+ALuaPawn::ALuaPawn(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+}
+
+FString ALuaPawn::GetLuaFilePath_Implementation() const
+{
+	return LuaFilePath;
+}
+
+ALuaCharacter::ALuaCharacter(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+}
+
+FString ALuaCharacter::GetLuaFilePath_Implementation() const
+{
+	return LuaFilePath;
+}
+
+ALuaController::ALuaController(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+}
+
+FString ALuaController::GetLuaFilePath_Implementation() const
+{
+	return LuaFilePath;
+}
+
+ALuaPlayerController::ALuaPlayerController(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+}
+
+FString ALuaPlayerController::GetLuaFilePath_Implementation() const
+{
+	return LuaFilePath;
+}
+
+ULuaActorComponent::ULuaActorComponent(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+}
+
+FString ULuaActorComponent::GetLuaFilePath_Implementation() const
+{
+	return LuaFilePath;
+}
+
+ALuaGameModeBase::ALuaGameModeBase(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+}
+
+FString ALuaGameModeBase::GetLuaFilePath_Implementation() const
+{
+	return LuaFilePath;
+}
+
+ALuaHUD::ALuaHUD(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+}
+
+FString ALuaHUD::GetLuaFilePath_Implementation() const
+{
+	return LuaFilePath;
+}

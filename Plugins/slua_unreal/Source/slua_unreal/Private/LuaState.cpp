@@ -838,7 +838,10 @@ namespace NS_SLUA {
 	FDeadLoopCheck::~FDeadLoopCheck()
 	{
 		Stop();
-		thread->WaitForCompletion();
+		if (thread != nullptr)
+		{
+			thread->WaitForCompletion();
+		}
 		SafeDelete(thread);
 	}
 

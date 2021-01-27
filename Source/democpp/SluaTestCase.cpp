@@ -19,8 +19,8 @@
 #include "Blueprint/UserWidget.h"
 #include "Misc/AssertionMacros.h"
 #include "HttpModule.h"
-#include "IHttpRequest.h"
-#include "IHttpResponse.h"
+#include "Interfaces/IHttpRequest.h"
+#include "Interfaces/IHttpResponse.h"
 
 
 namespace NS_SLUA {

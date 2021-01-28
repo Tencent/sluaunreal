@@ -777,11 +777,31 @@ namespace NS_SLUA {
 				if (!right.IsEmpty() && !lua_istable(L, -1))
 					return false;
 
-				if (lua_istable(L, -1) && right.IsEmpty()) {
-					lua_pushstring(L, TCHAR_TO_UTF8(*left));
-					v.push(L);
-					lua_rawset(L, -3);
-					return true;
+				if (right.IsEmpty())
+				{
+					if (
+						(lua_isboolean(L, -1) && v.isBool()) ||
+						(lua_isnumber(L, -1) && v.isNumber()) ||
+						(lua_isinteger(L, -1) && v.isInt()) ||
+						(lua_isstring(L, -1) && v.isString()) ||
+						(lua_istable(L, -1) && v.isTable()) ||
+						(lua_isfunction(L, -1) && v.isFunction()) ||
+						(lua_isuserdata(L, -1) && v.isUserdata("UObject")) ||
+						(lua_islightuserdata(L, -1) && v.isLightUserdata())
+					)
+					{
+						lua_pop(L, 1);
+					}
+
+					if (lua_istable(L, -1))
+					{
+						lua_pushstring(L, TCHAR_TO_UTF8(*left));
+						v.push(L);
+						lua_rawset(L, -3);
+						return true;
+					}
+
+					return false;
 				}
 			}
 			path = right;

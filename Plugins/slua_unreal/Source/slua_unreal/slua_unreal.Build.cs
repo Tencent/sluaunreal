@@ -113,5 +113,6 @@ public class slua_unreal : ModuleRules
 				// ... add any modules that your module loads dynamically here ...
 			}
             );
+        bLegacyPublicIncludePaths = false;
     }
 }

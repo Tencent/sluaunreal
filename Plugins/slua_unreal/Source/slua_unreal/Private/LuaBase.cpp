@@ -238,7 +238,9 @@ namespace NS_SLUA {
 
 		ensure(lb);
 
-		if (lb->indexFlag==IF_SUPER && lb->currentFunction==func) {
+		auto curFunc = lb->currentFunction;
+		if (lb->indexFlag == IF_SUPER && (curFunc == func || curFunc->IsChildOf(func)))
+		{
 			*(bool*)RESULT_PARAM = false;
 			return;
 		}
@@ -268,16 +270,34 @@ namespace NS_SLUA {
 		ensure(cls);
 
 		EFunctionFlags availableFlag = FUNC_BlueprintEvent;
+		TMap<FString, UFunction*> FuncToBind;
 		for (TFieldIterator<UFunction> it(cls); it; ++it) {
-			if (!(it->FunctionFlags&availableFlag))
+			if (!(it->FunctionFlags & availableFlag))
 				continue;
 			if (luaSelfTable.getFromTable<LuaVar>(it->GetName(), true).isFunction()) {
-#if ((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))
-				hookBpScript(*it, (FNativeFuncPtr)&luaOverrideFunc);
-#else
-				hookBpScript(*it, (Native)&LuaBase::luaOverrideFunc);
-#endif
+				FString FuncName = it->GetName();
+				UFunction* Func = *it;
+				if (FuncToBind.Contains(FuncName))
+				{
+					if (Func->IsChildOf(FuncToBind[FuncName]))
+					{
+						FuncToBind[FuncName] = Func;
+					}
+				}
+				else
+				{
+					FuncToBind.Add(FuncName, Func);
+				}
 			}
+		}
+		for (auto it : FuncToBind)
+		{
+			UFunction* Func = it.Value;
+#if ((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))
+			hookBpScript(it.Value, (FNativeFuncPtr)& luaOverrideFunc);
+#else
+			hookBpScript(it.Value, (Native)& LuaBase::luaOverrideFunc);
+#endif
 		}
 	}
 

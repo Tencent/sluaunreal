@@ -139,6 +139,7 @@ namespace NS_SLUA {
 
 	static int setParent(NS_SLUA::lua_State* L) {
 		// set field to obj, may raise an error
+		ensure(lua_type(L, 1) == LUA_TUSERDATA);
 		lua_settable(L, 1);
 		return 0;
 	}
@@ -154,6 +155,7 @@ namespace NS_SLUA {
 		LuaObject::push(L, (UObject*)ud, true);
 
 		lua_pushcfunction(L, setParent);
+		ensure(lua_type(L, -2) == LUA_TUSERDATA);
 		// push cpp inst
 		lua_pushvalue(L, -2);
 		// push key

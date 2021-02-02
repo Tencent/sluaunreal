@@ -955,7 +955,7 @@ namespace NS_SLUA {
 
     template<typename T>
     int pushUProperty(lua_State* L,FProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
-        auto p=Cast<T>(prop);
+        auto p= CastFieldChecked<T>(prop);
         ensure(p);
         return LuaObject::push(L,p->GetPropertyValue(parms));
     }
@@ -983,7 +983,7 @@ namespace NS_SLUA {
 	}
 
     int pushUArrayProperty(lua_State* L,FProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
-        auto p = CastFieldChecked<UArrayProperty>(prop);
+        auto p = CastFieldChecked<FArrayProperty>(prop);
         ensure(p);
         FScriptArray* v = p->GetPropertyValuePtr(parms);
 		return LuaArray::push(L, p->Inner, v);
@@ -1103,7 +1103,7 @@ namespace NS_SLUA {
     }
 
 	int pushUMulticastInlineDelegateProperty(lua_State* L, FProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
-		auto p = Cast<FMulticastInlineDelegateProperty>(prop);
+		auto p = CastFieldChecked<FMulticastInlineDelegateProperty>(prop);
 		ensure(p);
 		FMulticastScriptDelegate* delegate = const_cast<FMulticastScriptDelegate*>(p->GetMulticastDelegate(parms));
 		return LuaMultiDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());

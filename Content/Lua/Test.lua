@@ -51,6 +51,7 @@ function testcase()
     TestMap = require 'TestMap'
     TestArray = require 'TestArray'
     TestActor = require 'TestActor'
+    TestSet = require "TestSet"
 
     -- slua can detect dead loop code
     -- if lua exec timeout ,slua will report an error and jump out function 
@@ -68,6 +69,7 @@ function update(dt)
     TestArray.update(tt)
     TestMap.update(tt)
     TestBp:update(tt)
+    TestSet.update(tt)
 
     -- test weak ptr is alive?
     if slua.isValid(weakptr) then

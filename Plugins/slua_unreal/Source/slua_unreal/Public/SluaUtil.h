@@ -278,7 +278,17 @@ namespace NS_SLUA {
 		}
 	};
 
-	
+	template<typename T>
+	struct TypeName<TSet<T>, false> {
+		static SimpleString value()
+		{
+			SimpleString str;
+			str.append("TSet<");
+			str.append(TypeName<T>::value());
+			str.append(">");
+			return str;
+		}
+	};	
 
 	template<class R, class ...ARGS>
 	struct MakeGeneircTypeName {

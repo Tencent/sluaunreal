@@ -28,6 +28,7 @@
 #include "LuaWidgetTree.h"
 #include "LuaArray.h"
 #include "LuaMap.h"
+#include "LuaSet.h"
 #include "Log.h"
 #include "LuaState.h"
 #include "LuaWrapper.h"
@@ -996,6 +997,12 @@ namespace NS_SLUA {
 		return LuaMap::push(L, p->KeyProp, p->ValueProp, v);
     }
 
+	int pushUSetProperty(lua_State* L, FProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
+		auto p = CastFieldChecked<FSetProperty>(prop);
+		ensure(p);
+		return LuaSet::push(L, p->ElementProp, p->GetPropertyValuePtr(parms));
+	}
+
 	int pushUWeakProperty(lua_State* L, FProperty* prop, uint8* parms,NewObjectRecorder* objRecorder) {
 		auto p = CastFieldChecked<FWeakObjectProperty>(prop);
 		ensure(p);
@@ -1067,6 +1074,36 @@ namespace NS_SLUA {
         LuaMap::clone((FScriptMap*)parms,p->KeyProp,p->ValueProp,UD->get());
 		return 0;
 	}
+
+	int checkUSetProperty(lua_State* L, UProperty* prop, uint8* params, int i) {
+		auto p = CastFieldChecked<FSetProperty>(prop);
+		ensure(p);
+ 
+    	if (lua_istable(L, i)) {
+			int tableIndex = i;
+    		if (i <0 && i > LUA_REGISTRYINDEX) {
+				tableIndex = i - 1;
+    		}
+ 
+			FScriptSetHelper SetHelper(p, params);
+    		
+			lua_pushnil(L);
+
+    		const auto ElementChecker = LuaObject::getChecker(p->ElementProp);
+
+			while (lua_next(L, tableIndex) != 0) {
+				FDefaultConstructedPropertyElement TempInElement(p->ElementProp);
+				const auto ElementPtr = TempInElement.GetObjAddress();
+				ElementChecker(L, p->ElementProp, static_cast<uint8*>(ElementPtr), -1);
+				SetHelper.AddElement(ElementPtr);
+				lua_pop(L, 1);
+			}
+			return 0;
+    	}
+		CheckUD(LuaSet, L, i);
+		LuaSet::clone(reinterpret_cast<FScriptSet*>(params), p->ElementProp, UD->get());
+		return 0;
+    }
 
     int pushUStructProperty(lua_State* L,FProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
         auto p = CastFieldChecked<FStructProperty>(prop);
@@ -1541,6 +1578,7 @@ namespace NS_SLUA {
         regPusher(FObjectProperty::StaticClass(),pushUObjectProperty);
         regPusher(FArrayProperty::StaticClass(),pushUArrayProperty);
         regPusher(FMapProperty::StaticClass(),pushUMapProperty);
+        regPusher(FSetProperty::StaticClass(), pushUSetProperty);
         regPusher(FStructProperty::StaticClass(),pushUStructProperty);
 		regPusher(FEnumProperty::StaticClass(), pushEnumProperty);
 		regPusher(FClassProperty::StaticClass(), pushUClassProperty);
@@ -1565,6 +1603,7 @@ namespace NS_SLUA {
 
         regChecker(FArrayProperty::StaticClass(),checkUArrayProperty);
         regChecker(FMapProperty::StaticClass(),checkUMapProperty);
+        regChecker(FSetProperty::StaticClass(), checkUSetProperty);
         regChecker(FDelegateProperty::StaticClass(),checkUDelegateProperty);
         regChecker(FStructProperty::StaticClass(),checkUStructProperty);
 		regChecker(FClassProperty::StaticClass(), checkUClassProperty);
@@ -1610,7 +1649,10 @@ namespace NS_SLUA {
         // if it's an FMapProperty
         else if(cls==FMapProperty::StaticClass())
             return LuaMap::push(L, CastFieldChecked<FMapProperty>(up),obj);
-		else
+        // if it's an FSetProperty (the else is redundant)
+        else if(cls == FSetProperty::StaticClass())
+			return LuaSet::push(L, CastFieldChecked<FSetProperty>(up), obj);
+        else
 			return push(L, up, up->ContainerPtrToValuePtr<uint8>(obj), objRecorder);
 	}
 

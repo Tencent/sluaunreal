@@ -96,6 +96,11 @@ namespace NS_SLUA {
 		}
 
 		template <typename T>
+		static typename std::enable_if<TIsTSet<T>::Value, T>::type readArg(lua_State * L, int p) {
+            return LuaObject::checkTSet<T>(L, p);
+		}
+
+		template <typename T>
 		static typename std::enable_if<std::is_enum<T>::value, T>::type readArg(lua_State * L, int p) {
 			return LuaObject::checkEnumValue<T>(L, p);
 		}
@@ -129,6 +134,13 @@ namespace NS_SLUA {
 			if (!lua_isuserdata(L, p))
 				return T();
 			return LuaObject::checkTMap<T>(L, p);
+		}
+
+		template <typename T>
+		static typename std::enable_if<TIsTSet<T>::Value, T>::type readArg(lua_State * L, int p) {
+            if (!lua_isuserdata(L, p))
+                return T();
+            return LuaObject::checkTSet<T>(L, p);
 		}
 
 		template <typename T>

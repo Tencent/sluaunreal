@@ -108,6 +108,9 @@ public:
     TMap<int, FString> GetMap(/*TMap<int, FString> _map*/);
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
+    TSet<int> GetSet();
+
+    UFUNCTION(BlueprintCallable, Category="Lua|TestCase")
     TArray<FString> GetArrayStr();
 
     UFUNCTION(BlueprintCallable, Category="Lua|TestCase")

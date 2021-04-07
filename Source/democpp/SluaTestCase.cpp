@@ -384,6 +384,11 @@ TMap<int, FString> USluaTestCase::GetMap() {
 	return FruitMap;
 }
 
+TSet<int> USluaTestCase::GetSet() {
+    TSet<int> Set = { 0,1,2,3,1,2,3,5,7,9 };
+    return Set;
+}
+
 TArray<FString> USluaTestCase::GetArrayStr() {
     TArray<FString> array={"hello","world","nihao"};
     return array;

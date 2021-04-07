@@ -22,6 +22,7 @@
 #include "SluaUtil.h"
 #include "LuaArray.h"
 #include "LuaMap.h"
+#include "LuaSet.h"
 #include "Runtime/Launch/Resources/Version.h"
 
 #ifndef SLUA_CPPINST
@@ -130,6 +131,7 @@ namespace NS_SLUA {
 
     DefTypeName(LuaArray);
     DefTypeName(LuaMap);
+    DefTypeName(LuaSet);
 
     template<typename T>
     struct LuaOwnedPtr {
@@ -490,6 +492,13 @@ namespace NS_SLUA {
 			return UD->asTMap<KeyType, ValueType>(L);
 		}
 
+    	// check value if it's a TSet
+    	template<class T>
+    	static T checkTSet(lua_State* L, int p) {
+			CheckUD(LuaSet, L, p);
+			return UD->asTSet<typename T::ElementType>(L);
+        }
+
         template<typename T>
         static void* void_cast( const T* v ) {
             return reinterpret_cast<void *>(const_cast< T* >(v));
@@ -757,6 +766,11 @@ namespace NS_SLUA {
 		static int push(lua_State* L, const TMap<K,V>& v) {
 			return LuaMap::push(L, v);
 		}
+
+    	template<typename T>
+    	static int push(lua_State* L, const TSet<T>& v) {
+			return LuaSet::push(L, v);
+        }
 
 		// static int push(lua_State* L, FScriptArray* array);
         

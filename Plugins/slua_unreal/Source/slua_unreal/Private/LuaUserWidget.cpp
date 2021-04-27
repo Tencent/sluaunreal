@@ -60,6 +60,7 @@ void ULuaUserWidget::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)
 
 void ULuaUserWidget::tick(float dt) {
 	if (!tickFunction.isValid()) {
+		deltaTime = dt;
 		superTick();
 		return;
 	}

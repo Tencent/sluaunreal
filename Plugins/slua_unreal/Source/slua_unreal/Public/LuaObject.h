@@ -522,7 +522,10 @@ namespace NS_SLUA {
 				uint8* buf = (uint8*)FMemory::Malloc(size);
 				uss->InitializeStruct(buf);
 				uss->CopyScriptStruct(buf, v);
-				cacheObj(L, void_cast(v));
+				if (flag & UD_AUTOGC)
+				{
+					delete v;
+				}
 				return push(L, new LuaStruct(buf, size, uss));
 			}
 			NewUD(T, v, flag);

@@ -303,7 +303,7 @@ namespace NS_SLUA {
 		DefLuaMethod(SetVerb, &IHttpRequest::SetVerb)
 		DefLuaMethod(ProcessRequest, &IHttpRequest::ProcessRequest)
 		DefLuaMethod(SetURL, &IHttpRequest::SetURL)
-		DefLuaMethod(SetContent, &IHttpRequest::SetContent)
+		//DefLuaMethod(SetContent, &IHttpRequest::SetContent)
 		DefLuaMethod(OnRequestProgress, &IHttpRequest::OnRequestProgress)
 		DefLuaMethod(OnProcessRequestComplete, &IHttpRequest::OnProcessRequestComplete)
 #if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
@@ -382,6 +382,11 @@ TMap<int, FString> USluaTestCase::GetMap() {
 	FruitMap.Add(2, TEXT("Grapefruit"));
 	FruitMap.Add(7, TEXT("Pineapple"));
 	return FruitMap;
+}
+
+TSet<int> USluaTestCase::GetSet() {
+    TSet<int> Set = { 0,1,2,3,1,2,3,5,7,9 };
+    return Set;
 }
 
 TArray<FString> USluaTestCase::GetArrayStr() {

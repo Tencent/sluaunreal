@@ -26,6 +26,7 @@
 #include "LuaWrapper.h"
 #include "LuaArray.h"
 #include "LuaMap.h"
+#include "LuaSet.h"
 #include "LuaSocketWrap.h"
 #include "LuaMemoryProfile.h"
 #include "HAL/RunnableThread.h"
@@ -361,6 +362,7 @@ namespace NS_SLUA {
         LuaClass::reg(L);
         LuaArray::reg(L);
         LuaMap::reg(L);
+        LuaSet::reg(L);
 #ifdef ENABLE_PROFILER
 		LuaProfiler::init(this);
 #endif

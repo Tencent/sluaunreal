@@ -46,7 +46,12 @@ void ULuaUserWidget::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)
 #endif
 	{
 		GInitRunaway();
+#if (ENGINE_MINOR_VERSION>=26) && (ENGINE_MAJOR_VERSION>=4)
+		TickActionsAndAnimation(InDeltaTime);
+#else
 		TickActionsAndAnimation(MyGeometry, InDeltaTime);
+#endif
+		
 #if (ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4)
 		if (bHasScriptImplementedTick) {
 #else

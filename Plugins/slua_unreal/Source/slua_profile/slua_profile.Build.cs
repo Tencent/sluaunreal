@@ -64,6 +64,8 @@ public class slua_profile : ModuleRules
                 "Sockets",
 				// ... add private dependencies that you statically link with here ...	
 			}
-    );
+        );
+
+        bLegacyPublicIncludePaths = false;
     }
 }

@@ -20,6 +20,7 @@
 #include "LuaVar.h"
 #include "LuaArray.h"
 #include "LuaMap.h"
+#include "LuaSet.h"
 #include "LuaBase.h"
 #include "LuaActor.h"
 #include "LuaDelegate.h"

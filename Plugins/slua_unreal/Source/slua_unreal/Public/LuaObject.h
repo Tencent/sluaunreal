@@ -749,7 +749,7 @@ namespace NS_SLUA {
 
 		// for TBaseDelegate
 		template<class R, class ...ARGS>
-		static int push(lua_State* L, TBaseDelegate<R, ARGS...>& delegate);
+		static int push(lua_State* L, TDelegate<R(ARGS...)>& delegate);
 		
 
         template<typename T>

@@ -1075,7 +1075,7 @@ namespace NS_SLUA {
 		return 0;
 	}
 
-	int checkUSetProperty(lua_State* L, UProperty* prop, uint8* params, int i) {
+	int checkUSetProperty(lua_State* L, FProperty* prop, uint8* params, int i) {
 		auto p = CastFieldChecked<FSetProperty>(prop);
 		ensure(p);
  

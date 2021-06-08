@@ -444,6 +444,14 @@ namespace NS_SLUA {
 		
 		for (ClassCache::CachePropMap::TIterator it(classMap.cachePropMap); it; ++it)
 			if (!it.Key().IsValid())
+				it.RemoveCurrent();
+
+		for (ClassCache::PropCachedMap::TIterator it(classMap.propCachedMap); it; ++it)
+			if (!it.Key().IsValid())
+				it.RemoveCurrent();
+					
+		for (ClassCache::FuncSearchedMap::TIterator it(classMap.funcSearchedMap); it; ++it)
+			if (!it.Key().IsValid())
 				it.RemoveCurrent();		
 		
 		freeDeferObject();

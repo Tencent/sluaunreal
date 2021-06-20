@@ -139,7 +139,7 @@ namespace NS_SLUA {
     }
 
 	uint8* LuaMap::getKeyPtr(uint8* pairPtr) {
-#if (ENGINE_MINOR_VERSION>=22) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION>=22) || (ENGINE_MAJOR_VERSION>4)
 		return pairPtr;
 #else
 		return pairPtr + helper.MapLayout.KeyOffset;

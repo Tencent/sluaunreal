@@ -46,7 +46,7 @@ namespace NS_SLUA {
 		// Otherwise the LuaSet is an abstract class and can't be created.
 		virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
 
-#if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION>=20) || (ENGINE_MAJOR_VERSION>4)
 		virtual FString GetReferencerName() const override
 		{
 			return "LuaSet";

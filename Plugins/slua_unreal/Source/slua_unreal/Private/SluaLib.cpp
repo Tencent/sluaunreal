@@ -119,7 +119,7 @@ namespace NS_SLUA {
 		if (obj) {
 			if (obj->IsA<UWorld>())
 				widget = CreateWidget<UUserWidget>(Cast<UWorld>(obj), uclass);
-#if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION>=20) || (ENGINE_MAJOR_VERSION>4)
 			else if (obj->IsA<UWidget>())
 				widget = CreateWidget<UUserWidget>(Cast<UWidget>(obj), uclass);
 			else if (obj->IsA<UWidgetTree>())

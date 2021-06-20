@@ -15,9 +15,7 @@
 #include "CoreMinimal.h"
 #include "LuaState.h"
 #include "LuaBlueprintLibrary.h"
-#if !((ENGINE_MINOR_VERSION>21) && (ENGINE_MAJOR_VERSION>=4))
 #include "Kismet/GameplayStatics.h"
-#endif
 #include "LuaBase.generated.h"
 
 namespace NS_SLUA {
@@ -67,7 +65,7 @@ namespace NS_SLUA {
 		}
 
 		inline UGameInstance* getGameInstance(UUserWidget* self) {
-#if (ENGINE_MINOR_VERSION>21) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION>21) || (ENGINE_MAJOR_VERSION>4)
 			return self->GetGameInstance();
 #else
 			return UGameplayStatics::GetGameInstance(self);
@@ -133,7 +131,7 @@ namespace NS_SLUA {
 		}
 
 		void dispose();
-#if ((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))
+#if ((ENGINE_MINOR_VERSION>18)|| (ENGINE_MAJOR_VERSION>4) )
 		static void hookBpScript(UFunction* func, FNativeFuncPtr hookfunc);
 #else
 		static void hookBpScript(UFunction* func, Native hookfunc);

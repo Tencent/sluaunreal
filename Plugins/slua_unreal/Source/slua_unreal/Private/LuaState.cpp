@@ -591,7 +591,7 @@ namespace NS_SLUA {
 		// we just try and find some proper async position
 		if (enableMultiThreadGC && L) lua_gc(L, LUA_GCSTEP, 128);
 	}
-#if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION>=23) || (ENGINE_MAJOR_VERSION>4)
 	void LuaState::OnUObjectArrayShutdown() {
 		// nothing todo, we don't add any listener to FUObjectDeleteListener
 	}

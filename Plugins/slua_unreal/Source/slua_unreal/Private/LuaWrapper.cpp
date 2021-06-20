@@ -2483,7 +2483,7 @@ namespace NS_SLUA {
 				auto V = LuaObject::checkValue<int>(L, 3);
 				auto VVal = (unsigned char)V;
 				auto ret = __newFLinearColor();
-#if (ENGINE_MINOR_VERSION>=22) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION>=22) || (ENGINE_MAJOR_VERSION>4)
 				*ret = FLinearColor::MakeFromHSV8(HVal, SVal, VVal);
 #else
 				*ret = FLinearColor::FGetHSV(HVal, SVal, VVal);
@@ -7087,7 +7087,7 @@ namespace NS_SLUA {
 		_checkStructMap.Add(FPrimaryAssetIdStruct, __checkFPrimaryAssetId);
 		FPrimaryAssetIdWrapper::bind(L);
 
-#if (ENGINE_MINOR_VERSION>=21) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION>=21) || (ENGINE_MAJOR_VERSION>4)
 		FDateTimeStruct = TBaseStructure<FDateTime>::Get();
 		_pushStructMap.Add(FDateTimeStruct, __pushFDateTime);
 		_checkStructMap.Add(FDateTimeStruct, __checkFDateTime);

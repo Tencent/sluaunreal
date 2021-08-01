@@ -1298,6 +1298,14 @@ namespace NS_SLUA {
 		return 0;
 	}
 
+	int checkFSoftClassProperty(lua_State* L, FProperty* prop, uint8* parms, int i) {
+		auto p = CastFieldChecked<FSoftClassProperty>(prop);
+		ensure(p);
+		FString cls_path = LuaObject::checkValue<FString>(L, i);
+		p->SetPropertyValue(parms, FSoftObjectPtr(FSoftObjectPath(cls_path)));
+		return 0;
+	}
+
 	bool checkType(lua_State* L, int p, const char* tn) {
 		if (!lua_isuserdata(L, p)) {
 			lua_pop(L, 1);
@@ -1607,6 +1615,7 @@ namespace NS_SLUA {
         regChecker(FDelegateProperty::StaticClass(),checkUDelegateProperty);
         regChecker(FStructProperty::StaticClass(),checkUStructProperty);
 		regChecker(FClassProperty::StaticClass(), checkUClassProperty);
+		regChecker(FSoftClassProperty::StaticClass(), checkFSoftClassProperty);
 		
 		LuaWrapper::init(L);
         ExtensionMethod::init();

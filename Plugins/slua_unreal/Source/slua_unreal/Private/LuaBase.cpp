@@ -19,7 +19,7 @@
 #include "LuaUserWidget.h"
 #include "LuaActor.h"
 
-#if ((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))
+#if ((ENGINE_MINOR_VERSION>18) || (ENGINE_MAJOR_VERSION>4))
 extern uint8 GRegisterNative(int32 NativeBytecodeIndex, const FNativeFuncPtr& Func);
 #else
 extern uint8 GRegisterNative(int32 NativeBytecodeIndex, const Native& Func);
@@ -175,7 +175,7 @@ namespace NS_SLUA {
 		return 0;
 	}
 
-#if ((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))
+#if ((ENGINE_MINOR_VERSION>18) || (ENGINE_MAJOR_VERSION>4))
 	void LuaBase::hookBpScript(UFunction* func, FNativeFuncPtr hookfunc) {
 #else
 	void LuaBase::hookBpScript(UFunction* func, Native hookfunc) {
@@ -219,7 +219,7 @@ namespace NS_SLUA {
 			return nullptr;
 	}
 
-#if ((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))
+#if ((ENGINE_MINOR_VERSION>18) || (ENGINE_MAJOR_VERSION>4))
 	DEFINE_FUNCTION(LuaBase::luaOverrideFunc)
 #else
 	void LuaBase::luaOverrideFunc(FFrame& Stack, RESULT_DECL)
@@ -272,7 +272,7 @@ namespace NS_SLUA {
 			if (!(it->FunctionFlags&availableFlag))
 				continue;
 			if (luaSelfTable.getFromTable<LuaVar>(it->GetName(), true).isFunction()) {
-#if ((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))
+#if ((ENGINE_MINOR_VERSION>18) || (ENGINE_MAJOR_VERSION>4))
 				hookBpScript(*it, (FNativeFuncPtr)&luaOverrideFunc);
 #else
 				hookBpScript(*it, (Native)&LuaBase::luaOverrideFunc);

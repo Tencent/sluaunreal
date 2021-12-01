@@ -82,10 +82,20 @@ namespace NS_SLUA {
 	}
 
     int error(lua_State* L) {
-        const char* err = lua_tostring(L,1);
-        luaL_traceback(L,L,err,1);
-        err = lua_tostring(L,2);
-        lua_pop(L,1);
+		const char* err = lua_tostring(L, 1);
+		lua_getglobal(L, "__TRACEBACK__");
+		if (lua_isfunction(L, -1))
+		{
+			lua_pushvalue(L, 1);
+			lua_pcall(L, 1, 1, 0);
+		}
+		else
+		{
+			lua_pop(L, 1);
+			luaL_traceback(L, L, err, 1);
+		}
+		err = lua_tostring(L, 2);
+		lua_pop(L, 1);
 		auto ls = LuaState::get(L);
 		ls->onError(err);
         return 0;

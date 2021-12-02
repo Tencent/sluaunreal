@@ -169,7 +169,7 @@ public:
 	}
 };
 
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (Custom), BlueprintType, Blueprintable, meta = (BlueprintSpawnableComponent))
 class SLUA_UNREAL_API ULuaActorComponent : public UActorComponent, public slua_Luabase, public ILuaTableObjectInterface {
 	GENERATED_BODY()
 

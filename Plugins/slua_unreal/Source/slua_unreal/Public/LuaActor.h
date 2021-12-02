@@ -180,9 +180,9 @@ class SLUA_UNREAL_API ULuaActorComponent : public UActorComponent, public slua_L
 	};
 protected:
 	virtual void BeginPlay() override {
-		Super::BeginPlay();
 		if (!init(this, "LuaActorComponent", LuaStateName, LuaFilePath)) 
 			return;
+		Super::BeginPlay();
 		if (!GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
 			ReceiveBeginPlay();
 		PrimaryComponentTick.SetTickFunctionEnable(postInit("bCanEverTick"));

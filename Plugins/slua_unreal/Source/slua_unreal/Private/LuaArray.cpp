@@ -30,11 +30,16 @@ namespace NS_SLUA {
         // blueprint stack will destroy the TArray
         // so deep-copy construct FScriptArray
         // it's very expensive
-        if(!srcArray || srcArray->Num()==0)
+        if(!srcArray)
             return;
             
         FScriptArrayHelper helper = FScriptArrayHelper::CreateHelperFormInnerProperty(p,destArray);
-        helper.AddValues(srcArray->Num());
+    	if(srcArray->Num() == 0) {
+    		helper.EmptyValues();
+    		return;
+    	}
+    	
+        helper.Resize(srcArray->Num());
         uint8* dest = helper.GetRawPtr();
         uint8* src = (uint8*)srcArray->GetData();
         for(int n=0;n<srcArray->Num();n++) {

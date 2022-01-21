@@ -51,10 +51,14 @@ namespace NS_SLUA {
 	}
 
 	void LuaMap::clone(FScriptMap* dest,UProperty* keyProp, UProperty* valueProp,const FScriptMap* src) {
-		if(!src || src->Num()==0)
+		if(!src)
 			return;
 
 		FScriptMapHelper dstHelper = FScriptMapHelper::CreateHelperFormInnerProperties(keyProp,valueProp, dest);
+		if(src->Num() == 0) {
+        	dstHelper.EmptyValues();
+        	return;
+        }
 		FScriptMapHelper srcHelper = FScriptMapHelper::CreateHelperFormInnerProperties(keyProp,valueProp, src);
 		for (auto n = 0; n < srcHelper.GetMaxIndex(); n++) {
 			if (srcHelper.IsValidIndex(n)) {

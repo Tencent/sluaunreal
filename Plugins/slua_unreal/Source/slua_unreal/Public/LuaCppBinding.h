@@ -315,8 +315,10 @@ namespace NS_SLUA {
         }
     };
 
+    typedef int (*LuaFuncDef)(lua_State* L);
+
     template<int (*func)(lua_State* L),int Offset>
-    struct LuaCppBinding< int (lua_State* L), func, Offset> {
+    struct LuaCppBinding< LuaFuncDef, func, Offset> {
 
         static int LuaCFunction(lua_State* L) {
             return func(L);

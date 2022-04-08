@@ -82,7 +82,11 @@ void Fslua_profileModule::StartupModule()
 			.SetDisplayName(LOCTEXT("Flua_wrapperTabTitle", "slua Profiler"))
 			.SetMenuType(ETabSpawnerMenuType::Hidden);
 		TickDelegate = FTickerDelegate::CreateRaw(this, &Fslua_profileModule::Tick);
+        #if (ENGINE_MAJOR_VERSION>=5)
+        TickDelegateHandle = FTSTicker::GetCoreTicker().AddTicker(TickDelegate);
+        #else
 		TickDelegateHandle = FTicker::GetCoreTicker().AddTicker(TickDelegate);
+        #endif
 	}
 #endif
 }
@@ -101,7 +105,11 @@ void Fslua_profileModule::ShutdownModule()
 
 void Fslua_profileModule::PluginButtonClicked()
 {
+#if (ENGINE_MAJOR_VERSION>=5)
+    FGlobalTabmanager::Get()->TryInvokeTab(slua_profileTabName);
+#else
 	FGlobalTabmanager::Get()->InvokeTab(slua_profileTabName);
+#endif
 }
 
 bool Fslua_profileModule::Tick(float DeltaTime)
@@ -160,7 +168,11 @@ Flua_profileCommands::Flua_profileCommands()
 
 void Flua_profileCommands::RegisterCommands()
 {
-	UI_COMMAND(OpenPluginWindow, "slua Profile", "Open slua Profile tool", EUserInterfaceActionType::Button, FInputGesture());
+    #if (ENGINE_MAJOR_VERSION>=5)
+	UI_COMMAND(OpenPluginWindow, "slua Profile", "Open slua Profile tool", EUserInterfaceActionType::Button, FInputChord());
+    #else
+    UI_COMMAND(OpenPluginWindow, "slua Profile", "Open slua Profile tool", EUserInterfaceActionType::Button, FInputGesture());
+    #endif
 }
 #endif
 /////////////////////////////////////////////////////////////////////////////////////

@@ -14,7 +14,7 @@
 
 #include "LuaUserWidget.h"
 
-#if (ENGINE_MINOR_VERSION>20) && (ENGINE_MAJOR_VERSION>=4)
+#if (((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))) || (ENGINE_MAJOR_VERSION>=5)
 void ULuaUserWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
@@ -27,10 +27,10 @@ void ULuaUserWidget::NativeConstruct()
 	InitLuaTable();
 	Super::NativeConstruct();
 	if (getSelfTable().isValid()) {
-#if (ENGINE_MINOR_VERSION==18)
-		bCanEverTick = postInit("bHasScriptImplementedTick", false);
+#if (((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))) || (ENGINE_MAJOR_VERSION>=5)
+        bHasScriptImplementedTick = postInit("bHasScriptImplementedTick", false);
 #else
-		bHasScriptImplementedTick = postInit("bHasScriptImplementedTick", false);
+        bCanEverTick = postInit("bHasScriptImplementedTick", false);
 #endif
 	}
 }
@@ -41,18 +41,18 @@ void ULuaUserWidget::NativeDestruct() {
 
 void ULuaUserWidget::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)
 {
-#if (ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4)
+#if (((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))) || (ENGINE_MAJOR_VERSION>=5)
 	if (ensureMsgf(GetDesiredTickFrequency() != EWidgetTickFrequency::Never, TEXT("SObjectWidget and UUserWidget have mismatching tick states or UUserWidget::NativeTick was called manually (Never do this)")))
 #endif
 	{
 		GInitRunaway();
-#if (ENGINE_MINOR_VERSION>=26) && (ENGINE_MAJOR_VERSION>=4)
+#if (((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))) || (ENGINE_MAJOR_VERSION>=5)
 		TickActionsAndAnimation(InDeltaTime);
 #else
 		TickActionsAndAnimation(MyGeometry, InDeltaTime);
 #endif
-		
-#if (ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4)
+
+#if (((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))) || (ENGINE_MAJOR_VERSION>=5)
 		if (bHasScriptImplementedTick) {
 #else
 		if (bCanEverTick) {

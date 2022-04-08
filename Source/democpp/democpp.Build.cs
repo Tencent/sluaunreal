@@ -7,10 +7,14 @@ public class democpp : ModuleRules
 	public democpp(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "Http" });
 
+#if UE_5_0_OR_LATER
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HTTP" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "slua_unreal", "slua_profile", "Slate", "SlateCore", "UMG", "HTTP" });
+#else
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "Http" });
 		PrivateDependencyModuleNames.AddRange(new string[] { "slua_unreal", "slua_profile", "Slate", "SlateCore", "UMG", "Http" });
+#endif
 
         PrivateIncludePathModuleNames.AddRange(new string[] { "slua_unreal" });
         PublicIncludePathModuleNames.AddRange(new string[] { "slua_unreal","slua_profile" });

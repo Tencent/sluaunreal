@@ -133,7 +133,7 @@ namespace NS_SLUA {
 		}
 
 		void dispose();
-#if ((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))
+#if (((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))) || (ENGINE_MAJOR_VERSION>=5)
 		static void hookBpScript(UFunction* func, FNativeFuncPtr hookfunc);
 #else
 		static void hookBpScript(UFunction* func, Native hookfunc);

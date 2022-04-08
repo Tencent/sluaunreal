@@ -25,7 +25,7 @@ class SLUA_UNREAL_API ULuaUserWidget : public UUserWidget, public slua_Luabase, 
     GENERATED_BODY()
 
 protected:
-#if (ENGINE_MINOR_VERSION>20) && (ENGINE_MAJOR_VERSION>=4)
+#if (((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))) || (ENGINE_MAJOR_VERSION>=5)
 	virtual void NativeOnInitialized() override;
 #endif
 	virtual void NativeConstruct() override;

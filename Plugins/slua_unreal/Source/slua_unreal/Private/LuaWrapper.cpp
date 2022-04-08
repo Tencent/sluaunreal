@@ -2360,6 +2360,7 @@ namespace NS_SLUA {
 			return 0;
 		}
 
+#if (ENGINE_MAJOR_VERSION<5)
 		static int ComputeLuminance(lua_State* L) {
 			auto argc = lua_gettop(L);
 			if (argc == 1) {
@@ -2371,6 +2372,7 @@ namespace NS_SLUA {
 			luaL_error(L, "call FLinearColor::ComputeLuminance error, argc=%d", argc);
 			return 0;
 		}
+#endif
 
 		static int GetMax(lua_State* L) {
 			auto argc = lua_gettop(L);
@@ -2483,7 +2485,7 @@ namespace NS_SLUA {
 				auto V = LuaObject::checkValue<int>(L, 3);
 				auto VVal = (unsigned char)V;
 				auto ret = __newFLinearColor();
-#if (ENGINE_MINOR_VERSION>=22) && (ENGINE_MAJOR_VERSION>=4)
+#if (((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))) || (ENGINE_MAJOR_VERSION>=5)
 				*ret = FLinearColor::MakeFromHSV8(HVal, SVal, VVal);
 #else
 				*ret = FLinearColor::FGetHSV(HVal, SVal, VVal);
@@ -2583,7 +2585,9 @@ namespace NS_SLUA {
 			LuaObject::addMethod(L, "QuantizeRound", QuantizeRound, true);
 			LuaObject::addMethod(L, "ToFColor", ToFColor, true);
 			LuaObject::addMethod(L, "Desaturate", Desaturate, true);
+#if (ENGINE_MAJOR_VERSION<5)
 			LuaObject::addMethod(L, "ComputeLuminance", ComputeLuminance, true);
+#endif
 			LuaObject::addMethod(L, "GetMax", GetMax, true);
 			LuaObject::addMethod(L, "IsAlmostBlack", IsAlmostBlack, true);
 			LuaObject::addMethod(L, "GetMin", GetMin, true);

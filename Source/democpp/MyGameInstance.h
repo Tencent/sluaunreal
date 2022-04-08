@@ -23,7 +23,8 @@ public:
 	/** virtual function to allow custom GameInstances an opportunity to do cleanup when shutting down */
 	virtual void Shutdown() override;
 
-	UFUNCTION()
+
+UFUNCTION()
 	void LuaStateInitCallback();
 
 	// create global state, freed on app exit

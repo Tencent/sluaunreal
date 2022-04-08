@@ -1209,7 +1209,11 @@ void SProfilerInspector::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& mem
 		auto* fileInfos = memNode->infoList.Find(memFileInfo.hint);
 		if (!fileInfos)
 		{
-			TMap<int, TSharedPtr<FileMemInfo, ESPMode::Fast>> newFileInfos;
+#if (ENGINE_MAJOR_VERSION>=5)
+			TMap<int, TSharedPtr<FileMemInfo, ESPMode::ThreadSafe>> newFileInfos;
+#else
+            TMap<int, TSharedPtr<FileMemInfo, ESPMode::Fast>> newFileInfos;
+#endif
 			fileInfos = &memNode->infoList.Add(memFileInfo.hint, newFileInfos);
 		}
 

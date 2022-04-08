@@ -340,7 +340,11 @@ namespace NS_SLUA {
 
 		// check UObject is valid
 		static bool isUObjectValid(UObject* obj) {
+#if ENGINE_MAJOR_VERSION >=5
+            return obj && !obj->IsUnreachable() && IsValid(obj);
+#else
 			return obj && !obj->IsUnreachable() && !obj->IsPendingKill();
+#endif
 		}
 		
 		static void callUFunction(lua_State* L, UObject* obj, UFunction* func, uint8* params);

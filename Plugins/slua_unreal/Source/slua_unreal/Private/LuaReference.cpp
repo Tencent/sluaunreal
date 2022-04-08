@@ -127,7 +127,7 @@ namespace NS_SLUA {
 		{
 			for (int n = 0; n < p->ArrayDim; ++n)
 			{
-#if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
+#if (((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))) || (ENGINE_MAJOR_VERSION>=5)
 				FMulticastScriptDelegate* Value = const_cast<FMulticastScriptDelegate*>(p->GetMulticastDelegate(container ? p->ContainerPtrToValuePtr<void>(base, n) : base));
 #else
 				FMulticastScriptDelegate* Value = p->GetPropertyValuePtr(container?p->ContainerPtrToValuePtr<void>(base, n):base);

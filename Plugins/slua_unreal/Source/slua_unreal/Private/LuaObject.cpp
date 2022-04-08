@@ -62,7 +62,7 @@ namespace NS_SLUA {
 			, setter(setterf) {}
 	};
 
-    #if ENGINE_MINOR_VERSION >= 23 && (PLATFORM_MAC || PLATFORM_IOS)
+    #if (ENGINE_MINOR_VERSION >= 23 || (ENGINE_MAJOR_VERSION>4)) && (PLATFORM_MAC || PLATFORM_IOS)
     struct FNewFrame : public FOutputDevice
         {
         public:
@@ -107,20 +107,21 @@ namespace NS_SLUA {
             , CurrentNativeFunction(NULL)
             , bArrayContextFailed(false)
             {
-        #if DO_BLUEPRINT_GUARD
-                FBlueprintExceptionTracker::Get().ScriptStack.Push((FFrame *)this);
+        #if DO_BLUEPRINT_GUARD && ENGINE_MAJOR_VERSION<=4
+                FBlueprintExceptionTracker::Get().ScriptStack.Push((const FFrame *)this);
         #endif
             }
             
             virtual ~FNewFrame()
             {
-                #if DO_BLUEPRINT_GUARD
-                    FBlueprintExceptionTracker& BlueprintExceptionTracker = FBlueprintExceptionTracker::Get();
-                    if (BlueprintExceptionTracker.ScriptStack.Num())
-                    {
-                        BlueprintExceptionTracker.ScriptStack.Pop(false);
-                    }
-                #endif
+            #if DO_BLUEPRINT_GUARD && ENGINE_MAJOR_VERSION<=4
+                FBlueprintExceptionTracker& BlueprintExceptionTracker = FBlueprintExceptionTracker::Get();
+
+                if (BlueprintExceptionTracker.ScriptStack.Num())
+                {
+                    BlueprintExceptionTracker.ScriptStack.Pop(false);
+                }
+            #endif
             }
             
             virtual void Serialize( const TCHAR* V, ELogVerbosity::Type Verbosity, const class FName& Category ) {};
@@ -571,13 +572,13 @@ namespace NS_SLUA {
 		const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
 		uint8* ReturnValueAddress = bHasReturnParam ? ((uint8*)params + func->ReturnValueOffset) : nullptr;
         
-        #if ENGINE_MINOR_VERSION >= 23 && (PLATFORM_MAC || PLATFORM_IOS)
+        #if (ENGINE_MINOR_VERSION >= 23 || (ENGINE_MAJOR_VERSION>4)) && (PLATFORM_MAC || PLATFORM_IOS)
             FNewFrame NewStack(obj, func, params, NULL, func->ChildProperties);
         #else
             FFrame NewStack(obj, func, params, NULL, func->ChildProperties);
         #endif
         
-        #if ENGINE_MINOR_VERSION < 25
+        #if ENGINE_MINOR_VERSION < 25 && (ENGINE_MAJOR_VERSION == 4)
             if (func->ReturnValueOffset != MAX_uint16) {
                 FProperty* ReturnProperty = func->GetReturnProperty();
                 if (ensure(ReturnProperty)) {
@@ -622,7 +623,7 @@ namespace NS_SLUA {
             NewStack.OutParms = nullptr;
         #endif
     
-        #if ENGINE_MINOR_VERSION >= 23 && (PLATFORM_MAC || PLATFORM_IOS)
+        #if ( ENGINE_MINOR_VERSION >= 23 || (ENGINE_MAJOR_VERSION>4) ) && (PLATFORM_MAC || PLATFORM_IOS)
             FFrame *frame = (FFrame *)&NewStack;
     		obj->CallRemoteFunction(func, params, NewStack.OutParms, frame);
         #else
@@ -1298,6 +1299,14 @@ namespace NS_SLUA {
 		return 0;
 	}
 
+	int checkFSoftClassProperty(lua_State* L, FProperty* prop, uint8* parms, int i) {
+		auto p = CastFieldChecked<FSoftClassProperty>(prop);
+		ensure(p);
+		FString cls_path = LuaObject::checkValue<FString>(L, i);
+		p->SetPropertyValue(parms, FSoftObjectPtr(FSoftObjectPath(cls_path)));
+		return 0;
+	}
+
 	bool checkType(lua_State* L, int p, const char* tn) {
 		if (!lua_isuserdata(L, p)) {
 			lua_pop(L, 1);
@@ -1607,6 +1616,7 @@ namespace NS_SLUA {
         regChecker(FDelegateProperty::StaticClass(),checkUDelegateProperty);
         regChecker(FStructProperty::StaticClass(),checkUStructProperty);
 		regChecker(FClassProperty::StaticClass(), checkUClassProperty);
+		regChecker(FSoftClassProperty::StaticClass(), checkFSoftClassProperty);
 		
 		LuaWrapper::init(L);
         ExtensionMethod::init();

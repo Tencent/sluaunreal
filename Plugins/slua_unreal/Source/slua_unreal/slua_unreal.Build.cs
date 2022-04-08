@@ -56,7 +56,6 @@ public class slua_unreal : ModuleRules
             PublicAdditionalLibraries.Add("lua");
 #endif
         }
-
         else if (Target.Platform == UnrealTargetPlatform.Win64)
         {
             PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Win64/lua.lib"));

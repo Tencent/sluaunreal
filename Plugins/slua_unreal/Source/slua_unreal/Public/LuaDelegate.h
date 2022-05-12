@@ -71,9 +71,9 @@ namespace NS_SLUA {
 
 	template<typename R, typename ...ARGS>
 	struct LuaDelegateWrapT {
-		TBaseDelegate<R, ARGS...>& delegate;
+		TDelegate<R(ARGS...)>& delegate;
 
-		LuaDelegateWrapT(TBaseDelegate<R, ARGS...>& d) :delegate(d) {}
+		LuaDelegateWrapT(TDelegate<R(ARGS...)>& d) :delegate(d) {}
 	};
 
 
@@ -93,7 +93,7 @@ namespace NS_SLUA {
 		static int push(lua_State* L, FScriptDelegate* delegate, UFunction* ufunc, FString pName);
 
 		template<class R, class ...ARGS>
-		static int push(lua_State* L, TBaseDelegate<R, ARGS...>& delegate) {
+		static int push(lua_State* L, TDelegate<R(ARGS...)>& delegate) {
 			using T = LuaDelegateWrapT<R, ARGS...>;
 			auto wrapobj = new T(delegate);
  			return LuaObject::pushType<T*>(L, wrapobj,
@@ -153,7 +153,7 @@ namespace NS_SLUA {
 	};
 
 	template<class R, class ...ARGS>
-	int LuaObject::push(lua_State* L, TBaseDelegate<R, ARGS...>& delegate) {
+	int LuaObject::push(lua_State* L, TDelegate<R(ARGS...)>& delegate) {
 		return LuaDelegate::push(L,delegate);
 	}
 }

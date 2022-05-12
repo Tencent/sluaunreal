@@ -92,7 +92,7 @@ namespace NS_SLUA {
 
 		virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
 
-#if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION>=20) || (ENGINE_MAJOR_VERSION>4)
 		virtual FString GetReferencerName() const override
 		{
 			return "LuaStruct";
@@ -340,7 +340,11 @@ namespace NS_SLUA {
 
 		// check UObject is valid
 		static bool isUObjectValid(UObject* obj) {
+#if ENGINE_MAJOR_VERSION >=5
+            return obj && !obj->IsUnreachable() && IsValid(obj);
+#else
 			return obj && !obj->IsUnreachable() && !obj->IsPendingKill();
+#endif
 		}
 		
 		static void callUFunction(lua_State* L, UObject* obj, UFunction* func, uint8* params);
@@ -752,7 +756,7 @@ namespace NS_SLUA {
 
 		// for TBaseDelegate
 		template<class R, class ...ARGS>
-		static int push(lua_State* L, TBaseDelegate<R, ARGS...>& delegate);
+		static int push(lua_State* L, TDelegate<R(ARGS...)>& delegate);
 		
 
         template<typename T>

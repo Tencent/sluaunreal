@@ -56,10 +56,6 @@ public class slua_unreal : ModuleRules
             PublicAdditionalLibraries.Add("lua");
 #endif
         }
-        else if (Target.Platform == UnrealTargetPlatform.Win32 )
-        {
-            PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Win32/lua.lib"));
-        }
         else if (Target.Platform == UnrealTargetPlatform.Win64)
         {
             PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Win64/lua.lib"));
@@ -73,14 +69,14 @@ public class slua_unreal : ModuleRules
             PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Linux/liblua.a"));
         }
 
-    PublicDependencyModuleNames.AddRange(
-            new string[]
-            {
+        PublicDependencyModuleNames.AddRange(
+                new string[]
+                {
                 "Core",
-				"UMG",
-				// ... add other public dependencies that you statically link with here ...
-			}
-            );
+                "UMG",
+                    // ... add other public dependencies that you statically link with here ...
+                }
+                );
 
         if (Target.Type == TargetRules.TargetType.Editor)
         {

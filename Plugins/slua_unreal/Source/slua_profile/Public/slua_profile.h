@@ -49,7 +49,12 @@ public:
 private:
 	// fields
 	FTickerDelegate TickDelegate;
+
+#if (ENGINE_MAJOR_VERSION>=5)
+    FTSTicker::FDelegateHandle TickDelegateHandle;
+#else
 	FDelegateHandle TickDelegateHandle;
+#endif
     TSharedPtr<SProfilerInspector> sluaProfilerInspector;
 	bool tabOpened = false;
 	TSharedPtr<class FUICommandList> PluginCommands;

@@ -36,7 +36,7 @@ Add [a branch](https://github.com/Tencent/sluaunreal/tree/for_4.25) to support U
 * Supporting enum, FVector etc
 * Operator overloading in FVector or other struct class
 * Manually adding a non-blueprint function to UObject
-* Call Lua functions from blueprint, vice versa
+* Calling Lua functions from blueprint, vice versa
 * Dead loop dection and error reporting when dead loop is detected
 * Multi-state for different runtime environments
 * CPU profiling
@@ -71,7 +71,7 @@ Add [a branch](https://github.com/Tencent/sluaunreal/tree/for_4.25) to support U
 
 我们开发了专门的vs code调试插件，支持真机调试，断点，查看变量值，代码智能提示等功能。调试器自动识别可以使用的UE UFunction蓝图函数和CppBinding导出的接口函数，不需要额外导出静态数据。
 
-We developed a tool integrated with VsCode to support debug in device, breakpoint, watch variant and code intellisence. Debugger will auto generate intellisense data for UE UFunction and exported cpp function with CppBinding.
+We developed a tool integrated with VsCode to support in-device debugging, breakpoint, variable inspection and code IntelliSense. Debugger will auto-generate data for UE UFunction and export C++ functions with CppBinding.
 
 ![](https://user-images.githubusercontent.com/6227270/69936013-7fbde480-1511-11ea-8cb8-f1eb8d1bd9f2.gif)
 
@@ -185,7 +185,7 @@ slua-unreal提供3中技术绑定lua接口，包括：
 
 unit in second, 1,000,000 call to c++ interface from lua, compared reflection and cppbinding, (both reflection and cppbinding support by slua-unreal).
 
-Test machine, MacOSX, Unreal 4.18 develop building, CPU i7 4GHz, test case can find in TestPerf.lua
+Test on MacOSX, Unreal 4.18 develop building, CPU i7 4GHz, test case can be found in TestPerf.lua
 
 |                                                              | 蓝图反射方法(Reflection) | CppBinding方法(CppBinding) |
 | ------------------------------------------------------------ | ------------------------ | -------------------------- |

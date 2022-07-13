@@ -1,6 +1,6 @@
 ## What's slua-unreal?
 
-slua-unreal is unreal4 plugin, you can use lua language to develop game logic and hot fix your lua code via this plugin, slua-unreal give you 3 way to wrap your c++ interface for lua, including reflection(by blueprint), c++ template and static code generation by a tool, meanwhile you can communicate with blueprint, call lua from blueprint, vice versa.
+Slua-unreal is an unreal4 plugin, which allows you to use Lua language to develop game logic and hot fix your code. It gives you 3 ways to wrap your C++ interface to Lua, including reflection by blueprint, C++ template and static code generation. It also enables a two-way communication between blueprint and Lua.
 
 # slua-unreal 是什么 
 
@@ -25,23 +25,22 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 
 Add [a branch](https://github.com/Tencent/sluaunreal/tree/for_4.25) to support UE 4.25 or later
 
-## Feature
+## Features
 
-* call reflection method exported by blueprint
-* support rpc function
-* can override any blueprint function with a lua function
-* add event listener for blueprint event as lua function
-* normal c++ function and class exported by c++ template 
-* auto code generation to wrap your normal c++ fucntion to lua
-* support enum, FVector etc
-* support operator overload in FVector or other struct class
-* support extension method to add a non-blueprint function to uobject for lua use(extent blueprint function)
-* call lua function from blueprint, vise versa
-* detect dead loop code, report error if happen dead loop
-* support multi state for isolate lua runtime
-* cpu profile tool
-* multithread lua gc
-* profiler tools, supported in device
+* Automatic export of blueprint API to the Lua interface 
+* Supporting RPC (Remote Procedure Call) functions
+* Overriding any blueprint function with a Lua function
+* Calling Lua functions as callback functions for blueprint events
+* Normal C++ functions and classes exported by C++ template 
+* Auto code generation to wrap your normal C++ function for use in Lua
+* Supporting enum, FVector etc
+* Operator overloading in FVector or other struct class
+* Manually adding a non-blueprint function to UObject
+* Call Lua functions from blueprint, vice versa
+* Dead loop dection and error reporting when dead loop is detected
+* Multi-state for different runtime environments
+* CPU profiling
+* Multithread Lua GC (Garbage Collection)
 
 # slua-unreal 有什么功能
 
@@ -81,7 +80,7 @@ We developed a tool integrated with VsCode to support debug in device, breakpoin
 
 # 使用方法简单范例
 
-## Usage at glance
+## Usage at a glance
 
 ```lua
 -- import blueprint class to use
@@ -123,7 +122,7 @@ print("hit info",h)
 
 ## 在蓝图中调用lua
 
-## Blueprint call lua
+## Calling Lua functions in blueprint
 
 ![](bpcall.png)
 
@@ -140,7 +139,7 @@ Slua:     call from bp    1024    Hello World 3.1400001049042 UObject: 0x1364861
 
 ## 使用lua扩展Actor
 
-## Using lua extend Actor
+## Using Lua extend Actor
 
 ```lua
 -- LuaActor.lua

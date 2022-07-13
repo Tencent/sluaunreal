@@ -1,6 +1,6 @@
 ## What's slua-unreal?
 
-Slua-unreal is an unreal4 plugin, which allows you to use Lua language to develop game logic and hot fix your code. It gives you 3 ways to wrap your C++ interface to Lua, including reflection by blueprint, C++ template and static code generation. It also enables a two-way communication between blueprint and Lua.
+Slua-unreal is an unreal4 plugin, which allows you to use Lua language to develop game logic and hot fix your code. It gives you 3 ways to wrap your C++ interface to Lua, including reflection by blueprint, C++ template and static code generation. It also enables a two-way communication between blueprint and Lua.  The advantage of Lua over C++ is that it requires no compilation for logic change, which significantly speeds up game development process.
 
 # slua-unreal 是什么 
 
@@ -14,6 +14,8 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 ## Showcases
 
 ![icon_logo](https://user-images.githubusercontent.com/6227270/59747641-db6e1b80-92ab-11e9-81b6-7ca7ebfd6c0e.png)![logo](https://user-images.githubusercontent.com/6227270/59747461-80d4bf80-92ab-11e9-989b-44809d5b780c.png)
+
+Slua-unreal is currently adopted in PUBG mobile game, one of Tencent’s most-played and highest-grossing mobile games, and Pandora system. This system is widely used in Tencent’s UE4 gaming business, helping the business build and maintain its commercial operation system.
 
 ## What's new?
 
@@ -37,7 +39,7 @@ Add [a branch](https://github.com/Tencent/sluaunreal/tree/for_4.25) to support U
 * Operator overloading in FVector or other struct class
 * Manually adding a non-blueprint function to UObject
 * Calling Lua functions from blueprint, vice versa
-* Dead loop dection and error reporting when dead loop is detected
+* Dead loop detection and error reporting when a dead loop is detected
 * Multi-state for different runtime environments
 * CPU profiling
 * Multithread Lua GC (Garbage Collection)
@@ -183,9 +185,11 @@ slua-unreal提供3中技术绑定lua接口，包括：
 
 ### Performance
 
-unit in second, 1,000,000 call to c++ interface from lua, compared reflection and cppbinding, (both reflection and cppbinding support by slua-unreal).
+unit in second, 1,000,000 calls to C++ interface from Lua, compared reflection and cppbinding, (both reflection and cppbinding are supported by slua-unreal).
 
-Test on MacOSX, Unreal 4.18 develop building, CPU i7 4GHz, test case can be found in TestPerf.lua
+Test on MacOSX, Unreal 4.18 develop building, CPU i7 4GHz, test cases can be found in TestPerf.lua
+
+Without the time spent on gc alloc, the blueprint reflection-based approach is twice as fast as the one using static code generation, while CppBinding is an order of magnitude faster than reflection.
 
 |                                                              | 蓝图反射方法(Reflection) | CppBinding方法(CppBinding) |
 | ------------------------------------------------------------ | ------------------------ | -------------------------- |

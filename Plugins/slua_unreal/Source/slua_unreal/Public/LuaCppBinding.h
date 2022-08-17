@@ -182,53 +182,48 @@ namespace NS_SLUA {
             }
         };
 
-        template<typename VT, bool value = std::is_pointer<T>::value>
-        struct ReturnPointer {
-            constexpr static void* GetValue(VT& t) {
-                return (void*)t;
-            }
-        };
+        template<typename _ = T, bool value = std::is_void<T>::value>
+    	struct Invoker
+    	{
+    		template<typename VT, bool _bV = std::is_pointer<T>::value>
+			struct ReturnPointer {
+    			constexpr static void* GetValue(VT& t) {
+    				return (void*)t;
+    			}
+    		};
 
-        template<typename VT>
-        struct ReturnPointer<VT, false> {
-            constexpr static void* GetValue(VT& t) {
-                return (void*)(&t);
-            }
-        };
+    		template<typename VT>
+			struct ReturnPointer<VT, false> {
+    			constexpr static void* GetValue(VT& t) {
+    				return (void*)(&t);
+    			}
+    		};
+    		
+    		static int invoke(lua_State * L,void* ptr) {
+    			// make int list for arg index
+    			using I = MakeIntList<sizeof...(Args)>;
+    			T ret = Functor<I>::invoke(L,ptr);
+    			void* v = ReturnPointer<T>::GetValue(ret);
+    			if(v==nullptr) return LuaObject::pushNil(L);
+    			return LuaObject::push(L,ret);
+    		}
+    	};
 
-        static int invoke(lua_State * L,void* ptr) {
-            // make int list for arg index
-            using I = MakeIntList<sizeof...(Args)>;
-            T ret = Functor<I>::invoke(L,ptr);
-            void* v = ReturnPointer<T>::GetValue(ret);
-            if(v==nullptr) return LuaObject::pushNil(L);
-            return LuaObject::push(L,ret);
-        }
-    };
+    	template<typename _>
+    	struct Invoker<_, true>
+    	{
+    		static int invoke(lua_State * L,void* ptr) {
+    			// make int list for arg index
+    			using I = MakeIntList<sizeof...(Args)>;
+    			Functor<I>::invoke(L,ptr);
+    			return 0;
+    		}
+    	};
 
-    template <typename... Args,
-          void (*target)(lua_State * L, void*, Args...),int Offset>
-    struct FunctionBind<void (*)(lua_State * L, void* ,Args...), target, Offset> {
-        
-        template <typename X>
-        struct Functor;
-
-        template <int... index>
-        struct Functor<IntList<index...>> {
-
-            // index is int-list based 0, so should plus Offset to get first arg 
-            // (not include obj ptr if it's a member function)
-            static void invoke(lua_State * L,void* ptr) {
-                target(L, ptr, ArgOperator::readArg<typename remove_cr<Args>::type>(L, index + Offset)...);
-            }
-        };
-
-        static int invoke(lua_State * L,void* ptr) {
-            // make int list for arg index
-            using I = MakeIntList<sizeof...(Args)>;
-            Functor<I>::invoke(L,ptr);
-            return 0;
-        }
+    	static int invoke(lua_State * L,void* ptr)
+    	{
+    		return Invoker<>::invoke(L,ptr);
+    	}
     };
 
     template<typename T,T,int Offset=1>

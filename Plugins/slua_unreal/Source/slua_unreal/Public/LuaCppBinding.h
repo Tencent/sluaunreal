@@ -280,6 +280,7 @@ namespace NS_SLUA {
         }
     };
 
+#if (_MSC_VER < 1930)
     template<typename T,typename ...ARG,void (T::*func)(ARG...)>
     struct LuaCppBinding< void (T::*)(ARG...), func> {
 
@@ -297,6 +298,7 @@ namespace NS_SLUA {
             return f::invoke(L,p);
         }
     };
+#endif
 
     template<int (*func)(lua_State* L),int Offset>
     struct LuaCppBinding< int (lua_State* L), func, Offset> {

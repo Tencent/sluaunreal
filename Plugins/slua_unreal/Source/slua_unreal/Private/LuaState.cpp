@@ -591,7 +591,9 @@ namespace NS_SLUA {
 	}
 #if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
 	void LuaState::OnUObjectArrayShutdown() {
-		// nothing todo, we don't add any listener to FUObjectDeleteListener
+		// remove listeners to avoid crash on pc when app exit
+		GUObjectArray.RemoveUObjectCreateListener(this);
+		GUObjectArray.RemoveUObjectDeleteListener(this);
 	}
 #endif
 

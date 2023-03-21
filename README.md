@@ -1,6 +1,6 @@
 ## What's slua-unreal?
 
-slua-unreal is unreal4 plugin, you can use lua language to develop game logic and hot fix your lua code via this plugin, slua-unreal give you 3 way to wrap your c++ interface for lua, including reflection(by blueprint), c++ template and static code generation by a tool, meanwhile you can communicate with blueprint, call lua from blueprint, vice versa.
+Slua-unreal is an unreal4 plugin, which allows you to use Lua language to develop game logic and hot fix your code. It gives you 3 ways to wrap your C++ interface to Lua, including reflection by blueprint, C++ template and static code generation. It also enables a two-way communication between blueprint and Lua.  The advantage of Lua over C++ is that it requires no compilation for logic change, which significantly speeds up game development process.
 
 # slua-unreal 是什么 
 
@@ -15,6 +15,8 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 
 ![icon_logo](https://user-images.githubusercontent.com/6227270/59747641-db6e1b80-92ab-11e9-81b6-7ca7ebfd6c0e.png)![logo](https://user-images.githubusercontent.com/6227270/59747461-80d4bf80-92ab-11e9-989b-44809d5b780c.png)
 
+Slua-unreal is currently adopted in PUBG mobile game, one of Tencent’s most-played and highest-grossing mobile games, and Pandora system. This system is widely used in Tencent’s UE4 gaming business, helping the business build and maintain its commercial operation system.
+
 ## What's new?
 
 [Release 1.3.3](https://github.com/Tencent/sluaunreal/releases/tag/1.3.3), fix a crash bug, more stable
@@ -25,23 +27,22 @@ slua-unreal作为unreal引擎的插件，通过unreal自带蓝图接口的反射
 
 Add [a branch](https://github.com/Tencent/sluaunreal/tree/for_4.25) to support UE 4.25 or later
 
-## Feature
+## Features
 
-* call reflection method exported by blueprint
-* support rpc function
-* can override any blueprint function with a lua function
-* add event listener for blueprint event as lua function
-* normal c++ function and class exported by c++ template 
-* auto code generation to wrap your normal c++ fucntion to lua
-* support enum, FVector etc
-* support operator overload in FVector or other struct class
-* support extension method to add a non-blueprint function to uobject for lua use(extent blueprint function)
-* call lua function from blueprint, vise versa
-* detect dead loop code, report error if happen dead loop
-* support multi state for isolate lua runtime
-* cpu profile tool
-* multithread lua gc
-* profiler tools, supported in device
+* Automatic export of blueprint API to the Lua interface 
+* Supporting RPC (Remote Procedure Call) functions
+* Overriding any blueprint function with a Lua function
+* Calling Lua functions as callback functions for blueprint events
+* Normal C++ functions and classes exported by C++ template 
+* Auto code generation to wrap your normal C++ function for use in Lua
+* Supporting enum, FVector etc
+* Operator overloading in FVector or other struct class
+* Allowing manual addition of a non-blueprint function to UObject
+* Calling Lua functions from blueprint, vice versa
+* Dead loop detection and error reporting when a dead loop is detected
+* Multi-state for different runtime environments
+* CPU profiling
+* Multithread Lua GC (Garbage Collection)
 
 # slua-unreal 有什么功能
 
@@ -72,7 +73,7 @@ Add [a branch](https://github.com/Tencent/sluaunreal/tree/for_4.25) to support U
 
 我们开发了专门的vs code调试插件，支持真机调试，断点，查看变量值，代码智能提示等功能。调试器自动识别可以使用的UE UFunction蓝图函数和CppBinding导出的接口函数，不需要额外导出静态数据。
 
-We developed a tool integrated with VsCode to support debug in device, breakpoint, watch variant and code intellisence. Debugger will auto generate intellisense data for UE UFunction and exported cpp function with CppBinding.
+We developed a tool integrated with VsCode to support in-device debugging, breakpoint, variable inspection and code IntelliSense. Debugger will auto-generate data for UE UFunction and export C++ functions with CppBinding.
 
 ![](https://user-images.githubusercontent.com/6227270/69936013-7fbde480-1511-11ea-8cb8-f1eb8d1bd9f2.gif)
 
@@ -81,7 +82,7 @@ We developed a tool integrated with VsCode to support debug in device, breakpoin
 
 # 使用方法简单范例
 
-## Usage at glance
+## Usage at a glance
 
 ```lua
 -- import blueprint class to use
@@ -123,7 +124,7 @@ print("hit info",h)
 
 ## 在蓝图中调用lua
 
-## Blueprint call lua
+## Calling Lua functions in blueprint
 
 ![](bpcall.png)
 
@@ -140,7 +141,7 @@ Slua:     call from bp    1024    Hello World 3.1400001049042 UObject: 0x1364861
 
 ## 使用lua扩展Actor
 
-## Using lua extend Actor
+## Using Lua extend Actor
 
 ```lua
 -- LuaActor.lua
@@ -184,9 +185,11 @@ slua-unreal提供3中技术绑定lua接口，包括：
 
 ### Performance
 
-unit in second, 1,000,000 call to c++ interface from lua, compared reflection and cppbinding, (both reflection and cppbinding support by slua-unreal).
+unit in second, 1,000,000 calls to C++ interface from Lua, compared reflection and cppbinding, (both reflection and cppbinding are supported by slua-unreal).
 
-Test machine, MacOSX, Unreal 4.18 develop building, CPU i7 4GHz, test case can find in TestPerf.lua
+Test on MacOSX, Unreal 4.18 develop building, CPU i7 4GHz, test cases can be found in TestPerf.lua
+
+Without the time spent on gc alloc, the blueprint reflection-based approach is twice as fast as the one using static code generation, while CppBinding is an order of magnitude faster than reflection.
 
 |                                                              | 蓝图反射方法(Reflection) | CppBinding方法(CppBinding) |
 | ------------------------------------------------------------ | ------------------------ | -------------------------- |

@@ -265,6 +265,10 @@ namespace NS_SLUA {
 
 			typedef TMap<FString, TWeakObjectPtr<UProperty>> CachePropItem;
 			typedef TMap<TWeakObjectPtr<UClass>, CachePropItem> CachePropMap;
+
+			typedef TMap<TWeakObjectPtr<UClass>, bool> PropCachedMap;
+			typedef TMap<FString, bool> FuncCachedItem;
+			typedef TMap<TWeakObjectPtr<UClass>, FuncCachedItem> FuncSearchedMap;
 			
 			UFunction* findFunc(UClass* uclass, const char* fname);
 			UProperty* findProp(UClass* uclass, const char* pname);
@@ -273,10 +277,14 @@ namespace NS_SLUA {
 			void clear() {
 				cacheFuncMap.Empty();
 				cachePropMap.Empty();
+				propCachedMap.Empty();
+				funcSearchedMap.Empty();
 			}
 
 			CacheFuncMap cacheFuncMap;
 			CachePropMap cachePropMap;
+			PropCachedMap propCachedMap;
+			FuncSearchedMap funcSearchedMap;
 		} classMap;
 
 		FDeadLoopCheck* deadLoopCheck;

@@ -13,40 +13,41 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "lua/lua.hpp"
+#include "lua.h"
 
 namespace NS_SLUA {
     
-	enum ProfilerHookEvent
-	{
+    enum ProfilerHookEvent
+    {
         PHE_MEMORY_TICK = -2,
-		PHE_TICK = -1,
-		PHE_CALL = 0,
-		PHE_RETURN = 1,
-		PHE_LINE = 2,
-		PHE_TAILRET = 4,
+        PHE_TICK = -1,
+        PHE_CALL = 0,
+        PHE_RETURN = 1,
+        PHE_LINE = 2,
+        PHE_TAILRET = 4,
         PHE_MEMORY_GC = 5,
-		PHE_MEMORY_INCREACE = 6,
-		PHE_ENTER_COROUTINE = 7,
-		PHE_EXIT_COROUTINE = 8,
-	};
+        PHE_MEMORY_INCREACE = 6,
+        PHE_ENTER_COROUTINE = 7,
+        PHE_EXIT_COROUTINE = 8,
+    };
 
-	class SLUA_UNREAL_API LuaProfiler
-	{
-	public:
-		LuaProfiler(const char* funcName);
-		~LuaProfiler();
-		
-		static void init(class LuaState* LS);
-		static void tick(class LuaState* LS);
-		static void clean(class LuaState* LS);
+    class SLUA_UNREAL_API LuaProfiler
+    {
+    public:
+        LuaProfiler(const char* funcName);
+        ~LuaProfiler();
+        
+        static void init(class LuaState* LS);
+        static void tick(class LuaState* LS);
+        static void clean(class LuaState* LS);
 
-		static const char* ChunkName;
-		static lua_CFunction resumeFunc;
-	};
+        static const char* ChunkName;
+        static lua_CFunction resumeFunc;
+        static lua_CFunction yieldFunc;
+    };
 
 #ifdef ENABLE_PROFILER
-	// for native function
+    // for native function
 #define PROFILER_WATCHER(x)  NS_SLUA::LuaProfiler x(__FUNCTION__);
 #define PROFILER_WATCHER_X(x,name)  NS_SLUA::LuaProfiler x(name);
 #else

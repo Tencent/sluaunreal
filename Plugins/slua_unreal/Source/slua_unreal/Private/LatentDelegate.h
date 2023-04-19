@@ -15,24 +15,26 @@
 
 #include "CoreMinimal.h"
 #include "lua.h"
+#include "SluaMicro.h"
+#include "UObject/Package.h"
 #include "LatentDelegate.generated.h"
 
 namespace NS_SLUA {
-	class LuaState;
+    class LuaState;
 }
 
 UCLASS()
 class SLUA_UNREAL_API ULatentDelegate : public UObject {
-	GENERATED_UCLASS_BODY()
+    GENERATED_UCLASS_BODY()
 public:
-	static const FString NAME_LatentCallback;
+    static const FString NAME_LatentCallback;
 
-	UFUNCTION(BlueprintCallable, Category = "Lua|LatentDelegate")
-	void OnLatentCallback(int32 threadRef);
-	
-	void bindLuaState(NS_SLUA::LuaState *_luaState);
-	int getThreadRef(NS_SLUA::lua_State *L);
+    UFUNCTION(BlueprintCallable, Category = "Lua|LatentDelegate")
+    void OnLatentCallback(int32 threadRef);
+
+    void bindLuaState(NS_SLUA::LuaState* _luaState);
+    int getThreadRef(NS_SLUA::lua_State* L);
 
 protected:
-	NS_SLUA::LuaState* luaState;
+    NS_SLUA::LuaState* luaState;
 };

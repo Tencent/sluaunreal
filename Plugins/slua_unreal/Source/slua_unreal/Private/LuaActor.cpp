@@ -1,94 +1,54 @@
-// Tencent is pleased to support the open source community by making sluaunreal available.
-
-// Copyright (C) 2018 THL A29 Limited, a Tencent company. All rights reserved.
-// Licensed under the BSD 3-Clause License (the "License"); 
-// you may not use this file except in compliance with the License. You may obtain a copy of the License at
-
-// https://opensource.org/licenses/BSD-3-Clause
-
-// Unless required by applicable law or agreed to in writing, 
-// software distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and limitations under the License.
-
 #include "LuaActor.h"
+#include "LuaState.h"
+#include "UnrealNetwork.h"
 
 ALuaActor::ALuaActor(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+    : Super(ObjectInitializer)
 {
+}
+
+void ALuaActor::PostInitializeComponents()
+{
+    Super::PostInitializeComponents();
+
+    CallReceivePreRep(LuaFilePath);
+    TryHookActorComponents();
+}
+
+void ALuaActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    Super::EndPlay(EndPlayReason);
+
+    if (EnableLuaTick)
+    {
+        UnRegistLuaTick();
+    }
 }
 
 FString ALuaActor::GetLuaFilePath_Implementation() const
 {
-	return LuaFilePath;
+    return LuaFilePath;
 }
 
-ALuaPawn::ALuaPawn(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+void ALuaActor::RegistLuaTick(float TickInterval)
 {
+    EnableLuaTick = true;
+    auto state = NS_SLUA::LuaState::get();
+    state->registLuaTick(this, TickInterval);
 }
 
-FString ALuaPawn::GetLuaFilePath_Implementation() const
+void ALuaActor::UnRegistLuaTick()
 {
-	return LuaFilePath;
+    auto state = NS_SLUA::LuaState::get();
+    state->unRegistLuaTick(this);
 }
 
-ALuaCharacter::ALuaCharacter(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+void ALuaActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-}
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-FString ALuaCharacter::GetLuaFilePath_Implementation() const
-{
-	return LuaFilePath;
-}
-
-ALuaController::ALuaController(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-{
-}
-
-FString ALuaController::GetLuaFilePath_Implementation() const
-{
-	return LuaFilePath;
-}
-
-ALuaPlayerController::ALuaPlayerController(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-{
-}
-
-FString ALuaPlayerController::GetLuaFilePath_Implementation() const
-{
-	return LuaFilePath;
-}
-
-ULuaActorComponent::ULuaActorComponent(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-{
-}
-
-FString ULuaActorComponent::GetLuaFilePath_Implementation() const
-{
-	return LuaFilePath;
-}
-
-ALuaGameModeBase::ALuaGameModeBase(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-{
-}
-
-FString ALuaGameModeBase::GetLuaFilePath_Implementation() const
-{
-	return LuaFilePath;
-}
-
-ALuaHUD::ALuaHUD(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-{
-}
-
-FString ALuaHUD::GetLuaFilePath_Implementation() const
-{
-	return LuaFilePath;
+    if (!FLuaNetSerialization::bEnableLuaNetReplicate)
+    {
+        DOREPLIFETIME_CONDITION(ALuaActor, LuaNetSerialization, COND_Max);
+    }
 }

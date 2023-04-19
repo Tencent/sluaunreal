@@ -12,137 +12,132 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #pragma once
-#include "CoreMinimal.h"
-#include "lua/lua.hpp"
+
+#include "lua.h"
+#include "SluaMicro.h"
 #include "UObject/UnrealType.h"
 #include "UObject/GCObject.h"
-#include "Runtime/Launch/Resources/Version.h"
 #include "PropertyUtil.h"
 
 namespace NS_SLUA {
 
-	template<typename T>
-	struct TPairTraits;
+    template<typename T>
+    struct TPairTraits;
 
-	template <typename TKey, typename TValue>
-	struct TPairTraits<TPair<TKey, TValue>> {
-		typedef TKey	KeyType;
-		typedef TValue	ValueType;
-	};
+    template <typename TKey, typename TValue>
+    struct TPairTraits<TPair<TKey, TValue>> {
+        typedef TKey    KeyType;
+        typedef TValue    ValueType;
+    };
 
-	template <typename T> 
-	struct TIsTMap { enum { Value = false }; };
+    template <typename T> 
+    struct TIsTMap { enum { Value = false }; };
 
-	template<typename KeyType, typename ValueType, typename SetAllocator, typename KeyFuncs> 
-	struct TIsTMap<TMap<KeyType, ValueType, SetAllocator, KeyFuncs>> { enum { Value = true }; };
-	template<typename KeyType, typename ValueType, typename SetAllocator, typename KeyFuncs> 
-	struct TIsTMap<const TMap<KeyType, ValueType, SetAllocator, KeyFuncs>> { enum { Value = true }; };
-	template<typename KeyType, typename ValueType, typename SetAllocator, typename KeyFuncs> 
-	struct TIsTMap<volatile TMap<KeyType, ValueType, SetAllocator, KeyFuncs>> { enum { Value = true }; };
-	template<typename KeyType, typename ValueType, typename SetAllocator, typename KeyFuncs> 
-	struct TIsTMap<const volatile TMap<KeyType, ValueType, SetAllocator, KeyFuncs>> { enum { Value = true }; };
+    template<typename KeyType, typename ValueType, typename SetAllocator, typename KeyFuncs> 
+    struct TIsTMap<TMap<KeyType, ValueType, SetAllocator, KeyFuncs>> { enum { Value = true }; };
+    template<typename KeyType, typename ValueType, typename SetAllocator, typename KeyFuncs> 
+    struct TIsTMap<const TMap<KeyType, ValueType, SetAllocator, KeyFuncs>> { enum { Value = true }; };
+    template<typename KeyType, typename ValueType, typename SetAllocator, typename KeyFuncs> 
+    struct TIsTMap<volatile TMap<KeyType, ValueType, SetAllocator, KeyFuncs>> { enum { Value = true }; };
+    template<typename KeyType, typename ValueType, typename SetAllocator, typename KeyFuncs> 
+    struct TIsTMap<const volatile TMap<KeyType, ValueType, SetAllocator, KeyFuncs>> { enum { Value = true }; };
 
-	class SLUA_UNREAL_API LuaMap : public FGCObject{
+    class SLUA_UNREAL_API LuaMap : public FGCObject{
 
-	public:
-		static void reg(lua_State* L);
-		static int push(lua_State* L, UProperty* keyProp, UProperty* valueProp, const FScriptMap* buf, bool frombp=true);
-		static int push(lua_State* L, UMapProperty* prop, UObject* obj);
-		template<typename K,typename V>
-		static int push(lua_State* L, const TMap<K, V>& v) {
-			UProperty* keyProp = PropertyProto::createProperty(PropertyProto::get<K>());
-			UProperty* valueProp = PropertyProto::createProperty(PropertyProto::get<V>());
-			return push(L, keyProp, valueProp, reinterpret_cast<const FScriptMap*>(&v),false);
-		}
+    public:
+        static void reg(lua_State* L);
+        static int push(lua_State* L, FProperty* keyProp, FProperty* valueProp, FScriptMap* buf);
+        static int push(lua_State* L, LuaMap* luaMap);
+        
+        template<typename K,typename V>
+        static int push(lua_State* L, const TMap<K, V>& v) {
+            FProperty* keyProp = PropertyProto::createDeduceProperty<K>();
+            FProperty* valueProp = PropertyProto::createDeduceProperty<V>();
+            return push(L, keyProp, valueProp, reinterpret_cast<FScriptMap*>(const_cast<TMap<K, V>*>(&v)));
+        }
 
-		static void clone(FScriptMap* dest,UProperty* keyProp, UProperty* valueProp,const FScriptMap* src);
+        static void clone(FScriptMap* dest,FProperty* keyProp, FProperty* valueProp,const FScriptMap* src);
 
-		LuaMap(UProperty* keyProp, UProperty* valueProp, const FScriptMap* buf, bool frombp);
-		LuaMap(UMapProperty* prop, UObject* obj);
-		~LuaMap();
+        LuaMap(FMapProperty* prop, FScriptMap* buf, bool bIsRef);
+        LuaMap(FProperty* keyProp, FProperty* valueProp, FScriptMap* buf, bool bIsRef);
+        ~LuaMap();
 
-		const FScriptMap* get() {
-			return map;
-		}
+        FScriptMap* get() {
+            return map;
+        }
 
-		virtual void AddReferencedObjects( FReferenceCollector& Collector ) override;
+        virtual void AddReferencedObjects( FReferenceCollector& Collector ) override;
 
 #if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
-		virtual FString GetReferencerName() const override
+        virtual FString GetReferencerName() const override
         {
             return "LuaMap";
         }
 #endif
 
-		// Cast FScriptMap to TMap<TKey, TValue> if ElementSize matched
-		template<typename TKey, typename TValue>
-		const TMap<TKey, TValue>& asTMap(lua_State* L) const {
-			if (sizeof(TKey) != keyProp->ElementSize)
-				luaL_error(L, "Cast to TMap error, key element size isn't mathed(%d,%d)", sizeof(TKey), keyProp->ElementSize);
-			if (sizeof(TValue) != valueProp->ElementSize)
-				luaL_error(L, "Cast to TMap error, value element size isn't mathed(%d,%d)", sizeof(TValue), valueProp->ElementSize);
+        // Cast FScriptMap to TMap<TKey, TValue> if ElementSize matched
+        template<typename TKey, typename TValue>
+        const TMap<TKey, TValue>& asTMap(lua_State* L) const {
+            if (sizeof(TKey) != keyProp->ElementSize)
+                luaL_error(L, "Cast to TMap error, key element size isn't mathed(%d,%d)", sizeof(TKey), keyProp->ElementSize);
+            if (sizeof(TValue) != valueProp->ElementSize)
+                luaL_error(L, "Cast to TMap error, value element size isn't mathed(%d,%d)", sizeof(TValue), valueProp->ElementSize);
 
-			// modified FScriptMap::CheckConstraints function to check type constraints
-			typedef FScriptMap ScriptType;
-			typedef TMap<TKey, TValue> RealType;
+            // modified FScriptMap::CheckConstraints function to check type constraints
+            typedef FScriptMap ScriptType;
+            typedef TMap<TKey, TValue> RealType;
 
-			// Check that the class footprint is the same
-			static_assert(sizeof(ScriptType) == sizeof(RealType), "FScriptMap's size doesn't match TMap");
-			static_assert(alignof(ScriptType) == alignof(RealType), "FScriptMap's alignment doesn't match TMap");
+            // Check that the class footprint is the same
+            static_assert(sizeof(ScriptType) == sizeof(RealType), "FScriptMap's size doesn't match TMap");
+            static_assert(alignof(ScriptType) == alignof(RealType), "FScriptMap's alignment doesn't match TMap");
 
-			// Check member sizes
-			typedef FScriptSet ScriptPairsType;
-			typedef TSet<typename RealType::ElementType> RealPairsType;
-			static_assert(sizeof(FScriptSet) == sizeof(RealPairsType), "FScriptMap's Pairs member size does not match TMap's");
+            // Check member sizes
+            typedef FScriptSet ScriptPairsType;
+            typedef TSet<typename RealType::ElementType> RealPairsType;
+            static_assert(sizeof(FScriptSet) == sizeof(RealPairsType), "FScriptMap's Pairs member size does not match TMap's");
 
-			return *(reinterpret_cast<const TMap<TKey, TValue>*>(
-				map));
-		}
+            return *(reinterpret_cast<const TMap<TKey, TValue>*>(
+                map));
+        }
 
-	protected:
-		static int __ctor(lua_State* L);
+    protected:
+        static int __ctor(lua_State* L);
         static int Num(lua_State* L);
         static int Get(lua_State* L);
         static int Add(lua_State* L);
         static int Remove(lua_State* L);
         static int Clear(lua_State* L);
-		static int Pairs(lua_State* L);
-		static int Enumerable(lua_State* L);
+        static int Pairs(lua_State* L);
+        static int Enumerable(lua_State* L);
+        static int CreateValueTypeObject(lua_State* L);
 
-	private:
-		FScriptMap* map;
-		UProperty* keyProp;
-		UProperty* valueProp;
-		UMapProperty* prop;
-		UObject* propObj;
-		FScriptMapHelper helper;
-		bool createdByBp;
-		bool shouldFree;
+    private:
+        FScriptMap* map;
+        FProperty* keyProp;
+        FProperty* valueProp;
+        FScriptMapHelper helper;
+        bool isRef;
 
-		static int setupMT(lua_State* L);
-		static int gc(lua_State* L);
+        static int setupMT(lua_State* L);
+        static int gc(lua_State* L);
 
-		uint8* getKeyPtr(uint8* pairPtr);
-		uint8* getValuePtr(uint8* pairPtr);
-		void clear();
-		int32 num() const;
-		void emptyValues(int32 Slack = 0);
-		void destructItems(int32 Index, int32 Count);
-		void destructItems(uint8* PairPtr, uint32 Stride, int32 Index, int32 Count, bool bDestroyKeys, bool bDestroyValues);
-		bool removePair(const void* KeyPtr);
-		void removeAt(int32 Index, int32 Count = 1);
+        uint8* getKeyPtr(uint8* pairPtr);
+        uint8* getValuePtr(uint8* pairPtr);
+        void clear();
+        int32 num() const;
+        void emptyValues(int32 Slack = 0);
+        void destructItems(int32 Index, int32 Count);
+        void destructItems(uint8* PairPtr, uint32 Stride, int32 Index, int32 Count, bool bDestroyKeys, bool bDestroyValues);
+        bool removePair(const void* KeyPtr);
+        void removeAt(int32 Index, int32 Count = 1);
 
-		struct Enumerator {
-			LuaMap* map = nullptr;
-			// hold referrence of LuaMap, avoid gc
-			class LuaVar* holder = nullptr;
-			int32 index = 0;
-			int32 num = 0;
+        struct Enumerator {
+            LuaMap* map = nullptr;
+            int32 index = 0;
+            int32 num = 0;
 
-			static int gc(lua_State* L);
-			~Enumerator();
-		};
-
-	};
-	
+            static int gc(lua_State* L);
+        };
+    };
+    
 }

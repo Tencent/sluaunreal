@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #pragma once
-#include "CoreMinimal.h"
-#include "lua/lua.hpp"
+
+#include "SluaMicro.h"
+#include "lua.h"
 #include "UObject/UnrealType.h"
 #include "UObject/GCObject.h"
-#include "Runtime/Launch/Resources/Version.h"
 #include "PropertyUtil.h"
 
 namespace NS_SLUA {
@@ -24,22 +24,24 @@ namespace NS_SLUA {
     class SLUA_UNREAL_API LuaArray : public FGCObject {
     public:
         static void reg(lua_State* L);
-        static void clone(FScriptArray* destArray, UProperty* p, const FScriptArray* srcArray);
-		static int push(lua_State* L, UProperty* prop, FScriptArray* array);
-		static int push(lua_State* L, UArrayProperty* prop, UObject* obj);
+        static void clone(FScriptArray* destArray, FProperty* p, const FScriptArray* srcArray);
+        static void clone(FScriptArray* destArray, FArrayProperty* arrayP, const FScriptArray* srcArray);
+        static int push(lua_State* L, FProperty* prop, FScriptArray* array);
+        static int push(lua_State* L, FArrayProperty* prop, FScriptArray* data);
+        static int push(lua_State* L, LuaArray* luaArray);
 
-		template<typename T>
-		static int push(lua_State* L, const TArray<T>& v) {
-			UProperty* prop = PropertyProto::createProperty(PropertyProto::get<T>());
-			auto array = reinterpret_cast<const FScriptArray*>(&v);
-			return push(L, prop, const_cast<FScriptArray*>(array));
-		}
+        template<typename T>
+        static int push(lua_State* L, const TArray<T>& v) {
+            FProperty* prop = PropertyProto::createDeduceProperty<T>();
+            auto array = reinterpret_cast<const FScriptArray*>(&v);
+            return push(L, prop, const_cast<FScriptArray*>(array));
+        }
 
-		LuaArray(UProperty* prop, FScriptArray* buf);
-		LuaArray(UArrayProperty* prop, UObject* obj);
+        LuaArray(FProperty* prop, FScriptArray* buf, bool bIsRef);
+        LuaArray(FArrayProperty* arrayProp, FScriptArray* buf, bool bIsRef);
         ~LuaArray();
 
-        const FScriptArray* get() {
+        FScriptArray* get() {
             return array;
         }
 
@@ -64,20 +66,20 @@ namespace NS_SLUA {
         static int __ctor(lua_State* L);
         static int Num(lua_State* L);
         static int Get(lua_State* L);
-		static int Set(lua_State* L);
+        static int Set(lua_State* L);
         static int Add(lua_State* L);
+        static int AddUnique(lua_State* L);
         static int Remove(lua_State* L);
         static int Insert(lua_State* L);
         static int Clear(lua_State* L);
-		static int Pairs(lua_State* L);
-		static int Enumerable(lua_State* L);
+        static int Pairs(lua_State* L);
+        static int Enumerable(lua_State* L);
+        static int CreateValueTypeObject(lua_State* L);
 
     private:
-        UProperty* inner;
+        FProperty* inner;
         FScriptArray* array;
-		UArrayProperty* prop;
-		UObject* propObj;
-		bool shouldFree;
+        bool isRef;
 
         void clear();
         uint8* getRawPtr(int index) const;
@@ -92,13 +94,10 @@ namespace NS_SLUA {
         static int setupMT(lua_State* L);
         static int gc(lua_State* L);
 
-		struct Enumerator {
-			LuaArray* arr = nullptr;
-			// hold referrence of LuaArray, avoid gc
-			class LuaVar* holder = nullptr;
-			int32 index = 0;
-			static int gc(lua_State* L);
-			~Enumerator();
-		};
+        struct Enumerator {
+            LuaArray* arr = nullptr;
+            int32 index = 0;
+            static int gc(lua_State* L);
+        };
     };
 }

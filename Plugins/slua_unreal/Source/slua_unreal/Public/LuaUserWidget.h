@@ -13,27 +13,24 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "LuaState.h"
+#include "Blueprint/UserWidget.h"
 #include "LuaOverriderInterface.h"
+
 #include "LuaUserWidget.generated.h"
 
 UCLASS()
 class SLUA_UNREAL_API ULuaUserWidget : public UUserWidget, public ILuaOverriderInterface {
     GENERATED_BODY()
 
-protected:
-#if (ENGINE_MINOR_VERSION>20) && (ENGINE_MAJOR_VERSION>=4)
-	virtual void NativeOnInitialized() override;
-#endif
-public:	
-	// below UPROPERTY and UFUNCTION can't be put to macro LUABASE_BODY
-	// so copy & paste them
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
-	FString LuaFilePath;
+public:
+    // below UPROPERTY and UFUNCTION can't be put to macro LUABASE_BODY
+    // so copy & paste them
+    UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+    FString LuaFilePath;
 
-	virtual bool Initialize() override;
-	virtual void BeginDestroy() override;
+    virtual bool Initialize() override;
+    virtual void BeginDestroy() override;
 
-	FString GetLuaFilePath_Implementation() const override;
+    FString GetLuaFilePath_Implementation() const override;
 };
 

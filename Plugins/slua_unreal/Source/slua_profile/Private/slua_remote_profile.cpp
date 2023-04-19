@@ -14,205 +14,207 @@
 #include "slua_remote_profile.h"
 #include "slua_profile.h"
 #include "Common/TcpListener.h"
-#include "Templates/SharedPointer.h"
+#include "SharedPointer.h"
 #include "SocketSubsystem.h"
 #include "SluaUtil.h"
 #include "LuaProfiler.h"
 
 namespace NS_SLUA
 {
-	FProfileServer::FProfileServer()
-		: Thread(nullptr)
-		, bStop(true)
-	{
-		Thread = FRunnableThread::Create(this, TEXT("FProfileServer"), 0, TPri_Normal);
-	}
+    FProfileServer::FProfileServer()
+        : Thread(nullptr)
+        , bStop(true)
+    {
+        Thread = FRunnableThread::Create(this, TEXT("FProfileServer"), 0, TPri_Normal);
+    }
 
-	FProfileServer::~FProfileServer()
-	{
-		StopTransport();
+    FProfileServer::~FProfileServer()
+    {
+        StopTransport();
         
-		Thread->WaitForCompletion();
-		SafeDelete(Thread);
-	}
+        Thread->WaitForCompletion();
+        SafeDelete(Thread);
+    }
 
-	FOnProfileMessageDelegate& FProfileServer::OnProfileMessageRecv()
-	{
-		return OnProfileMessageDelegate;
-	}
+    FOnProfileMessageDelegate& FProfileServer::OnProfileMessageRecv()
+    {
+        return OnProfileMessageDelegate;
+    }
 
-	bool FProfileServer::Init()
-	{
-		bStop = false;
+    bool FProfileServer::Init()
+    {
+        bStop = false;
 
-		ListenEndpoint.Address = FIPv4Address(0, 0, 0, 0);
-		ListenEndpoint.Port = 8081;
-		Listener = new FTcpListener(ListenEndpoint);
-		Listener->OnConnectionAccepted().BindRaw(this, &FProfileServer::HandleConnectionAccepted);
-		return true;
-	}
+        ListenEndpoint.Address = FIPv4Address(0, 0, 0, 0);
+        ListenEndpoint.Port = 8081;
+        Listener = new FTcpListener(ListenEndpoint);
+        Listener->OnConnectionAccepted().BindRaw(this, &FProfileServer::HandleConnectionAccepted);
+        return true;
+    }
     
     TArray<TSharedPtr<FProfileConnection>> FProfileServer::GetConnections() {
         return Connections;
     }
 
-	uint32 FProfileServer::Run()
-	{
-		while (!bStop)
-		{
-			TSharedPtr<FProfileConnection> Connection;
-			while (PendingConnections.Dequeue(Connection))
-			{
-				Connection->Start();
-				Connections.Add(Connection);
-			}
+    uint32 FProfileServer::Run()
+    {
+        while (!bStop)
+        {
+            TSharedPtr<FProfileConnection> Connection;
+            while (PendingConnections.Dequeue(Connection))
+            {
+                Connection->Start();
+                Connections.Add(Connection);
+            }
 
-			int32 ActiveConnections = 0;
-			for (int32 Index = 0; Index < Connections.Num(); Index++)
-			{
-				auto& conn = Connections[Index];
+            int32 ActiveConnections = 0;
+            for (int32 Index = 0; Index < Connections.Num(); Index++)
+            {
+                auto& conn = Connections[Index];
 
-				// handle disconnected by remote
-				switch (conn->GetConnectionState())
-				{
-				case FProfileConnection::STATE_Connected:
-					ActiveConnections++;
-					break;
+                // handle disconnected by remote
+                switch (conn->GetConnectionState())
+                {
+                case FProfileConnection::STATE_Connected:
+                    ActiveConnections++;
+                    break;
 
-				case FProfileConnection::STATE_Disconnected:
-					Connections.RemoveAtSwap(Index);
-					Index--;
-					break;
+                case FProfileConnection::STATE_Disconnected:
+                    Connections.RemoveAtSwap(Index);
+                    Index--;
+                    break;
 
-				default:
-					break;
-				}
-			}
+                default:
+                    break;
+                }
+            }
 
-			for (auto& conn : Connections)
-			{
-				TSharedPtr<FProfileMessage, ESPMode::ThreadSafe> Message;
+            for (auto& conn : Connections)
+            {
+                TSharedPtr<FProfileMessage, ESPMode::ThreadSafe> Message;
 
-				while (conn->ReceiveData(Message))
-				{
-					OnProfileMessageDelegate.ExecuteIfBound(Message);
-				}
-			}
+                while (conn->ReceiveData(Message))
+                {
+                    (void)OnProfileMessageDelegate.ExecuteIfBound(Message);
+                }
+            }
 
-			FPlatformProcess::Sleep(ActiveConnections > 0 ? 0.01f : 1.f);
-		}
-		return 0;
-	}
+            FPlatformProcess::Sleep(ActiveConnections > 0 ? 0.01f : 1.f);
+        }
+        return 0;
+    }
 
-	void FProfileServer::Stop()
-	{
-		bStop = true;
-	}
+    void FProfileServer::Stop()
+    {
+        bStop = true;
+    }
 
-	void FProfileServer::StopTransport()
-	{
-		bStop = true;
+    void FProfileServer::StopTransport()
+    {
+        bStop = true;
 
-		if (Listener)
-		{
-			delete Listener;
-			Listener = nullptr;
-		}
+        if (Listener)
+        {
+            delete Listener;
+            Listener = nullptr;
+        }
 
-		for (auto& Connection : Connections)
-		{
-			Connection->Close();
-		}
+        for (auto& Connection : Connections)
+        {
+            Connection->Close();
+        }
 
-		Connections.Empty();
-		PendingConnections.Empty();
-	}
+        Connections.Empty();
+        PendingConnections.Empty();
+    }
 
-	bool FProfileServer::HandleConnectionAccepted(FSocket* ClientSocket, const FIPv4Endpoint& ClientEndpoint)
-	{
-		PendingConnections.Enqueue(MakeShareable(new FProfileConnection(ClientSocket, ClientEndpoint)));
+    bool FProfileServer::HandleConnectionAccepted(FSocket* ClientSocket, const FIPv4Endpoint& ClientEndpoint)
+    {
+        PendingConnections.Enqueue(MakeShareable(new FProfileConnection(ClientSocket, ClientEndpoint)));
 
-		return true;
-	}
+        return true;
+    }
 
-	FProfileConnection::FProfileConnection(FSocket* InSocket, const FIPv4Endpoint& InRemoteEndpoint)
-		: RemoteEndpoint(InRemoteEndpoint)
-		, Socket(InSocket)
-		, Thread(nullptr)
-		, TotalBytesReceived(0)
-		, RecvMessageDataRemaining(0)
-		, ConnectionState(EConnectionState::STATE_Connecting)
-		, bRun(false)
-	{
-		int32 NewSize = 0;
-		Socket->SetReceiveBufferSize(2 * 1024 * 1024, NewSize);
-		Socket->SetSendBufferSize(2 * 1024 * 1024, NewSize);
-	}
+    FProfileConnection::FProfileConnection(FSocket* InSocket, const FIPv4Endpoint& InRemoteEndpoint)
+        : RemoteEndpoint(InRemoteEndpoint)
+        , Socket(InSocket)
+        , Thread(nullptr)
+        , TotalBytesReceived(0)
+        , RecvMessageDataRemaining(0)
+        , hookEvent(0)
+        , ConnectionState(EConnectionState::STATE_Connecting)
+        , bRun(false)
+    {
+        int32 NewSize = 0;
+        // Socket->IsNotEncrypt = true; // For PUBG Mobile
+        Socket->SetReceiveBufferSize(2 * 1024 * 1024, NewSize);
+        Socket->SetSendBufferSize(2 * 1024 * 1024, NewSize);
+    }
 
-	FProfileConnection::~FProfileConnection()
-	{
-		if (Thread != nullptr)
-		{
-			if (bRun)
-			{
-				bRun = false;
-				Thread->WaitForCompletion();
-			}
-			delete Thread;
-		}
+    FProfileConnection::~FProfileConnection()
+    {
+        if (Thread != nullptr)
+        {
+            if (bRun)
+            {
+                bRun = false;
+                Thread->WaitForCompletion();
+            }
+            delete Thread;
+        }
 
-		if (Socket)
-		{
-			Socket->Close();
-			ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->DestroySocket(Socket);
-			Socket = nullptr;
-		}
-	}
+        if (Socket)
+        {
+            Socket->Close();
+            ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->DestroySocket(Socket);
+            Socket = nullptr;
+        }
+    }
 
-	void FProfileConnection::Start()
-	{
-		check(Thread == nullptr);
-		bRun = true;
-		Thread = FRunnableThread::Create(this, *FString::Printf(TEXT("FProfileConnection %s"), *RemoteEndpoint.ToString()), 128 * 1024, TPri_Normal);
-	}
+    void FProfileConnection::Start()
+    {
+        check(Thread == nullptr);
+        bRun = true;
+        Thread = FRunnableThread::Create(this, *FString::Printf(TEXT("FProfileConnection %s"), *RemoteEndpoint.ToString()), 128 * 1024, TPri_Normal);
+    }
 
-	FProfileConnection::EConnectionState FProfileConnection::GetConnectionState() const
-	{
-		return ConnectionState;
-	}
+    FProfileConnection::EConnectionState FProfileConnection::GetConnectionState() const
+    {
+        return ConnectionState;
+    }
 
-	bool FProfileConnection::ReceiveData(TSharedPtr<FProfileMessage, ESPMode::ThreadSafe>& OutMessage)
-	{
-		if (Inbox.Dequeue(OutMessage))
-		{
-			return true;
-		}
-		return false;
-	}
+    bool FProfileConnection::ReceiveData(TSharedPtr<FProfileMessage, ESPMode::ThreadSafe>& OutMessage)
+    {
+        if (Inbox.Dequeue(OutMessage))
+        {
+            return true;
+        }
+        return false;
+    }
 
-	void FProfileConnection::Close()
-	{
-		// let the thread shutdown on its own
-		if (Thread != nullptr)
-		{
-			bRun = false;
-			Thread->WaitForCompletion();
-			delete Thread;
-			Thread = nullptr;
-		}
+    void FProfileConnection::Close()
+    {
+        // let the thread shutdown on its own
+        if (Thread != nullptr)
+        {
+            bRun = false;
+            Thread->WaitForCompletion();
+            delete Thread;
+            Thread = nullptr;
+        }
 
-		// if there a socket, close it so our peer will get a quick disconnect notification
-		if (Socket)
-		{
-			Socket->Close();
-		}
-	}
+        // if there a socket, close it so our peer will get a quick disconnect notification
+        if (Socket)
+        {
+            Socket->Close();
+        }
+    }
 
-	bool FProfileConnection::Init()
-	{
-		ConnectionState = EConnectionState::STATE_Connected;
-		return true;
-	}
+    bool FProfileConnection::Init()
+    {
+        ConnectionState = EConnectionState::STATE_Connected;
+        return true;
+    }
 
     FSocket* FProfileConnection::GetSocket()
     {
@@ -220,76 +222,76 @@ namespace NS_SLUA
         return nullptr;
     }
     
-	uint32 FProfileConnection::Run()
-	{
+    uint32 FProfileConnection::Run()
+    {
          
-		while (bRun)
-		{
-			if ((!ReceiveMessages() || Socket->GetConnectionState() == SCS_ConnectionError) && bRun)
-			{
-				bRun = false;
-			}
+        while (bRun)
+        {
+            if ((!ReceiveMessages() || Socket->GetConnectionState() == SCS_ConnectionError) && bRun)
+            {
+                bRun = false;
+            }
 
-			FPlatformProcess::SleepNoStats(0.0001f);
-		}
+            FPlatformProcess::SleepNoStats(0.0001f);
+        }
 
-		ConnectionState = EConnectionState::STATE_Disconnected;
-		return 0;
-	}
+        ConnectionState = EConnectionState::STATE_Disconnected;
+        return 0;
+    }
 
-	void FProfileConnection::Stop()
-	{
-		if (Socket)
-		{
-			Socket->Close();
-		}
-	}
+    void FProfileConnection::Stop()
+    {
+        if (Socket)
+        {
+            Socket->Close();
+        }
+    }
 
-	void FProfileConnection::Exit()
-	{
+    void FProfileConnection::Exit()
+    {
 
-	}
+    }
 
-	bool FProfileConnection::ReceiveMessages()
-	{
-		ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
-		uint32 PendingDataSize = 0;
+    bool FProfileConnection::ReceiveMessages()
+    {
+        ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
+        uint32 PendingDataSize = 0;
 
-		// check if the socket has closed
-		{
-			int32 BytesRead;
-			uint8 Dummy;
-			if (!Socket->Recv(&Dummy, 1, BytesRead, ESocketReceiveFlags::Peek))
-			{
-				UE_LOG(LogSluaProfile, Verbose, TEXT("Dummy read failed with code %d"), (int32)SocketSubsystem->GetLastErrorCode());
-				return false;
-			}
-		}
+        // check if the socket has closed
+        {
+            int32 BytesRead;
+            uint8 Dummy;
+            if (!Socket->Recv(&Dummy, 1, BytesRead, ESocketReceiveFlags::Peek))
+            {
+                UE_LOG(LogSluaProfile, Verbose, TEXT("Dummy read failed with code %d"), (int32)SocketSubsystem->GetLastErrorCode());
+                return false;
+            }
+        }
 
-		// Block waiting for some data
-		if (!Socket->Wait(ESocketWaitConditions::WaitForRead, FTimespan::FromSeconds(1.0)))
-		{
-			return (Socket->GetConnectionState() != SCS_ConnectionError);
-		}
+        // Block waiting for some data
+        if (!Socket->Wait(ESocketWaitConditions::WaitForRead, FTimespan::FromSeconds(1.0)))
+        {
+            return (Socket->GetConnectionState() != SCS_ConnectionError);
+        }
 
-		// keep going until we have no data.
-		for (;;)
-		{
-			int32 BytesRead = 0;
-			// See if we're in the process of receiving a (large) message
-			if (RecvMessageDataRemaining == 0)
-			{
-				// no partial message. Try to receive the size of a message
-				if (!Socket->HasPendingData(PendingDataSize) || (PendingDataSize < sizeof(uint32)))
-				{
-					// no messages
-					return true;
-				}
+        // keep going until we have no data.
+        for (;;)
+        {
+            int32 BytesRead = 0;
+            // See if we're in the process of receiving a (large) message
+            if (RecvMessageDataRemaining == 0)
+            {
+                // no partial message. Try to receive the size of a message
+                if (!Socket->HasPendingData(PendingDataSize) || (PendingDataSize < sizeof(uint32)))
+                {
+                    // no messages
+                    return true;
+                }
 
-				FArrayReader MessagesizeData = FArrayReader(true);
+                FArrayReader MessagesizeData = FArrayReader(true);
                 MessagesizeData.SetNumUninitialized(sizeof(uint32));
 
-				// read message size from the stream
+                // read message size from the stream
                 BytesRead = 0;
                 if (!Socket->Recv(MessagesizeData.GetData(), sizeof(uint32), BytesRead))
                 {
@@ -299,79 +301,81 @@ namespace NS_SLUA
 
                 check(BytesRead == sizeof(uint32));
                 TotalBytesReceived += BytesRead;
-				// Setup variables to receive the message
-				MessagesizeData << RecvMessageDataRemaining;
+                // Setup variables to receive the message
+                MessagesizeData << RecvMessageDataRemaining;
 
-				RecvMessageData = MakeShareable(new FArrayReader(true));
-				RecvMessageData->SetNumUninitialized(RecvMessageDataRemaining);
-				check(RecvMessageDataRemaining > 0);
-			}
+                RecvMessageData = MakeShareable(new FArrayReader(true));
+                RecvMessageData->SetNumUninitialized(RecvMessageDataRemaining);
+                check(RecvMessageDataRemaining > 0);
+            }
 
-			BytesRead = 0;
-			if (!Socket->Recv(RecvMessageData->GetData() + RecvMessageData->Num() - RecvMessageDataRemaining, RecvMessageDataRemaining, BytesRead))
-			{
-				UE_LOG(LogSluaProfile, Verbose, TEXT("Read failed with code %d"), (int32)SocketSubsystem->GetLastErrorCode());
-				return false;
-			}
+            BytesRead = 0;
+            if (!Socket->Recv(RecvMessageData->GetData() + RecvMessageData->Num() - RecvMessageDataRemaining, RecvMessageDataRemaining, BytesRead))
+            {
+                UE_LOG(LogSluaProfile, Verbose, TEXT("Read failed with code %d"), (int32)SocketSubsystem->GetLastErrorCode());
+                return false;
+            }
 
-			if (BytesRead > 0)
-			{
-				check(BytesRead <= RecvMessageDataRemaining);
-				TotalBytesReceived += BytesRead;
-				RecvMessageDataRemaining -= BytesRead;
-				if (RecvMessageDataRemaining == 0)
-				{
+            if (BytesRead > 0)
+            {
+                check(BytesRead <= RecvMessageDataRemaining);
+                TotalBytesReceived += BytesRead;
+                RecvMessageDataRemaining -= BytesRead;
+                if (RecvMessageDataRemaining == 0)
+                {
                     FProfileMessage* DeserializedMessage = new FProfileMessage();
                     if (DeserializedMessage->Deserialize(RecvMessageData))
                     {
                         Inbox.Enqueue(MakeShareable(DeserializedMessage));
                     }
-					RecvMessageData.Reset();
-				}
-			}
-			else
-			{
-				// no data
-				return true;
-			}
-		}
+                    RecvMessageData.Reset();
+                }
+            }
+            else
+            {
+                // no data
+                return true;
+            }
+        }
+    }
 
-		return true;
-	}
-
-	FProfileMessage::FProfileMessage()
-		: Linedefined(-1)
-		, Name()
-		, ShortSrc()
+    FProfileMessage::FProfileMessage()
+        : Event(0)
+        , Time(0)
+        , Linedefined(-1)
+        , Name()
+        , ShortSrc()
     {
 
-	}
+    }
 
-	FProfileMessage::~FProfileMessage()
-	{
+    FProfileMessage::~FProfileMessage()
+    {
 
-	}
+    }
 
-	bool FProfileMessage::Deserialize(const TSharedPtr<FArrayReader, ESPMode::ThreadSafe>& Message)
-	{
-		FArrayReader& MessageReader = Message.ToSharedRef().Get();
+    bool FProfileMessage::Deserialize(const TSharedPtr<FArrayReader, ESPMode::ThreadSafe>& Message)
+    {
+        FArrayReader& MessageReader = Message.ToSharedRef().Get();
 
-		MessageReader << Event;
-		switch (Event)
-		{
-		case NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK:
-			MessageReader << memoryInfoList;
-			return true;
-		case NS_SLUA::ProfilerHookEvent::PHE_MEMORY_INCREACE:
-			MessageReader << memoryIncrease;
-			return true;
-		}
+        MessageReader << Event;
+        switch (Event)
+        {
+        case NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK:
+            MessageReader << memoryInfoList;
+            return true;
+        case NS_SLUA::ProfilerHookEvent::PHE_MEMORY_INCREACE:
+            MessageReader << memoryIncrease;
+            return true;
+        default:
+            break;
+        }
         
-		MessageReader << Time;
-		MessageReader << Linedefined;
-		MessageReader << Name;
-		MessageReader << ShortSrc;
+        MessageReader << Time;
+        MessageReader << Linedefined;
+        MessageReader << Name;
+        MessageReader << ShortSrc;
         
-		return true;
-	}
+        return true;
+    }
 }

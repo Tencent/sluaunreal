@@ -11,36 +11,46 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 
-
 #include "LuaUserWidget.h"
-
-#if (ENGINE_MINOR_VERSION>20) && (ENGINE_MAJOR_VERSION>=4)
-void ULuaUserWidget::NativeOnInitialized()
-{
-	Super::NativeOnInitialized();
-	CallLuaFunction(TEXT("Initialize"));
-}
-#endif
 
 bool ULuaUserWidget::Initialize()
 {
-	bool bIsInited = Super::Initialize();
-	if (bIsInited)
-	{
-		CallLuaFunction(TEXT("Initialize"));
-	}
+    bool bIsInited = Super::Initialize();
+    if (bIsInited)
+    {
+        UE_LOG(Slua, Verbose, TEXT("ULuaUserWidget[%s] Initialize [%s]!"), *GetName(), *LuaFilePath);
 
-	return bIsInited;
+        if (GetSelfTable().isValid())
+        {
+            CallLuaFunction(TEXT("Initialize"));
+        }
+    }
+
+    return bIsInited;
 }
 
 void ULuaUserWidget::BeginDestroy()
 {
-	CallLuaFunction(TEXT("OnDestroy"));
-	
-	Super::BeginDestroy();
+    auto SelfTable = GetSelfTable();
+    if (SelfTable.isValid())
+    {
+        auto OnDestroyFunc = SelfTable.getFromTable<NS_SLUA::LuaVar>("OnDestroy");
+        if (OnDestroyFunc.isFunction())
+        {
+            OnDestroyFunc.call(SelfTable);
+        }
+        else
+        {
+            NS_SLUA::Log::Error("ULuaUserWidget[%s] missing OnDestroy function [%s]!", TCHAR_TO_UTF8(*GetName()), TCHAR_TO_UTF8(*LuaFilePath));
+        }
+    }
+
+    UE_LOG(Slua, Log, TEXT("ULuaUserWidget[%s] BeginDestroy [%s]!"), *GetName(), *LuaFilePath);
+    
+    Super::BeginDestroy();
 }
 
 FString ULuaUserWidget::GetLuaFilePath_Implementation() const
 {
-	return LuaFilePath;
+    return LuaFilePath;
 }

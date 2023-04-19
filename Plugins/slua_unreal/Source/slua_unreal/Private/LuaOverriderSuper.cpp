@@ -1,166 +1,129 @@
 #include "LuaOverriderSuper.h"
 
+#include "LuaFunctionAccelerator.h"
 #include "LuaObject.h"
 #include "LuaOverrider.h"
 
 namespace NS_SLUA
 {
-	template<typename T>
-	UFunction* getSuperOrRpcFunction(lua_State* L)
-	{
-		CheckUD(T, L, 1);
-		lua_getmetatable(L, 1);
-		const char* name = LuaObject::checkValue<const char*>(L, 2);
+    template<typename T>
+    UFunction* getSuperFunction(lua_State* L)
+    {
+        CheckUD(T, L, 1);
+        lua_getmetatable(L, 1);
+        const char* name = lua_tostring(L, 2);
 
-		lua_getfield(L, -1, name);
-		lua_remove(L, -2); // remove mt of ud
-		if (!lua_isnil(L, -1)) 
-		{
-			return nullptr;
-		}
+        lua_getfield(L, -1, name);
+        lua_remove(L, -2); // remove mt of ud
+        if (!lua_isnil(L, -1))
+        {
+            return nullptr;
+        }
 
-		UObject* obj = UD->base.Get();
-		if (!obj)
-			luaL_error(L, "Context is invalid");
+        UObject* obj = UD->base.Get();
+        if (!obj)
+            luaL_error(L, "Context is invalid");
 
-		UClass* cls = obj->GetClass();
-		FName funcName = UTF8_TO_TCHAR(name);
-		UFunction* func = cls->FindFunctionByName(funcName);
-		
-		while (func && cls && !ULuaOverrider::getSuperNativeFunc(func))
-		{
-			cls = cls->GetSuperClass();
-			if (cls)
-				func = cls->FindFunctionByName(funcName);
-		}
-		
-		if (!func)
-			luaL_error(L, "Can't find function %s in super", name);
+        UClass* cls = obj->GetClass();
+        FString funcName = UTF8_TO_TCHAR(name);
+        extern const FString SUPER_CALL_FUNC_NAME_PREFIX;
+        UFunction* cachedFunc = cls->FindFunctionByName(FName(*(SUPER_CALL_FUNC_NAME_PREFIX + funcName)));
+        if (cachedFunc)
+        {
+            static UClass* InterfaceClass = UInterface::StaticClass();
+            UClass* superClass = (UClass*)cachedFunc->GetSuperStruct();
+            UClass* superFuncOuter = superClass ? (UClass*)superClass->GetOuter() : nullptr;
+            if (superFuncOuter && superFuncOuter->IsChildOf(InterfaceClass)) // fixed UInterface's UFunction Super Call in lua
+            {
+                auto superFunc = superFuncOuter->FindFunctionByName(*funcName);
+                if (superFunc)
+                {
+                    cachedFunc = superFunc;
+                }
+            }
+            return cachedFunc;
+        }
+        luaL_error(L, "Can't find function %s in super", name);
+        return nullptr;
+    }
 
-		if ((func->FunctionFlags & FUNC_Native) == 0)
-			luaL_error(L, "Super only support with native UFunction[%s]!", name);
+    int LuaSuperCall::setupMetatable(lua_State* L)
+    {
+        LuaObject::setupMTSelfSearch(L);
+        RegMetaMethodByName(L, "__index", __superIndex);
+        return 0;
+    }
 
-		return func;
-	}
+    int LuaSuperCall::__superIndex(lua_State* L)
+    {
+        if (lua_getuservalue(L, 1) != LUA_TNIL)
+        {
+            lua_pushvalue(L, 2);
+            if (lua_rawget(L, -2) != LUA_TNIL)
+            {
+                return 1;
+            }
+        }
+        lua_pop(L, 1);
+        
+        UFunction* func = getSuperFunction<LuaSuperCall>(L);
+        if (!func) return 1;
 
-	class GuardNativeFunc
-	{
-	public:
-		GuardNativeFunc(UFunction* func, NS_SLUA::FNativeType newNativeFunc)
-		{
-			ufunc = func;
-			oldNative = func->GetNativeFunc();
-			func->SetNativeFunc(newNativeFunc);
+        lua_pushlightuserdata(L, LuaFunctionAccelerator::findOrAdd(func));
+        lua_pushcclosure(L, __superCall, 1);
 
-			auto flags = func->FunctionFlags;
-			hasNativeFlag = (flags & FUNC_Native) != 0;
-			if (!hasNativeFlag)
-			{
-				func->FunctionFlags = flags | FUNC_Native;
-			}
-		}
+        if (lua_getuservalue(L, 1) == LUA_TNIL)
+        {
+            lua_pop(L, 1);
+            lua_newtable(L);
+            lua_setuservalue(L, 1);
+            L->top++;
+        }
+        lua_pushvalue(L, 2);
+        lua_pushvalue(L, -3);
+        lua_rawset(L, -3);
 
-		~GuardNativeFunc()
-		{
-			ufunc->SetNativeFunc(oldNative);
-			if (!hasNativeFlag)
-			{
-				ufunc->FunctionFlags &= ~FUNC_Native;
-			}
-		}
+        lua_pop(L, 1);
+        
+        return 1;
+    }
 
-	protected:
-		UFunction* ufunc;
-		NS_SLUA::FNativeType oldNative;
-		bool hasNativeFlag;
-	};
-	
-	int LuaSuperOrRpc::setupMetatable(lua_State* L)
-	{
-		LuaObject::setupMTSelfSearch(L);
-		RegMetaMethodByName(L, "__index", __superIndex);
-		return 0;
-	}
+    int LuaSuperCall::__superCall(lua_State* L)
+    {
+        CheckUD(LuaSuperCall, L, 1);
+        auto base = UD->base;
+        UObject* obj = base.Get();
+        if (!obj)
+            luaL_error(L, "Context is invalid");
 
-	int LuaSuperOrRpc::__superIndex(lua_State* L) {
+        lua_pushvalue(L, lua_upvalueindex(1));
+        auto* funcAcc = (LuaFunctionAccelerator*)lua_touserdata(L, -1);
+        auto func = funcAcc->func;
+        if (!IsValid(func) || !func->IsValidLowLevel())
+            luaL_error(L, "Super function is invalid");
+        lua_pop(L, 1);
 
-		UFunction* func = getSuperOrRpcFunction<LuaSuperOrRpc>(L);
-		if (!func) return 1;
+        return UD->superCall(L, funcAcc);
+    }
 
-		lua_pushlightuserdata(L, func);
-		lua_pushcclosure(L, __superCall, 1);
-		return 1;
-	}
+    int LuaSuperCall::superCall(lua_State* L, LuaFunctionAccelerator* funcAcc)
+    {
+        UObject* obj = base.Get();
+        if (!obj)
+        {
+            return 0;
+        }
 
-	int LuaSuperOrRpc::__superCall(lua_State* L)
-	{
-		CheckUD(LuaSuperOrRpc, L, 1);
-		auto base = UD->base;
-		UObject* obj = base.Get();
-		if (!obj)
-			luaL_error(L, "Context is invalid");
-		
-		lua_pushvalue(L, lua_upvalueindex(1));
-		UFunction* func = (UFunction*)lua_touserdata(L, -1);
-		if (!func || !func->IsValidLowLevel())
-			luaL_error(L, "Super function is isvalid");
-		lua_pop(L, 1);
-		
-		return UD->superOrRpcCall(L, func);
-	}
+        bool isLatentFunction;
+        int outParamCount;
+        {
+            NewObjectRecorder objectRecorder(L);
+            outParamCount = funcAcc->call(L, 2, obj, isLatentFunction, &objectRecorder);
+        }
 
-	int LuaSuperOrRpc::superOrRpcCall(lua_State* L, UFunction* func)
-	{
-		UObject* obj = base.Get();
-		if (!obj)
-		{
-			return 0;
-		}
-
-		NS_SLUA::FNativeType superNative = ULuaOverrider::getSuperNativeFunc(func);
-		if (!superNative)
-		{
-			NS_SLUA::Log::Error("LuaOverrider SuperOrRpcCall not isValid UObject[%s] of FunctionName[%s]", TCHAR_TO_UTF8(*(obj->GetName())), TCHAR_TO_UTF8(*(func->GetName())));
-			return 0;
-		}
-
-		bool isLatentFunction = false;
-		int outParamCount = 0;
-
-		// Avoid longjump break objectRecorder's destruction at iOS.
-		{
-			NewObjectRecorder objectRecorder(L);
-
-			uint8* params = (uint8*)FMemory_Alloca(func->ParmsSize);
-			FMemory::Memzero(params, func->ParmsSize);
-			for (TFieldIterator<UProperty> it(func); it && it->HasAnyPropertyFlags(CPF_Parm); ++it)
-			{
-				UProperty* localProp = *it;
-				checkSlow(localProp);
-				if (!localProp->HasAnyPropertyFlags(CPF_ZeroConstructor))
-				{
-					localProp->InitializeValue_InContainer(params);
-				}
-			}
-
-			LuaObject::fillParam(L, 2, func, params);
-			{
-				GuardNativeFunc nativeFuncGuard(func, superNative);
-				// call function with params
-				LuaObject::callUFunction(L, obj, func, params);
-			}
-			// return value to push lua stack
-			outParamCount = LuaObject::returnValue(L, func, params, &objectRecorder, isLatentFunction);
-
-			for (TFieldIterator<UProperty> it(func); it && (it->HasAnyPropertyFlags(CPF_Parm)); ++it)
-			{
-				it->DestroyValue_InContainer(params);
-			}
-		}
-
-		if (isLatentFunction)
-			return lua_yield(L, outParamCount);
-		return outParamCount;
-	}
+        if (isLatentFunction)
+            return lua_yield(L, outParamCount);
+        return outParamCount;
+    }
 }
 

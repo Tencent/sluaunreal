@@ -18,145 +18,144 @@
 #include "Containers/Queue.h"
 #include "Interfaces/IPv4/IPv4Endpoint.h"
 #include "LuaMemoryProfile.h"
-#include "Templates/SharedPointer.h"
-#include "Serialization/ArrayWriter.h"
-#include "Serialization/ArrayReader.h"
-#include "Delegates/DelegateCombinations.h"
+#include "SharedPointer.h"
+#include "ArrayReader.h"
+#include "DelegateCombinations.h"
 
 class FSocket;
 class FTcpListener;
 
 namespace NS_SLUA {
-	class FProfileConnection;
-	class FProfileMessage;
+    class FProfileConnection;
+    class FProfileMessage;
     
-	typedef TSharedPtr<FProfileMessage, ESPMode::ThreadSafe> FProfileMessagePtr;
-	DECLARE_DELEGATE_OneParam(FOnProfileMessageDelegate, FProfileMessagePtr);
+    typedef TSharedPtr<FProfileMessage, ESPMode::ThreadSafe> FProfileMessagePtr;
+    DECLARE_DELEGATE_OneParam(FOnProfileMessageDelegate, FProfileMessagePtr);
 
-	class FProfileServer : public FRunnable
-	{
-	public:
-		FProfileServer();
-		~FProfileServer();
+    class FProfileServer : public FRunnable
+    {
+    public:
+        FProfileServer();
+        ~FProfileServer();
 
-		FOnProfileMessageDelegate& OnProfileMessageRecv();
+        FOnProfileMessageDelegate& OnProfileMessageRecv();
 
         TArray<TSharedPtr<FProfileConnection>> GetConnections();
         
-	protected:
-		bool Init() override;
-		uint32 Run() override;
-		void Stop() override;
-		
-		void StopTransport();
+    protected:
+        bool Init() override;
+        uint32 Run() override;
+        void Stop() override;
+        
+        void StopTransport();
 
-	private:
-		/** Callback for accepted connections to the local server. */
-		bool HandleConnectionAccepted(FSocket* ClientSocket, const FIPv4Endpoint& ClientEndpoint);
+    private:
+        /** Callback for accepted connections to the local server. */
+        bool HandleConnectionAccepted(FSocket* ClientSocket, const FIPv4Endpoint& ClientEndpoint);
 
-		FRunnableThread* Thread;
+        FRunnableThread* Thread;
 
-		FIPv4Endpoint ListenEndpoint;
+        FIPv4Endpoint ListenEndpoint;
 
-		FTcpListener* Listener;
+        FTcpListener* Listener;
 
-		/** Current connections */
-		TArray<TSharedPtr<FProfileConnection>> Connections;
+        /** Current connections */
+        TArray<TSharedPtr<FProfileConnection>> Connections;
 
-		/** Holds a queue of pending connections. */
-		TQueue<TSharedPtr<FProfileConnection>, EQueueMode::Mpsc> PendingConnections;
+        /** Holds a queue of pending connections. */
+        TQueue<TSharedPtr<FProfileConnection>, EQueueMode::Mpsc> PendingConnections;
         
         FOnProfileMessageDelegate OnProfileMessageDelegate;
 
-		bool bStop;
-	};
+        bool bStop;
+    };
 
-	/**
-	* Implements a TCP message tunnel connection.
-	*/
-	class FProfileConnection
-		: public FRunnable
-		, public TSharedFromThis<FProfileConnection>
-	{
-	public:
-		FProfileConnection(FSocket* InSocket, const FIPv4Endpoint& InRemoteEndpoint);
+    /**
+    * Implements a TCP message tunnel connection.
+    */
+    class FProfileConnection
+        : public FRunnable
+        , public TSharedFromThis<FProfileConnection>
+    {
+    public:
+        FProfileConnection(FSocket* InSocket, const FIPv4Endpoint& InRemoteEndpoint);
 
-		/** Virtual destructor. */
-		virtual ~FProfileConnection();
+        /** Virtual destructor. */
+        virtual ~FProfileConnection();
 
-		void Start();
+        void Start();
 
-	public:
-		enum EConnectionState
-		{
-			STATE_Connecting,					// connecting but don't yet have RemoteNodeId
-			STATE_Connected,					// connected and RemoteNodeId is valid
-			STATE_Disconnected					// disconnected. Previous RemoteNodeId is retained
-		};
+    public:
+        enum EConnectionState
+        {
+            STATE_Connecting,                    // connecting but don't yet have RemoteNodeId
+            STATE_Connected,                    // connected and RemoteNodeId is valid
+            STATE_Disconnected                    // disconnected. Previous RemoteNodeId is retained
+        };
 
-		EConnectionState GetConnectionState() const;
+        EConnectionState GetConnectionState() const;
 
         FSocket* GetSocket();
         
-		bool ReceiveData(TSharedPtr<FProfileMessage, ESPMode::ThreadSafe>& OutMessage);
+        bool ReceiveData(TSharedPtr<FProfileMessage, ESPMode::ThreadSafe>& OutMessage);
         
-		void Close();
+        void Close();
 
-	private:
-		//~ FRunnable interface
-		virtual bool Init() override;
-		virtual uint32 Run() override;
-		virtual void Stop() override;
-		virtual void Exit() override;
+    private:
+        //~ FRunnable interface
+        virtual bool Init() override;
+        virtual uint32 Run() override;
+        virtual void Stop() override;
+        virtual void Exit() override;
 
-	protected:
-		bool ReceiveMessages();
+    protected:
+        bool ReceiveMessages();
 
-		/** Holds the IP endpoint of the remote client. */
-		FIPv4Endpoint RemoteEndpoint;
+        /** Holds the IP endpoint of the remote client. */
+        FIPv4Endpoint RemoteEndpoint;
 
-		/** Holds the connection socket. */
-		FSocket* Socket;
+        /** Holds the connection socket. */
+        FSocket* Socket;
 
-		FRunnableThread* Thread;
+        FRunnableThread* Thread;
 
-		/** Holds the total number of bytes received from the connection. */
-		uint64 TotalBytesReceived;
+        /** Holds the total number of bytes received from the connection. */
+        uint64 TotalBytesReceived;
 
-		/** Holds the collection of received Messages. */
-		TQueue<TSharedPtr<FProfileMessage, ESPMode::ThreadSafe>, EQueueMode::Mpsc> Inbox;
+        /** Holds the collection of received Messages. */
+        TQueue<TSharedPtr<FProfileMessage, ESPMode::ThreadSafe>, EQueueMode::Mpsc> Inbox;
 
-		/** Message data we're currently in the process of receiving, if any */
-		TSharedPtr<FArrayReader, ESPMode::ThreadSafe> RecvMessageData;
+        /** Message data we're currently in the process of receiving, if any */
+        TSharedPtr<FArrayReader, ESPMode::ThreadSafe> RecvMessageData;
 
-		int32 RecvMessageDataRemaining;
+        int32 RecvMessageDataRemaining;
         
         int hookEvent;
 
-		EConnectionState ConnectionState;
+        EConnectionState ConnectionState;
 
-		bool bRun;
-	};
+        bool bRun;
+    };
 
-	class FProfileMessage
-	{
-	public:
-		FProfileMessage();
-		~FProfileMessage();
+    class FProfileMessage
+    {
+    public:
+        FProfileMessage();
+        ~FProfileMessage();
 
-		bool Deserialize(const TSharedPtr<FArrayReader, ESPMode::ThreadSafe>& Message);
+        bool Deserialize(const TSharedPtr<FArrayReader, ESPMode::ThreadSafe>& Message);
 
-	public:
-		int Event;
-		int64 Time;
+    public:
+        int Event;
+        int64 Time;
 
-		int Linedefined;
-		FString Name;
-		FString ShortSrc;
+        int Linedefined;
+        FString Name;
+        FString ShortSrc;
         
         //Memory infomation
         TArray<NS_SLUA::LuaMemInfo> memoryInfoList;
-		TArray<NS_SLUA::LuaMemInfo> memoryIncrease;
-		TArray<NS_SLUA::LuaMemInfo> memoryDecrease;
-	};
+        TArray<NS_SLUA::LuaMemInfo> memoryIncrease;
+        TArray<NS_SLUA::LuaMemInfo> memoryDecrease;
+    };
 }

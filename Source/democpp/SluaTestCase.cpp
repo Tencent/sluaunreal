@@ -303,11 +303,11 @@ namespace NS_SLUA {
 		DefLuaMethod(SetVerb, &IHttpRequest::SetVerb)
 		DefLuaMethod(ProcessRequest, &IHttpRequest::ProcessRequest)
 		DefLuaMethod(SetURL, &IHttpRequest::SetURL)
-		DefLuaMethod(SetContent, &IHttpRequest::SetContent)
-		DefLuaMethod(OnRequestProgress, &IHttpRequest::OnRequestProgress)
-		DefLuaMethod(OnProcessRequestComplete, &IHttpRequest::OnProcessRequestComplete)
+		//DefLuaMethod(SetContent, &IHttpRequest::SetContent)
+		//DefLuaMethod(OnRequestProgress, &IHttpRequest::OnRequestProgress)
+		//DefLuaMethod(OnProcessRequestComplete, &IHttpRequest::OnProcessRequestComplete)
 #if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
-		DefLuaMethod(OnHeaderReceived, &IHttpRequest::OnHeaderReceived)
+		//DefLuaMethod(OnHeaderReceived, &IHttpRequest::OnHeaderReceived)
 #endif
 	EndDef(IHttpRequest, nullptr)
 

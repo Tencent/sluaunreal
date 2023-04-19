@@ -13,15 +13,18 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "lua.hpp"
+
+DECLARE_LOG_CATEGORY_EXTERN(Slua, Log, All);
 
 namespace NS_SLUA {
     namespace Log {
 
         void SLUA_UNREAL_API Error(const char* fmt,...);
         void SLUA_UNREAL_API Log(const char* fmt,...);
+        void SLUA_UNREAL_API Verbose(const char* fmt, ...);
         
         void SLUA_UNREAL_API Error(const wchar_t* fmt,...);
         void SLUA_UNREAL_API Log(const wchar_t* fmt,...);
+        void SLUA_UNREAL_API Verbose(const wchar_t* fmt, ...);
     }
 }

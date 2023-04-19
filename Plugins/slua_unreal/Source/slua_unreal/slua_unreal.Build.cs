@@ -92,14 +92,18 @@ public class slua_unreal : ModuleRules
                 "Slate",
                 "SlateCore",
                 "UMG",
+				"InputCore",
+				"NetCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
             );
 
 #if UE_4_21_OR_LATER
         PublicDefinitions.Add("ENABLE_PROFILER");
+        PublicDefinitions.Add("NS_SLUA=slua");
 #else
         Definitions.Add("ENABLE_PROFILER");
+        Definitions.Add("NS_SLUA=slua");
 #endif
 
 

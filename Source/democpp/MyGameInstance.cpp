@@ -26,16 +26,21 @@ static uint8* ReadFile(IPlatformFile& PlatformFile, FString path, uint32& len) {
 	return nullptr;
 }
 
-UMyGameInstance::UMyGameInstance() :state("main",this) {
-
+UMyGameInstance::UMyGameInstance() : state(nullptr)
+{
+if (!HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
+	{
+		CreateLuaState();
+	}
 }
 
-void UMyGameInstance::Init()
+void UMyGameInstance::CreateLuaState()
 {
-	NS_SLUA::LuaState::onInitEvent.AddUObject(this, &UMyGameInstance::LuaStateInitCallback);
-	state.init();
+    NS_SLUA::LuaState::onInitEvent.AddUObject(this, &UMyGameInstance::LuaStateInitCallback);
 
-	state.setLoadFileDelegate([](const char* fn, FString& filepath)->TArray<uint8> {
+	CloseLuaState();
+	state = new NS_SLUA::LuaState("SLuaMainState", this);
+	state->setLoadFileDelegate([](const char* fn, FString& filepath)->TArray<uint8> {
 
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 		FString path = FPaths::ProjectContentDir();
@@ -57,11 +62,28 @@ void UMyGameInstance::Init()
 
 		return MoveTemp(Content);
 	});
+	state->init();
+}
+
+void UMyGameInstance::CloseLuaState()
+{
+    if (state)
+    {
+    	state->close();
+		delete state;
+        state = nullptr;
+    }
+	
+}
+
+void UMyGameInstance::Init()
+{
+	Super::Init();
 }
 
 void UMyGameInstance::Shutdown()
 {
-	state.close();
+	CloseLuaState();
 }
 
 static int32 PrintLog(NS_SLUA::lua_State *L)

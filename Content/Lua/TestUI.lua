@@ -12,7 +12,7 @@ local handler = btn2.OnClicked:Add(function()
 end);
 
 -- can use key to index ui
-local bpClass = slua.loadClass("/Game/TestActor.TestActor")
+local bpClass = import("/Game/TestActor.TestActor_C")
 
 local btn1 = ui["Button_0"]
 local h_openmap = btn1.OnClicked:Add(function()

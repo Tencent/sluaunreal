@@ -1,13 +1,13 @@
 
 local WBL = import("WidgetBlueprintLibrary")
 
-local panel ={}
+local Panel ={}
 
-function panel:Initialize() 
+function Panel:Initialize()
 
 end
 
-function panel:Construct()
+function Panel:Construct()
     print"panel:Construct"
     self.bHasScriptImplementedTick = true
 
@@ -27,18 +27,18 @@ function panel:Construct()
     print("over ret",ok,str)
 end
 
-function panel:MyOverride()
+function Panel:MyOverride()
     print"MyOverride lua"
     self.Super:MyOverride()
     return false,"return from lua"
 end
 
-function panel:Destruct()
+function Panel:Destruct()
     print"panel:Destruct"
     self.imgs = nil
 end
 
-function panel:Tick(geom,dt)
+function Panel:Tick(geom, dt)
     print("panel:tick")
     -- call parent super
     self.Super:Tick(geom,dt)
@@ -54,42 +54,42 @@ function panel:Tick(geom,dt)
     end
 end
 
-function panel:OnDestroy()
+function Panel:OnDestroy()
 end
 
-function panel:OnKeyDown(Geometry,Event)
+function Panel:OnKeyDown(Geometry, Event)
     print"panel:OnKeyDown"
     
 end
 
 local FKey = import "Key"
-function panel:OnMouseButtonDown(Geometry,Event)
+function Panel:OnMouseButtonDown(Geometry, Event)
     local key = FKey()
     key.KeyName = "LeftMouseButton"
     print("panel:OnMouseButtonDown",FKey,key)
     return WBL.DetectDragIfPressed(Event,self,key)
 end
 
-function panel:OnFocusReceived(Geometry,Event)
+function Panel:OnFocusReceived(Geometry, Event)
     print"panel:OnFocusReceived"
 end
 
-function panel:OnMouseMove(Geometry,Event)
+function Panel:OnMouseMove(Geometry, Event)
     print"panel:OnMouseMove"
     return WBL.Handled()
 end
 
-local DragOPCls = slua.loadClass("/Game/MyDragOP.MyDragOP")
-function panel:OnDragDetected(Geometry,PointerEvent,Operation)
+local DragOPCls = import("/Game/MyDragOP.MyDragOP_C")
+function Panel:OnDragDetected(Geometry, PointerEvent, Operation)
     return WBL.CreateDragDropOperation(DragOPCls)
 end
 
-function panel:OnDragEnter(Geometry,Event,Operation)
+function Panel:OnDragEnter(Geometry, Event, Operation)
     print("panel:OnDragEnter",Operation)
 end
 
-function panel:OnDragLeave(Event,Operation)
+function Panel:OnDragLeave(Event, Operation)
     print("panel:OnDragLeave",Operation)
 end
 
-return panel
+return class(nil, nil, Panel)

@@ -145,24 +145,24 @@ Slua:     call from bp    1024    Hello World 3.1400001049042 UObject: 0x1364861
 
 ```lua
 -- LuaActor.lua
-local actor={}
+local LuaActor={}
 
 -- override event from blueprint
-function actor:BeginPlay()
+function LuaActor:BeginPlay()
     self.bCanEverTick = true
-    print("actor:BeginPlay")
+    print("LuaActor:BeginPlay")
 end
 
-function actor:Tick(dt)
-    print("actor:Tick",self,dt)
-    -- call actor function
+function LuaActor:Tick(dt)
+    print("LuaActor:Tick",self,dt)
+    -- call LuaActor function
     local pos = self:K2_GetActorLocation()
     -- can pass self as Actor*
     local dist = self:GetHorizontalDistanceTo(self)
-    print("actor pos",pos,dist)
+    print("LuaActor pos",pos,dist)
 end
 
-return actor
+return Class(nil, nil, LuaActor)
 ```
 
 ![](luaactor.png)

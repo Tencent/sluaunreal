@@ -1,17 +1,15 @@
+local Map2Actor ={}
 
-
-local actor={}
-
-local EPropertyClass = import"EPropertyClass"
+local EPropertyClass = import("EPropertyClass")
 -- override event from blueprint
-function actor:ReceiveBeginPlay()
+function Map2Actor:ReceiveBeginPlay()
     self.bCanEverTick = true
     -- set bCanBeDamaged property in parent
     self.bCanBeDamaged = false
     print("actor:ReceiveBeginPlay")
 
     local world = self:GetWorld()
-    local bpClass = slua.loadClass("/Game/TestActor.TestActor")
+    local bpClass = import("/Game/TestActor.TestActor_C")
 
     self.basepos={}
     self.rot={}
@@ -27,18 +25,10 @@ function actor:ReceiveBeginPlay()
     end
     self.Super:ReceiveBeginPlay()
 
-    -- test an issue
-    -- callLastMapActorMethod()
-end
-
-function callLastMapActorMethod()
-    for k,v in pairs(gactor.objs) do
-        print(k,v)
-    end
 end
 
 -- override event from blueprint
-function actor:ReceiveEndPlay(reason)
+function Map2Actor:ReceiveEndPlay(reason)
     print("actor:ReceiveEndPlay")
     self.Super:ReceiveEndPlay(reason)
 
@@ -46,7 +36,7 @@ end
 
 local HitResult = import('HitResult');
 local tt=0
-function actor:Tick(dt)
+function Map2Actor:Tick(dt)
     tt=tt+dt
     for i=1,10 do
         local actor = self.ballarr:Get(i-1)
@@ -60,4 +50,4 @@ function actor:Tick(dt)
     self.Super:Tick(dt)
 end
 
-return actor
+return Class(nil, nil, Map2Actor)

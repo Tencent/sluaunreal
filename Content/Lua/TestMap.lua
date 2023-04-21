@@ -58,9 +58,9 @@ local function test()
 	assert(t.maps:Num()==0)
 end
 
-TestMap={}
+local TestMap={}
 function TestMap.update()
     test()
 end
 
-return TestMap
+return Class(ni, nil, TestMap)

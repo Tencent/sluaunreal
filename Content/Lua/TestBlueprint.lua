@@ -7,7 +7,7 @@ local HitResult = import('HitResult');
 
 function testcase:test(uworld,uactor)
     print("=====Begin test blueprint")
-    local bpClass = slua.loadClass("/Game/TestActor.TestActor")
+    local bpClass = import("/Game/TestActor.TestActor_C")
     -- get out TArray for actors
     local arr=GameplayStatics.GetAllActorsOfClass(uactor,bpClass,nil)
 
@@ -22,7 +22,7 @@ function testcase:test(uworld,uactor)
     -- store old actor for map2 use, test a bug
     oldactor = self
 
-    local bpClass = slua.loadClass("/Game/LuaBpActor.LuaBpActor")
+    local bpClass = import("/Game/LuaBpActor.LuaBpActor_C")
 
     self.balls={}
     self.basepos={}

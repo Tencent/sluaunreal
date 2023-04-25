@@ -18,7 +18,7 @@
 #include "LuaState.h"
 #include "LuaProfiler.h"
 #include "Log.h"
-#include "Paths.h"
+#include "Misc/Paths.h"
 #include "Misc/ConfigCacheIni.h"
 
 namespace NS_SLUA {

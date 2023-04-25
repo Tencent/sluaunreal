@@ -19,7 +19,7 @@
 #include <memory>
 #include <atomic>
 
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
 #include "UObject/WeakFieldPtr.h"
 #endif
 #include "HAL/Runnable.h"
@@ -206,7 +206,7 @@ namespace NS_SLUA {
         // unlink UObject, flag Object had been free, and remove from cache and objRefs
         void unlinkUObject(const UObject * Object,void* userdata=nullptr);
 
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<23) && (ENGINE_MAJOR_VERSION==4))
         void OnUObjectArrayShutdown() override;
 #endif
 
@@ -219,7 +219,7 @@ namespace NS_SLUA {
         // tell Engine which objs should be referenced
         virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
 
-#if (ENGINE_MINOR_VERSION>=20) || (ENGINE_MAJOR_VERSION>4)
+#if !((ENGINE_MINOR_VERSION<20) && (ENGINE_MAJOR_VERSION==4))
         virtual FString GetReferencerName() const override
         {
             return "LuaState";

@@ -16,7 +16,7 @@
 #if WITH_EDITOR
 #include "Editor.h"
 #include "LuaOverrider.h"
-#include "FileHelper.h"
+#include "Misc/FileHelper.h"
 
 namespace NS_SLUA {
     LuaState::LoadFileDelegate LuaSimulate::Delegate = nullptr;
@@ -83,10 +83,11 @@ namespace NS_SLUA {
         }
     }
     
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<23) && (ENGINE_MAJOR_VERSION==4))
     void LuaSimulate::OnUObjectArrayShutdown()
     {
-
+        GUObjectArray.RemoveUObjectCreateListener(this);
+        GUObjectArray.RemoveUObjectDeleteListener(this);
     }
 #endif
     

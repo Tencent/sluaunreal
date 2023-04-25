@@ -1,14 +1,14 @@
 #include "SluaProfilerDataManager.h"
-#include "ArchiveLoadCompressedProxy.h"
-#include "ArchiveSaveCompressedProxy.h"
-#include "FileHelper.h"
+#include "Serialization/ArchiveLoadCompressedProxy.h"
+#include "Serialization/ArchiveSaveCompressedProxy.h"
+#include "Misc/FileHelper.h"
 #include "Log.h"
 #include "LuaProfiler.h"
-#include "MemoryReader.h"
-#include "Paths.h"
+#include "Serialization/MemoryReader.h"
+#include "Misc/Paths.h"
 #include <LuaState.h>
 
-#include "RunnableThread.h"
+#include "HAL/RunnableThread.h"
 #define ROOT_NAME "ROOT"
 
 FProfileDataProcessRunnable* SluaProfilerDataManager::ProcessRunnable;
@@ -390,7 +390,13 @@ void FProfileDataProcessRunnable::SaveDataWithData(int CpuViewBeginIndex, int Me
 
     UE_LOG(Slua, Log, TEXT("BEGIN COMPRESSED DATA"));
 
-    FArchiveSaveCompressedProxy CompressProxyLZ4 = FArchiveSaveCompressedProxy(CompressDateLZ4, ECompressionFlags::COMPRESS_ZLIB);
+    //FArchiveSaveCompressedProxy( TArray<uint8>& InCompressedData, FName InCompressionFormat, ECompressionFlags InCompressionFlags=COMPRESS_None);
+#if (ENGINE_MINOR_VERSION<21) && (ENGINE_MAJOR_VERSION==4)
+FArchiveSaveCompressedProxy CompressProxyLZ4 = FArchiveSaveCompressedProxy(CompressDateLZ4, ECompressionFlags::COMPRESS_ZLIB);
+#else
+    FArchiveSaveCompressedProxy CompressProxyLZ4 = FArchiveSaveCompressedProxy(CompressDateLZ4, NAME_Zlib, ECompressionFlags::COMPRESS_ZLIB);
+#endif
+    
     CompressProxyLZ4 << *BufferArchive;
     CompressProxyLZ4.Flush();
     UE_LOG(Slua, Log, TEXT("BEGIN SAVE FILE "));
@@ -418,10 +424,10 @@ void FProfileDataProcessRunnable::LoadData(const TArray<uint8>& FileData, int& C
         bool tempRecording = bIsRecording;
         bIsRecording = false;
         FBufferArchive BufAr;
-#if (ENGINE_MINOR_VERSION>=19) && (ENGINE_MAJOR_VERSION>=4)
-        FArchiveLoadCompressedProxy DecompressProxy = FArchiveLoadCompressedProxy(FileData, NAME_Zlib, ECompressionFlags::COMPRESS_ZLIB);
-#else
+#if (ENGINE_MINOR_VERSION<19) && (ENGINE_MAJOR_VERSION==4)
         FArchiveLoadCompressedProxy DecompressProxy = FArchiveLoadCompressedProxy(FileData, ECompressionFlags::COMPRESS_ZLIB);
+#else
+        FArchiveLoadCompressedProxy DecompressProxy = FArchiveLoadCompressedProxy(FileData, NAME_Zlib, ECompressionFlags::COMPRESS_ZLIB);
 #endif
         DecompressProxy << BufAr;
         DeserializeCompressedSave(&BufAr, CpuViewBeginIndex, MemViewBeginIndex, ProfileData, LuaMemNodeList);
@@ -632,7 +638,11 @@ void FProfileDataProcessRunnable::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemI
         auto* fileInfos = memNode->infoList.Find(memFileInfo.hint);
         if (!fileInfos)
         {
+#if ENGINE_MAJOR_VERSION==5
+            TMap<int, TSharedPtr<FileMemInfo, ESPMode::ThreadSafe>> newFileInfos;
+#else
             TMap<int, TSharedPtr<FileMemInfo, ESPMode::Fast>> newFileInfos;
+#endif
             fileInfos = &memNode->infoList.Add(memFileInfo.hint, newFileInfos);
         }
 

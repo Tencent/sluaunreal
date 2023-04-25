@@ -221,10 +221,10 @@ namespace NS_SLUA {
             if (!isFunction()) {
                 Log::Error("LuaVar is not a function, can't be called");
 #if UE_BUILD_DEVELOPMENT
-#if (ENGINE_MINOR_VERSION>=26) && (ENGINE_MAJOR_VERSION>=4)
-                FDebug::DumpStackTraceToLog(ELogVerbosity::Type::Verbose);
-#else
+#if (ENGINE_MINOR_VERSION<26) && (ENGINE_MAJOR_VERSION==4)
                 FDebug::DumpStackTraceToLog();
+#else
+                FDebug::DumpStackTraceToLog(ELogVerbosity::Type::Verbose);
 #endif
 #endif
                 return LuaVar();
@@ -257,10 +257,10 @@ namespace NS_SLUA {
         LuaVar callField(const char* field, ARGS&& ...args) const {
             if (!isTable()) {
 #if UE_BUILD_DEVELOPMENT
-#if (ENGINE_MINOR_VERSION>=26) && (ENGINE_MAJOR_VERSION>=4)
-                FDebug::DumpStackTraceToLog(ELogVerbosity::Type::Verbose);
-#else
+#if (ENGINE_MINOR_VERSION<26) && (ENGINE_MAJOR_VERSION==4)
                 FDebug::DumpStackTraceToLog();
+#else
+                FDebug::DumpStackTraceToLog(ELogVerbosity::Type::Verbose);
 #endif
 #endif
                 Log::Error("LuaVar is not a table, can't call field");

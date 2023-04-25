@@ -1,10 +1,10 @@
-#include "lpb.h"
+#include "luaprotobuf/lpb.h"
 #include <stdio.h>
 #include "lua.h"
 #include "lauxlib.h"
-#include "pb.h"
-#include "StringConv.h"
-#include "UnrealString.h"
+#include "luaprotobuf/pb.h"
+#include "Containers/StringConv.h"
+#include "Containers/UnrealString.h"
 
 // Disable warning "interaction between '_setjmp' and C++ object destruction is non-portable"
 #ifdef _MSC_VER

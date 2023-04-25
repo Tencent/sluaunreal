@@ -1,5 +1,5 @@
 #include "LuaPlayerController.h"
-#include "UnrealNetwork.h"
+#include "Net/UnrealNetwork.h"
 
 ALuaPlayerController::ALuaPlayerController(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -22,8 +22,8 @@ void ALuaPlayerController::PostInitializeComponents()
 void ALuaPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-    if (!FLuaNetSerialization::bEnableLuaNetReplicate)
+    
     {
-        DOREPLIFETIME_CONDITION(ALuaPlayerController, LuaNetSerialization, COND_Max);
+        DOREPLIFETIME_CONDITION(ALuaPlayerController, LuaNetSerialization, COND_None);
     }
 }

@@ -3,12 +3,12 @@
 #pragma once
 
 #include "ProfileDataDefine.h"
-#include "ModuleManager.h"
-#include "Queue.h"
-#include "Array.h"
-#include "Ticker.h"
-#include "BufferArchive.h"
-#include "Runnable.h"
+#include "Modules/ModuleManager.h"
+#include "Containers/Queue.h"
+#include "Containers/Array.h"
+#include "Containers/Ticker.h"
+#include "Serialization/BufferArchive.h"
+#include "HAL/Runnable.h"
 
 class SLUA_UNREAL_API FProfileDataProcessRunnable : public FRunnable
 {

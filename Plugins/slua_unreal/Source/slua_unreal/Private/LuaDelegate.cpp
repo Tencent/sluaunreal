@@ -75,7 +75,7 @@ namespace NS_SLUA {
     struct LuaMultiDelegateWrap {
         FMulticastScriptDelegate* delegate;
         LuaFunctionAccelerator* funcAcc;
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
         FMulticastSparseDelegateProperty* sparseProp = nullptr;
         FSparseDelegate* sparseDelegate = nullptr;
 #endif
@@ -109,7 +109,7 @@ namespace NS_SLUA {
         // add event listener
         FScriptDelegate Delegate;
         Delegate.BindUFunction(obj, TEXT("EventTrigger"));
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
         if (UD->sparseProp)
         {
             UD->sparseProp->AddDelegate(Delegate, nullptr, UD->sparseDelegate);
@@ -145,7 +145,7 @@ namespace NS_SLUA {
         Delegate.BindUFunction(obj, TEXT("EventTrigger"));
 
         // remove delegate
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
         if (UD->sparseProp)
         {
             UD->sparseProp->RemoveDelegate(Delegate, nullptr, UD->sparseDelegate);
@@ -177,7 +177,7 @@ namespace NS_SLUA {
                 }
             }
         };
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
         if (UD->sparseProp)
         {
             const FMulticastScriptDelegate* scriptDelegate = UD->sparseProp->GetMulticastDelegate(UD->sparseDelegate);
@@ -214,7 +214,7 @@ namespace NS_SLUA {
             UD->funcAcc->fillParam(L, 2, nullptr, callback, isLatentFunction);
         };
 
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
         if (UD->sparseProp)
         {
             if (!UD->sparseDelegate->IsBound())
@@ -262,7 +262,7 @@ namespace NS_SLUA {
         return LuaObject::pushType<LuaMultiDelegateWrap*>(L,wrapobj,"LuaMultiDelegateWrap",setupMT,gc);
     }
 
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
     int LuaMultiDelegate::push(lua_State* L,FMulticastSparseDelegateProperty* prop,FSparseDelegate* sparseDelegate,UFunction* ufunc,const FString& pName)
     {
 #if WITH_EDITOR

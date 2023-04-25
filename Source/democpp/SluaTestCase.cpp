@@ -19,8 +19,8 @@
 #include "Blueprint/UserWidget.h"
 #include "Misc/AssertionMacros.h"
 #include "HttpModule.h"
-#include "IHttpRequest.h"
-#include "IHttpResponse.h"
+#include "Interfaces/IHttpRequest.h"
+#include "Interfaces/IHttpResponse.h"
 
 
 namespace NS_SLUA {
@@ -210,7 +210,7 @@ namespace NS_SLUA {
 		}
 
 		TMap<int,FString> getTMap() {
-#if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<20) && (ENGINE_MAJOR_VERSION==4))
 			return { {1,"s"},{2,"a"},{3,"b"} };
 #else
 			TMap<int, FString> ret;
@@ -306,7 +306,7 @@ namespace NS_SLUA {
 		//DefLuaMethod(SetContent, &IHttpRequest::SetContent)
 		//DefLuaMethod(OnRequestProgress, &IHttpRequest::OnRequestProgress)
 		//DefLuaMethod(OnProcessRequestComplete, &IHttpRequest::OnProcessRequestComplete)
-#if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<20) && (ENGINE_MAJOR_VERSION==4))
 		//DefLuaMethod(OnHeaderReceived, &IHttpRequest::OnHeaderReceived)
 #endif
 	EndDef(IHttpRequest, nullptr)

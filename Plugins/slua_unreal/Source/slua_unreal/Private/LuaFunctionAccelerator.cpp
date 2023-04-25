@@ -264,7 +264,7 @@ namespace NS_SLUA
         uint8* returnValueAddress = bHasReturnParam ? ((uint8*)params + func->ReturnValueOffset) : nullptr;
         if (funcFlag & FUNC_Net)
         {
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             int32 functionCallspace = obj->GetFunctionCallspace(func, params, &newStack);
 #else
             int32 functionCallspace = obj->GetFunctionCallspace(func, &newStack);

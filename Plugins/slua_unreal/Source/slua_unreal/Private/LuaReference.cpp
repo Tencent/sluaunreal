@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #include "LuaReference.h"
-#include "UnrealType.h"
+#include "UObject/UnrealType.h"
 
 namespace NS_SLUA {
     namespace LuaReference {
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         const uint64 StructPropertyFlag = FStructProperty::StaticClassCastFlags();
         const uint64 RefPropertyFlag = FObjectProperty::StaticClassCastFlags()
                                         | FArrayProperty::StaticClassCastFlags()
@@ -32,7 +32,7 @@ namespace NS_SLUA {
                                         | FSetProperty::StaticClassCastFlagsPrivate();
 #endif
         bool isRefProperty(const FProperty* prop) {
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             auto castFlags = prop->GetClass()->ClassCastFlags;
 #else
             auto castFlags = prop->GetCastFlags();

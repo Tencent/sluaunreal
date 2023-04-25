@@ -98,7 +98,7 @@ namespace NS_SLUA
 
     ClassLuaReplicated* LuaNet::addClassReplicatedProps(slua::lua_State* L, UObject* obj, const slua::LuaVar& luaModule)
     {
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         typedef NS_SLUA::EPropertyClass EPropertyClass;
 #endif
 
@@ -137,7 +137,7 @@ namespace NS_SLUA
                                 ustruct->AddToRoot();
                             
                                 classReplicated.ustruct = ustruct;
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
                                 NS_SLUA::FField** currentField = &(ustruct->Children);
 #else
                                 FField** currentField = &(ustruct->ChildProperties);
@@ -253,8 +253,12 @@ namespace NS_SLUA
                                          int32& index, int32 offset, int32 ownerPropIndex, ClassLuaReplicated::FlatArrayPropInfo* arrayInfo)
     {
         bool outMost = ustruct == classReplicated.ustruct;
-        
+
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         for (FProperty* iter = (FProperty*)ustruct->Children; iter != nullptr; iter = (FProperty*)iter->Next)
+#else
+        for (auto iter = (FProperty*)ustruct->ChildProperties; iter != nullptr; iter = (FProperty*)iter->Next)
+#endif
         {
             int32 propOffset = offset + iter->GetOffset_ForInternal();
             if (auto structProp = CastField<FStructProperty>(iter))
@@ -278,22 +282,27 @@ namespace NS_SLUA
 
             if (auto arrayProp = CastField<FArrayProperty>(iter))
             {
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
-                ensureMsgf(!arrayInfo, TEXT("Array in array is forbidden with Class[%s]!"), *classReplicated.ownerProperty->GetOwnerUObject()->GetName());
-#else
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
                 ensureMsgf(!arrayInfo, TEXT("Array in array is forbidden with Class[%s]!"), *classReplicated.ownerProperty->GetOuter()->GetName());
+#else
+                ensureMsgf(!arrayInfo, TEXT("Array in array is forbidden with Class[%s]!"), *classReplicated.ownerProperty->GetOwnerUObject()->GetName());
 #endif
-                
-                auto innerStructProp = CastField<FStructProperty>(arrayProp->Inner);
+
+                auto &arrayPropInfo = classReplicated.flatArrayPropInfos.Add(propOffset);
+                arrayPropInfo.propIndex = ownerPropIndex;
+                arrayPropInfo.offset = propOffset;
+                auto inner = arrayProp->Inner;
+                auto innerStructProp = CastField<FStructProperty>(inner);
                 if (innerStructProp)
                 {
-                    auto &arrayPropInfo = classReplicated.flatArrayPropInfos.Add(propOffset);
-                    arrayPropInfo.propIndex = ownerPropIndex;
-                    arrayPropInfo.offset = propOffset;
-                    
                     int32 arrayIndex = 0;
                     initFlatReplicatedProps(classReplicated, arrayPropInfo.markIndex, innerStructProp->Struct, arrayIndex, 0, ownerPropIndex, &arrayPropInfo);
                     arrayPropInfo.innerPropertyNum = arrayIndex;
+                }
+                else
+                {
+                    arrayPropInfo.properties.Add({ownerPropIndex, 0, FLuaNetSerialization::IsSupportSharedSerialize(inner), inner});
+                    arrayPropInfo.innerPropertyNum = 1;
                 }
             }
 
@@ -457,17 +466,18 @@ namespace NS_SLUA
             uint32 checkSum = 0;
             if (fieldCache)
             {
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
-                fieldName = fieldCache->Field ? fieldCache->Field.GetFName().ToString() : fieldName;
-                if (fieldCache->Field && fieldCache->Field.GetOutermost())
-                {
-                    outerName = fieldCache->Field.GetOutermost()->GetFName().ToString();
-                }
-#else
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
                 fieldName = fieldCache->Field ? fieldCache->Field->GetFName().ToString() : fieldName;
                 if (fieldCache->Field && fieldCache->Field->GetOuter())
                 {
                     outerName = fieldCache->Field->GetOuter()->GetFName().ToString();
+                }
+                
+#else
+                fieldName = fieldCache->Field ? fieldCache->Field.GetFName().ToString() : fieldName;
+                if (fieldCache->Field && fieldCache->Field.GetOutermost())
+                {
+                    outerName = fieldCache->Field.GetOutermost()->GetFName().ToString();
                 }
 #endif
                 checkSum = fieldCache->FieldChecksum;
@@ -617,7 +627,7 @@ namespace NS_SLUA
             {
                 LuaVar index;
                 LuaVar paramType;
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
                 FField** propertyStorageLocation = &(func->Children);
 #else
                 FField** propertyStorageLocation = &(func->ChildProperties);

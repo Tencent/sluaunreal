@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "UObjectArray.h"
+#include "UObject/UObjectArray.h"
 #include "LuaState.h"
 
 namespace NS_SLUA {
@@ -19,7 +19,7 @@ namespace NS_SLUA {
 
         void NotifyUObjectCreated(const class UObjectBase* Object, int32 Index) override;
         void NotifyUObjectDeleted(const UObjectBase* Object, int32 Index) override;
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<23) && (ENGINE_MAJOR_VERSION==4))
         void OnUObjectArrayShutdown();
 #endif
 

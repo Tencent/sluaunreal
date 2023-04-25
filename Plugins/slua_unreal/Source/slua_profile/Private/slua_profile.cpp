@@ -13,12 +13,13 @@
 
 #include "slua_profile.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
-#include "FileManager.h"
+#include "HAL/FileManager.h"
 #include "Containers/Ticker.h"
 #include "LuaState.h"
 #if WITH_EDITOR
 #include "LevelEditor.h"
 #include "EditorStyle.h"
+#include "EditorStyleSet.h"
 #endif
 
 #include "LuaProfiler.h"
@@ -74,7 +75,11 @@ void Fslua_profileModule::StartupModule()
             .SetDisplayName(LOCTEXT("Flua_wrapperTabTitle", "slua Profiler"))
             .SetMenuType(ETabSpawnerMenuType::Hidden);
         TickDelegate = FTickerDelegate::CreateRaw(this, &Fslua_profileModule::Tick);
+#if ENGINE_MAJOR_VERSION==5
+        TickDelegateHandle = FTSTicker::GetCoreTicker().AddTicker(TickDelegate);
+#else
         TickDelegateHandle = FTicker::GetCoreTicker().AddTicker(TickDelegate);
+#endif
     }
 
 #endif
@@ -94,7 +99,7 @@ void Fslua_profileModule::ShutdownModule()
 
 void Fslua_profileModule::PluginButtonClicked()
 {
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
     FGlobalTabmanager::Get()->InvokeTab(slua_profileTabName);
 #else
     FGlobalTabmanager::Get()->TryInvokeTab(slua_profileTabName);
@@ -146,9 +151,12 @@ TSharedRef<class SDockTab> Fslua_profileModule::OnSpawnPluginTab(const FSpawnTab
 #if WITH_EDITOR
 Flua_profileCommands::Flua_profileCommands()
     : TCommands<Flua_profileCommands>(slua_profileTabName,
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>0
+        NSLOCTEXT("Contexts", "slua_profile", "slua_profile Plugin"), NAME_None, FAppStyle::GetAppStyleSetName())
+#else
         NSLOCTEXT("Contexts", "slua_profile", "slua_profile Plugin"), NAME_None, FEditorStyle::GetStyleSetName())
+#endif
 {
-
 }
 
 void Flua_profileCommands::RegisterCommands()

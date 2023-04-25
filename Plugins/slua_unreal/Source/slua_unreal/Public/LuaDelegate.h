@@ -63,7 +63,7 @@ namespace NS_SLUA {
     class SLUA_UNREAL_API LuaMultiDelegate {
     public:
         static int push(lua_State* L,FMulticastScriptDelegate* delegate,UFunction* ufunc, const FString& pName);
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
         static int push(lua_State* L,FMulticastSparseDelegateProperty* prop,FSparseDelegate* sparseDelegate,UFunction* ufunc,const FString& pName);
 #endif
     private:
@@ -77,7 +77,7 @@ namespace NS_SLUA {
 
     template<typename R, typename ...ARGS>
     struct LuaDelegateWrapT {
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         TBaseDelegate<R, ARGS...>& delegate;
 
         LuaDelegateWrapT(TBaseDelegate<R, ARGS...>& d) :delegate(d) {}
@@ -104,7 +104,7 @@ namespace NS_SLUA {
         static int push(lua_State* L, FScriptDelegate* delegate, UFunction* ufunc, const FString& pName);
 
         template<class R, class ...ARGS>
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         static int push(lua_State* L, TBaseDelegate<R, ARGS...>& delegate)
 #else
         static int push(lua_State* L, TDelegate<R, ARGS...>& delegate)
@@ -171,7 +171,7 @@ namespace NS_SLUA {
 
 
     template<class R, class ...ARGS>
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
     int LuaObject::push(lua_State* L, TBaseDelegate<R, ARGS...>& delegate)
 #else
     int LuaObject::push(lua_State* L, TDelegate<R, ARGS...>& delegate)

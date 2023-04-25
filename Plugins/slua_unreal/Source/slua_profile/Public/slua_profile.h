@@ -15,8 +15,8 @@
 
 #include "CoreMinimal.h"
 #include "Containers/Ticker.h"
-#include "ModuleManager.h"
-#include "Commands.h"
+#include "Modules/ModuleManager.h"
+#include "Framework/Commands/Commands.h"
 #include "slua_profile_inspector.h"
 #include "LuaMemoryProfile.h"
 #include "slua_profile.h"
@@ -42,7 +42,12 @@ public:
 private:
     // fields
     FTickerDelegate TickDelegate;
+#if ENGINE_MAJOR_VERSION==5
+    FTSTicker::FDelegateHandle TickDelegateHandle;
+#else
     FDelegateHandle TickDelegateHandle;
+#endif
+
     TSharedPtr<SProfilerInspector> sluaProfilerInspector;
     bool tabOpened = false;
     TSharedPtr<class FUICommandList> PluginCommands;

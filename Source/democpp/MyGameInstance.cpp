@@ -3,7 +3,7 @@
 #include "MyGameInstance.h"
 #include "Misc/Paths.h"
 #include "HAL/PlatformFileManager.h"
-#include "GenericPlatformFile.h"
+#include "GenericPlatform/GenericPlatformFile.h"
 #include "HAL/FileManager.h"
 
 
@@ -28,7 +28,7 @@ static uint8* ReadFile(IPlatformFile& PlatformFile, FString path, uint32& len) {
 
 UMyGameInstance::UMyGameInstance() : state(nullptr)
 {
-if (!HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
+	if (!HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
 	{
 		CreateLuaState();
 	}

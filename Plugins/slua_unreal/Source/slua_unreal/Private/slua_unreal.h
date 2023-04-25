@@ -5,7 +5,7 @@
 #if WITH_EDITOR
 #include "LuaSimulate.h"
 #endif
-#include "ModuleManager.h"
+#include "Modules/ModuleManager.h"
 
 class Fslua_unrealModule : public IModuleInterface
 {
@@ -17,6 +17,6 @@ public:
 
 #if WITH_EDITOR
 private:
-    slua::LuaSimulate Simulate;
+    NS_SLUA::LuaSimulate Simulate;
 #endif
 };

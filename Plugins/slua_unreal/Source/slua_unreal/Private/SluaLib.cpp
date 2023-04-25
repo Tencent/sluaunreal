@@ -31,14 +31,14 @@
 #else
 #include "Engine/GameEngine.h"
 #endif
-#include "ArrayWriter.h"
+#include "Serialization/ArrayWriter.h"
 #include <chrono>
 
 #include "LuaOverrider.h"
 #include "Engine/GameEngine.h"
 
 #if UE_BUILD_DEVELOPMENT
-#include "GenericPlatformMisc.h"
+#include "GenericPlatform/GenericPlatformMisc.h"
 #endif
 
 namespace NS_SLUA {
@@ -149,7 +149,7 @@ namespace NS_SLUA {
         if (obj) {
             if (obj->IsA<UWorld>())
                 widget = CreateWidget<UUserWidget>(Cast<UWorld>(obj), uclass);
-#if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<20) && (ENGINE_MAJOR_VERSION==4))
             else if (obj->IsA<UWidget>())
                 widget = CreateWidget<UUserWidget>(Cast<UWidget>(obj), uclass);
             else if (obj->IsA<UWidgetTree>())

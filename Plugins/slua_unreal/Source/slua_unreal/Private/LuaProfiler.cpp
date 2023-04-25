@@ -43,7 +43,7 @@ namespace NS_SLUA {
 
     #include "LuaProfiler.inl"
     #include "SluaUtil.h"
-    #include "Stats2.h"
+    #include "Stats/Stats2.h"
 
     enum class HookState {
         UNHOOK=0,

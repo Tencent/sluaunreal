@@ -14,10 +14,13 @@
 #include "PropertyUtil.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/StrongObjectPtr.h"
-#include "UnrealType.h"
+#include "UObject/UnrealType.h"
+#if ENGINE_MAJOR_VERSION==5
+#include "UObject/UnrealTypePrivate.h"
+#endif
 
 namespace NS_SLUA {
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
     UObject* getPropertyOutter() {
         static TStrongObjectPtr<UStruct> propOuter;
         if (!propOuter.IsValid()) propOuter.Reset(NewObject<UStruct>((UObject*)GetTransientPackage()));
@@ -344,7 +347,7 @@ namespace NS_SLUA {
                 }
                 else
                 {
-#if (ENGINE_MINOR_VERSION<19) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<19) && (ENGINE_MAJOR_VERSION==4)
                     arrayProperty->MarkPendingKill();
 #endif
                 }

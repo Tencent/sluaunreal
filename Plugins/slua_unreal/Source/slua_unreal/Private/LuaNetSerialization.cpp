@@ -50,20 +50,20 @@ bool NetSerializeItem(NS_SLUA::FProperty* Prop, FArchive& Ar, UPackageMap* Map, 
         }
         else
         {
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
-            StructProp->SerializeItem(FStructuredArchiveFromArchive(Ar).GetSlot(), Data, nullptr);
-#else
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             StructProp->SerializeItem(Ar, Data, nullptr);
+#else
+            StructProp->SerializeItem(FStructuredArchiveFromArchive(Ar).GetSlot(), Data, nullptr);
 #endif
             return true;
         }
     }
     else if (auto MapProp = CastField<NS_SLUA::FMapProperty>(Prop))
     {
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
-        MapProp->SerializeItem(FStructuredArchiveFromArchive(Ar).GetSlot(), Data, nullptr);
-#else
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         MapProp->SerializeItem(Ar, Data, nullptr);
+#else
+        MapProp->SerializeItem(FStructuredArchiveFromArchive(Ar).GetSlot(), Data, nullptr);
 #endif
         return true;
     }
@@ -544,8 +544,12 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
         return false;
     }
 
+#if ENGINE_MAJOR_VERSION==5
+    #pragma warning(push)
+    #pragma warning(disable : 4996)
+#endif
     {
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         UActorChannel* actorChannel = connection->ActorChannels.FindRef(actor);
 #else
         UActorChannel* actorChannel = connection->ActorChannelMap().FindRef(actor);
@@ -553,7 +557,7 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
         if (actorChannel)
         {
             auto& objectReplicator = actorChannel->GetActorReplicationData();
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             repState = objectReplicator.RepState;
 #else
             repState = objectReplicator.RepState.Get();
@@ -566,7 +570,9 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
         }
 
         auto replicationFrame = connection->Driver->ReplicationFrame;
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
+        auto &conditionMap = repState->ConditionMap;
+#else
         auto sendingRepState = repState->GetSendingRepState();
         if (sendingRepState->RepFlags.Value != proxy->repFlags.Value)
         {
@@ -574,8 +580,6 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
             proxy->conditionMap = BuildConditionMapFromRepFlags(sendingRepState->RepFlags);
         }
         auto &conditionMap = proxy->conditionMap;
-#else
-        auto &conditionMap = repState->ConditionMap;
 #endif
         if (SerializeVersion == 1)
         {
@@ -660,7 +664,7 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
                         auto &sharedInfo = sharedPropertyInfo[propIndex];
                         if (sharedInfo.Guid.D)
                         {
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
                             writer.SerializeBits(sharedSerialization.SerializedProperties->GetData() + (sharedInfo.BitOffset >> 3), sharedInfo.BitLength);
 #else
                             writer.SerializeBitsWithOffset(sharedSerialization.SerializedProperties->GetData(), sharedInfo.BitOffset, sharedInfo.BitLength);
@@ -750,7 +754,7 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
                         {
                             auto writeShareSerializeBit = [](FBitWriter& writer, uint8* data, const FRepSerializedPropertyInfo& sharedInfo)
                             {
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
                                 writer.SerializeBits(data + (sharedInfo.BitOffset >> 3), sharedInfo.BitLength);
 #else
                                 writer.SerializeBitsWithOffset(data, sharedInfo.BitOffset, sharedInfo.BitLength);
@@ -818,6 +822,10 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
     
         return false;
     }
+
+#if ENGINE_MAJOR_VERSION==5
+    #pragma warning(pop)
+#endif
 }
 
 bool FLuaNetSerialization::CompareProperties(UObject* obj, FLuaNetSerializationProxy& proxy, uint32 ReplicationFrame)
@@ -995,6 +1003,10 @@ void FLuaNetSerialization::BuildSharedSerialization_V1(UPackageMap* map, ClassLu
 
     for (LuaBitArray::FIterator It(changes); It; ++It)
     {
+#if ENGINE_MAJOR_VERSION==5
+        #pragma warning(push)
+        #pragma warning(disable : 4996)
+#endif
         int32 propIndex = *It;
         if (!properties.IsValidIndex(propIndex))
         {
@@ -1041,7 +1053,7 @@ void FLuaNetSerialization::BuildSharedSerialization_V1(UPackageMap* map, ClassLu
 
                                         sharedArrayPropInfo.BitLength = ar.GetNumBits() - sharedArrayPropInfo.BitOffset;
 
-                    #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+                    #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
                                         if (ar.GetNumBits() & 7)
                                         {
                                             ar.WriteAlign();
@@ -1058,11 +1070,14 @@ void FLuaNetSerialization::BuildSharedSerialization_V1(UPackageMap* map, ClassLu
         }
 
         sharedPropInfo.BitLength = serializedProperties->GetNumBits() - sharedPropInfo.BitOffset;
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         if (serializedProperties->GetNumBits() & 7)
         {
             serializedProperties->WriteAlign();
         }
+#endif
+#if ENGINE_MAJOR_VERSION==5
+        #pragma warning(pop)
 #endif
     }
 
@@ -1169,6 +1184,10 @@ void FLuaNetSerialization::BuildSharedSerialization(UPackageMap* map, ClassLuaRe
 
     for (LuaBitArray::FIterator It(changes); It; ++It)
     {
+#if ENGINE_MAJOR_VERSION==5
+        #pragma warning(push)
+        #pragma warning(disable : 4996)
+#endif
         int32 propIndex = *It;
         if (!properties.IsValidIndex(propIndex))
         {
@@ -1188,11 +1207,14 @@ void FLuaNetSerialization::BuildSharedSerialization(UPackageMap* map, ClassLuaRe
         NetSerializeItem(prop, *serializedProperties, map, data + prop->GetOffset_ForInternal());
 
         sharedPropInfo.BitLength = serializedProperties->GetNumBits() - sharedPropInfo.BitOffset;
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         if (serializedProperties->GetNumBits() & 7)
         {
             serializedProperties->WriteAlign();
         }
+#endif
+#if ENGINE_MAJOR_VERSION==5
+        #pragma warning(pop)
 #endif
     }
 
@@ -1201,7 +1223,7 @@ void FLuaNetSerialization::BuildSharedSerialization(UPackageMap* map, ClassLuaRe
 
 bool FLuaNetSerialization::IsSupportSharedSerialize(NS_SLUA::FProperty* prop)
 {
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
     if (Cast<UObjectProperty>(prop))
     {
         return false;
@@ -1252,7 +1274,7 @@ void FLuaNetSerialization::CallOnRep(NS_SLUA::lua_State* L, const slua::LuaVar& 
     }
 }
 
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
 TStaticBitArray<COND_Max> FLuaNetSerialization::BuildConditionMapFromRepFlags(const FReplicationFlags RepFlags)
 {
     TStaticBitArray<COND_Max> ConditionMap;

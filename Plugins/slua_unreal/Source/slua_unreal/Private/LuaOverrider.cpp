@@ -1,14 +1,14 @@
 #include "LuaOverrider.h"
 #include <lstate.h>
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
-#include "BlueprintSupport.h"
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
+#include "Blueprint/BlueprintSupport.h"
 #endif
-#include "CoreDelegates.h"
+#include "Misc/CoreDelegates.h"
 #include "LuaClass.inl"
-#include "Script.h"
+#include "UObject/Script.h"
 #include "LuaVar.h"
 #include "LuaNet.h"
-#include "UObjectBaseUtility.h"
+#include "UObject/UObjectBaseUtility.h"
 #include "LuaOverriderInterface.h"
 #include "LuaOverriderSuper.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
@@ -18,7 +18,7 @@
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerController.h"
 
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
     typedef NS_SLUA::FProperty FProperty;
 #endif
 
@@ -28,12 +28,12 @@ DECLARE_CYCLE_STAT(TEXT("LuaOverrider hookBpScript"), STAT_LuaOverrider_hookBpSc
 DECLARE_CYCLE_STAT(TEXT("LuaOverrider bindOverrideFuncs selfCtor"), STAT_LuaOverrider_bindOverrideFuncs_selfCtor, STATGROUP_Game);
 DECLARE_STATS_GROUP(TEXT("Lua"), STATGROUP_Lua, STATCAT_Advanced);
 
-#if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
-#define GET_INPUT_ACTION_NAME(IAB) IAB.GetActionName()
-#define IS_INPUT_ACTION_PAIRED(IAB) IAB.IsPaired()
-#else
+#if (ENGINE_MINOR_VERSION<20) && (ENGINE_MAJOR_VERSION==4)
 #define GET_INPUT_ACTION_NAME(IAB) IAB.ActionName
 #define IS_INPUT_ACTION_PAIRED(IAB) IAB.bPaired
+#else
+#define GET_INPUT_ACTION_NAME(IAB) IAB.GetActionName()
+#define IS_INPUT_ACTION_PAIRED(IAB) IAB.IsPaired()
 #endif
 
 extern uint8 GRegisterNative(int32 NativeBytecodeIndex, const NS_SLUA::FNativeFuncPtr& Func);
@@ -51,7 +51,7 @@ namespace NS_SLUA
 TMap<NS_SLUA::lua_State*, ULuaOverrider::ObjectTableMap> ULuaOverrider::objectTableMap;
 ULuaOverrider::ClassNativeMap ULuaOverrider::classSuperFuncs;
 
-#if (ENGINE_MINOR_VERSION<19) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<19) && (ENGINE_MAJOR_VERSION==4)
 void ULuaOverrider::luaOverrideFunc(FFrame& Stack, RESULT_DECL)
 #else
 void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL)
@@ -59,7 +59,7 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
 {
     UFunction* func = Stack.Node;
     ensure(func);
-#if (ENGINE_MINOR_VERSION<19) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<19) && (ENGINE_MAJOR_VERSION==4)
     UObject* obj = Stack.Object;
 #else
     UObject* obj = Context;
@@ -77,7 +77,7 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
         // if ProcessContextOpcode with native function Stack Node and Object should be fixed!
         if (Stack.CurrentNativeFunction != func)
         {
-#if (ENGINE_MINOR_VERSION<19) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<19) && (ENGINE_MAJOR_VERSION==4)
             obj = this;
 #endif
             bContextOp = true;
@@ -460,7 +460,7 @@ namespace NS_SLUA
     const uint8 LuaOverrider::Code[] = { (uint8)Ex_LuaOverride, EX_Return, EX_Nothing };
     const int32 LuaOverrider::CodeSize = sizeof(Code);
     const TCHAR* LuaOverrider::EInputEventNames[] = { TEXT("Pressed"), TEXT("Released"), TEXT("Repeat"), TEXT("DoubleClick"), TEXT("Axis"), TEXT("Max") };
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
     LuaOverrider::FBlueprintFlushReinstancingQueue LuaOverrider::blueprintFlushReinstancingQueue;
 #endif
     
@@ -474,7 +474,7 @@ namespace NS_SLUA
         GUObjectArray.AddUObjectCreateListener(this);
         asyncLoadingFlushUpdateHandle = FCoreDelegates::OnAsyncLoadingFlushUpdate.AddRaw(this, &LuaOverrider::onAsyncLoadingFlushUpdate);
         gcHandler = FCoreUObjectDelegates::GetPostGarbageCollect().AddRaw(this, &LuaOverrider::onEngineGC);
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         if (!blueprintFlushReinstancingQueue.IsBound())
         {
             FBlueprintSupport::SetFlushReinstancingQueueFPtr(OnBlueprintFlushReinstancingQueue);
@@ -494,7 +494,7 @@ namespace NS_SLUA
         ULuaOverrider::onLuaStateClose(sluaState->getLuaState());
         sluaState = nullptr;
 
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         blueprintFlushReinstancingQueue.Remove(blueprintFlushDelegate);
         if (!blueprintFlushReinstancingQueue.IsBound())
         {
@@ -536,10 +536,10 @@ namespace NS_SLUA
                 {
                     actor = Cast<APawn>(Object->GetOuter());
                 }
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
-                if (actor && actor->GetLocalRole() >= ROLE_AutonomousProxy)
-#else
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
                 if (actor && actor->Role >= ROLE_AutonomousProxy)
+#else
+                if (actor && actor->GetLocalRole() >= ROLE_AutonomousProxy)
 #endif
                 {
                     inputComponents.AddUnique(inputComponent);
@@ -554,10 +554,11 @@ namespace NS_SLUA
         }
     }
 
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<23) && (ENGINE_MAJOR_VERSION==4))
     void LuaOverrider::OnUObjectArrayShutdown()
     {
-        
+        GUObjectArray.RemoveUObjectCreateListener(this);
+        GUObjectArray.RemoveUObjectDeleteListener(this);
     }
 #endif
 
@@ -771,7 +772,7 @@ namespace NS_SLUA
     {
     }
 
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
     void LuaOverrider::OnBlueprintFlushReinstancingQueue()
     {
         blueprintFlushReinstancingQueue.Broadcast();
@@ -878,26 +879,14 @@ namespace NS_SLUA
         FObjectDuplicationParameters duplicationParams(templateFunction, outerClass);
         duplicationParams.DestName = newFuncName;
         duplicationParams.InternalFlagMask &= ~EInternalObjectFlags::Native;
-#if (ENGINE_MINOR_VERSION<19) && (ENGINE_MAJOR_VERSION>=4)
-        if (GIsWinClientNoRender)
-        {
-            GIsDuplicatingClassForReinstancing = true;
-        }
-#endif
 
         UFunction* newFunc = Cast<UFunction>(StaticDuplicateObjectEx(duplicationParams));
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         newFunc->PropertyLink = Cast<FProperty>(newFunc->Children);
 #else
         newFunc->PropertyLink = CastField<FProperty>(newFunc->ChildProperties);
 #endif
 
-#if (ENGINE_MINOR_VERSION<19) && (ENGINE_MAJOR_VERSION>=4)
-        if (GIsWinClientNoRender)
-        {
-            GIsDuplicatingClassForReinstancing = false;
-        }
-#endif
         newFunc->PropertiesSize = templateFunction->PropertiesSize;
         newFunc->MinAlignment = templateFunction->MinAlignment;
         for (TFieldIterator<FProperty> srcIter(templateFunction), dstIter(newFunc); srcIter && dstIter; ++srcIter, ++dstIter)
@@ -1113,7 +1102,9 @@ namespace NS_SLUA
     bool LuaOverrider::isHookable(const UObjectBaseUtility* obj)
     {
         //NS_SLUA::Log::Log("LuaOverrider::isHookable log %s", TCHAR_TO_UTF8(*obj->GetFName().ToString()));
+#if ENGINE_MAJOR_VERSION==4
         check(!obj->IsPendingKill());
+#endif
         UClass* cls = obj->GetClass();
         //NS_SLUA::Log::Log("LuaOverrider::isHookable GetClass %s, is Class: %d", TCHAR_TO_UTF8(*obj->GetFName().ToString()), cls->IsChildOf<UClass>());
         if (cls->IsChildOf<UPackage>() || cls->IsChildOf<UClass>())
@@ -1361,7 +1352,7 @@ namespace NS_SLUA
         }
     }
 
-#if ENGINE_MAJOR_VERSION >= 4 && ENGINE_MINOR_VERSION <= 23
+#if ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION <= 23
     void LuaOverrider::onWorldTickStart(ELevelTick TickType, float DeltaTime)
 #else
     void LuaOverrider::onWorldTickStart(UWorld *World, ELevelTick TickType, float DeltaTime)

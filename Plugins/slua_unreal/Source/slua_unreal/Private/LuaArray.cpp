@@ -111,13 +111,17 @@ namespace NS_SLUA {
                 inner->DestroyValue(Dest);
             }
         }
+#if ENGINE_MAJOR_VERSION==5
+        array->Empty(0, inner->ElementSize, GetPropertyAlignment(inner));
+#else
         array->Empty(0, inner->ElementSize);
+#endif
     }
 
     void LuaArray::AddReferencedObjects( FReferenceCollector& Collector )
     {
         if (inner) {
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             Collector.AddReferencedObject(inner);
 #else
             inner->AddReferencedObjects(Collector);
@@ -154,20 +158,34 @@ namespace NS_SLUA {
     }
 
     uint8* LuaArray::add() {
+#if ENGINE_MAJOR_VERSION==5
+        const int index = array->Add(1, inner->ElementSize, GetPropertyAlignment(inner));
+#else
         const int index = array->Add(1, inner->ElementSize);
+#endif
+        
         constructItems(index, 1);
         return getRawPtr(index);
     }
 
     uint8* LuaArray::insert(int index) {
+#if ENGINE_MAJOR_VERSION==5
+        array->Insert(index, 1, inner->ElementSize, GetPropertyAlignment(inner));
+#else
         array->Insert(index, 1, inner->ElementSize);
+#endif
+        
         constructItems(index, 1);
         return getRawPtr(index);
     }
 
     void LuaArray::remove(int index) {
         destructItems(index, 1);
+#if ENGINE_MAJOR_VERSION==5
+        array->Remove(index, 1, inner->ElementSize, GetPropertyAlignment(inner));
+#else
         array->Remove(index, 1, inner->ElementSize);
+#endif  
     }
 
     void LuaArray::destructItems(int index,int count) {

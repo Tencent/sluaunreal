@@ -239,7 +239,7 @@ namespace NS_SLUA
     void LuaSet::AddReferencedObjects(FReferenceCollector& Collector)
     {
         if (InElementProperty)
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             Collector.AddReferencedObject(InElementProperty);
 #else
             InElementProperty->AddReferencedObjects(Collector);

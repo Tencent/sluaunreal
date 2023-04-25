@@ -102,7 +102,7 @@ namespace NS_SLUA {
     void LuaMap::AddReferencedObjects( FReferenceCollector& Collector )
     {
         if (keyProp) {
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             Collector.AddReferencedObject(keyProp);
 #else
             keyProp->AddReferencedObjects(Collector);
@@ -110,7 +110,7 @@ namespace NS_SLUA {
         }
 
         if (valueProp) {
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             Collector.AddReferencedObject(valueProp);
 #else
             valueProp->AddReferencedObjects(Collector);
@@ -145,10 +145,10 @@ namespace NS_SLUA {
     }
 
     uint8* LuaMap::getKeyPtr(uint8* pairPtr) {
-#if (ENGINE_MINOR_VERSION>=22) && (ENGINE_MAJOR_VERSION>=4)
-        return pairPtr;
-#else
+#if (ENGINE_MINOR_VERSION<22) && (ENGINE_MAJOR_VERSION==4)
         return pairPtr + helper.MapLayout.KeyOffset;
+#else
+        return pairPtr;
 #endif
     }
 
@@ -181,10 +181,10 @@ namespace NS_SLUA {
     void LuaMap::destructItems(uint8* PairPtr, uint32 Stride, int32 Index, int32 Count, bool bDestroyKeys, bool bDestroyValues) {
         // if map is owned by uobject, don't destructItems
         if(isRef) return;
-#if (ENGINE_MINOR_VERSION>=22) && (ENGINE_MAJOR_VERSION>=4)
-        int32 keyOffset = 0;
-#else
+#if (ENGINE_MINOR_VERSION<22) && (ENGINE_MAJOR_VERSION==4)
         int32 keyOffset = helper.MapLayout.KeyOffset;
+#else
+        int32 keyOffset = 0;
 #endif
         auto valueOffset = helper.MapLayout.ValueOffset;
         for (; Count; ++Index) {

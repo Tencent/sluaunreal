@@ -2585,7 +2585,11 @@ namespace NS_SLUA {
             if (argc == 1) {
                 CheckSelf(FLinearColor);
                 auto ret = __newFColor();
+#if ENGINE_MAJOR_VERSION==5
+                *ret = self->QuantizeFloor();
+#else
                 *ret = self->Quantize();
+#endif
                 LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
@@ -2638,7 +2642,11 @@ namespace NS_SLUA {
             auto argc = lua_gettop(L);
             if (argc == 1) {
                 CheckSelf(FLinearColor);
+#if ENGINE_MAJOR_VERSION==5
+                auto ret = self->R * 0.3f + self->G * 0.59f + self->B * 0.11f;
+#else
                 auto ret = self->ComputeLuminance();
+#endif
                 LuaObject::push(L, ret);
                 return 1;
             }
@@ -2765,10 +2773,10 @@ namespace NS_SLUA {
                 auto V = LuaObject::checkValue<int>(L, 3);
                 auto VVal = (unsigned char)V;
                 auto ret = __newFLinearColor();
-#if (ENGINE_MINOR_VERSION>=22) && (ENGINE_MAJOR_VERSION>=4)
-                *ret = FLinearColor::MakeFromHSV8(HVal, SVal, VVal);
-#else
+#if (ENGINE_MINOR_VERSION<22) && (ENGINE_MAJOR_VERSION==4)
                 *ret = FLinearColor::FGetHSV(HVal, SVal, VVal);
+#else
+                *ret = FLinearColor::MakeFromHSV8(HVal, SVal, VVal);
 #endif
                 LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
                 return 1;

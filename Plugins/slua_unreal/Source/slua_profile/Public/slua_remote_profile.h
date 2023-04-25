@@ -18,9 +18,9 @@
 #include "Containers/Queue.h"
 #include "Interfaces/IPv4/IPv4Endpoint.h"
 #include "LuaMemoryProfile.h"
-#include "SharedPointer.h"
-#include "ArrayReader.h"
-#include "DelegateCombinations.h"
+#include "Templates/SharedPointer.h"
+#include "Serialization/ArrayReader.h"
+#include "Delegates/DelegateCombinations.h"
 
 class FSocket;
 class FTcpListener;

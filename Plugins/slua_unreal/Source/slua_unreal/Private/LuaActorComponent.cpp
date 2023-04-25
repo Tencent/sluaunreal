@@ -1,5 +1,5 @@
 #include "LuaActorComponent.h"
-#include "UnrealNetwork.h"
+#include "Net/UnrealNetwork.h"
 
 ULuaActorComponent::ULuaActorComponent(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -45,8 +45,8 @@ void ULuaActorComponent::UnRegistLuaTick()
 void ULuaActorComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-    if (!FLuaNetSerialization::bEnableLuaNetReplicate)
+    
     {
-        DOREPLIFETIME_CONDITION(ULuaActorComponent, LuaNetSerialization, COND_Max);
+        DOREPLIFETIME_CONDITION(ULuaActorComponent, LuaNetSerialization, COND_None);
     }
 }

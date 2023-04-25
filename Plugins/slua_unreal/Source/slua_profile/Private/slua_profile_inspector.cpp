@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 
-#include "SlateColorBrush.h"
+#include "Brushes/SlateColorBrush.h"
 #include "Widgets/Input/SCheckBox.h"
 #include "Widgets/Images/SImage.h"
-#include "Public/Brushes/SlateDynamicImageBrush.h"
+#include "Brushes/SlateDynamicImageBrush.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "Templates/SharedPointer.h"
 #include "Delegates/IDelegateInstance.h"
@@ -30,15 +30,15 @@
 #include "slua_profile_inspector.h"
 
 #include <algorithm>
-#include "ArrayWriter.h"
-#include "FileHelper.h"
-#include "FileManager.h"
-#include "Paths.h"
-#include "SButton.h"
-#include "SluaProfilerDataManager.h"
-#include "SSlider.h"
-#include "Stats2.h"
+#include "Serialization/ArrayWriter.h"
+#include "Misc/FileHelper.h"
+#include "HAL/FileManager.h"
+#include "Misc/Paths.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SSlider.h"
+#include "Stats/Stats2.h"
 #include "Developer/DesktopPlatform/Public/DesktopPlatformModule.h"
+#include "SluaProfilerDataManager.h"
 
 ///////////////////////////////////////////////////////////////////////////
 SProfilerInspector::SProfilerInspector()
@@ -638,7 +638,11 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
             SNew(SBorder)
             .HAlign(HAlign_Fill)
             .VAlign(VAlign_Fill)
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>0
+            .BorderImage(FAppStyle::GetBrush("ToolPanel.GroupBorder"))
+#else
             .BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
+#endif
             [
                 SNew(SVerticalBox)
                 +SVerticalBox::Slot()
@@ -647,7 +651,11 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                 .Padding(0, 3.0f)
                 [
                     SAssignNew(cpuTabWidget, SProfilerTabWidget)
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>0
+                    .TabIcon(FAppStyle::GetBrush("ProfilerCommand.StatsProfiler"))
+#else
                     .TabIcon(FEditorStyle::GetBrush("ProfilerCommand.StatsProfiler"))
+#endif
                     .TabName(FText::FromString("CPU Usages"))
                     .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
                     tabSwitcher->SetActiveWidgetIndex(0);
@@ -661,7 +669,11 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                 .Padding(0, 3.0f)
                 [
                     SAssignNew(memTabWidget, SProfilerTabWidget)
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>0
+                    .TabIcon(FAppStyle::GetBrush("ProfilerCommand.MemoryProfiler"))
+#else
                     .TabIcon(FEditorStyle::GetBrush("ProfilerCommand.MemoryProfiler"))
+#endif
                     .TabName(FText::FromString("Memory Usages"))
                     .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
                     tabSwitcher->SetActiveWidgetIndex(1);
@@ -871,7 +883,11 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                         .MaxHeight(1.0f)
                         [
                             SNew(SBorder)
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>0
+                            .BorderImage(FAppStyle::GetBrush("ProgressBar.ThinBackground"))
+#else
                             .BorderImage(FEditorStyle::GetBrush("ProgressBar.ThinBackground"))
+#endif
                         ]
                     ]
                     + SVerticalBox::Slot().AutoHeight()
@@ -1079,7 +1095,11 @@ void SProfilerInspector::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& mem
         auto* fileInfos = memNode->infoList.Find(memFileInfo.hint);
         if (!fileInfos)
         {
+#if ENGINE_MAJOR_VERSION==5
+            TMap<int, TSharedPtr<FileMemInfo, ESPMode::ThreadSafe>> newFileInfos;
+#else
             TMap<int, TSharedPtr<FileMemInfo, ESPMode::Fast>> newFileInfos;
+#endif
             fileInfos = &memNode->infoList.Add(memFileInfo.hint, newFileInfos);
         }
 
@@ -1788,7 +1808,11 @@ void SProfilerTabWidget::Construct(const FArguments& InArgs)
             SNew(SBorder)
             .HAlign(HAlign_Fill)
             .VAlign(VAlign_Fill)
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>0
+            .BorderImage(FAppStyle::GetBrush("ToolPanel.DarkGroupBorder"))
+#else
             .BorderImage(FEditorStyle::GetBrush("ToolPanel.DarkGroupBorder"))
+#endif
             [
                 SNew(SVerticalBox)
                 +SVerticalBox::Slot()

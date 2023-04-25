@@ -38,7 +38,7 @@
 #include "LuaOverriderInterface.h"
 #include "LuaProfiler.h"
 #include "LuaProtobufWrap.h"
-#include "Stats.h"
+#include "Stats/Stats.h"
 #include "luasocket/luasocket.h"
 
 namespace NS_SLUA {
@@ -202,26 +202,31 @@ namespace NS_SLUA {
                 }
             }
 
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>0
+            static UPackage* AnyPackage = (UPackage*)-1;
+#else
+            static UPackage* AnyPackage = ANY_PACKAGE;
+#endif
             FString path = UTF8_TO_TCHAR(name);
-            if (!FindObject<UObject>(ANY_PACKAGE, *path)) {
+            if (!FindObject<UObject>(AnyPackage, *path)) {
                 // Try to load object if not found!
                 LoadObject<UObject>(NULL, *path);
             }
 
-            UClass* uclass = FindObject<UClass>(ANY_PACKAGE, *path);
+            UClass* uclass = FindObject<UClass>(AnyPackage, *path);
             if (uclass) {
                 LuaObject::pushClass(L, uclass);
                 state->cacheImportedMap.Add(name, ImportedObjectCache {uclass, ImportedClass});
                 return 1;
             }
-            UScriptStruct* ustruct = FindObject<UScriptStruct>(ANY_PACKAGE, *path);
+            UScriptStruct* ustruct = FindObject<UScriptStruct>(AnyPackage, *path);
             if (ustruct) {
                 LuaObject::pushStruct(L, ustruct);
                 state->cacheImportedMap.Add(name, ImportedObjectCache {ustruct, ImportedStruct});
                 return 1;
             }
 
-            UEnum* uenum = FindObject<UEnum>(ANY_PACKAGE, *path);
+            UEnum* uenum = FindObject<UEnum>(AnyPackage, *path);
             if (uenum) {
                 LuaObject::pushEnum(L, uenum);
                 state->cacheImportedMap.Add(name, ImportedObjectCache{ uenum, ImportedEnum });
@@ -685,7 +690,7 @@ namespace NS_SLUA {
         }
 
         auto& propList = *propLinksPtr;
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         propList.RemoveSwap(propud);
 #else
         propList.RemoveSwap(propud, false);
@@ -766,7 +771,7 @@ namespace NS_SLUA {
         return MoveTemp(luaModule);
     }
 
-#if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<23) && (ENGINE_MAJOR_VERSION==4))
     void LuaState::OnUObjectArrayShutdown()
     {
         // remove listeners to avoid crash on pc when app exit
@@ -1274,7 +1279,7 @@ namespace NS_SLUA {
             item = &cachePropMap.Add(ustruct);
             auto propertyLink = ustruct->PropertyLink;
             static const uint64 ScriptStructCastFlags = UScriptStruct::StaticClassCastFlags();
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             auto scriptStruct = ustruct->GetClass()->HasAnyCastFlag(ScriptStructCastFlags) ? Cast<UScriptStruct>(ustruct) : nullptr;
 #else
             auto scriptStruct = ustruct->HasAnyCastFlags(ScriptStructCastFlags) ? Cast<UScriptStruct>(ustruct) : nullptr;

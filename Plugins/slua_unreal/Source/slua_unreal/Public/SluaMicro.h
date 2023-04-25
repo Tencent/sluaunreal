@@ -13,7 +13,7 @@ namespace NS_SLUA
 {
     //typedef lua_State lua_State; // For PUBG Mobile
 
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
     #define CastField Cast
     typedef UProperty FProperty;
     typedef UField FField;
@@ -52,7 +52,7 @@ namespace NS_SLUA
     typedef FField FField;
 #endif
 
-#if (ENGINE_MINOR_VERSION<19) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<19) && (ENGINE_MAJOR_VERSION==4)
     typedef Native FNativeFuncPtr;
 #else
     typedef FNativeFuncPtr FNativeFuncPtr;

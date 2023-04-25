@@ -1,5 +1,5 @@
 #include "LuaGameState.h"
-#include "UnrealNetwork.h"
+#include "Net/UnrealNetwork.h"
 
 ALuaGameState::ALuaGameState(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -22,8 +22,8 @@ void ALuaGameState::PostInitializeComponents()
 void ALuaGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-    if (!FLuaNetSerialization::bEnableLuaNetReplicate)
+    
     {
-        DOREPLIFETIME_CONDITION(ALuaGameState, LuaNetSerialization, COND_Max);
+        DOREPLIFETIME_CONDITION(ALuaGameState, LuaNetSerialization, COND_None);
     }
 }

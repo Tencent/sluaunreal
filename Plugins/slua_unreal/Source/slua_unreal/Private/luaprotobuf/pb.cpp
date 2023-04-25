@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
-#include "pb.h"
+#include "luaprotobuf/pb.h"
 
 // Disable warning "interaction between '_setjmp' and C++ object destruction is non-portable"
 #ifdef _MSC_VER

@@ -88,7 +88,7 @@ namespace NS_SLUA
         ~LuaOverrider();
 
         void NotifyUObjectCreated(const class UObjectBase* Object, int32 Index) override;
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<23) && (ENGINE_MAJOR_VERSION==4))
         void OnUObjectArrayShutdown() override;
 #endif
         void NotifyUObjectDeleted(const UObjectBase* Object, int32 Index) override;
@@ -140,7 +140,7 @@ namespace NS_SLUA
         FDelegateHandle asyncLoadingFlushUpdateHandle;
         FDelegateHandle gcHandler;
 
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         static void OnBlueprintFlushReinstancingQueue();
         
         DECLARE_MULTICAST_DELEGATE(FBlueprintFlushReinstancingQueue);
@@ -157,7 +157,7 @@ namespace NS_SLUA
         void initInputs();
         void onWorldCleanup(UWorld * World, bool bSessionEnded, bool bCleanupResources);
 
-#if ENGINE_MAJOR_VERSION >= 4 && ENGINE_MINOR_VERSION <= 23
+#if ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION <= 23
         void onWorldTickStart(ELevelTick TickType, float DeltaTime);
 #else
         void onWorldTickStart(UWorld *World, ELevelTick TickType, float DeltaTime);

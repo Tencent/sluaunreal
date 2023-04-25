@@ -30,7 +30,7 @@ struct ClassLuaReplicated
     typedef TArray<NS_SLUA::FProperty*> ReplicatedProperties;
     typedef TMap<int32, int32> OffsetToMarkType;
 
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
     TWeakObjectPtr<NS_SLUA::FProperty> ownerProperty;
 #else
     TWeakFieldPtr<NS_SLUA::FProperty> ownerProperty;
@@ -87,7 +87,7 @@ struct FLuaNetSerializerGuidReferences
     int32 numBufferBits;
 };
 
-#if (ENGINE_MINOR_VERSION<=25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<=25) && (ENGINE_MAJOR_VERSION==4)
 /** Holds the unique identifier and offsets/lengths of a net serialized property used for Shared Serialization */
 struct FRepSerializedPropertyInfo
 {
@@ -181,7 +181,7 @@ struct FLuaNetSerializationProxy : public FGCObject
     FRepSerializationSharedInfo sharedSerialization;
     TMap<int32, FRepSerializationSharedInfo> sharedArraySerialization;
 
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
     FReplicationFlags repFlags;
     TStaticBitArray<COND_Max> conditionMap;
 #endif
@@ -230,7 +230,7 @@ protected:
     
     void CallOnRep(NS_SLUA::lua_State* L, const NS_SLUA::LuaVar& luaTable, const FString& propName, NS_SLUA::FProperty* prop, uint8* oldData);
     
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
     TStaticBitArray<COND_Max> BuildConditionMapFromRepFlags(const FReplicationFlags RepFlags);
 #endif
 

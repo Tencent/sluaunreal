@@ -52,10 +52,12 @@ public class slua_unreal : ModuleRules
             PublicAdditionalLibraries.Add("lua");
 #endif
         }
+#if UE_5_00_OR_LATER
         else if (Target.Platform == UnrealTargetPlatform.Win32 )
         {
             PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Win32/lua.lib"));
         }
+#endif
         else if (Target.Platform == UnrealTargetPlatform.Win64)
         {
             PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Win64/lua.lib"));

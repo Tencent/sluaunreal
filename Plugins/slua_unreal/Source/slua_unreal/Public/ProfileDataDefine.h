@@ -3,7 +3,7 @@
 
 #include "CoreMinimal.h"
 #include "LuaMemoryProfile.h"
-#include "Queue.h"
+#include "Containers/Queue.h"
 #include "ProfileDataDefine.generated.h"
 
 struct FileMemInfo;

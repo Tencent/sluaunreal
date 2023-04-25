@@ -1,5 +1,5 @@
 #pragma once
-#include "WeakObjectPtr.h"
+#include "UObject/WeakObjectPtr.h"
 #include "lua.h"
 #include "LuaObject.h"
 #include "SluaUtil.h"

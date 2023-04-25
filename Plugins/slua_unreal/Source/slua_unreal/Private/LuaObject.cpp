@@ -28,7 +28,7 @@
 #include "LuaState.h"
 #include "LuaWrapper.h"
 
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
 // For PUBG Mobile
 #include "LuaEnums.h"
 #endif
@@ -686,7 +686,7 @@ namespace NS_SLUA {
 
     int luaFunctionCall(lua_State* L, UObject* obj, UFunction* func, int paramOffset, int paramCount) {
         if (func->FunctionFlags & FUNC_Net) {
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             int functionCallspace = obj->GetFunctionCallspace(func, nullptr, nullptr);
 #else
             int functionCallspace = obj->GetFunctionCallspace(func, nullptr);
@@ -1100,7 +1100,10 @@ namespace NS_SLUA {
                 | FMapProperty::StaticClassCastFlags()
                 | FSetProperty::StaticClassCastFlags();
 
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+            #pragma warning(push)
+            #pragma warning(disable : 4996)
+
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             if (GSluaEnableReference || up->GetClass()->HasAnyCastFlag(ReferenceCastFlags))
 #else
             if (GSluaEnableReference || up->HasAnyCastFlags(ReferenceCastFlags))
@@ -1123,6 +1126,8 @@ namespace NS_SLUA {
                 luaL_error(L, "unsupport type %s to push, prop:%s", TCHAR_TO_UTF8(*clsName), TCHAR_TO_UTF8(*propName));
                 return 0;
             }
+
+            #pragma warning(pop)
         }
 
         // get blueprint member
@@ -1517,7 +1522,11 @@ namespace NS_SLUA {
         if (type == LUA_TSTRING && p->Inner->GetClass() == FByteProperty::StaticClass()) {
             size_t len;
             uint8* content = (uint8*)lua_tolstring(L, i, &len);
+#if ENGINE_MAJOR_VERSION==5
+            scriptArray->Add((int32)len, 1, GetPropertyAlignment(p->Inner));
+#else
             scriptArray->Add((int32)len, 1);
+#endif
             uint8* dest = (uint8*)scriptArray->GetData();
             FMemory::Memcpy(dest, content, len);
             return nullptr;
@@ -1526,7 +1535,7 @@ namespace NS_SLUA {
         if (!UD)
             luaL_error(L, "expect LuaArray at %d, but got nil", i);
 
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         auto outerFunc = Cast<UFunction>(p->GetOuter());
 #else
         auto outerFunc = Cast<UFunction>(p->GetOwnerUObject());
@@ -1576,7 +1585,7 @@ namespace NS_SLUA {
             luaL_error(L, "expect LuaMap at %d, but got nil", i);
 
         auto scriptMap = (FScriptMap*)parms;
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         auto outerFunc = Cast<UFunction>(p->GetOuter());
 #else
         auto outerFunc = Cast<UFunction>(p->GetOwnerUObject());
@@ -1623,7 +1632,7 @@ namespace NS_SLUA {
             luaL_error(L, "expect LuaSet at %d, but got nil", i);
 
         auto scriptSet = (FScriptSet*)params;
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         auto outerFunc = Cast<UFunction>(p->GetOuter());
 #else
         auto outerFunc = Cast<UFunction>(p->GetOwnerUObject());
@@ -1760,7 +1769,7 @@ namespace NS_SLUA {
     int pushUMulticastDelegateProperty(lua_State* L,FProperty* prop,uint8* parms, NewObjectRecorder* objRecorder) {
         auto p = CastField<FMulticastDelegateProperty>(prop);
         ensure(p);
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         FMulticastScriptDelegate* delegate = p->GetPropertyValuePtr(parms);
 #else
         FMulticastScriptDelegate* delegate = const_cast<FMulticastScriptDelegate*>(p->GetMulticastDelegate(parms));
@@ -1768,7 +1777,7 @@ namespace NS_SLUA {
         return LuaMultiDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
     }
 
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
     int pushUMulticastInlineDelegateProperty(lua_State* L,FProperty* prop,uint8* parms, NewObjectRecorder* objRecorder) {
         auto p = CastField<FMulticastInlineDelegateProperty>(prop);
         ensure(p);
@@ -1798,6 +1807,17 @@ namespace NS_SLUA {
         p->SetPropertyValue(parms,d);
         return nullptr;
     }
+
+#if ENGINE_MAJOR_VERSION==5
+    int pushUObjectPtrProperty(lua_State* L,FProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
+        auto p = CastField<FObjectPtrProperty>(prop);
+        ensure(p);
+        auto objPtr = p->GetPropertyValue(parms);
+        UObject* o = objPtr.Get();
+        bool ref = objRecorder ? objRecorder->hasObject(o) : false;
+        return LuaObject::push(L, o, ref);
+    }
+#endif
      
     int pushUObjectProperty(lua_State* L,FProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
         auto p = CastField<FObjectProperty>(prop);
@@ -1873,7 +1893,7 @@ namespace NS_SLUA {
         // if it's LuaBPVar
         if (uss == FLuaBPVar::StaticStruct())
             return FLuaBPVar::checkValue(L, p, parms, i);
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         auto outerFunc = Cast<UFunction>(p->GetOuter());
 #else
         auto outerFunc = Cast<UFunction>(p->GetOwnerUObject());
@@ -2301,9 +2321,12 @@ namespace NS_SLUA {
         
         regPusher(FDelegateProperty::StaticClass(), pushUDelegateProperty);
         regPusher(FMulticastDelegateProperty::StaticClass(),pushUMulticastDelegateProperty);
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
         regPusher(FMulticastInlineDelegateProperty::StaticClass(),pushUMulticastInlineDelegateProperty);
         regPusher(FMulticastSparseDelegateProperty::StaticClass(), pushUMulticastSparseDelegateProperty);
+#endif
+#if ENGINE_MAJOR_VERSION==5
+        regPusher(FObjectPtrProperty::StaticClass(),pushUObjectPtrProperty);
 #endif
         regPusher(FObjectProperty::StaticClass(),pushUObjectProperty);
         regPusher(FArrayProperty::StaticClass(),pushUArrayProperty);
@@ -2353,7 +2376,7 @@ namespace NS_SLUA {
         
         LuaWrapper::init(L);
         // For PUBG Mobile
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         LuaEnums::init(L);
 #endif
         ExtensionMethod::init();
@@ -2389,7 +2412,9 @@ namespace NS_SLUA {
             | FMapProperty::StaticClassCastFlags()
             | FSetProperty::StaticClassCastFlags();
 
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+        #pragma warning(push)
+        #pragma warning(disable : 4996)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         if (GSluaEnableReference || up->GetClass()->HasAnyCastFlag(ReferenceCastFlags))
 #else
         if (GSluaEnableReference || up->HasAnyCastFlags(ReferenceCastFlags))
@@ -2403,6 +2428,7 @@ namespace NS_SLUA {
         }
 
         return push(L, up, up->ContainerPtrToValuePtr<uint8>(obj), objRecorder);
+        #pragma warning(pop)
     }
 
     int LuaObject::push(lua_State* L, LuaStruct* ls) {

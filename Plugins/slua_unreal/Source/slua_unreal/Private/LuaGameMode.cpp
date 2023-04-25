@@ -1,5 +1,5 @@
 #include "LuaGameMode.h"
-#include "UnrealNetwork.h"
+#include "Net/UnrealNetwork.h"
 
 ALuaGameMode::ALuaGameMode(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)

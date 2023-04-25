@@ -18,7 +18,7 @@
 #endif
 #include "SluaMicro.h"
 
-#if (ENGINE_MINOR_VERSION>=22) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<22) && (ENGINE_MAJOR_VERSION==4))
 #include "EPropertyClassUEnum.h"
 #else
 #include "EPropertyClass.h"
@@ -34,8 +34,7 @@ namespace NS_SLUA {
     template<> struct DeduceType<A> { \
         static const EPropertyClass value = EPropertyClass::B; \
     };\
-
-
+    
     DefDeduceType(uint8, Byte);
     DefDeduceType(int8, Int8);
     DefDeduceType(int16, Int16);
@@ -49,6 +48,13 @@ namespace NS_SLUA {
     DefDeduceType(bool, Bool);
     DefDeduceType(UObject*, Object);
     DefDeduceType(FString, Str);
+
+#if ENGINE_MAJOR_VERSION==5
+    FORCEINLINE int32 GetPropertyAlignment(FProperty* InProperty)
+    {
+        return Align(InProperty->GetSize(), InProperty->GetMinAlignment());
+    }
+#endif
 
     // definition of property
     struct SLUA_UNREAL_API PropertyProto {
@@ -75,7 +81,7 @@ namespace NS_SLUA {
 
         template<typename T>
         static FProperty* createDeduceProperty() {
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             static TWeakObjectPtr<FProperty> CacheProperty[(int)EPropertyClass::Enum + 1];
 #else
             static TWeakFieldPtr<FProperty> CacheProperty[(int)EPropertyClass::Enum + 1];
@@ -96,12 +102,12 @@ namespace NS_SLUA {
         UScriptStruct* scriptStruct;
         // create FProperty by PropertyProto
         // returned FProperty should be collect by yourself
-#if (ENGINE_MINOR_VERSION>=25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
+        static FProperty* createProperty(const PropertyProto& p, UObject* owner = nullptr, FName propName = NAME_None);
+#else
         static FProperty* createProperty(const PropertyProto& p, const FFieldVariant* owner, FName propName);
         static FProperty* createProperty(const PropertyProto& p, const FFieldVariant& owner, FName propName);
         static FProperty* createProperty(const PropertyProto& p, const UObject* owner = nullptr, FName propName = NAME_None);
-#else
-        static FProperty* createProperty(const PropertyProto& p, UObject* owner = nullptr, FName propName = NAME_None);
 #endif
         static bool structHasGetTypeHash(const UScriptStruct* StructType);
     };

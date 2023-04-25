@@ -106,7 +106,7 @@ namespace NS_SLUA {
 
         virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
 
-#if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
+#if !((ENGINE_MINOR_VERSION<20) && (ENGINE_MAJOR_VERSION==4))
         virtual FString GetReferencerName() const override
         {
             return "LuaStruct";
@@ -375,7 +375,11 @@ namespace NS_SLUA {
 
         // check UObject is valid
         static bool isUObjectValid(UObject* obj) {
+#if ENGINE_MAJOR_VERSION >= 5
+            return IsValid(obj);
+#else
             return obj && !obj->IsUnreachable() && !obj->IsPendingKill();
+#endif
         }
 
         // create new enum type to lua, see DefEnum macro
@@ -940,7 +944,7 @@ namespace NS_SLUA {
             }
             return r;
         }
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION>=4)
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         // for TBaseDelegate
         template<class R, class ...ARGS>
         static int push(lua_State* L, TBaseDelegate<R, ARGS...>& delegate);

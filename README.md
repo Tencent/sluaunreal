@@ -262,9 +262,9 @@ LuaActor.ServerRPC.TestServerRPC = {
     -- 定义参数列表
     Params = 
     { 
-        UEnums.EPropertyClass.Int, 
-        UEnums.EPropertyClass.Str, 
-        UEnums.EPropertyClass.bool, 
+        EPropertyClass.Int, 
+        EPropertyClass.Str, 
+        EPropertyClass.bool, 
     }
 }
 
@@ -274,9 +274,9 @@ LuaActor.ClientRPC.TestClientRPC = {
     -- 定义参数列表
     Params = 
     { 
-        UEnums.EPropertyClass.Int, 
-        UEnums.EPropertyClass.Str, 
-        UEnums.EPropertyClass.bool, 
+        EPropertyClass.Int, 
+        EPropertyClass.Str, 
+        EPropertyClass.bool, 
     }
 }
 
@@ -286,9 +286,9 @@ LuaActor.MulticastRPC.TestMulticastRPC = {
     -- 定义参数列表
     Params = 
     { 
-        UEnums.EPropertyClass.Int, 
-        UEnums.EPropertyClass.Str, 
-        UEnums.EPropertyClass.bool, 
+        EPropertyClass.Int, 
+        EPropertyClass.Str, 
+        EPropertyClass.bool, 
     }
 }
 

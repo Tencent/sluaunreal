@@ -92,4 +92,4 @@ function Panel:OnDragLeave(Event, Operation)
     print("panel:OnDragLeave",Operation)
 end
 
-return class(nil, nil, Panel)
+return Class(nil, nil, Panel)

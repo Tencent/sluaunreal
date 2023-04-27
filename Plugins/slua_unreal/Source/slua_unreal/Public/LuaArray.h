@@ -26,7 +26,7 @@ namespace NS_SLUA {
         static void reg(lua_State* L);
         static void clone(FScriptArray* destArray, FProperty* p, const FScriptArray* srcArray);
         static void clone(FScriptArray* destArray, FArrayProperty* arrayP, const FScriptArray* srcArray);
-        static int push(lua_State* L, FProperty* prop, FScriptArray* array);
+        static int push(lua_State* L, FProperty* prop, FScriptArray* array, bool bIsNewInner);
         static int push(lua_State* L, FArrayProperty* prop, FScriptArray* data);
         static int push(lua_State* L, LuaArray* luaArray);
 
@@ -34,10 +34,10 @@ namespace NS_SLUA {
         static int push(lua_State* L, const TArray<T>& v) {
             FProperty* prop = PropertyProto::createDeduceProperty<T>();
             auto array = reinterpret_cast<const FScriptArray*>(&v);
-            return push(L, prop, const_cast<FScriptArray*>(array));
+            return push(L, prop, const_cast<FScriptArray*>(array), false);
         }
 
-        LuaArray(FProperty* prop, FScriptArray* buf, bool bIsRef);
+        LuaArray(FProperty* prop, FScriptArray* buf, bool bIsRef, bool bIsNewInner);
         LuaArray(FArrayProperty* arrayProp, FScriptArray* buf, bool bIsRef);
         ~LuaArray();
 
@@ -80,6 +80,7 @@ namespace NS_SLUA {
         FProperty* inner;
         FScriptArray* array;
         bool isRef;
+        bool isNewInner;
 
         void clear();
         uint8* getRawPtr(int index) const;

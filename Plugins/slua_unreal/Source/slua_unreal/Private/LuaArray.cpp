@@ -58,9 +58,10 @@ namespace NS_SLUA {
         }
     }
 
-    LuaArray::LuaArray(FProperty* p, FScriptArray* buf, bool bIsRef)
+    LuaArray::LuaArray(FProperty* p, FScriptArray* buf, bool bIsRef, bool bIsNewInner)
         : inner(p)
         , isRef(bIsRef)
+        , isNewInner(bIsNewInner)
     {
         if (isRef)
         {
@@ -77,6 +78,7 @@ namespace NS_SLUA {
         : inner(arrayProp->Inner)
         , array(buf)
         , isRef(bIsRef)
+        , isNewInner(false)
     {
         if (isRef)
         {
@@ -97,7 +99,14 @@ namespace NS_SLUA {
             ensure(array);
             SafeDelete(array);
         }
-        
+
+        if (isNewInner)
+        {
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
+            delete inner;
+#endif
+        }
+
         inner = nullptr;
     }
 
@@ -216,7 +225,7 @@ namespace NS_SLUA {
         }
     }
 
-    int LuaArray::push(lua_State* L,FProperty* inner,FScriptArray* data) {
+    int LuaArray::push(lua_State* L,FProperty* inner,FScriptArray* data, bool bIsNewInner) {
         if (inner->GetClass() == FByteProperty::StaticClass())
         {
             char* dest = (char*)data->GetData();
@@ -225,7 +234,7 @@ namespace NS_SLUA {
             return 1;
         }
 
-        LuaArray* luaArrray = new LuaArray(inner, data, false);
+        LuaArray* luaArrray = new LuaArray(inner, data, false, bIsNewInner);
         LuaObject::addLink(L, luaArrray->get());
         return LuaObject::pushType(L,luaArrray,"LuaArray",setupMT,gc);
     }
@@ -257,16 +266,16 @@ namespace NS_SLUA {
             auto cls = LuaObject::checkValueOpt<UClass*>(L, 2, nullptr);
             if (!cls)
                 luaL_error(L, "Array of UObject should have second parameter is UClass");
-            return push(L, PropertyProto::createProperty(PropertyProto(type, cls)), &array);
+            return push(L, PropertyProto::createProperty(PropertyProto(type, cls)), &array, true);
         }
         else if (type == EPropertyClass::Struct)
         {
             auto scriptStruct = LuaObject::checkValueOpt<UScriptStruct*>(L, 2, nullptr);
             if (!scriptStruct)
                 luaL_error(L, "Array of UStruct should have second parameter is UStruct");
-            return push(L, PropertyProto::createProperty(PropertyProto(type, scriptStruct)), &array);
+            return push(L, PropertyProto::createProperty(PropertyProto(type, scriptStruct)), &array, true);
         }
-        return push(L, PropertyProto::createProperty(PropertyProto(type)), &array);
+        return push(L, PropertyProto::createProperty(PropertyProto(type)), &array, true);
     }
 
     int LuaArray::Num(lua_State* L) {

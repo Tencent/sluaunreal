@@ -34,8 +34,8 @@ namespace NS_SLUA {
         SluaUtil::reg(L, "Map", __ctor);
     }
 
-    int LuaMap::push(lua_State* L, FProperty* keyProp, FProperty* valueProp, FScriptMap* buf) {
-        auto luaMap = new LuaMap(keyProp, valueProp, buf, false);
+    int LuaMap::push(lua_State* L, FProperty* keyProp, FProperty* valueProp, FScriptMap* buf, bool bIsNewInner) {
+        auto luaMap = new LuaMap(keyProp, valueProp, buf, false, bIsNewInner);
         LuaObject::addLink(L, luaMap->get());
         return LuaObject::pushType(L, luaMap, "LuaMap", setupMT, gc);
     }
@@ -66,12 +66,13 @@ namespace NS_SLUA {
     }
 
 
-    LuaMap::LuaMap(FProperty* kp, FProperty* vp, FScriptMap* buf, bool bIsRef)
+    LuaMap::LuaMap(FProperty* kp, FProperty* vp, FScriptMap* buf, bool bIsRef, bool bIsNewInner)
         : map(bIsRef ? buf : new FScriptMap())
         , keyProp(kp)
         , valueProp(vp)
         , helper(FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, map))
         , isRef(bIsRef)
+        , isNewInner(bIsNewInner)
     {
         if (!bIsRef) {
             clone(map,kp,vp,buf);
@@ -84,6 +85,7 @@ namespace NS_SLUA {
         , valueProp(p->ValueProp)
         , helper(FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, map))
         , isRef(bIsRef)
+        , isNewInner(false)
     {
         if (!bIsRef) {
             clone(map,keyProp,valueProp,buf);
@@ -95,6 +97,13 @@ namespace NS_SLUA {
             clear();
             ensure(map);
             SafeDelete(map);
+        }
+        if (isNewInner)
+        {
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
+            delete keyProp;
+            delete valueProp;
+#endif
         }
         keyProp = valueProp = nullptr;
     }
@@ -263,7 +272,7 @@ namespace NS_SLUA {
 
         auto keyProp = PropertyProto::createProperty(PropertyProto(keyType,cls));
         auto valueProp = PropertyProto::createProperty(PropertyProto(valueType,cls2));
-        return push(L, keyProp, valueProp, nullptr);
+        return push(L, keyProp, valueProp, nullptr, true);
     }
 
     int LuaMap::Num(lua_State* L) {

@@ -17,11 +17,12 @@ namespace NS_SLUA
 
     DefTypeName(LuaSet::Enumerator);
 
-    LuaSet::LuaSet(FProperty* Property, FScriptSet* Buffer, bool bIsRef)
+    LuaSet::LuaSet(FProperty* Property, FScriptSet* Buffer, bool bIsRef, bool bIsNewInner)
         : Set(bIsRef ? Buffer : new FScriptSet())
         , InElementProperty(Property)
         , Helper(FScriptSetHelper::CreateHelperFormElementProperty(InElementProperty, Set))
         , IsRef(bIsRef)
+        , isNewInner(bIsNewInner)
     {
         if (!IsRef)
         {
@@ -34,6 +35,7 @@ namespace NS_SLUA
         , InElementProperty(Property->ElementProp)
         , Helper(FScriptSetHelper::CreateHelperFormElementProperty(InElementProperty, Set))
         , IsRef(bIsRef)
+        , isNewInner(false)
     {
         if (!IsRef)
         {
@@ -48,6 +50,13 @@ namespace NS_SLUA
             clear();
             ensure(Set);
             SafeDelete(Set);
+        }
+
+        if (isNewInner)
+        {
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
+            delete InElementProperty;
+#endif
         }
         InElementProperty = nullptr;
     }
@@ -81,9 +90,9 @@ namespace NS_SLUA
         }
     }
 
-    int LuaSet::push(lua_State* L, FProperty* Property, FScriptSet* Set)
+    int LuaSet::push(lua_State* L, FProperty* Property, FScriptSet* Set, bool bIsNewInner)
     {
-        LuaSet* NewSet = new LuaSet(Property, Set, false);
+        LuaSet* NewSet = new LuaSet(Property, Set, false, bIsNewInner);
         LuaObject::addLink(L, NewSet->get());
         return push(L, NewSet);
     }
@@ -105,7 +114,7 @@ namespace NS_SLUA
             luaL_error(L, "The 2nd parameter should be UClass for the set of UObject");
         }
         
-        return push(L, PropertyProto::createProperty(PropertyProto(ElementType, UnClass)), &Set);
+        return push(L, PropertyProto::createProperty(PropertyProto(ElementType, UnClass)), &Set, true);
     }
 
     int LuaSet::Num(lua_State* L)

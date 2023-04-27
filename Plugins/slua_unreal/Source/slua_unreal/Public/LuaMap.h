@@ -46,20 +46,20 @@ namespace NS_SLUA {
 
     public:
         static void reg(lua_State* L);
-        static int push(lua_State* L, FProperty* keyProp, FProperty* valueProp, FScriptMap* buf);
+        static int push(lua_State* L, FProperty* keyProp, FProperty* valueProp, FScriptMap* buf, bool bIsNewInner);
         static int push(lua_State* L, LuaMap* luaMap);
         
         template<typename K,typename V>
         static int push(lua_State* L, const TMap<K, V>& v) {
             FProperty* keyProp = PropertyProto::createDeduceProperty<K>();
             FProperty* valueProp = PropertyProto::createDeduceProperty<V>();
-            return push(L, keyProp, valueProp, reinterpret_cast<FScriptMap*>(const_cast<TMap<K, V>*>(&v)));
+            return push(L, keyProp, valueProp, reinterpret_cast<FScriptMap*>(const_cast<TMap<K, V>*>(&v)), false);
         }
 
         static void clone(FScriptMap* dest,FProperty* keyProp, FProperty* valueProp,const FScriptMap* src);
 
         LuaMap(FMapProperty* prop, FScriptMap* buf, bool bIsRef);
-        LuaMap(FProperty* keyProp, FProperty* valueProp, FScriptMap* buf, bool bIsRef);
+        LuaMap(FProperty* keyProp, FProperty* valueProp, FScriptMap* buf, bool bIsRef, bool bIsNewInner);
         ~LuaMap();
 
         FScriptMap* get() {
@@ -117,6 +117,7 @@ namespace NS_SLUA {
         FProperty* valueProp;
         FScriptMapHelper helper;
         bool isRef;
+        bool isNewInner;
 
         static int setupMT(lua_State* L);
         static int gc(lua_State* L);

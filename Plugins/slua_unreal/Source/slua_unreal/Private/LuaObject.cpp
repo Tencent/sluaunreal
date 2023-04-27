@@ -1466,13 +1466,13 @@ namespace NS_SLUA {
         auto p = CastField<FMapProperty>(prop);
         ensure(p);
         FScriptMap* v = p->GetPropertyValuePtr(parms);
-        return LuaMap::push(L, p->KeyProp, p->ValueProp, v);
+        return LuaMap::push(L, p->KeyProp, p->ValueProp, v, false);
     }
     
     int pushUSetProperty(lua_State* L, FProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
         auto p = CastField<FSetProperty>(prop);
         ensure(p);
-        return LuaSet::push(L, p->ElementProp, p->GetPropertyValuePtr(parms));
+        return LuaSet::push(L, p->ElementProp, p->GetPropertyValuePtr(parms), false);
     }
 
     int pushUWeakProperty(lua_State* L, FProperty* prop, uint8* parms,NewObjectRecorder* objRecorder) {

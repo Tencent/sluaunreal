@@ -26,13 +26,13 @@ namespace NS_SLUA {
     class SLUA_UNREAL_API LuaSet : public FGCObject {
 
     public:
-        LuaSet(FProperty* Property, FScriptSet* Buffer, bool bIsRef);
+        LuaSet(FProperty* Property, FScriptSet* Buffer, bool bIsRef, bool bIsNewInner);
         LuaSet(FSetProperty* Property, FScriptSet* Buffer, bool bIsRef);
         ~LuaSet();
         
         static void reg(lua_State* L);
         static void clone(FScriptSet* DstSet, FProperty* Property, const FScriptSet* SrcSet);
-        static int push(lua_State* L, FProperty* Property, FScriptSet* Set);
+        static int push(lua_State* L, FProperty* Property, FScriptSet* Set, bool bIsNewInner);
         static int push(lua_State* L, LuaSet* luaSet);
 
         template<typename T>
@@ -40,7 +40,7 @@ namespace NS_SLUA {
         {
             FProperty* Property = PropertyProto::createDeduceProperty<T>();
             const FScriptSet* Set = reinterpret_cast<const FScriptSet*>(&V);
-            return push(L, Property, const_cast<FScriptSet*>(Set));
+            return push(L, Property, const_cast<FScriptSet*>(Set), false);
         }
 
         // Otherwise the LuaSet is an abstract class and can't be created.
@@ -80,6 +80,7 @@ namespace NS_SLUA {
         FScriptSetHelper Helper;
 
         bool IsRef;
+        bool isNewInner;
 
         struct Enumerator
         {

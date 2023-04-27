@@ -418,6 +418,7 @@ bool FLuaNetSerialization::Read(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeria
         }
         else
         {
+            proxy->dirtyMark.Clear();
             proxy->flatDirtyMark = changes;
         }
 
@@ -440,7 +441,12 @@ bool FLuaNetSerialization::Read(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeria
                     {
                         continue;
                     }
-                    
+
+                    if (!flatProperties.IsValidIndex(index))
+                    {
+                        UE_LOG(Slua, Error, TEXT("FLuaNetSerialization::Read Error: Object[%s]'s flatProperties index[%d] is out of range[%d]!"), *object->GetFullName(), index, flatProperties.Num());
+                        break;
+                    }
                     index = flatProperties[index].propIndex;
                     preIndex = index;
 

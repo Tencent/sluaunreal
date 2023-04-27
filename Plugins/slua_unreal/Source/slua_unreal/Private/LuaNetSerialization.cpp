@@ -994,6 +994,10 @@ void FLuaNetSerialization::BuildSharedSerialization_V1(UPackageMap* map, ClassLu
     auto &sharedSerialization = proxy->sharedSerialization;
     auto &sharedArraySerialization = proxy->sharedArraySerialization;
     auto &sharedPropertyInfo = sharedSerialization.SharedPropertyInfo;
+
+#if ENGINE_MAJOR_VERSION==5
+    sharedSerialization.Init();
+#endif
     auto &serializedProperties = sharedSerialization.SerializedProperties;
 
     auto &properties = classLuaReplicated->flatProperties;
@@ -1033,6 +1037,9 @@ void FLuaNetSerialization::BuildSharedSerialization_V1(UPackageMap* map, ClassLu
             sharedPropInfo.Guid.B = bArray;
             
             auto &sharedArray = sharedArraySerialization.FindOrAdd(propOffset);
+#if ENGINE_MAJOR_VERSION==5
+            sharedArray.Init();
+#endif
             auto &ar = *sharedArray.SerializedProperties;
             auto prepearCallback = [&](int32 arrayNum, int32 innerPropNum)
             {

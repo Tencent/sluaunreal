@@ -84,6 +84,8 @@ void UMyGameInstance::Init()
 void UMyGameInstance::Shutdown()
 {
 	CloseLuaState();
+
+	Super::Shutdown();
 }
 
 static int32 PrintLog(NS_SLUA::lua_State *L)

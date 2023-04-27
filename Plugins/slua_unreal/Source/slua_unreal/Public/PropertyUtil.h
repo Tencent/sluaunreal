@@ -52,7 +52,7 @@ namespace NS_SLUA {
 #if ENGINE_MAJOR_VERSION==5
     FORCEINLINE int32 GetPropertyAlignment(FProperty* InProperty)
     {
-        return Align(InProperty->GetSize(), InProperty->GetMinAlignment());
+        return InProperty->GetMinAlignment();
     }
 #endif
 

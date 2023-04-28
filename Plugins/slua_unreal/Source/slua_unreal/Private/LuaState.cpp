@@ -703,8 +703,6 @@ namespace NS_SLUA {
         for (CacheImportedMap::TIterator it(cacheImportedMap); it; ++it)
             if (!it.Value().cacheObjectPtr.IsValid())
                 it.RemoveCurrent();
-
-        UE_LOG(Slua, Log, TEXT("Unreal engine GC"));
     }
     
     void LuaState::onWorldCleanup(UWorld * World, bool bSessionEnded, bool bCleanupResources)

@@ -614,6 +614,7 @@ namespace NS_SLUA
                     return true;
 #else
                     bindOverrideFuncs(obj, cls, bHookInstancedObj);
+                    return true;
 #endif
                 }
             }

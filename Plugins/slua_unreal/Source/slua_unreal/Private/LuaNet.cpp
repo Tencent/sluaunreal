@@ -509,7 +509,8 @@ namespace NS_SLUA
         UClass* superCls = cls->GetSuperClass();
         if (superCls && superCls->ImplementsInterface(ULuaOverriderInterface::StaticClass()))
         {
-            const FString superLuaFilePath = LuaOverrider::getLuaFilePath(nullptr, superCls, true);
+            bool bHookInstancedObj;
+            const FString superLuaFilePath = LuaOverrider::getLuaFilePath(nullptr, superCls, true, bHookInstancedObj);
             bAdded |= addClassRPCRecursive(L, superCls, superLuaFilePath, cppSuperModule);
         }
 

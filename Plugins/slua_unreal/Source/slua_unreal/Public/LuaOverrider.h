@@ -95,7 +95,7 @@ namespace NS_SLUA
 
         static bool isHookable(const UObjectBaseUtility* obj);
         bool tryHook(const UObjectBaseUtility* obj, bool bIsPostLoad = false, bool bCDOLua = true, bool bHookInstancedObj = false);
-        static FString getLuaFilePath(UObject* obj, class UClass* cls, bool bCDOLua);
+        static FString getLuaFilePath(UObject* obj, class UClass* cls, bool bCDOLua, bool& bHookInstancedObj);
 
 #if WITH_EDITOR
         ULuaOverrider::ClassNativeMap cacheNativeFuncs;
@@ -114,11 +114,51 @@ namespace NS_SLUA
 
         void onAsyncLoadingFlushUpdate();
         void onEngineGC();
-        
-        bool bindOverrideFuncs(const UObjectBase* obj, UClass* cls, bool bCDOLua, bool bHookInstancedObj);
+
+        bool bindOverrideFuncs(const UObjectBase* obj, UClass* cls, bool bHookInstancedObj);
         void setmetatable(const LuaVar& luaSelfTable, void* objPtr);
 
         bool hookBpScript(UFunction* func, UClass* cls, FNativeFuncPtr hookFunc);
+
+        static void CustomClassConstructor(const FObjectInitializer& ObjectInitializer);
+        
+        struct ClassHookLinker
+        {
+            ClassHookLinker* pre;
+            LuaOverrider* overrider;
+            UObject* obj;
+            UClass* cls;
+            UClass::ClassConstructorType clsConstructor;
+
+            ClassHookLinker()
+                : pre(this)
+                , overrider(nullptr)
+                , obj(nullptr)
+                , cls(nullptr)
+                , clsConstructor(nullptr)
+            {
+            }
+
+            ClassHookLinker(LuaOverrider* _overrider, UObject* _obj, UClass* _cls, ClassHookLinker* _pre)
+                : pre(_pre)
+                , overrider(_overrider)
+                , obj(_obj)
+                , cls(_cls)
+            {
+                clsConstructor = cls->ClassConstructor;
+                while (clsConstructor == CustomClassConstructor && _pre->obj == obj)
+                {
+                    clsConstructor = _pre->clsConstructor;
+                    _pre = _pre->pre;
+                }
+
+                if (clsConstructor != CustomClassConstructor)
+                {
+                    cls->ClassConstructor = CustomClassConstructor;
+                }
+            }
+        };
+        static ClassHookLinker* currentHook;
 
         static int __index(lua_State* L);
         static int classIndex(lua_State* L);

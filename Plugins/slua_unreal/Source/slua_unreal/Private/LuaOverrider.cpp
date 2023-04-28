@@ -459,10 +459,20 @@ namespace NS_SLUA
     const char* LuaOverrider::CACHE_NAME = "__cache";
     const uint8 LuaOverrider::Code[] = { (uint8)Ex_LuaOverride, EX_Return, EX_Nothing };
     const int32 LuaOverrider::CodeSize = sizeof(Code);
+    LuaOverrider::ClassHookLinker* LuaOverrider::currentHook = new LuaOverrider::ClassHookLinker();
+
     const TCHAR* LuaOverrider::EInputEventNames[] = { TEXT("Pressed"), TEXT("Released"), TEXT("Repeat"), TEXT("DoubleClick"), TEXT("Axis"), TEXT("Max") };
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
     LuaOverrider::FBlueprintFlushReinstancingQueue LuaOverrider::blueprintFlushReinstancingQueue;
 #endif
+
+    #define ACCESS_PRIVATE_FIELD(Class, Type, Member) \
+        template <typename Class, Type Class::* M> \
+        struct AccessPrivate##Class##Member { \
+            friend Type Class::* Private##Class##Member() { return M; } \
+        };\
+        Type Class::* Private##Class##Member(); \
+        template struct AccessPrivate##Class##Member<Class, &Class::Member>
     
     LuaOverrider::LuaOverrider(NS_SLUA::LuaState* luaState)
         : sluaState(luaState)
@@ -592,8 +602,19 @@ namespace NS_SLUA
                 {
                     //NS_SLUA::Log::Log("LuaOverrider::NotifyUObjectCreated %s", TCHAR_TO_UTF8(*obj->GetFName().ToString()));
                     UClass* cls = obj->GetClass();
-                    bindOverrideFuncs(obj, cls, bCDOLua, bHookInstancedObj);
+                    if (bHookInstancedObj)
+                    {
+                        bindOverrideFuncs(obj, cls, bHookInstancedObj);
+                        return true;
+                    }
+
+#if USE_CIRCULAR_DEPENDENCY_LOAD_DEFERRING
+                    auto classHookerLink = new ClassHookLinker(this, (UObject*)obj, cls, currentHook);
+                    currentHook = classHookerLink;
                     return true;
+#else
+                    bindOverrideFuncs(obj, cls, bHookInstancedObj);
+#endif
                 }
             }
 
@@ -602,6 +623,53 @@ namespace NS_SLUA
         }
 
         return false;
+    }
+
+#if USE_CIRCULAR_DEPENDENCY_LOAD_DEFERRING
+    ACCESS_PRIVATE_FIELD(FObjectInitializer, bool, bIsDeferredInitializer);
+    ACCESS_PRIVATE_FIELD(FObjectInitializer, UObject*, Obj);
+#endif
+
+    void LuaOverrider::CustomClassConstructor(const FObjectInitializer& ObjectInitializer)
+    {
+        ensure(currentHook->pre != currentHook);
+
+        auto obj = ObjectInitializer.GetObj();
+        auto &current = *currentHook;
+
+        ensure(currentHook->obj == obj);
+
+        auto clsConstructor = current.clsConstructor;
+        ensure(clsConstructor != CustomClassConstructor);
+        if (clsConstructor != CustomClassConstructor)
+        {
+            // revert class constructor function
+            ObjectInitializer.GetClass()->ClassConstructor = clsConstructor;
+            clsConstructor(ObjectInitializer);
+
+            ObjectInitializer.~FObjectInitializer();
+
+#if USE_CIRCULAR_DEPENDENCY_LOAD_DEFERRING
+            static auto bIsDeferredInitializerPtr = PrivateFObjectInitializerbIsDeferredInitializer();
+            static auto ObjPtr = PrivateFObjectInitializerObj();
+            if (!(ObjectInitializer.*bIsDeferredInitializerPtr))
+            {
+                auto &ObjectInitializerProxy = *const_cast<FObjectInitializer*>(&ObjectInitializer);
+                ObjectInitializerProxy.*bIsDeferredInitializerPtr = true;
+                ObjectInitializerProxy.*ObjPtr = nullptr;
+            }
+#endif
+        }
+
+        auto cls = current.cls;
+        while (currentHook->obj == obj)
+        {
+            auto overrider = currentHook->overrider;
+            overrider->bindOverrideFuncs(obj, cls, false);
+            auto pre = currentHook;
+            currentHook = currentHook->pre;
+            delete pre;
+        }
     }
 
 #if WITH_EDITOR
@@ -695,7 +763,7 @@ namespace NS_SLUA
             NS_SLUA::LuaNet::classLuaReplicatedMap.Remove(cls);
         }
     }
-    
+
     void LuaOverrider::removeOverrides()
     {
         for (auto iter = overridedClasses.CreateIterator(); iter; ++iter)
@@ -753,7 +821,7 @@ namespace NS_SLUA
             {
                 // NS_SLUA::Log::Log("LuaOverrider::OnAsyncLoadingFlushUpdate %s", TCHAR_TO_UTF8(*actorInfo.obj->GetFName().ToString()));
                 UClass* cls = actorInfo.obj->GetClass();
-                bindOverrideFuncs(actorInfo.obj, cls, actorInfo.bCDOLua, true);
+                bindOverrideFuncs(actorInfo.obj, cls, true);
             }
             else
             {
@@ -779,21 +847,26 @@ namespace NS_SLUA
     }
 #endif
 
-    FString LuaOverrider::getLuaFilePath(UObject* obj, UClass* cls, bool bCDOLua)
+    FString LuaOverrider::getLuaFilePath(UObject* obj, UClass* cls, bool bCDOLua, bool& bHookInstancedObj)
     {
+        bHookInstancedObj = false;
         const FString GET_LUA_FILE_FUNC_NAME = TEXT("GetLuaFilePath");
         UFunction* func = cls->FindFunctionByName(FName(*GET_LUA_FILE_FUNC_NAME));
         FString luaFilePath;
         if (func->GetNativeFunc())
         {
-            if (bCDOLua)
+            UObject* defaultObject = cls->GetDefaultObject();
+            defaultObject->ProcessEvent(func, &luaFilePath);
+
+            if (!bCDOLua)
             {
-                UObject* defaultObject = cls->GetDefaultObject();
-                defaultObject->ProcessEvent(func, &luaFilePath);
-            }
-            else
-            {
-                obj->UObject::ProcessEvent(func, &luaFilePath);
+                FString instanceFilePath;
+                obj->UObject::ProcessEvent(func, &instanceFilePath);
+                if (!instanceFilePath.IsEmpty() && instanceFilePath != luaFilePath)
+                {
+                    bHookInstancedObj = true;
+                    luaFilePath = MoveTemp(instanceFilePath);
+                }
             }
         }
         return MoveTemp(luaFilePath);
@@ -854,14 +927,6 @@ namespace NS_SLUA
             iterateTable(L, funcNames);
         }
     }
-
-    #define ACCESS_PRIVATE_FIELD(Class, Type, Member) \
-        template <typename Class, Type Class::* M> \
-        struct AccessPrivate##Class##Member { \
-            friend Type Class::* Private##Class##Member() { return M; } \
-        };\
-        Type Class::* Private##Class##Member(); \
-        template struct AccessPrivate##Class##Member<Class, &Class::Member>
 
     ACCESS_PRIVATE_FIELD(FProperty, int, Offset_Internal);
 
@@ -925,7 +990,7 @@ namespace NS_SLUA
         return newFunc;
     }
 
-    bool LuaOverrider::bindOverrideFuncs(const UObjectBase* obj, UClass* cls, bool bCDOLua, bool bHookInstancedObj) {
+    bool LuaOverrider::bindOverrideFuncs(const UObjectBase* obj, UClass* cls, bool bHookInstancedObj) {
         SCOPE_CYCLE_COUNTER(STAT_LuaOverrider_bindOverrideFuncs);
 
         //NS_SLUA::Log::Log("LuaOverrider::BindOverrideFuncs %s", TCHAR_TO_UTF8(*obj->GetFName().ToString()));
@@ -937,6 +1002,7 @@ namespace NS_SLUA
         if (selfTable) {
             return true;
         }
+
         if (!bHookInstancedObj && cls->ImplementsInterface(UInstancedLuaInterface::StaticClass()))
         {
             //NS_SLUA::Log::Log("LuaOverrider::BindOverrideFuncs Delay Hook for Instanced Obj %s", TCHAR_TO_UTF8(*obj->GetFName().ToString()));
@@ -953,7 +1019,8 @@ namespace NS_SLUA
             }
             return false;
         }
-        FString luaFilePath = getLuaFilePath((UObject*)obj, cls, bCDOLua);
+
+        FString luaFilePath = getLuaFilePath((UObject*)obj, cls, false, bHookInstancedObj);
         if (luaFilePath.IsEmpty()) {
             //NS_SLUA::Log::Log("LuaOverrider::BindOverrideFuncs LuaFilePath empty of Object[%s]", TCHAR_TO_UTF8(*(obj->GetFName().ToString())));
             return false;

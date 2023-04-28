@@ -27,7 +27,8 @@ void ILuaOverriderInterface::TryHook()
     {
         return;
     }
-    const FString luaFilePath = NS_SLUA::LuaOverrider::getLuaFilePath(obj, obj->GetClass(), false);
+    bool bHookInstancedObj;
+    const FString luaFilePath = NS_SLUA::LuaOverrider::getLuaFilePath(obj, obj->GetClass(), false, bHookInstancedObj);
     if (luaFilePath.IsEmpty())
     {
         return;

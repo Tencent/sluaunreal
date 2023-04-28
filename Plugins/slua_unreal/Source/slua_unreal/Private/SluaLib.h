@@ -26,7 +26,7 @@ namespace NS_SLUA {
         static int getWorld(lua_State* L);
         static int loadUI(lua_State* L);
         static int loadClass(lua_State* L);
-        static int loadClassObject(lua_State* L);
+        static int loadObject(lua_State* L);
         static int createDelegate(lua_State* L);
 
         // remote profile

@@ -50,6 +50,7 @@ namespace NS_SLUA {
         RegMetaMethod(L, loadUI);
         RegMetaMethod(L, createDelegate);
         RegMetaMethod(L, loadClass);
+        RegMetaMethod(L, loadObject);
         RegMetaMethod(L, setTickFunction);
         RegMetaMethod(L, getMicroseconds);
         RegMetaMethod(L, getMiliseconds);
@@ -120,19 +121,10 @@ namespace NS_SLUA {
         return LuaObject::pushClass(L,uclass);
     }
 
-    int SluaUtil::loadClassObject(lua_State* L)
-    {
-        const char* path = luaL_checkstring(L, 1);
-
-        auto classPath = FString::Printf(TEXT("Blueprint'%s_C'"), UTF8_TO_TCHAR(path));
-
-        TSubclassOf<UObject> uclass = LoadClass<UObject>(NULL, *classPath);
-        if (uclass == nullptr)
-        {
-            luaL_error(L, "Can't find class object named %s", path);
-        }
-
-        return LuaObject::push(L, uclass, true);
+    int SluaUtil::loadObject(lua_State* L) {
+        const char* objname = luaL_checkstring(L, 1);
+        UObject* outter = LuaObject::checkValueOpt<UObject*>(L, 2, nullptr);
+        return LuaObject::push(L, LoadObject<UObject>(outter, UTF8_TO_TCHAR(objname)));
     }
     
     int SluaUtil::loadUI(lua_State* L) {

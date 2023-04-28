@@ -651,13 +651,21 @@ namespace NS_SLUA
             ObjectInitializer.~FObjectInitializer();
 
 #if USE_CIRCULAR_DEPENDENCY_LOAD_DEFERRING
+            auto &ObjectInitializerProxy = *const_cast<FObjectInitializer*>(&ObjectInitializer);
+#if ENGINE_MAJOR_VERSION==4
+            static auto LastConstructedObjectPtr = PrivateFObjectInitializerLastConstructedObject();
+            auto lastConstructObj = &(ObjectInitializerProxy.*LastConstructedObjectPtr);
+            bool &bIsDeferredInitializer = *(bool*)(lastConstructObj + 1);
+#else
             static auto bIsDeferredInitializerPtr = PrivateFObjectInitializerbIsDeferredInitializer();
+            bool &bIsDeferredInitializer = ObjectInitializerProxy.*bIsDeferredInitializerPtr;
+#endif
             static auto ObjPtr = PrivateFObjectInitializerObj();
-            if (!(ObjectInitializer.*bIsDeferredInitializerPtr))
+            auto &obj = ObjectInitializerProxy.*ObjPtr;
+            if (!bIsDeferredInitializer && !obj)
             {
-                auto &ObjectInitializerProxy = *const_cast<FObjectInitializer*>(&ObjectInitializer);
-                ObjectInitializerProxy.*bIsDeferredInitializerPtr = true;
-                ObjectInitializerProxy.*ObjPtr = nullptr;
+                // avoid ObjectInitializer destruct twice.
+                bIsDeferredInitializer = true;
             }
 #endif
         }

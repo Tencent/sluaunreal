@@ -33,6 +33,10 @@ public:
 
     NS_SLUA::LuaVar GetSelfTable() const;
 
+    virtual void PostLuaHook()
+    {
+    }
+
     /**
     *  Provide the ReceivePreRep interface before OnRep, Initialization sequence: bindOverrideFuncs->ReceivePreRep->OnRep->BeginPlay
     */

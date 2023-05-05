@@ -125,6 +125,7 @@ namespace NS_SLUA
         struct ClassHookLinker
         {
             ClassHookLinker* pre;
+            ClassHookLinker* next;
             LuaOverrider* overrider;
             UObject* obj;
             UClass* cls;
@@ -132,6 +133,7 @@ namespace NS_SLUA
 
             ClassHookLinker()
                 : pre(this)
+                , next(this)
                 , overrider(nullptr)
                 , obj(nullptr)
                 , cls(nullptr)
@@ -141,10 +143,12 @@ namespace NS_SLUA
 
             ClassHookLinker(LuaOverrider* _overrider, UObject* _obj, UClass* _cls, ClassHookLinker* _pre)
                 : pre(_pre)
+                , next(_pre->next)
                 , overrider(_overrider)
                 , obj(_obj)
                 , cls(_cls)
             {
+                pre->next = this;
                 clsConstructor = cls->ClassConstructor;
                 while (clsConstructor == CustomClassConstructor && _pre->obj == obj)
                 {
@@ -156,6 +160,7 @@ namespace NS_SLUA
                 {
                     cls->ClassConstructor = CustomClassConstructor;
                 }
+                ensure(clsConstructor != CustomClassConstructor);
             }
         };
         static ClassHookLinker* currentHook;

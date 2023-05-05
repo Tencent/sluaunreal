@@ -627,8 +627,11 @@ namespace NS_SLUA
     }
 
 #if USE_CIRCULAR_DEPENDENCY_LOAD_DEFERRING
+#if ENGINE_MAJOR_VERSION==4
+    ACCESS_PRIVATE_FIELD(FObjectInitializer, UObject*, LastConstructedObject);
+#else
     ACCESS_PRIVATE_FIELD(FObjectInitializer, bool, bIsDeferredInitializer);
-    ACCESS_PRIVATE_FIELD(FObjectInitializer, UObject*, Obj);
+#endif
 #endif
 
     void LuaOverrider::CustomClassConstructor(const FObjectInitializer& ObjectInitializer)
@@ -636,6 +639,7 @@ namespace NS_SLUA
         ensure(currentHook->pre != currentHook);
 
         auto obj = ObjectInitializer.GetObj();
+        auto cls = obj->GetClass();
         auto &current = *currentHook;
 
         ensure(currentHook->obj == obj);
@@ -644,41 +648,71 @@ namespace NS_SLUA
         ensure(clsConstructor != CustomClassConstructor);
         if (clsConstructor != CustomClassConstructor)
         {
-            // revert class constructor function
-            ObjectInitializer.GetClass()->ClassConstructor = clsConstructor;
             clsConstructor(ObjectInitializer);
-
             ObjectInitializer.~FObjectInitializer();
 
-#if USE_CIRCULAR_DEPENDENCY_LOAD_DEFERRING
             auto &ObjectInitializerProxy = *const_cast<FObjectInitializer*>(&ObjectInitializer);
+
+            FUObjectThreadContext& ThreadContext = FUObjectThreadContext::Get();
+            auto lastConstructedObject = ThreadContext.ConstructedObject;
+            // set InstanceGraph(in UE4)/SubobjectOverrides(in UE5)¡¢ComponentInits to initialize to avoid destructor twice
+            new (&ObjectInitializerProxy) FObjectInitializer();
+
+            ThreadContext.PopInitializer();
+
+            // Let the FObjectFinders know we left the constructor.
+            ThreadContext.IsInConstructor--;
+            check(ThreadContext.IsInConstructor >= 0);
+            ThreadContext.ConstructedObject = lastConstructedObject;
+            
+#if USE_CIRCULAR_DEPENDENCY_LOAD_DEFERRING
 #if ENGINE_MAJOR_VERSION==4
             static auto LastConstructedObjectPtr = PrivateFObjectInitializerLastConstructedObject();
-            auto lastConstructObj = &(ObjectInitializerProxy.*LastConstructedObjectPtr);
-            bool &bIsDeferredInitializer = *(bool*)(lastConstructObj + 1);
+
+            struct FObjectProxyStruct
+            {
+                UObject* LastConstructedObject;
+                bool bIsDeferredInitializer : 1;
+            };
+
+            FObjectProxyStruct* objProxy = reinterpret_cast<FObjectProxyStruct*>(&(ObjectInitializerProxy.*LastConstructedObjectPtr));
 #else
             static auto bIsDeferredInitializerPtr = PrivateFObjectInitializerbIsDeferredInitializer();
             bool &bIsDeferredInitializer = ObjectInitializerProxy.*bIsDeferredInitializerPtr;
 #endif
-            static auto ObjPtr = PrivateFObjectInitializerObj();
-            auto &obj = ObjectInitializerProxy.*ObjPtr;
-            if (!bIsDeferredInitializer && !obj)
+            if (!ObjectInitializer.GetObj())
             {
                 // avoid ObjectInitializer destruct twice.
+#if ENGINE_MAJOR_VERSION==4
+                objProxy->bIsDeferredInitializer = true;
+#else
                 bIsDeferredInitializer = true;
+#endif
             }
 #endif
         }
 
-        auto cls = current.cls;
-        while (currentHook->obj == obj)
+        auto tempClassHookLinker = currentHook;
+        while (tempClassHookLinker->obj == obj)
         {
-            auto overrider = currentHook->overrider;
+            ensure(tempClassHookLinker->cls == cls);
+            auto overrider = tempClassHookLinker->overrider;
+            auto currentLinker = tempClassHookLinker;
             overrider->bindOverrideFuncs(obj, cls, false);
-            auto pre = currentHook;
-            currentHook = currentHook->pre;
-            delete pre;
+
+            tempClassHookLinker = tempClassHookLinker->pre;
+            if (currentLinker == currentHook)
+            {
+                currentHook = tempClassHookLinker;
+            }
+            tempClassHookLinker->next = currentLinker->next;
+            currentLinker->next->pre = tempClassHookLinker;
+
+            delete currentLinker;
         }
+
+        // revert class constructor function
+        cls->ClassConstructor = clsConstructor;
     }
 
 #if WITH_EDITOR
@@ -999,15 +1033,16 @@ namespace NS_SLUA
         return newFunc;
     }
 
-    bool LuaOverrider::bindOverrideFuncs(const UObjectBase* obj, UClass* cls, bool bHookInstancedObj) {
+    bool LuaOverrider::bindOverrideFuncs(const UObjectBase* objBase, UClass* cls, bool bHookInstancedObj) {
         SCOPE_CYCLE_COUNTER(STAT_LuaOverrider_bindOverrideFuncs);
 
-        //NS_SLUA::Log::Log("LuaOverrider::BindOverrideFuncs %s", TCHAR_TO_UTF8(*obj->GetFName().ToString()));
-        if (!sluaState || !obj || !cls) {
+        //UE_LOG(Slua, Log, TEXT("LuaOverrider::BindOverrideFuncs %s"), *objBase->GetFName().ToString());
+        if (!sluaState || !objBase || !cls) {
             return false;
         }
         lua_State* L = sluaState->getLuaState();
-        NS_SLUA::LuaVar* selfTable = ULuaOverrider::getObjectLuaTable((UObject*)obj, L);
+        auto obj = (UObject*)objBase;
+        NS_SLUA::LuaVar* selfTable = ULuaOverrider::getObjectLuaTable(obj, L);
         if (selfTable) {
             return true;
         }
@@ -1015,7 +1050,7 @@ namespace NS_SLUA
         if (!bHookInstancedObj && cls->ImplementsInterface(UInstancedLuaInterface::StaticClass()))
         {
             //NS_SLUA::Log::Log("LuaOverrider::BindOverrideFuncs Delay Hook for Instanced Obj %s", TCHAR_TO_UTF8(*obj->GetFName().ToString()));
-            auto objPtr = sluaState->delayHookStateMap.Find((UObject*)obj);
+            auto objPtr = sluaState->delayHookStateMap.Find(obj);
             if (objPtr)
             {
                 (*objPtr).Add(sluaState);
@@ -1024,12 +1059,12 @@ namespace NS_SLUA
             {
                 TArray<LuaState*> arr;
                 arr.Add(sluaState);
-                sluaState->delayHookStateMap.Add((UObject*)obj, arr);
+                sluaState->delayHookStateMap.Add(obj, arr);
             }
             return false;
         }
 
-        FString luaFilePath = getLuaFilePath((UObject*)obj, cls, false, bHookInstancedObj);
+        FString luaFilePath = getLuaFilePath(obj, cls, false, bHookInstancedObj);
         if (luaFilePath.IsEmpty()) {
             //NS_SLUA::Log::Log("LuaOverrider::BindOverrideFuncs LuaFilePath empty of Object[%s]", TCHAR_TO_UTF8(*(obj->GetFName().ToString())));
             return false;
@@ -1123,13 +1158,19 @@ namespace NS_SLUA
             classHookedFuncNames.Add(cls, funcNames);
         }
 
-        if (auto classReplicated = LuaNet::addClassReplicatedProps(L, (UObject*)obj, luaModule))
+        if (auto classReplicated = LuaNet::addClassReplicatedProps(L, obj, luaModule))
         {
-            LuaNet::initLuaReplicatedProps(L, (UObject*)obj, *classReplicated, luaSelfTable);
+            LuaNet::initLuaReplicatedProps(L, obj, *classReplicated, luaSelfTable);
         }
 
         setmetatable(luaSelfTable, (void*)obj);
-        ULuaOverrider::addObjectTable(L, (UObject*)obj, luaSelfTable, bHookInstancedObj);
+        ULuaOverrider::addObjectTable(L, obj, luaSelfTable, bHookInstancedObj);
+
+        if (auto luaInterface = Cast<ILuaOverriderInterface>(obj))
+        {
+            luaInterface->PostLuaHook();
+        }
+
         return true;
     }
 

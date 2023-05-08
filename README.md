@@ -314,7 +314,7 @@ local LuaActor ={}
 
 function LuaActor:GetLifetimeReplicatedProps()
     local ELifetimeCondition = import("ELifetimeCondition")
-    local FVectorType = import("FVector")
+    local FVectorType = import("Vector")
     return {
         { "Name", ELifetimeCondition.COND_InitialOnly, EPropertyClass.Str},
         { "HP", ELifetimeCondition.COND_OwnerOnly, EPropertyClass.Float},
@@ -380,7 +380,7 @@ Actor.Position.X = 1
 支撑PUBG Mobile 线上业务开发，稳定性得到充分验证。
 
 ### 版本支持
-- UE4.18、UE4.26完整支持，其他版本因为时间精力问题暂时无法支持到位
+- UE4.18、UE4.26完整支持，支持UE5.1，其他版本因为时间精力问题暂时无法支持到位
 - 兼容lua 5.4版本接入
 
 # 相关参考

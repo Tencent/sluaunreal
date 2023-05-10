@@ -395,7 +395,7 @@ slua-unreal依赖dot-clang做c++静态代码生成的工具稍后开源，目前
 
 QQ技术支持群：15647305，需要提交具体问题issue后申请入群，谢绝hr和非技术人员进入。
 
-# 附：竞品性能对比
+# 附：同品类性能对比
 系统Win10 64位
 CPU： AMD Ryzen 7 4700G with Radeon Graphics 3.60 GHZ
 

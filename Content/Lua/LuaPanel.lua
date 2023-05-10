@@ -3,12 +3,16 @@ local WBL = import("WidgetBlueprintLibrary")
 
 local Panel ={}
 
+function Panel:ctor()
+    self.printOnceInTick = true
+end
+
 function Panel:Initialize()
 
 end
 
 function Panel:Construct()
-    print"panel:Construct"
+    print("panel:Construct")
     self.bHasScriptImplementedTick = true
 
     self.imgs = {
@@ -28,18 +32,20 @@ function Panel:Construct()
 end
 
 function Panel:MyOverride()
-    print"MyOverride lua"
+    print("MyOverride lua")
     self.Super:MyOverride()
     return false,"return from lua"
 end
 
 function Panel:Destruct()
-    print"panel:Destruct"
+    print("panel:Destruct")
     self.imgs = nil
 end
 
 function Panel:Tick(geom, dt)
-    print("panel:tick")
+    if self.printOnceInTick then
+        print("panel:tick")
+    end
     -- call parent super
     self.Super:Tick(geom,dt)
     local item = self.imgs[math.random(1,2)]
@@ -47,19 +53,22 @@ function Panel:Tick(geom, dt)
     self.Item.Image_42:SetBrushFromTexture( texture,false )
     self.Item.TextBlock_43:SetText(item.name)
 
-    local m = self.ValMap
-    print("over",m:Num())
-    for k,v in pairs(m) do
-        print("over",k,v)
+    if self.printOnceInTick then
+        local m = self.ValMap
+        print("over",m:Num())
+        for k,v in pairs(m) do
+            print("over",k,v)
+        end
     end
+
+    self.printOnceInTick = false
 end
 
 function Panel:OnDestroy()
 end
 
 function Panel:OnKeyDown(Geometry, Event)
-    print"panel:OnKeyDown"
-    
+    print("panel:OnKeyDown")
 end
 
 local FKey = import "Key"
@@ -71,11 +80,11 @@ function Panel:OnMouseButtonDown(Geometry, Event)
 end
 
 function Panel:OnFocusReceived(Geometry, Event)
-    print"panel:OnFocusReceived"
+    print("panel:OnFocusReceived")
 end
 
 function Panel:OnMouseMove(Geometry, Event)
-    print"panel:OnMouseMove"
+    print("panel:OnMouseMove")
     return WBL.Handled()
 end
 

@@ -59,7 +59,7 @@ local function test()
 end
 
 local TestMap={}
-function TestMap.update()
+function TestMap:ReceiveBeginPlay()
     test()
 end
 

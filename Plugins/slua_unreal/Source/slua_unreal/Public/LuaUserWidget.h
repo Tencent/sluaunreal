@@ -13,48 +13,24 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "LuaState.h"
-#include "LuaBase.h"
-#include "GameFramework/Actor.h"
+#include "Blueprint/UserWidget.h"
+#include "LuaOverriderInterface.h"
+
 #include "LuaUserWidget.generated.h"
 
-using slua_Luabase = NS_SLUA::LuaBase;
-
 UCLASS()
-class SLUA_UNREAL_API ULuaUserWidget : public UUserWidget, public slua_Luabase, public ILuaTableObjectInterface {
+class SLUA_UNREAL_API ULuaUserWidget : public UUserWidget, public ILuaOverriderInterface {
     GENERATED_BODY()
 
-protected:
-#if (ENGINE_MINOR_VERSION>20) && (ENGINE_MAJOR_VERSION>=4)
-	virtual void NativeOnInitialized() override;
-#endif
-	virtual void NativeConstruct() override;
-	virtual void NativeDestruct() override;
-	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
-public:	
-	// below UPROPERTY and UFUNCTION can't be put to macro LUABASE_BODY
-	// so copy & paste them
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
-	FString LuaFilePath;
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
-	FString LuaStateName;
-	UFUNCTION(BlueprintCallable, Category = "slua")
-	FLuaBPVar CallLuaMember(FString FunctionName, const TArray<FLuaBPVar>& Args) {
-		return callMember(FunctionName, Args);
-	}
-	virtual bool Initialize() override;
-	virtual void ProcessEvent(UFunction* func, void* params) override;
-	virtual void BeginDestroy() override;
-	void superTick(NS_SLUA::lua_State* L) override;
-	void superTick() override;
-	void tick(float dt) override;
+public:
+    // below UPROPERTY and UFUNCTION can't be put to macro LUABASE_BODY
+    // so copy & paste them
+    UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "slua")
+    FString LuaFilePath;
 
-	virtual NS_SLUA::LuaVar getSelfTable() const {
-		return luaSelfTable;
-	}
-private:
-	void InitLuaTable();
+    virtual bool Initialize() override;
+    virtual void BeginDestroy() override;
 
-	FGeometry currentGeometry;
+    FString GetLuaFilePath_Implementation() const override;
 };
 

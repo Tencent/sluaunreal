@@ -19,44 +19,17 @@
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Views/STreeView.h"
 #include "Widgets/Views/SListView.h"
-#include "Widgets/Input/SCheckBox.h"
 #include "Widgets/Notifications/SProgressBar.h"
 #include "slua_remote_profile.h"
 #include "LuaMemoryProfile.h"
+#include "ProfileDataDefine.h"
+#include "slua_profile_inspector.h"
 
 #define IsMemoryProfiler (m_stdLineVisibility.Get() != EVisibility::Visible)
-
-struct FunctionProfileInfo;
-struct FileMemInfo;
-struct ProflierMemNode;
-struct MemoryFrame;
-
-typedef TArray<TSharedPtr<FunctionProfileInfo>> SluaProfiler;
-typedef TSharedPtr<MemoryFrame, ESPMode::ThreadSafe> MemoryFramePtr;
-typedef TMap<FString, TMap<int, TSharedPtr<FileMemInfo>>> MemFileInfoMap;
-typedef TArray<TSharedPtr<ProflierMemNode>> MemNodeInfoList;
-typedef TArray<TSharedPtr<FileMemInfo>> ShownMemInfoList;
-typedef TMap<FString, TSharedPtr<FileMemInfo>> ParentFileMap;
-
 class SProfilerWidget;
 class SProfilerTabWidget;
-
-const int cMaxSampleNum = 250;
-const int cMaxViewHeight = 200;
-
-struct FileMemInfo {
-    FString hint;
-    FString lineNumber;
-    float size;
-    // one line memory difference between two point
-    float difference;
-};
-
-struct ProflierMemNode {
-    MemFileInfoMap infoList;
-    ParentFileMap parentFileMap;
-    float totalSize;
-};
+class Profiler;
+class SSlider;
 
 class SLUA_PROFILE_API SProfilerInspector
 {
@@ -64,12 +37,13 @@ public:
     SProfilerInspector();
     ~SProfilerInspector();
     
-    void Refresh(TArray<SluaProfiler>& curProfilersArray, TMap<int64, NS_SLUA::LuaMemInfo>& memoryInfoList, MemoryFramePtr memoryFrame);
+    void Refresh(TSharedPtr<FunctionProfileNode> funcInfoRoot, TMap<int64, NS_SLUA::LuaMemInfo>& memoryInfoList, MemoryFramePtr memoryFrame);
     TSharedRef<class SDockTab> GetSDockTab();
     TSharedRef<ITableRow> OnGenerateMemRowForList(TSharedPtr<FileMemInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
-    TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FunctionProfileInfo> Item, const TSharedRef<STableViewBase>& OwnerTable);
     void OnGetMemChildrenForTree(TSharedPtr<FileMemInfo> Parent, TArray<TSharedPtr<FileMemInfo>>& OutChildren);
-    void OnGetChildrenForTree(TSharedPtr<FunctionProfileInfo> Parent, TArray<TSharedPtr<FunctionProfileInfo>>& OutChildren);
+    
+    void OnGetChildrenForTree(TSharedPtr<FunctionProfileNode> Parent, TArray<TSharedPtr<FunctionProfileNode>>& OutChildren);
+    TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FunctionProfileNode> Item, const TSharedRef<STableViewBase>& OwnerTable);
     void StartChartRolling();
     bool GetNeedProfilerCleared() const
     {
@@ -84,18 +58,18 @@ public:
     
 private:
     const static int sampleNum = cMaxSampleNum;
-    const static int fixRowWidth = 300;
+    const static int fixRowWidth = 600;
     const static int refreshInterval = 1;
     const float perMilliSec = 1000.0f;
     const static int maxMemoryFile = 30;
-
-	typedef TMap<FString, int> MemInfoIndexMap;
+    bool bIsTouching = false;
+    typedef TMap<FString, int> MemInfoIndexMap;
     
-    TSharedPtr<STreeView<TSharedPtr<FunctionProfileInfo>>> treeview;
+    TSharedPtr<STreeView<TSharedPtr<FunctionProfileNode>>> treeview;
     TSharedPtr<SListView<TSharedPtr<FileMemInfo>>> listview;
     TSharedPtr<STreeView<TSharedPtr<FileMemInfo>>> memTreeView;
-    TSharedPtr<SCheckBox> profilerCheckBox;
-    TSharedPtr<SCheckBox> memProfilerCheckBox;
+    TSharedPtr<SSlider> cpuSlider,memSlider;
+
     TSharedPtr<SProgressBar> profilerBarArray[sampleNum];
     TSharedPtr<SProfilerWidget> cpuProfilerWidget;
     TSharedPtr<SProfilerWidget> memProfilerWidget;
@@ -108,9 +82,9 @@ private:
     TArray<float> chartValArray;
     TArray<float> memChartValArray;
     bool stopChartRolling;
-    int refreshIdx;
-    int arrayOffset;
-    int lastArrayOffset;
+    int cpuViewBeginIndex;
+    int memViewBeginIndex;
+    
     float maxLuaMemory;
     float avgLuaMemory;
     float luaTotalMemSize;
@@ -122,47 +96,41 @@ private:
     bool isMemMouseButtonUp;
     FVector2D mouseUpPoint;
     FVector2D mouseDownPoint;
+
     
-    TArray<SluaProfiler> tmpProfilersArraySamples[sampleNum];
-    TArray<SluaProfiler> profilersArraySamples[sampleNum];
-    SluaProfiler shownRootProfiler;
-    SluaProfiler shownProfiler;
-    SluaProfiler tmpRootProfiler;
-    SluaProfiler tmpProfiler;
-    TSharedPtr<ProflierMemNode> lastLuaMemNode;
+    TArray<TArray<TSharedPtr<FunctionProfileNode>>> allProfileData;
+
+    TArray<TSharedPtr<FunctionProfileNode>> profileRootArr;    
+    TSharedPtr<FProflierMemNode> lastLuaMemNode;
     /* holding all of the memory node which are showed on Profiler chart */
-    MemNodeInfoList luaMemNodeChartList;
+    MemNodeInfoList allLuaMemNodeList;
+    
     /* refresh with the chart line, when mouse clicks down, it'll get point from this array */
-    MemNodeInfoList tempLuaMemNodeChartList;
     MemFileInfoMap shownFileInfo;
     /* store the file name as the parent item in memory treeview */
     ShownMemInfoList shownParentFileName;
     
     void initLuaMemChartList();
-    bool NeedReBuildInspector();
     void RefreshBarValue();
-    void AddProfilerBarOnMouseMoveEvent();
-    void RemoveProfilerBarOnMouseMoveEvent();
-    void ShowProfilerTree(TArray<SluaProfiler> &selectedProfiler);
+    
+    void ShowProfilerTree(TArray<TSharedPtr<FunctionProfileNode>>&selectedProfiler);
     void CheckBoxChanged(ECheckBoxState newState);
-    void MemoryCheckBoxChanged(ECheckBoxState newState);
-    void ClearProfilerCharFillImage();
-    void AssignProfiler(TArray<SluaProfiler> &profilerArray, SluaProfiler& rootProfilers, SluaProfiler& profilers);
-    void AssignProfiler(SluaProfiler& srcProfilers, SluaProfiler& dstProfilers);
-    void MergeSiblingNode(SluaProfiler& profiler, int begIdx, int endIdx, TArray<int> parentMergeArray, int mergeArrayIdx);
-    void SearchSiblingNode(SluaProfiler& profiler, int curIdx, int endIdx, TSharedPtr<FunctionProfileInfo> &node);
-    FString GenBrevFuncName(FString &functionName);
-    void CopyFunctionNode(TSharedPtr<FunctionProfileInfo>& oldFuncNode, TSharedPtr<FunctionProfileInfo>& newFuncNode);
-    void InitProfilerBar(int barIdx, TSharedPtr<SHorizontalBox>& horBox);
+    
+    FString GenBrevFuncName(const FString &functionName);
+    
     void RestartMemoryStatistis();
     void OnClearBtnClicked();
-    void SortProfiler(SluaProfiler &shownRootProfiler);
-    void SortShownInfo();
     void CalcPointMemdiff(int beginIndex, int endIndex);
     void CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& memoryInfoMap, MemoryFramePtr memoryFrame);
-    void CombineSameFileInfo(ProflierMemNode& proflierMemNode);
+    void CombineSameFileInfo(FProflierMemNode& proflierMemNode);
     int ContainsFile(FString& fileName, MemInfoIndexMap &list);
     FString ChooseMemoryUnit(float memorySize);
+
+    // save/load disk profile file
+    void OnLoadFileBtnClicked();
+    void OnSaveFileBtnClicked();
+    void OnCpuSliderValueChanged(float Value);
+    void OnMemSliderValueChanged(float Value);
 };
 
 class SLUA_PROFILE_API SProfilerWidget : public SCompoundWidget
@@ -208,15 +176,15 @@ private:
     TAttribute<EVisibility> m_stdLineVisibility;
     const int32 m_cSliceCount = cMaxSampleNum;
     const float m_cStdWidth = 1300;
-    float m_widgetWidth;
+    float m_widgetWidth = 0;
     const int32 m_cStdLeftPosition = 30;
-    float m_maxCostTime;
-    float m_maxMemSize;
-    float m_maxPointHeight;
-    float m_pointInterval;
-    float m_toolTipVal;
-    int32 m_memStdScale;
-    int32 m_pathArrayNum;
+    float m_maxCostTime = 0;
+    float m_maxMemSize = 0;
+    float m_maxPointHeight = 0;
+    float m_pointInterval = 0;
+    float m_toolTipVal = 0;
+    int32 m_memStdScale = 1;
+    int32 m_pathArrayNum = 0;
     FVector2D m_clickedPoint;
     FVector2D m_mouseDownPoint;
     const float m_cStdHighVal = cMaxViewHeight;

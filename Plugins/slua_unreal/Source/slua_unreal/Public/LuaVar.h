@@ -17,9 +17,6 @@
 #include "LuaObject.h"
 #include "LuaCppBinding.h"
 #include "Log.h"
-#include <string>
-#include <exception>
-#include <utility>
 #include <cstddef>
 
 #ifdef _WIN32
@@ -27,6 +24,9 @@
 #endif
 
 namespace NS_SLUA {
+    DECLARE_DELEGATE(FSafeOutputDelegate);
+
+    typedef std::function<int()> FillParamCallback;
 
     class SLUA_UNREAL_API LuaVar {
     public:
@@ -38,8 +38,8 @@ namespace NS_SLUA {
         LuaVar(int v);
         LuaVar(size_t v);
         LuaVar(lua_Number v);
-		LuaVar(const char* v);
-		LuaVar(const char* v, size_t len);
+        LuaVar(const char* v);
+        LuaVar(const char* v, size_t len);
         LuaVar(bool v);
 
         LuaVar(lua_State* L,int p);
@@ -48,17 +48,31 @@ namespace NS_SLUA {
         LuaVar(const LuaVar& other):LuaVar() {
             clone(other);
         }
-        LuaVar(LuaVar&& other):LuaVar() {
+        LuaVar(LuaVar&& other) noexcept:LuaVar() {
             move(MoveTemp(other));
         }
 
-        void operator=(const LuaVar& other) {
+        LuaVar& operator=(const LuaVar& other) {
             free();
             clone(other);
+            return *this;
         }
-        void operator=(LuaVar&& other) {
+        LuaVar& operator=(LuaVar&& other) noexcept {
             free();
             move(MoveTemp(other));
+            return *this;
+        }
+
+        bool operator==(const LuaVar& other) const;
+        bool operator==(LuaVar& other) const {
+            return operator==(static_cast<const LuaVar&>(other));
+        }
+
+        bool operator!=(const LuaVar& other) const {
+            return !operator==(other);
+        }
+        bool operator!=(LuaVar& other) const {
+            return !operator==(other);
         }
 
         virtual ~LuaVar();
@@ -67,10 +81,10 @@ namespace NS_SLUA {
         void set(lua_Integer v);
         void set(int v);
         void set(lua_Number v);
-		void set(const char* v, size_t len);
-		void set(const LuaLString& lstr);
+        void set(const char* v, size_t len);
+        void set(const LuaLString& lstr);
         void set(bool b);
-		void free();
+        void free();
 
         // push luavar to lua state, 
         // if l is null, push luavar to L
@@ -94,7 +108,7 @@ namespace NS_SLUA {
         float asFloat() const;
         double asDouble() const;
         const char* asString(size_t* outlen=nullptr) const;
-		LuaLString asLString() const;
+        LuaLString asLString() const;
         bool asBool() const;
         void* asLightUD() const;
         template<typename T>
@@ -104,6 +118,16 @@ namespace NS_SLUA {
             UserData<T*>* ud = reinterpret_cast<UserData<T*>*>(luaL_testudata(L, -1, t));
             lua_pop(L,1);
             return ud?ud->ud:nullptr;
+        }
+
+        template<typename T>
+        T* getUserData(const char* t) const
+        {
+            auto L = getState();
+            push(L);
+            T* p = static_cast<T*>(luaL_testudata(L, -1, t));
+            lua_pop(L,1);
+            return p;
         }
 
         // iterate LuaVar if it's table
@@ -124,13 +148,13 @@ namespace NS_SLUA {
         }
 
 
-		template<typename R>
-		inline void castTo(R& target) {
-			if (isValid())
-			{
-				target = castTo<R>();
-			}
-		}
+        template<typename R>
+        inline void castTo(R& target) {
+            if (isValid())
+            {
+                target = castTo<R>();
+            }
+        }
 
         // return count of luavar if it's table or tuple, 
         // otherwise it's return 1
@@ -163,29 +187,30 @@ namespace NS_SLUA {
         R getFromTable(T key,bool rawget=false) const {
             ensure(isTable());
             auto L = getState();
-			if (!L) return R();
+            if (!L) return R();
             AutoStack as(L);
             push(L);
             LuaObject::push(L,key);
-			if (rawget) lua_rawget(L, -2);
-			else lua_gettable(L,-2);
+            if (rawget) lua_rawget(L, -2);
+            else lua_gettable(L,-2);
             return ArgOperatorOpt::readArg<typename remove_cr<R>::type>(L,-1);
         }
 
-		template<typename R, typename T>
-		void getFromTable(T key, R& target) const {
-			target = getFromTable<R>(key);
-		}
+        template<typename R, typename T>
+        void getFromTable(T key, R& target) const {
+            target = getFromTable<R>(key);
+        }
 
         // set table by key and value
         template<typename K,typename V>
-        void setToTable(K k,V v) {
+        void setToTable(K k,V v, bool rawset=false) {
             ensure(isTable());
             auto L = getState();
             push(L);
             LuaObject::push(L,k);
             LuaObject::push(L,v);
-            lua_settable(L,-3);
+            if (rawset) lua_rawset(L, -3);
+            else lua_settable(L,-3);
             lua_pop(L,1);
         }
 
@@ -193,56 +218,74 @@ namespace NS_SLUA {
         // args is arguments passed to lua
         template<class ...ARGS>
         LuaVar call(ARGS&& ...args) const {
-            if(!isFunction()) {
+            if (!isFunction()) {
                 Log::Error("LuaVar is not a function, can't be called");
+#if UE_BUILD_DEVELOPMENT
+#if (ENGINE_MINOR_VERSION<26) && (ENGINE_MAJOR_VERSION==4)
+                FDebug::DumpStackTraceToLog();
+#else
+                FDebug::DumpStackTraceToLog(ELogVerbosity::Type::Verbose);
+#endif
+#endif
                 return LuaVar();
             }
-            if(!isValid()) {
+            if (!isValid()) {
                 Log::Error("State of lua function is invalid");
                 return LuaVar();
             }
+            auto fillParam = [&]
+            {
+                return pushArg(std::forward<ARGS>(args)...);
+            };
             auto L = getState();
-            int n = pushArg(std::forward<ARGS>(args)...);
-            int nret = docall(n);
-            auto ret = LuaVar::wrapReturn(L,nret);
-            lua_pop(L,nret);
+            int nret = docall(fillParam);
+            auto ret = LuaVar::wrapReturn(L, nret);
+            lua_pop(L, nret);
             return ret;
         }
 
         template<class RET,class ...ARGS>
         RET call(ARGS&& ...args) const {
             LuaVar ret = call(std::forward<ARGS>(args)...);
+            if (!ret.isValid()) {
+                return RET();
+            }
             return ret.castTo<RET>();
         }
 
-		template<class ...ARGS>
-		LuaVar callField(const char* field, ARGS&& ...args) const {
-			if (!isTable()) {
-				Log::Error("LuaVar is not a table, can't call field");
-				return LuaVar();
-			}
-			if (!isValid()) {
-				Log::Error("State of lua function is invalid");
-				return LuaVar();
-			}
-			LuaVar ret = getFromTable<LuaVar>(field);
-			return ret.call(std::forward<ARGS>(args)...);
-		}
+        template<class ...ARGS>
+        LuaVar callField(const char* field, ARGS&& ...args) const {
+            if (!isTable()) {
+#if UE_BUILD_DEVELOPMENT
+#if (ENGINE_MINOR_VERSION<26) && (ENGINE_MAJOR_VERSION==4)
+                FDebug::DumpStackTraceToLog();
+#else
+                FDebug::DumpStackTraceToLog(ELogVerbosity::Type::Verbose);
+#endif
+#endif
+                Log::Error("LuaVar is not a table, can't call field");
+                return LuaVar();
+            }
+            if (!isValid()) {
+                Log::Error("State of lua function is invalid");
+                return LuaVar();
+            }
+            LuaVar ret = getFromTable<LuaVar>(field);
+            return ret.call(std::forward<ARGS>(args)...);
+        }
 
-        // call function with pre-pushed n args
-        inline LuaVar callWithNArg(int n) {
+        inline LuaVar callWithNArg(const FillParamCallback& fillParam) {
             auto L = getState();
-            int nret = docall(n);
+            int nret = docall(fillParam);
             auto ret = LuaVar::wrapReturn(L,nret);
             lua_pop(L,nret);
             return ret;
         }
 
-        bool toProperty(UProperty* p,uint8* ptr);
-        bool callByUFunction(UFunction* ufunc,uint8* parms,struct FOutParmRec *outParams=nullptr,RESULT_DECL=nullptr,LuaVar* pSelf=nullptr);
+        bool callByUFunction(UFunction* ufunc,uint8* parms,struct FOutParmRec *outParams=nullptr,LuaVar* pSelf=nullptr);
 
-		// get associate state
-		lua_State* getState() const;
+        // get associate state
+        lua_State* getState() const;
     private:
         friend class LuaState;
 
@@ -258,7 +301,7 @@ namespace NS_SLUA {
             Ref():refCount(1) {}
             virtual ~Ref() {}
             void addRef() {
-				refCount++;
+                refCount++;
             }
             void release() {
                 ensure(refCount >0);
@@ -270,21 +313,21 @@ namespace NS_SLUA {
         };
 
         struct RefStr : public Ref {
-			RefStr(const char* s, size_t len)
-				:Ref()
+            RefStr(const char* s, size_t len)
+                :Ref()
             {
-				if (len == 0) len = strlen(s);
-				// alloc extra space for '\0'
-				buf = (char*) FMemory::Malloc(len+1);
-				FMemory::Memcpy(buf, s, len);
-				buf[len] = 0;
-				length = len;
-			}
+                if (len == 0) len = strlen(s);
+                // alloc extra space for '\0'
+                buf = (char*) FMemory::Malloc(len+1);
+                FMemory::Memcpy(buf, s, len);
+                buf[len] = 0;
+                length = len;
+            }
             virtual ~RefStr() {
                 FMemory::Free(buf);
             }
             char* buf;
-			size_t length;
+            size_t length;
         };
 
         struct RefRef: public Ref {
@@ -338,13 +381,16 @@ namespace NS_SLUA {
                 return LuaVar(L,(size_t) n);
         }
 
-        int docall(int argn) const;
-        int pushArgByParms(UProperty* prop,uint8* parms);
+        int docall(const FillParamCallback& fillParam) const;
+        int pushArgByParms(FProperty* prop,uint8* parms);
 
         void clone(const LuaVar& other);
         void move(LuaVar&& other);
         void varClone(lua_var& tv,const lua_var& ov) const;
         void pushVar(lua_State* l,const lua_var& ov) const;
+
+        static int safeOutput(lua_State* L);
+        static FSafeOutputDelegate safeOutputLambda;
     };
 
     template<>
@@ -352,10 +398,10 @@ namespace NS_SLUA {
         return LuaVar(L,p);
     }
 
-	template<>
-	inline void LuaVar::castTo()
-	{
-		return;
-	}
+    template<>
+    inline void LuaVar::castTo()
+    {
+        return;
+    }
     
 }

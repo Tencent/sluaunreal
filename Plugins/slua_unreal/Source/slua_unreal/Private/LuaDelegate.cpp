@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #include "LuaDelegate.h"
+
+#include "LuaFunctionAccelerator.h"
 #include "LuaObject.h"
 #include "LuaState.h"
-#include "LuaVar.h"
+#include "SluaUtil.h"
 
 ULuaDelegate::ULuaDelegate(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+    : Super(ObjectInitializer)
     ,luafunction(nullptr)
     ,ufunction(nullptr)
 {
@@ -33,7 +35,14 @@ void ULuaDelegate::EventTrigger()
 }
 
 void ULuaDelegate::ProcessEvent( UFunction* f, void* Parms ) {
-    ensure(luafunction!=nullptr && ufunction!=nullptr);
+    if (luafunction == nullptr || ufunction == nullptr) {
+#if WITH_EDITOR
+        NS_SLUA::Log::Error("Can't remove lua delegate[%s] on trigger delegate!", TCHAR_TO_UTF8(*pName));
+#else
+        NS_SLUA::Log::Error("Can't remove lua delegate on trigger delegate!");
+#endif
+        return;
+    }
     luafunction->callByUFunction(ufunction,reinterpret_cast<uint8*>(Parms));
 }
 
@@ -56,30 +65,35 @@ void ULuaDelegate::bindFunction(UFunction *ufunc) {
 
 void ULuaDelegate::dispose()
 {
-	SafeDelete(luafunction);
-	ufunction = nullptr;
+    SafeDelete(luafunction);
+    ufunction = nullptr;
 }
+
 namespace NS_SLUA {
 
     struct LuaMultiDelegateWrap {
         FMulticastScriptDelegate* delegate;
-        UFunction* ufunc;
+        LuaFunctionAccelerator* funcAcc;
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
+        FMulticastSparseDelegateProperty* sparseProp = nullptr;
+        FSparseDelegate* sparseDelegate = nullptr;
+#endif
 #if WITH_EDITOR
-		FString pName;
+        FString pName;
 #endif
     };
 
     DefTypeName(LuaMultiDelegateWrap);
 
-	struct LuaDelegateWrap {
-		FScriptDelegate* delegate;
-		UFunction* ufunc;
+    struct LuaDelegateWrap {
+        FScriptDelegate* delegate;
+        LuaFunctionAccelerator* funcAcc;
 #if WITH_EDITOR
-		FString pName;
+        FString pName;
 #endif
-	};
+    };
 
-	DefTypeName(LuaDelegateWrap);
+    DefTypeName(LuaDelegateWrap);
 
     int LuaMultiDelegate::Add(lua_State* L) {
         CheckUD(LuaMultiDelegateWrap,L,1);
@@ -87,14 +101,23 @@ namespace NS_SLUA {
         // bind luafucntion and signature function
         auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(),ULuaDelegate::StaticClass());
 #if WITH_EDITOR
-		obj->setPropName(UD->pName);
+        obj->setPropName(UD->pName);
 #endif
-        obj->bindFunction(L,2,UD->ufunc);
+        obj->bindFunction(L,2,UD->funcAcc->func);
 
         // add event listener
         FScriptDelegate Delegate;
         Delegate.BindUFunction(obj, TEXT("EventTrigger"));
-        UD->delegate->AddUnique(Delegate);
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
+        if (UD->sparseProp)
+        {
+            UD->sparseProp->AddDelegate(Delegate, nullptr, UD->sparseDelegate);
+        }
+        else
+#endif
+        {
+            UD->delegate->AddUnique(Delegate);
+        }
 
         // add reference
         LuaObject::addRef(L,obj,nullptr,true);
@@ -109,39 +132,109 @@ namespace NS_SLUA {
             luaL_error(L,"arg 2 expect ULuaDelegate");
         auto obj =  reinterpret_cast<ULuaDelegate*>(lua_touserdata(L,2));
 
-    	auto *luaState = LuaState::get(L);
-    	auto &map = luaState->cacheSet();
-    	
-		if (!map.Contains(obj) || !obj->IsValidLowLevel())
-		{
-			luaL_error(L, "Invalid ULuaDelegate!");
-		}
+        auto *luaState = LuaState::get(L);
+        auto &map = luaState->cacheSet();
+        
+        if (!map.Contains(obj) || !obj->IsValidLowLevel())
+        {
+#if UE_BUILD_DEVELOPMENT
+            luaL_error(L, "Invalid ULuaDelegate!");
+#endif
+            return 0;
+        }
 
         FScriptDelegate Delegate;
         Delegate.BindUFunction(obj, TEXT("EventTrigger"));
 
         // remove delegate
-        UD->delegate->Remove(Delegate);
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
+        if (UD->sparseProp)
+        {
+            UD->sparseProp->RemoveDelegate(Delegate, nullptr, UD->sparseDelegate);
+        }
+        else
+#endif
+        {
+            UD->delegate->Remove(Delegate);
+        }
 
         // remove reference
         LuaObject::removeRef(L,obj);
-		obj->dispose();
+        obj->dispose();
 
         return 0;
     }
 
     int LuaMultiDelegate::Clear(lua_State* L) {
         CheckUD(LuaMultiDelegateWrap,L,1);
-        auto array = UD->delegate->GetAllObjects();
-        for(auto it:array) {
-			ULuaDelegate* delegateObj = Cast<ULuaDelegate>(it);
-			if (delegateObj)
-			{
-				delegateObj->dispose();
-				LuaObject::removeRef(L, it);
-			}
+
+        auto clearLuaDelegate = [L](TArray<UObject*> array)
+        {
+            for (auto it : array) {
+                ULuaDelegate* delegateObj = Cast<ULuaDelegate>(it);
+                if (delegateObj)
+                {
+                    delegateObj->dispose();
+                    LuaObject::removeRef(L, it);
+                }
+            }
+        };
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
+        if (UD->sparseProp)
+        {
+            const FMulticastScriptDelegate* scriptDelegate = UD->sparseProp->GetMulticastDelegate(UD->sparseDelegate);
+            if (scriptDelegate)
+            {
+                clearLuaDelegate(scriptDelegate->GetAllObjects());
+                UD->sparseProp->ClearDelegate(nullptr, UD->sparseDelegate);
+            }
         }
-        UD->delegate->Clear();
+        else
+#endif
+        {
+            clearLuaDelegate(UD->delegate->GetAllObjects());
+            UD->delegate->Clear();
+        }
+        return 0;
+    }
+
+    int LuaMultiDelegate::BroadCast(lua_State* L) {
+        CheckUD(LuaMultiDelegateWrap,L,1);
+
+        auto callBroadcast = [UD, L](const FMulticastScriptDelegate* delegate)
+        {
+            if (!delegate)
+            {
+                return;
+            }
+
+            auto callback = [delegate](uint8* params, PTRINT* outParams, NewObjectRecorder *objectRecorder)
+            {
+                delegate->ProcessMulticastDelegate<UObject>(params);
+            };
+            bool isLatentFunction;
+            UD->funcAcc->fillParam(L, 2, nullptr, callback, isLatentFunction);
+        };
+
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
+        if (UD->sparseProp)
+        {
+            if (!UD->sparseDelegate->IsBound())
+            {
+                return 0;
+            }
+            callBroadcast(UD->sparseProp->GetMulticastDelegate(UD->sparseDelegate));
+            return 0;
+        }
+        else
+#endif
+        {
+            if (!UD->delegate->IsBound())
+            {
+                return 0;
+            }
+            callBroadcast(UD->delegate);
+        }
         return 0;
     }
 
@@ -157,86 +250,125 @@ namespace NS_SLUA {
         RegMetaMethod(L,Add);
         RegMetaMethod(L,Remove);
         RegMetaMethod(L,Clear);
+        RegMetaMethod(L,BroadCast);
         return 0;
     }
 
-    int LuaMultiDelegate::push(lua_State* L,FMulticastScriptDelegate* delegate,UFunction* ufunc,FString pName) {
+    int LuaMultiDelegate::push(lua_State* L,FMulticastScriptDelegate* delegate,UFunction* ufunc,const FString& pName) {
 #if WITH_EDITOR
-		LuaMultiDelegateWrap* wrapobj = new LuaMultiDelegateWrap{ delegate,ufunc,pName };
+        LuaMultiDelegateWrap* wrapobj = new LuaMultiDelegateWrap{ delegate,LuaFunctionAccelerator::findOrAdd(ufunc) };
+        wrapobj->pName = pName;
 #else
-		LuaMultiDelegateWrap* wrapobj = new LuaMultiDelegateWrap{ delegate,ufunc };
+        LuaMultiDelegateWrap* wrapobj = new LuaMultiDelegateWrap{ delegate,LuaFunctionAccelerator::findOrAdd(ufunc) };
 #endif
         return LuaObject::pushType<LuaMultiDelegateWrap*>(L,wrapobj,"LuaMultiDelegateWrap",setupMT,gc);
     }
 
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
+    int LuaMultiDelegate::push(lua_State* L,FMulticastSparseDelegateProperty* prop,FSparseDelegate* sparseDelegate,UFunction* ufunc,const FString& pName)
+    {
+#if WITH_EDITOR
+        LuaMultiDelegateWrap* wrapobj = new LuaMultiDelegateWrap{
+            nullptr, LuaFunctionAccelerator::findOrAdd(ufunc), prop, sparseDelegate, pName
+        };
+#else
+        LuaMultiDelegateWrap* wrapobj = new LuaMultiDelegateWrap{ nullptr, LuaFunctionAccelerator::findOrAdd(ufunc), prop, sparseDelegate };
+#endif
+        return LuaObject::pushType<LuaMultiDelegateWrap*>(L,wrapobj,"LuaMultiDelegateWrap",setupMT,gc);
+    }
+#endif
+
     void clear(lua_State* L, LuaDelegateWrap* ldw) {
         auto object = ldw->delegate->GetUObject();
-		if (object)
-		{
-			ULuaDelegate* delegateObj = Cast<ULuaDelegate>(object);
-			if (delegateObj)
-			{
-				LuaObject::removeRef(L, object);
-				delegateObj->dispose();
-			}
-		}
-		ldw->delegate->Clear();
+        if (object)
+        {
+            ULuaDelegate* delegateObj = Cast<ULuaDelegate>(object);
+            if (delegateObj)
+            {
+                LuaObject::removeRef(L, object);
+                delegateObj->dispose();
+            }
+        }
+        ldw->delegate->Clear();
     }
 
-	int LuaDelegate::Bind(lua_State* L)
-	{
-		CheckUD(LuaDelegateWrap, L, 1);
+    int LuaDelegate::Bind(lua_State* L)
+    {
+        CheckUD(LuaDelegateWrap, L, 1);
 
         // clear old delegate object
         if(UD) clear(L,UD);
 
-		// bind luafucntion and signature function
-		auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(), ULuaDelegate::StaticClass());
-#if WITH_EDITOR
-		obj->setPropName(UD->pName);
+        // bind luafucntion and signature function
+        auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(), ULuaDelegate::StaticClass());
+#if WITH_EDITOR 
+        obj->setPropName(UD->pName);
 #endif
-		obj->bindFunction(L, 2, UD->ufunc);
+        obj->bindFunction(L, 2, UD->funcAcc->func);
 
-		UD->delegate->BindUFunction(obj, TEXT("EventTrigger"));
+        UD->delegate->BindUFunction(obj, TEXT("EventTrigger"));
 
-		// add reference
-		LuaObject::addRef(L, obj, nullptr, true);
+        // add reference
+        LuaObject::addRef(L, obj, nullptr, true);
 
-		lua_pushlightuserdata(L, obj);
-		return 1;
-	}
+        lua_pushlightuserdata(L, obj);
+        return 1;
+    }
 
-	int LuaDelegate::Clear(lua_State* L)
-	{
-		CheckUD(LuaDelegateWrap, L, 1);
-		if(UD) clear(L,UD);
-		return 0;
-	}
+    int LuaDelegate::Clear(lua_State* L)
+    {
+        CheckUD(LuaDelegateWrap, L, 1);
+        if(UD) clear(L,UD);
+        return 0;
+    }
 
-	int LuaDelegate::gc(lua_State* L)
-	{
-		CheckUD(LuaDelegateWrap, L, 1);
-		delete UD;
-		return 0;
-	}
+    int LuaDelegate::Execute(lua_State* L)
+    {
+        CheckUD(LuaDelegateWrap, L, 1);
+        if (!UD->delegate->IsBound())
+        {
+            return 0;
+        }
 
-	int LuaDelegate::setupMT(lua_State* L)
-	{
-		LuaObject::setupMTSelfSearch(L);
+        int outParamCount;
+        auto funcAcc = UD->funcAcc;
+        auto callback = [L, UD, funcAcc, &outParamCount](uint8* params, PTRINT* outParams, NewObjectRecorder* objectRecorder)
+        {
+            UD->delegate->ProcessDelegate<UObject>(params);
+            
+            outParamCount = funcAcc->returnValue(L, 2, params, outParams, objectRecorder);
+        };
+        
+        bool isLatentFunction = false;
+        funcAcc->fillParam(L, 2, nullptr, callback, isLatentFunction);
+        return outParamCount;
+    }
 
-		RegMetaMethod(L, Bind);
-		RegMetaMethod(L, Clear);
-		return 0;
-	}
+    int LuaDelegate::gc(lua_State* L)
+    {
+        CheckUD(LuaDelegateWrap, L, 1);
+        delete UD;
+        return 0;
+    }
 
-	int LuaDelegate::push(lua_State* L, FScriptDelegate* delegate, UFunction* ufunc, FString pName)
-	{
+    int LuaDelegate::setupMT(lua_State* L)
+    {
+        LuaObject::setupMTSelfSearch(L);
+
+        RegMetaMethod(L, Bind);
+        RegMetaMethod(L, Clear);
+        RegMetaMethod(L, Execute);
+        return 0;
+    }
+
+    int LuaDelegate::push(lua_State* L, FScriptDelegate* delegate, UFunction* ufunc, const FString& pName)
+    {
 #if WITH_EDITOR
-		LuaDelegateWrap* wrapobj = new LuaDelegateWrap{ delegate,ufunc,pName };
+        LuaDelegateWrap* wrapobj = new LuaDelegateWrap{delegate, LuaFunctionAccelerator::findOrAdd(ufunc), pName};
 #else
-		LuaDelegateWrap* wrapobj = new LuaDelegateWrap{ delegate,ufunc };
+        LuaDelegateWrap* wrapobj = new LuaDelegateWrap{ delegate, LuaFunctionAccelerator::findOrAdd(ufunc) };
 #endif
-		return LuaObject::pushType<LuaDelegateWrap*>(L, wrapobj, "LuaDelegateWrap", setupMT, gc);
-	}
+        return LuaObject::pushType<LuaDelegateWrap*>(L, wrapobj, "LuaDelegateWrap", setupMT, gc);
+    }
 
 }

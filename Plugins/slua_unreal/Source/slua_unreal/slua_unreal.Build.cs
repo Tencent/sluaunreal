@@ -42,8 +42,8 @@ public class slua_unreal : ModuleRules
         else if (Target.Platform == UnrealTargetPlatform.Android)
         {
 #if UE_4_24_OR_LATER
-            PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Android/armeabi-arm64/liblua.a"));
             PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Android/armeabi-v7a/liblua.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Android/armeabi-arm64/liblua.a"));
             PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Android/x86/liblua.a"));
 #else
             PublicLibraryPaths.Add(Path.Combine(externalLib, "Android/armeabi-arm64"));
@@ -52,10 +52,12 @@ public class slua_unreal : ModuleRules
             PublicAdditionalLibraries.Add("lua");
 #endif
         }
+#if UE_5_00_OR_LATER
         else if (Target.Platform == UnrealTargetPlatform.Win32 )
         {
             PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Win32/lua.lib"));
         }
+#endif
         else if (Target.Platform == UnrealTargetPlatform.Win64)
         {
             PublicAdditionalLibraries.Add(Path.Combine(externalLib, "Win64/lua.lib"));
@@ -92,14 +94,18 @@ public class slua_unreal : ModuleRules
                 "Slate",
                 "SlateCore",
                 "UMG",
+				"InputCore",
+				"NetCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
             );
 
 #if UE_4_21_OR_LATER
         PublicDefinitions.Add("ENABLE_PROFILER");
+        PublicDefinitions.Add("NS_SLUA=slua");
 #else
         Definitions.Add("ENABLE_PROFILER");
+        Definitions.Add("NS_SLUA=slua");
 #endif
 
 

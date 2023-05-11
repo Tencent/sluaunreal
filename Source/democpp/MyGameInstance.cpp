@@ -3,9 +3,8 @@
 #include "MyGameInstance.h"
 #include "Misc/Paths.h"
 #include "HAL/PlatformFileManager.h"
-#include "GenericPlatformFile.h"
-#include "HAL/FileManager.h"
-
+#include "GenericPlatform/GenericPlatformFile.h"
+#include "Misc/FileHelper.h"
 
 
 // read file content
@@ -26,16 +25,21 @@ static uint8* ReadFile(IPlatformFile& PlatformFile, FString path, uint32& len) {
 	return nullptr;
 }
 
-UMyGameInstance::UMyGameInstance() :state("main",this) {
-
+UMyGameInstance::UMyGameInstance() : state(nullptr)
+{
+	if (!HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
+	{
+		CreateLuaState();
+	}
 }
 
-void UMyGameInstance::Init()
+void UMyGameInstance::CreateLuaState()
 {
-	state.onInitEvent.AddUObject(this, &UMyGameInstance::LuaStateInitCallback);
-	state.init();
+    NS_SLUA::LuaState::onInitEvent.AddUObject(this, &UMyGameInstance::LuaStateInitCallback);
 
-	state.setLoadFileDelegate([](const char* fn, FString& filepath)->TArray<uint8> {
+	CloseLuaState();
+	state = new NS_SLUA::LuaState("SLuaMainState", this);
+	state->setLoadFileDelegate([](const char* fn, FString& filepath)->TArray<uint8> {
 
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 		FString path = FPaths::ProjectContentDir();
@@ -57,11 +61,30 @@ void UMyGameInstance::Init()
 
 		return MoveTemp(Content);
 	});
+	state->init();
+}
+
+void UMyGameInstance::CloseLuaState()
+{
+    if (state)
+    {
+    	state->close();
+		delete state;
+        state = nullptr;
+    }
+	
+}
+
+void UMyGameInstance::Init()
+{
+	Super::Init();
 }
 
 void UMyGameInstance::Shutdown()
 {
-	state.close();
+	CloseLuaState();
+
+	Super::Shutdown();
 }
 
 static int32 PrintLog(NS_SLUA::lua_State *L)
@@ -74,9 +97,8 @@ static int32 PrintLog(NS_SLUA::lua_State *L)
 	return 0;
 }
 
-void UMyGameInstance::LuaStateInitCallback()
+void UMyGameInstance::LuaStateInitCallback(NS_SLUA::lua_State* L)
 {
-	NS_SLUA::lua_State *L = state.getLuaState();
 	lua_pushcfunction(L, PrintLog);
 	lua_setglobal(L, "PrintLog");
 }

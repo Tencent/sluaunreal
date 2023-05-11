@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #pragma once
-#include "lua/lua.hpp"
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
 #include "Log.h"
 #include "SluaUtil.h"
 #include "LuaObject.h"
@@ -20,7 +22,7 @@
 #include "LuaVar.h"
 #include "LuaArray.h"
 #include "LuaMap.h"
-#include "LuaBase.h"
+#include "LuaSet.h"
 #include "LuaActor.h"
 #include "LuaDelegate.h"
 #include "LuaCppBinding.h"

@@ -12,34 +12,36 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #include "LatentDelegate.h"
+#include "lua.h"
+#include "lstate.h"
 #include "LuaState.h"
 
 const FString ULatentDelegate::NAME_LatentCallback = TEXT("OnLatentCallback");
 
 ULatentDelegate::ULatentDelegate(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-	, luaState(nullptr)
+    : Super(ObjectInitializer)
+    , luaState(nullptr)
 {
 }
 
 void ULatentDelegate::OnLatentCallback(int32 threadRef)
 {
-	luaState->resumeThread(threadRef);
+    luaState->resumeThread(threadRef);
 }
 
 void ULatentDelegate::bindLuaState(NS_SLUA::LuaState *_luaState)
 {
-	luaState = _luaState;
+    luaState = _luaState;
 }
 
 int ULatentDelegate::getThreadRef(NS_SLUA::lua_State *L)
 {
-	ensure(L);
+    ensure(L);
 
-	int threadRef = luaState->findThread(L);
-	if (threadRef == LUA_REFNIL)
-	{
-		threadRef = luaState->addThread(L);
-	}
-	return threadRef;
+    int threadRef = luaState->findThread(L);
+    if (threadRef == LUA_REFNIL)
+    {
+        threadRef = luaState->addThread(L);
+    }
+    return threadRef;
 }

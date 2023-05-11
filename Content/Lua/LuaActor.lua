@@ -1,9 +1,7 @@
-
-
-local actor={}
+local LuaActor ={}
 
 -- override event from blueprint
-function actor:ReceiveBeginPlay()
+function LuaActor:ReceiveBeginPlay()
     self.bCanEverTick = true
     -- set bCanBeDamaged property in parent
     self.bCanBeDamaged = false
@@ -11,11 +9,11 @@ function actor:ReceiveBeginPlay()
 end
 
 -- override event from blueprint
-function actor:ReceiveEndPlay(reason)
+function LuaActor:ReceiveEndPlay(reason)
     print("actor:ReceiveEndPlay")
 end
 
-function actor:Tick(dt)
+function LuaActor:Tick(dt)
     print("actor:Tick",self,dt)
     -- call actor function
     local pos = self:K2_GetActorLocation()
@@ -24,4 +22,4 @@ function actor:Tick(dt)
     print("actor pos",pos,dist)
 end
 
-return actor
+return Class(nil, nil, LuaActor)

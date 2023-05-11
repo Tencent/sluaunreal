@@ -13,83 +13,85 @@
 
 #pragma once
 #define LUA_LIB
-#include "CoreMinimal.h"
-#include "Components/SceneComponent.h"
+#include "SluaMicro.h"
 #include "LuaVar.h"
 #include <string>
 #include <memory>
 #include <atomic>
+
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
+#include "UObject/WeakFieldPtr.h"
+#endif
 #include "HAL/Runnable.h"
-#include "Tickable.h"
 
 #define SLUA_LUACODE "[sluacode]"
 #define SLUA_CPPINST "__cppinst"
 
-DECLARE_MULTICAST_DELEGATE(FLuaStateInitEvent);
-
 class ULatentDelegate;
 
 namespace NS_SLUA {
+    DECLARE_MULTICAST_DELEGATE_OneParam(FLuaStateInitEvent, lua_State*);
 
-	struct ScriptTimeoutEvent {
-		virtual void onTimeout() = 0;
-	};
+    struct ScriptTimeoutEvent {
+        virtual void onTimeout() = 0;
+    };
 
-	class FDeadLoopCheck : public FRunnable
-	{
-	public:
-		FDeadLoopCheck();
-		~FDeadLoopCheck();
+    class FDeadLoopCheck : public FRunnable
+    {
+    public:
+        FDeadLoopCheck();
+        ~FDeadLoopCheck();
 
-		int scriptEnter(ScriptTimeoutEvent* pEvent);
-		int scriptLeave();
+        static int32 NameCounter;
 
-	protected:
-		uint32 Run() override;
-		void Stop() override;
-		void onScriptTimeout();
-	private:
-		std::atomic<ScriptTimeoutEvent*> timeoutEvent;
-		FThreadSafeCounter timeoutCounter;
-		FThreadSafeCounter stopCounter;
-		FThreadSafeCounter frameCounter;
-		FRunnableThread* thread;
-	};
+        int scriptEnter(ScriptTimeoutEvent* pEvent);
+        int scriptLeave();
 
-	// check lua script dead loop
-	class LuaScriptCallGuard : public ScriptTimeoutEvent {
-	public:
-		LuaScriptCallGuard(lua_State* L);
-		virtual ~LuaScriptCallGuard();
-		void onTimeout() override;
-	private:
-		lua_State* L;
-		static void scriptTimeout(lua_State *L, lua_Debug *ar);
-	};
+    protected:
+        uint32 Run() override;
+        void Stop() final;
+        void onScriptTimeout();
+    private:
+        std::atomic<ScriptTimeoutEvent*> timeoutEvent;
+        FThreadSafeCounter timeoutCounter;
+        FThreadSafeCounter stopCounter;
+        FThreadSafeCounter frameCounter;
+        FRunnableThread* thread;
+    };
 
-	typedef TSet<UObjectBase*> ObjectSet;
+    // check lua script dead loop
+    class LuaScriptCallGuard : public ScriptTimeoutEvent {
+    public:
+        LuaScriptCallGuard(lua_State* L);
+        virtual ~LuaScriptCallGuard();
+        void onTimeout() override;
+    private:
+        lua_State* L;
+        static void scriptTimeout(lua_State *L, lua_Debug *ar);
+    };
 
-	class NewObjectRecorder {
-	public:
-		NewObjectRecorder(lua_State* L);
+    typedef TSet<UObjectBase*> ObjectSet;
 
-		~NewObjectRecorder();
+    class NewObjectRecorder {
+    public:
+        NewObjectRecorder(lua_State* L);
 
-		bool hasObject(const UObject* obj) const;
+        ~NewObjectRecorder();
 
-	protected:
-		class LuaState* luaState;
+        bool hasObject(const UObject* obj) const;
 
-		int stackLayer;
-	};
+    protected:
+        class LuaState* luaState;
 
-	typedef TMap<UObject*, GenericUserData*> UObjectRefMap;
+        int stackLayer;
+    };
+
+    typedef TMap<UObject*, GenericUserData*> UObjectRefMap;
 
     class SLUA_UNREAL_API LuaState 
-		: public FUObjectArray::FUObjectDeleteListener
-		, public FUObjectArray::FUObjectCreateListener
-		, public FGCObject
-		, public FTickableGameObject
+        : public FUObjectArray::FUObjectDeleteListener
+        , public FUObjectArray::FUObjectCreateListener
+        , public FGCObject
     {
     public:
         LuaState(const char* name=nullptr,UGameInstance* pGI=nullptr);
@@ -97,12 +99,10 @@ namespace NS_SLUA {
 
         /*
          * fn, lua file to load, fn may be a short filename
-         * if find fn to load, return file size to len and file full path fo filepath arguments
-         * if find fn and load successful, return buf of file content, otherwise return nullptr
-         * you must delete[] buf returned by function for free memory.
+         * if find fn to load, return file size to len and file full path fo filepath arguments.
          */
         typedef TArray<uint8> (*LoadFileDelegate) (const char* fn, FString& filepath);
-		typedef void (*ErrorDelegate) (const char* err);
+        DECLARE_MULTICAST_DELEGATE_OneParam(ErrorDelegate, const char*);
 
         inline static LuaState* get(lua_State* l=nullptr) {
             // if L is nullptr, return main state
@@ -111,12 +111,18 @@ namespace NS_SLUA {
         }
         // get LuaState from state index
         static LuaState* get(int index);
-		// get LuaState from UGameInstance, you should create LuaState with an UGameInstance pointer at first
-		// if multi LuaState have same UGameInstance, we will return first one
-		static LuaState* get(UGameInstance* pGI);
+        // get LuaState from UGameInstance, you should create LuaState with an UGameInstance pointer at first
+        // if multi LuaState have same UGameInstance, we will return first one
+        static LuaState* get(UGameInstance* pGI);
 
         // get LuaState from name
         static LuaState* get(const FString& name);
+
+        static UGameInstance* getObjectGameInstance(const UObject* obj);
+
+        UGameInstance* getGameInstance() const {
+            return gameInstance.Get();
+        }
 
         // return specified index is valid state index
         inline static bool isValid(int index)  {
@@ -127,13 +133,22 @@ namespace NS_SLUA {
         int stateIndex() const { return si; }
         
         // init lua state
-        virtual bool init(bool enableMultiThreadGC=false);
-		// attach this luaState to UGameInstance
-		// this function just store UGameInstance pointer for search future
-		void attach(UGameInstance* pGI);
-        
+        virtual bool init();
+
+        // attach this luaState to UGameInstance
+        // this function just store UGameInstance pointer for search future
+        void attach(UGameInstance* pGI);
+
+        void registLuaTick(UObject* obj, float tickInterval);
+        void unRegistLuaTick(const UObject* obj);
+        FORCEINLINE void callLuaTick(UObject* obj, NS_SLUA::LuaVar& tickFunc, float dtime);
+        // tick function
+        virtual void tick(float dtime);
+        void tickGC(float dtime);
+        void tickLuaActors(float dtime);
+
         // close lua state
-        virtual void close();
+        void close();
 
         // execute lua string
         LuaVar doString(const char* str, LuaVar* pEnv = nullptr);
@@ -143,6 +158,8 @@ namespace NS_SLUA {
         // file how to loading depend on load delegation
         // see setLoadFileDelegate function
         LuaVar doFile(const char* fn, LuaVar* pEnv = nullptr);
+        // require a module
+        LuaVar requireModule(const char* fn, LuaVar* pEnv = nullptr);
 
        
         // call function that specified by key
@@ -155,160 +172,213 @@ namespace NS_SLUA {
 
         // get field from _G, support "x.x.x.x" to search children field
         LuaVar get(const char* key);
-		// set field to _G, support "x.x.x.x" to create sub table recursive
-		bool set(const char* key, LuaVar v);
+        // set field to _G, support "x.x.x.x" to create sub table recursive
+        bool set(const char* key, LuaVar v);
 
         // set load delegation function to load lua code
-		void setLoadFileDelegate(LoadFileDelegate func);
-		// set error delegation function to handle error
-		void setErrorDelegate(ErrorDelegate func);
+        void setLoadFileDelegate(LoadFileDelegate func);
+        // get error delegation function to handle error
+        ErrorDelegate* getErrorDelegate();
 
-		lua_State* getLuaState() const
-		{
-			return L;
-		}
-		operator lua_State*() const
-		{
-			return L;
-		}
+        lua_State* getLuaState() const
+        {
+            return L;
+        }
+        operator lua_State*() const
+        {
+            return L;
+        }
 
         // create a empty table
-		LuaVar createTable();
-		// create named table, support "x.x.x.x", put table to _G
-		LuaVar createTable(const char* key);
+        LuaVar createTable();
+        // create named table, support "x.x.x.x", put table to _G
+        LuaVar createTable(const char* key);
 
-		const UObjectRefMap& cacheSet() const {
-			return objRefs;
-		}
-        
-		void setTickFunction(LuaVar func);
+        const UObjectRefMap& cacheSet() const {
+            return objRefs;
+        }
 
-		// add obj to ref, tell Engine don't collect this obj
-		void addRef(UObject* obj,void* ud,bool ref);
-		// unlink UObject, flag Object had been free, and remove from cache and objRefs
-		void unlinkUObject(const UObject * Object,void* userdata=nullptr);
+        void setGCParam(double limitSeconds, int limitCount, double interval);
+        void setTickFunction(LuaVar func);
 
-		// if obj be deleted, call this function
-		virtual void NotifyUObjectDeleted(const class UObjectBase *Object, int32 Index) override;
+        // add obj to ref, tell Engine don't collect this obj
+        void addRef(UObject* obj,void* ud,bool ref);
+        // unlink UObject, flag Object had been free, and remove from cache and objRefs
+        void unlinkUObject(const UObject * Object,void* userdata=nullptr);
 
-		// if obj created, call this function
-		virtual void NotifyUObjectCreated(const class UObjectBase *Object, int32 Index) override;
+#if !((ENGINE_MINOR_VERSION<23) && (ENGINE_MAJOR_VERSION==4))
+        void OnUObjectArrayShutdown() override;
+#endif
 
-		// tell Engine which objs should be referenced
-		virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
+        // if obj be deleted, call this function
+        virtual void NotifyUObjectDeleted(const class UObjectBase *Object, int32 Index) override;
+
+        // if obj created, call this function
+        virtual void NotifyUObjectCreated(const class UObjectBase *Object, int32 Index) override;
+
+        // tell Engine which objs should be referenced
+        virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
+
+#if !((ENGINE_MINOR_VERSION<20) && (ENGINE_MAJOR_VERSION==4))
+        virtual FString GetReferencerName() const override
+        {
+            return "LuaState";
+        }
+#endif
+
         static int pushErrorHandler(lua_State* L);
-#if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
-		virtual void OnUObjectArrayShutdown() override;
+
+        int addThread(lua_State *thread);
+        void resumeThread(int threadRef);
+        int findThread(lua_State *thread);
+        void cleanupThreads();
+        ULatentDelegate* getLatentDelegate() const;
+
+        // call this function on script error
+        void onError(const char* err);
+        
+        static bool hookObject(LuaState* inState, const class UObjectBaseUtility* obj, bool bIsPostLoad = false, bool bCDOLua = true, bool bHookInstancedObj = false);
+
+#if UE_BUILD_DEVELOPMENT
+        void addRefTraceback(int ref);
+
+        void removeRefTraceback(int ref);
+
+        FString getRefTraceback(int ref);
+
+        bool isRefTraceEnable() const;
+        void setRefTraceEnable(bool enable);
 #endif
 
-		// tickable object methods
-		virtual void Tick(float DeltaTime) override;
-		virtual TStatId GetStatId() const override;
-#if !((ENGINE_MINOR_VERSION>18) && (ENGINE_MAJOR_VERSION>=4))
-		virtual bool IsTickable() const override { return true; }
-#endif
-
-		int addThread(lua_State *thread);
-		void resumeThread(int threadRef);
-		int findThread(lua_State *thread);
-		void cleanupThreads();
-		ULatentDelegate* getLatentDelegate() const;
-
-		// call this function on script error
-		void onError(const char* err);
     protected:
-		LoadFileDelegate loadFileDelegate;
-		ErrorDelegate errorDelegate;
+        LoadFileDelegate loadFileDelegate;
+        ErrorDelegate errorDelegate;
         TArray<uint8> loadFile(const char* fn,FString& filepath);
-		static int loader(lua_State* L);
-		static int getStringFromMD5(lua_State* L);
+        static int loader(lua_State* L);
+        static int import(lua_State *L);
+        static int getStringFromMD5(lua_State* L);
 
-	public:
-		FLuaStateInitEvent onInitEvent;
-	protected:
-		friend class NewObjectRecorder;
+    public:
+        static FLuaStateInitEvent onInitEvent;
+    protected:
+        friend class NewObjectRecorder;
 
-		int increaseCallStack();
-		void decreaseCallStack();
-		bool hasObjectInStack(const UObject* obj, int stackLayer);
+        int increaseCallStack();
+        void decreaseCallStack();
+        bool hasObjectInStack(const UObject* obj, int stackLayer);
 
     private:
         friend class LuaObject;
         friend class SluaUtil;
-		friend struct LuaEnums;
-		friend class LuaScriptCallGuard;
+        friend struct LuaEnums;
+        friend class LuaScriptCallGuard;
         lua_State* L;
         int cacheObjRef;
-		int cacheFuncRef;
-		// init enums lua code
+        int cacheEnumRef;
+        int cacheClassPropRef;
+        int cacheClassFuncRef;
+        // init enums lua code
+        LuaVar initInnerCode(const char* s);
         int _pushErrorHandler(lua_State* L);
         static int _atPanic(lua_State* L);
-		void linkProp(void* parent, void* prop);
-		void releaseLink(void* prop);
-		void releaseAllLink();
-		// unreal gc will call this funciton
-		void onEngineGC();
-		// on world cleanup
-		void onWorldCleanup(UWorld* World, bool bSessionEnded, bool bCleanupResources);
-		void freeDeferObject();
+        void addLink(void* address);
+        void releaseLink(void* address);
+        void releaseAllLink();
+        void linkProp(void* parentAddress, void* prop);
+        void unlinkProp(void* prop);
+        // unreal gc will call this funciton
+        void onEngineGC();
+        // on world cleanup
+        void onWorldCleanup(UWorld* World, bool bSessionEnded, bool bCleanupResources);
 
-
-		TMap<void*, TArray<void*>> propLinks;
-        int stackCount;
+        TMap<void*, TArray<void*>> propLinks;
         int si;
         FString stateName;
 
-		// cache ufunction/uproperty ptr if index by lua
-		struct ClassCache {
-			typedef TMap<FString, TWeakObjectPtr<UFunction>> CacheFuncItem;
-			typedef TMap<TWeakObjectPtr<UClass>, CacheFuncItem> CacheFuncMap;
+        // cache ufunction/uproperty ptr if index by lua
+        struct ClassCache {
+            typedef TMap<SimpleString, FProperty*> CachePropItem;
+            typedef TMap<UStruct*, CachePropItem> CachePropMap;
+            
+            FProperty* findProp(UStruct* ustruct, const char* pname);
+            void clear() {
+                cachePropMap.Empty();
+            }
 
-			typedef TMap<FString, TWeakObjectPtr<UProperty>> CachePropItem;
-			typedef TMap<TWeakObjectPtr<UClass>, CachePropItem> CachePropMap;
-			
-			UFunction* findFunc(UClass* uclass, const char* fname);
-			UProperty* findProp(UClass* uclass, const char* pname);
-			void cacheFunc(UClass* uclass, const char* fname, UFunction* func);
-			void cacheProp(UClass* uclass, const char* pname, UProperty* prop);
-			void clear() {
-				cacheFuncMap.Empty();
-				cachePropMap.Empty();
-			}
+            CachePropMap cachePropMap;
+        } classMap;
 
-			CacheFuncMap cacheFuncMap;
-			CachePropMap cachePropMap;
-		} classMap;
+        enum ImportedType {
+            ImportedClass,
+            ImportedStruct,
+            ImportedEnum,
+        };
+        struct ImportedObjectCache {
+            TWeakObjectPtr<UObject> cacheObjectPtr;
+            ImportedType importedType;
+        };
 
-		FDeadLoopCheck* deadLoopCheck;
+        typedef TMap<FString, ImportedObjectCache> CacheImportedMap;
+        CacheImportedMap cacheImportedMap;
 
-		// hold UObjects pushed to lua
-		UObjectRefMap objRefs;
-		// hold FGcObject to defer delete
-		TArray<FGCObject*> deferDelete;
-		// store UGameInstance ptr to search LuaState
-		// we don't hold referrence
-		UGameInstance* pGI;
+        FDeadLoopCheck* deadLoopCheck;
 
+        // hold UObjects pushed to lua
+        UObjectRefMap objRefs;
+        
+        // store UGameInstance ptr to search LuaState
+        // we don't hold referrence
+        TWeakObjectPtr<UGameInstance> gameInstance;
 
-		FDelegateHandle pgcHandler;
-		FDelegateHandle wcHandler;
+        FDelegateHandle pgcHandler;
+        FDelegateHandle wcHandler;
+        class LuaOverrider* overrider;
 
-		bool enableMultiThreadGC;
-		LuaVar stateTickFunc;
+        double stepGCTimeLimit;
+        int stepGCCountLimit;
+        double fullGCInterval;
+        double lastFullGCSeconds;
+        
+        LuaVar stateTickFunc;
 
         static LuaState* mainState;
 
-        #if WITH_EDITOR
+#if WITH_EDITOR
         // used for debug
-		TMap<FString, FString> debugStringMap;
-        #endif
+        TMap<FString, FString> debugStringMap;
+#endif
 
-		TMap<lua_State*, int> threadToRef;                                // coroutine -> ref
-		TMap<int, lua_State*> refToThread;                                // coroutine -> ref
-		ULatentDelegate* latentDelegate;
-		
-		int currentCallStack;
-		TArray<ObjectSet> newObjectsInCallStack;
+        TMap<lua_State*, int> threadToRef;                                // coroutine -> ref
+        TMap<int, lua_State*> refToThread;                                // coroutine -> ref
+        ULatentDelegate* latentDelegate;
+        
+        int currentCallStack;
+        TArray<ObjectSet> newObjectsInCallStack;
 
+        TArray<struct LuaStruct*> deferGCStruct;
+
+#if UE_BUILD_DEVELOPMENT
+        bool bRefTraceEnable;
+        TMap<int, FString> refTraceback;
+#endif
+
+        void InitExtLib(lua_State* ls);
+
+        struct LuaTickInfo {
+            TWeakObjectPtr<UObject> obj;
+            double interval;
+            double expire;
+            double preExecuteTime;
+            NS_SLUA::LuaVar tickFunc;
+            bool bRemoved;
+            LuaTickInfo(UObject* object, float tickInterval, double expireTime, double preExeTime)
+                :obj(object), interval(tickInterval), expire(expireTime), preExecuteTime(preExeTime), bRemoved(false) {}
+        };
+        double tickInternalTime = 0;
+        TArray<LuaTickInfo> tickActors;
+
+    public:
+        typedef TMap<TWeakObjectPtr<UObject>, TArray<LuaState*>, FDefaultSetAllocator, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<UObject>, TArray<LuaState*>>> DelayHookMap;
+        static DelayHookMap delayHookStateMap;
     };
 }

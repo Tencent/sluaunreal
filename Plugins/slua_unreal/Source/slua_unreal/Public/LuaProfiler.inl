@@ -110,7 +110,7 @@ function this.reConnect()
     end
 
     local sockSuccess, status = sock:connect(connectHost, connectPort)
-	this.setSocket(sock)
+    this.setSocket(sock)
     if sockSuccess == 1 or status == "already connected" then
         this.printToConsole("reconnect success")
         this.connectSuccess()
@@ -147,9 +147,9 @@ function this.stop()
 end
 
 function this.changeCoroutinesHookState()
-	for k, co in pairs(coroutinePool) do
+    for k, co in pairs(coroutinePool) do
         if coroutine.status(co) == "dead" then
-			coroutinePool[k] = nil
+            coroutinePool[k] = nil
         else
             this.changeCoroutineHookState(co)
         end
@@ -166,6 +166,20 @@ local function replaceCoroutineFuncs()
             this.changeCoroutineHookState(co, true)
             return co
         end
+    end
+end
+
+-- 本地记录性能数据的接口，true代表开始记录，false代表停止记录并保存
+function this.changeRecordState(RecordState)
+    if RecordState then
+        print("[Slua Profile] changeHookState true")
+        this.changeHookState(HookState.HOOK)
+        this.onChangeRecordState(true)
+    else
+        print("[Slua Profile] changeHookState false")
+        this.changeHookState(HookState.UNHOOK)
+        this.onChangeRecordState(false)
+
     end
 end
 

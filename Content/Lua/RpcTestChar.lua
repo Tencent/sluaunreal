@@ -1,8 +1,6 @@
+local RpcTestActor ={}
 
-
-local actor={}
-
-function actor:ReceiveBeginPlay()
+function RpcTestActor:ReceiveBeginPlay()
     print("actor:ReceiveBeginPlay")
     self.Super:ReceiveBeginPlay()
     local Test=import('SluaTestCase')
@@ -15,28 +13,28 @@ end
 -- end
 
 -- override event from blueprint
-function actor:ReceiveEndPlay(reason)
+function RpcTestActor:ReceiveEndPlay(reason)
     print("actor:ReceiveEndPlay")
     self.Super:ReceiveEndPlay(reason)
 end
 
-function actor:onPressH()
+function RpcTestActor:onPressH()
     local array = self.tt:GetArrayStr();
 
     self.Rpc:HelloEvent(121,array)
 end
 
-function actor:MultiClientEvent()
+function RpcTestActor:MultiClientEvent()
     self:Output("[multi] actor:MultiClientEvent xx")
     -- can't call super function in RPC
     -- self.Super:MultiClientEvent()
 end
 
-function actor:MyTest()
+function RpcTestActor:MyTest()
     print("actor:MyTest")
 end
 
-function actor:Tick(dt)
+function RpcTestActor:Tick(dt)
 end
 
-return actor
+return Class(nil, nil, RpcTestActor)

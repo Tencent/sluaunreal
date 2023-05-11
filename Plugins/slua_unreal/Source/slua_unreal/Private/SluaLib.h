@@ -12,32 +12,49 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #pragma once
-#include "CoreMinimal.h"
-#include "lua/lua.hpp"
+#include "lua.h"
 
 namespace NS_SLUA {
-
+    
     // used for lua interface
     class SluaUtil {
     public:
         static void openLib(lua_State* L);
-        static void reg(lua_State* L,const char* fn,lua_CFunction f);
+        static void reg(lua_State* L, const char* fn, lua_CFunction f);
     private:
+        static int getGameInstance(lua_State* L);
+        static int getWorld(lua_State* L);
         static int loadUI(lua_State* L);
         static int loadClass(lua_State* L);
-		static int createDelegate(lua_State* L);
+        static int loadObject(lua_State* L);
+        static int createDelegate(lua_State* L);
 
-		// remote profile
-		static int setTickFunction(lua_State* L);
-		static int makeProfilePackage(lua_State* L);
-		static int getMicroseconds(lua_State* L);
-		static int getMiliseconds(lua_State* L);
-		static int loadObject(lua_State* L);
-		static int threadGC(lua_State* L);
-		// dump all uobject that referenced by lua
-		static int dumpUObjects(lua_State* L);
-		// return whether an userdata is valid?
-		static int isValid(lua_State* L);
+        // remote profile
+        static int setTickFunction(lua_State* L);
+        static int getMicroseconds(lua_State* L);
+        static int getMiliseconds(lua_State* L);
+        static int getGStartTime(lua_State* L);
+
+        static int setGCParam(lua_State* L);
+
+        // dump all uobject that referenced by lua
+        static int dumpUObjects(lua_State* L);
+        // get all UUserWidget that referenced by lua
+        static int getAllWidgetObjects(lua_State* L);
+        // return whether an userdata is valid?
+        static int isValid(lua_State* L);
+        // return whether an userdata is LuaStruct?
+        static int isStruct(lua_State* L);
+
+        static int addRef(lua_State* L);
+        static int removeRef(lua_State * L);
+        
+        static int removeDelegate(lua_State* L);
+#if UE_BUILD_DEVELOPMENT
+        static int getObjectTableMap(lua_State* L);
+        static int getRefTraceback(lua_State* L);
+        static int toggleRefTraceback(lua_State* L);
+#endif
     };
 
 }

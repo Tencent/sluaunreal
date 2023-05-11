@@ -1,8 +1,8 @@
 
-local role = {}
+local MyRole = {}
 
 -- override event from blueprint
-function role:ReceiveBeginPlay()
+function MyRole:ReceiveBeginPlay()
 
     self.handle = self.OnFire:Add(function(value,name) 
         print("Trigger onfire",value,name)
@@ -15,9 +15,9 @@ function role:ReceiveBeginPlay()
 end
 
 -- override event from blueprint
-function role:ReceiveEndPlay(reason)
+function MyRole:ReceiveEndPlay(reason)
     print("role:ReceiveEndPlay")
     self.OnFire:Remove(self.handle)
 end
 
-return role
+return Class(nil, nil, MyRole)

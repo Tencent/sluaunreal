@@ -17,16 +17,19 @@
 #endif
 
 #include "LuaVar.h"
-#include "UObject/UObjectGlobals.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/Stack.h"
 #include "Blueprint/WidgetTree.h"
 #include "LuaState.h"
+#include "lstate.h"
+// #include "CrashContextCollector.h" // For PUBG Mobile
 
 namespace NS_SLUA {
 
-	const int INVALID_INDEX = -1;
+    FSafeOutputDelegate LuaVar::safeOutputLambda;
+
+    const int INVALID_INDEX = -1;
     LuaVar::LuaVar()
         :stateIndex(INVALID_INDEX)
     {
@@ -70,11 +73,11 @@ namespace NS_SLUA {
         set(v,strlen(v));
     }
 
-	LuaVar::LuaVar(const char* v,size_t len)
-		: LuaVar()
-	{
-		set(v, len);
-	}
+    LuaVar::LuaVar(const char* v,size_t len)
+        : LuaVar()
+    {
+        set(v, len);
+    }
 
     LuaVar::LuaVar(lua_State* l,int p):LuaVar() {
         set(l,p);
@@ -83,7 +86,7 @@ namespace NS_SLUA {
     void LuaVar::set(lua_State* l,int p) {
         free();
         int t = lua_type(l,p);
-        LuaVar::Type type = LV_NIL;
+        LuaVar::Type type;
         switch(t) {
             case LUA_TNUMBER:
                 {
@@ -132,8 +135,8 @@ namespace NS_SLUA {
 
     lua_State* LuaVar::getState() const
     {
-		auto ls = LuaState::get(stateIndex);
-		return ls ? ls->getLuaState() : nullptr;
+        auto ls = LuaState::get(stateIndex);
+        return ls ? ls->getLuaState() : nullptr;
     }
 
     void LuaVar::init(lua_State* l,int p,LuaVar::Type type) {
@@ -148,12 +151,12 @@ namespace NS_SLUA {
         case LV_NUMBER:
             set(lua_tonumber(l,p));
             break;
-		case LV_STRING: {
-			size_t len;
-			const char* buf = lua_tolstring(l, p, &len);
-			set(buf,len);
-			break;
-		}
+        case LV_STRING: {
+            size_t len;
+            const char* buf = lua_tolstring(l, p, &len);
+            set(buf,len);
+            break;
+        }
         case LV_BOOL:
             set(!!lua_toboolean(l,p));
             break;
@@ -177,6 +180,85 @@ namespace NS_SLUA {
         default:
             break;
         }
+    }
+
+    bool LuaVar::operator==(const LuaVar& other) const
+    {
+        lua_State* L = getState();
+        if (!L || L != other.getState()) { return false; }
+
+        if (numOfVar != other.numOfVar) { return false; }
+        if (numOfVar == 0 && vars == nullptr && other.vars == nullptr)
+        {
+            return true;
+        }
+        if (vars == nullptr || other.vars == nullptr) { return false; }
+
+        for (size_t i = 0; i < numOfVar; i++) {
+            Type luatype = vars[i].luatype;
+            if (luatype != other.vars[i].luatype)
+            {
+                return false;
+            }
+
+            switch (luatype) {
+                case LV_BOOL:
+                {
+                    if (vars[i].b != other.vars[i].b) {
+                        return false;
+                    }
+                    break;
+                }
+                case LV_INT:
+                {
+                    if (vars[i].i != other.vars[i].i) {
+                        return false;
+                    }
+                    break;
+                }
+                case LV_NUMBER:
+                {
+                    if (vars[i].d != other.vars[i].d) {
+                        return false;
+                    }
+                    break;
+                }
+                case LV_STRING: 
+                {
+                    if (strcmp(vars[i].s->buf, other.vars[i].s->buf) != 0) {
+                        return false;
+                    }
+                    break;
+                }
+                case LV_FUNCTION:
+                case LV_TABLE:
+                case LV_USERDATA:
+                {
+                    if (!vars[i].ref || !other.vars[i].ref) { return false; }
+
+                    lua_rawgeti(L, LUA_REGISTRYINDEX, vars[i].ref->ref);
+                    lua_rawgeti(L, LUA_REGISTRYINDEX, other.vars[i].ref->ref);
+                    bool bEqual = lua_compare(L, -1, -2, LUA_OPEQ) == 1;
+                    lua_pop(L, 2);
+                    if (!bEqual)
+                    {
+                        return false;
+                    }
+                    break;
+                }
+                case LV_LIGHTUD:
+                {
+                    if (vars[i].ptr != other.vars[i].ptr) {
+                        return false;
+                    }
+                    break;
+                }
+                case LUA_TNIL:
+                default:
+                    break;
+            }
+        }
+        return true;
     }
 
     void LuaVar::initTuple(lua_State* l,size_t n) {
@@ -205,13 +287,13 @@ namespace NS_SLUA {
                     }
                 }
                 break;
-			case LUA_TSTRING: {
-				vars[i].luatype = LV_STRING;
-				size_t len;
-				const char* buf = lua_tolstring(l, p, &len);
-				vars[i].s = new RefStr(buf,len);
-				break;
-			}
+            case LUA_TSTRING: {
+                vars[i].luatype = LV_STRING;
+                size_t len;
+                const char* buf = lua_tolstring(l, p, &len);
+                vars[i].s = new RefStr(buf,len);
+                break;
+            }
             case LUA_TFUNCTION:
                 vars[i].luatype = LV_FUNCTION;
                 lua_pushvalue(l,p);
@@ -222,15 +304,15 @@ namespace NS_SLUA {
                 lua_pushvalue(l,p);
                 vars[i].ref = new RefRef(l);
                 break;
-			case LUA_TUSERDATA:
-				vars[i].luatype = LV_USERDATA;
-				lua_pushvalue(l, p);
-				vars[i].ref = new RefRef(l);
-				break;
-			case LUA_TLIGHTUSERDATA:
-				vars[i].luatype = LV_LIGHTUD;
-				vars[i].ptr = lua_touserdata(l, p);
-				break;
+            case LUA_TUSERDATA:
+                vars[i].luatype = LV_USERDATA;
+                lua_pushvalue(l, p);
+                vars[i].ref = new RefRef(l);
+                break;
+            case LUA_TLIGHTUSERDATA:
+                vars[i].luatype = LV_LIGHTUD;
+                vars[i].ptr = lua_touserdata(l, p);
+                break;
             case LUA_TNIL:
             default:
                 vars[i].luatype = LV_NIL;
@@ -248,12 +330,20 @@ namespace NS_SLUA {
     {
         ref=luaL_ref(l,LUA_REGISTRYINDEX);
         stateIndex = LuaState::get(l)->stateIndex();
+#if UE_BUILD_DEVELOPMENT
+        LuaState::get(l)->addRefTraceback(ref);
+#endif
     }
 
     LuaVar::RefRef::~RefRef() {
         if(LuaState::isValid(stateIndex)) {
             auto state = LuaState::get(stateIndex);
-            luaL_unref(state->getLuaState(),LUA_REGISTRYINDEX,ref);
+            if (state) {
+                luaL_unref(state->getLuaState(),LUA_REGISTRYINDEX,ref);
+#if UE_BUILD_DEVELOPMENT
+                state->removeRefTraceback(ref);
+#endif
+            }
         }
     }
 
@@ -368,15 +458,15 @@ namespace NS_SLUA {
 
     const char* LuaVar::asString(size_t* outlen) const {
         ensure(numOfVar==1 && vars[0].luatype==LV_STRING);
-		if(outlen) *outlen = vars[0].s->length;
+        if(outlen) *outlen = vars[0].s->length;
         return vars[0].s->buf;
     }
 
-	LuaLString LuaVar::asLString() const
-	{
-		ensure(numOfVar == 1 && vars[0].luatype == LV_STRING);
-		return { vars[0].s->buf,vars[0].s->length };
-	}
+    LuaLString LuaVar::asLString() const
+    {
+        ensure(numOfVar == 1 && vars[0].luatype == LV_STRING);
+        return { vars[0].s->buf,vars[0].s->length };
+    }
 
     bool LuaVar::asBool() const {
         ensure(numOfVar==1 && vars[0].luatype==LV_BOOL);
@@ -436,10 +526,10 @@ namespace NS_SLUA {
         vars[0].luatype = LV_STRING;
     }
 
-	void LuaVar::set(const LuaLString & lstr)
-	{
-		set(lstr.buf, lstr.len);
-	}
+    void LuaVar::set(const LuaLString & lstr)
+    {
+        set(lstr.buf, lstr.len);
+    }
 
     void LuaVar::set(bool b) {
         free();
@@ -557,37 +647,38 @@ namespace NS_SLUA {
             return LV_TUPLE;
     }
 
-    int LuaVar::docall(int argn) const {
-        if(!isValid()) {
+    int LuaVar::docall(const FillParamCallback& fillParam) const
+    {
+        if (!isValid()) {
             Log::Error("State of lua function is invalid");
             return 0;
         }
         auto L = getState();
-        int top = lua_gettop(L);
-        top=top-argn+1;
-        LuaState::pushErrorHandler(L);
-        lua_insert(L,top);
+        int errhandle = LuaState::pushErrorHandler(L);
         vars[0].ref->push(L);
-
-		{
-			LuaScriptCallGuard g(L);
-			lua_insert(L, top + 1);
-			// top is err handler
-			if (lua_pcallk(L, argn, LUA_MULTRET, top, NULL, NULL))
-				lua_pop(L, 1);
-			lua_remove(L, top); // remove err handler;
-		}
-        return lua_gettop(L)-top+1;
+        int argn = 0;
+        if (fillParam) {
+            argn = fillParam();
+        }
+        {
+#if WITH_EDITOR
+            LuaScriptCallGuard g(L);
+#endif
+            if (lua_pcallk(L, argn, LUA_MULTRET, errhandle, NULL, NULL))
+                lua_pop(L, 1);
+            lua_remove(L, errhandle); // remove err handler
+        }
+        return lua_gettop(L) - errhandle + 1;
     }
 
-    int LuaVar::pushArgByParms(UProperty* prop,uint8* parms) {
+    int LuaVar::pushArgByParms(FProperty* prop,uint8* parms) {
         auto L = getState();
         if (LuaObject::push(L,prop,parms,nullptr))
             return prop->ElementSize;
         return 0;
     }
 
-    bool LuaVar::callByUFunction(UFunction* func,uint8* parms,FOutParmRec *outParams,RESULT_DECL,LuaVar* pSelf) {
+    bool LuaVar::callByUFunction(UFunction* func,uint8* parms,FOutParmRec *outParams,LuaVar* pSelf) {
         
         if(!func) return false;
 
@@ -596,77 +687,148 @@ namespace NS_SLUA {
             return false;
         }
 
-        const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
-        if(func->ParmsSize==0 && !bHasReturnParam) {
-			int nArg = 0;
-			if (pSelf) {
-				pSelf->push();
-				nArg++;
-			}
+        // For PUBG Mobile
+        // GCrashContextCollector->AddCrashContextData(ECrashContextDataType::CVT_SEQ_CALL_FUNCTIONS, func->GetName(), false, ECrashContextDataLogLevel::CVLL_700);
 
-			auto L = getState();
-			int n = docall(nArg);
-			lua_pop(L, n);
+        auto L = getState();
+
+        const bool bHasReturnParam = func->ReturnValueOffset != MAX_uint16;
+        if (func->ParmsSize == 0 && !bHasReturnParam) {
+            auto fillParam = [&]
+            {
+                int nArg = 0;
+                if (pSelf) {
+                    pSelf->push();
+                    nArg++;
+                }
+                return nArg;
+            };
+
+            int n = docall(fillParam);
+            lua_pop(L, n);
             return true;
         }
-        // push self if valid
-        int n=0;
-		if (pSelf) {
-			pSelf->push();
-			n++;
-		}
-        // push arguments to lua state
-        for(TFieldIterator<UProperty> it(func);it && (it->PropertyFlags&CPF_Parm);++it) {
-            UProperty* prop = *it;
-            uint64 propflag = prop->GetPropertyFlags();
-            if (func->HasAnyFunctionFlags(FUNC_Native)) {
-                if ((propflag & CPF_ReturnParm))
+
+        auto fillParam = [&]
+        {
+            // push self if valid
+            int nArg = 0;
+            if (pSelf) {
+                pSelf->push();
+                nArg++;
+            }
+            // push arguments to lua state
+            for (TFieldIterator<FProperty> it(func); it && (it->PropertyFlags & CPF_Parm); ++it) {
+                FProperty* prop = *it;
+                uint64 propflag = prop->GetPropertyFlags();
+                if (func->HasAnyFunctionFlags(FUNC_Native)) {
+                    if (propflag & CPF_ReturnParm)
+                        continue;
+                }
+                else if (IsRealOutParam(propflag))
                     continue;
+                if (outParams && (propflag & CPF_OutParm) && (propflag & CPF_BlueprintReadOnly)) {
+                    FOutParmRec* out = outParams;
+                    while (out->Property != prop) {
+                        out = out->NextOutParm;
+                        checkSlow(Out);
+                    }
+                    pushArgByParms(prop, out->PropAddr);
+                    nArg++;
+                }
+                else {
+                    pushArgByParms(prop, parms + prop->GetOffset_ForInternal());
+                    nArg++;
+                }
+                
             }
-            else if (IsRealOutParam(propflag))
-                continue;
-
-            pushArgByParms(prop,parms+prop->GetOffset_ForInternal());
-            n++;
-        }
+            return nArg;
+        };
         
-		auto L = getState();
-        int retCount = docall(n);
-		int remain = retCount;
-        // if lua return value
-        // we only handle first lua return value
-        if(remain >0 && bHasReturnParam) {
-            auto prop = func->GetReturnProperty();
-            auto checkder = prop?LuaObject::getChecker(prop):nullptr;
-            if (checkder) {
-                (*checkder)(L, prop, parms+prop->GetOffset_ForInternal(), lua_absindex(L, -remain));
-                if (RESULT_PARAM) {
-                    prop->CopyCompleteValue(RESULT_PARAM, prop->ContainerPtrToValuePtr<uint8>(parms));
-                }
+        int retCount = docall(fillParam);
+        int remain = retCount;
+
+        auto checkOutputValue = [&](FProperty *prop) {
+            auto checker = LuaObject::getChecker(prop);
+            FOutParmRec* out = outParams;
+            while (out && out->Property != prop) {
+                out = out->NextOutParm;
             }
-			remain--;
+            uint8* outParam = out ? out->PropAddr : parms + prop->GetOffset_ForInternal();
+            if (checker) {
+                (*checker)(L, prop, outParam, lua_absindex(L, -remain), true);
+            }
+            remain--;
+        };
+
+        if (remain > 0)
+        {
+            safeOutputLambda = FSafeOutputDelegate::CreateLambda([&]()
+            {
+                // if lua return value
+                // we only handle first lua return value
+                if (bHasReturnParam) {
+                    auto prop = func->GetReturnProperty();
+                    checkOutputValue(prop);
+                }
+
+                // fill lua return value to blueprint stack if argument is out param
+                for (TFieldIterator<FProperty> it(func); remain > 0 && it && (it->PropertyFlags & CPF_Parm); ++it) {
+                    FProperty* prop = *it;
+                    uint64 propflag = prop->GetPropertyFlags();
+                    if (IsRealOutParam(propflag)) {
+                        checkOutputValue(prop);
+                    }
+                }
+            });
+            
+            if (!L->errfunc)
+            {
+                int errhandle = LuaState::pushErrorHandler(L);
+                lua_pushcfunction(L, safeOutput);
+                for (int i = 0; i < remain; ++i)
+                    lua_pushvalue(L, -remain - 2);
+
+                if (lua_pcall(L, remain, 0, errhandle) != 0) {
+                    LuaState::get(L)->onError(TCHAR_TO_UTF8(
+                        *FString::Printf(TEXT("Class[%s] function[%s] return type mismatch! error: %s"),
+                            *func->GetOuter()->GetName(), *func->GetName(), UTF8_TO_TCHAR(lua_tostring(L, -1)))));
+
+                    lua_pop(L, 1);
+                }
+                lua_pop(L, 1);
+            }
+            else 
+            {
+                auto errfunc = L->errfunc;
+                L->errfunc = 0;
+
+                try
+                {
+                    safeOutputLambda.Execute();
+                }
+                catch (...)
+                {
+                    LuaState::get(L)->onError(TCHAR_TO_UTF8(
+                        *FString::Printf(TEXT("Class[%s] function[%s] return type mismatch! error: %s"),
+                            *func->GetOuter()->GetName(), *func->GetName(), UTF8_TO_TCHAR(lua_tostring(L, -1)))));
+
+                    lua_pop(L, 1); // pop error msg
+                }
+
+                L->errfunc = errfunc;
+            }
         }
 
-		// fill lua return value to blueprint stack if argument is out param
-		for (TFieldIterator<UProperty> it(func); remain >0 && it && (it->PropertyFlags&CPF_Parm); ++it) {
-			UProperty* prop = *it;
-			uint64 propflag = prop->GetPropertyFlags();
-            if (IsRealOutParam(propflag)) {
-                auto checker = LuaObject::getChecker(prop);
-                FOutParmRec* out = outParams;
-                while (out && out->Property != prop) {
-                    out = out->NextOutParm;
-                }
-                uint8* outParam = out ? out->PropAddr : parms + prop->GetOffset_ForInternal();
-                if (checker) {
-                    (*checker)(L, prop, outParam, lua_absindex(L, -remain));
-                }
-                remain--;
-            }
-		}
         // pop returned value
         lua_pop(L, retCount);
-		return true;
+        return true;
+    }
+
+    int LuaVar::safeOutput(lua_State* L)
+    {
+        safeOutputLambda.Execute();
+        return 0;
     }
 
     // clone luavar
@@ -720,21 +882,6 @@ namespace NS_SLUA {
 
         other.numOfVar = 0;
         other.vars = nullptr;
-    }
-
-    bool LuaVar::toProperty(UProperty* p,uint8* ptr) {
-
-        auto func = LuaObject::getChecker(p);
-        if(func) {
-            // push var's value to top of stack
-            auto L = getState();
-            push(L);
-            (*func)(L,p,ptr,lua_absindex(L,-1));
-            lua_pop(L,1);
-            return true;
-        }
-        
-        return false;
     }
 }
 

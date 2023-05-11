@@ -14,13 +14,10 @@
 #include "LuaObject.h"
 #include "LuaCppBinding.h"
 #include "Blueprint/WidgetTree.h"
-#include "Log.h"
-#include "LuaActor.h"
 
 namespace NS_SLUA {
 
     namespace ExtensionMethod {
-
         void init() {
             REG_EXTENSION_METHOD(UUserWidget,"FindWidget",&UUserWidget::GetWidgetFromName);
             REG_EXTENSION_METHOD_IMP(UUserWidget,"RemoveWidget",{
@@ -29,9 +26,13 @@ namespace NS_SLUA {
                 bool ret = UD->WidgetTree->RemoveWidget(widget);
                 return LuaObject::push(L,ret);
             });
+            
+            REG_EXTENSION_METHOD(UUserWidget, "SetVisibility", &UUserWidget::SetVisibility);
+            REG_EXTENSION_METHOD(UUserWidget, "RemoveFromParent", &UUserWidget::RemoveFromParent);
 
-			REG_EXTENSION_METHOD(AActor, "GetWorld", &AActor::GetWorld);
-			REG_EXTENSION_METHOD_IMP(UObject, "GetClass", {
+            REG_EXTENSION_METHOD(AActor, "GetWorld", &AActor::GetWorld);
+            REG_EXTENSION_METHOD(UObject, "ConditionalBeginDestroy", &UObject::ConditionalBeginDestroy);
+            REG_EXTENSION_METHOD_IMP(UObject, "GetClass", {
                 CheckUD(UObject,L,1);
                 if(!UD) luaL_error(L,"arg 1 expect UObject");
                 return LuaObject::push(L,UD->GetClass());
@@ -39,10 +40,6 @@ namespace NS_SLUA {
 
             // resolve overloaded member function
             REG_EXTENSION_METHOD_WITHTYPE(UWorld,"SpawnActor",&UWorld::SpawnActor,AActor* (UWorld::*)( UClass*, FVector const*,FRotator const*, const FActorSpawnParameters&));
-
-			// disable __luaPart
-			// REG_EXTENSION_PROPERTY(ALuaActor, "__luaPart", &ALuaActor::getSelfTable, nullptr);
-
         }
     }
 }

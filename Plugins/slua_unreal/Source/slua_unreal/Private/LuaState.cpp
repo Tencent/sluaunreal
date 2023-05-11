@@ -13,6 +13,9 @@
 
 
 #include "LuaState.h"
+
+#include <lgc.h>
+#include <lstate.h>
 #include "LuaObject.h"
 #include "SluaLib.h"
 #include "UObject/UObjectGlobals.h"
@@ -21,40 +24,39 @@
 #include "Misc/AssertionMacros.h"
 #include "Misc/SecureHash.h"
 #include "Log.h"
-#include "lua/lua.hpp"
-#include <map>
-#include "LuaWrapper.h"
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
 #include "LuaArray.h"
 #include "LuaMap.h"
-#include "LuaSocketWrap.h"
+#include "LuaSet.h"
 #include "LuaMemoryProfile.h"
 #include "HAL/RunnableThread.h"
-#include "GameDelegates.h"
 #include "LatentDelegate.h"
-#include "LuaActor.h"
+#include "LuaFunctionAccelerator.h"
+#include "LuaOverrider.h"
+#include "LuaOverriderInterface.h"
 #include "LuaProfiler.h"
+#include "LuaProtobufWrap.h"
 #include "Stats/Stats.h"
+#include "luasocket/luasocket.h"
 
 namespace NS_SLUA {
 
-	const int MaxLuaExecTime = 5; // in second
+    LuaState::DelayHookMap LuaState::delayHookStateMap;
 
-    int import(lua_State *L) {
-        const char* name = LuaObject::checkValue<const char*>(L,1);
-        if(name) {
-            UClass* uclass = FindObject<UClass>(ANY_PACKAGE, UTF8_TO_TCHAR(name));
-            if(uclass) return LuaObject::pushClass(L,uclass);
-            
-			UScriptStruct* ustruct = FindObject<UScriptStruct>(ANY_PACKAGE, UTF8_TO_TCHAR(name));
-            if(ustruct) return LuaObject::pushStruct(L,ustruct);
+    FLuaStateInitEvent LuaState::onInitEvent;
+    
+    const int MaxLuaExecTime = 60; // in second
+    const int MaxLuaGCCount = 8192;
 
-			UEnum* uenum = FindObject<UEnum>(ANY_PACKAGE, UTF8_TO_TCHAR(name));
-			if (uenum) return LuaObject::pushEnum(L, uenum);
-            
-            luaL_error(L,"Can't find class named %s",name);
-        }
-        return 0;
-    }
+    static float GCStructTimeLimit = 0.001f;
+
+    FAutoConsoleVariableRef CVarSluaGCStructTimeLimit(
+        TEXT("slua.GCStructTimeLimit"),
+        GCStructTimeLimit,
+        TEXT("Defer gc struct time limit in one frame.\n"),
+        ECVF_Default);
     
     int print(lua_State *L) {
         FString str;
@@ -65,76 +67,75 @@ namespace NS_SLUA {
             str+="\t";
             if(s) str+=UTF8_TO_TCHAR(s);
         }
-        Log::Log("%s",TCHAR_TO_UTF8(*str));
+        UE_LOG(Slua, Log, TEXT("%s"), *str);
         return 0;
     }
-
-	int dofile(lua_State *L) {
-		auto fn = luaL_checkstring(L, 1);
-		auto ls = LuaState::get(L);
-		ensure(ls);
-		auto var = ls->doFile(fn);
-		if (var.isValid()) {
-			return var.push(L);
-		}
-		return 0;
-	}
 
     int error(lua_State* L) {
         const char* err = lua_tostring(L,1);
         luaL_traceback(L,L,err,1);
         err = lua_tostring(L,2);
         lua_pop(L,1);
-		auto ls = LuaState::get(L);
-		ls->onError(err);
+        auto ls = LuaState::get(L);
+        ls->onError(err);
         return 0;
     }
+    
+    void LuaState::onError(const char* err) {
+        if (errorDelegate.IsBound()) errorDelegate.Broadcast(err);
+        else Log::Error("%s", err);
+    }
 
-	void LuaState::onError(const char* err) {
-		if (errorDelegate) errorDelegate(err);
-		else Log::Error("%s", err);
-	}
-
+    int newCacheTable(lua_State* L) {
+        lua_newtable(L);
+        lua_newtable(L);
+        lua_pushstring(L, "kv");
+        lua_setfield(L, -2, "__mode");
+        lua_setmetatable(L, -2);
+        // register it
+        return luaL_ref(L, LUA_REGISTRYINDEX);
+    }
+    
      #if WITH_EDITOR
      // used for debug
-	int LuaState::getStringFromMD5(lua_State* L) {
-		const char* md5String = lua_tostring(L, 1);
-		LuaState* state = LuaState::get(L);
-		FString md5FString = UTF8_TO_TCHAR(md5String);
-		bool hasValue = state->debugStringMap.Contains(md5FString);
-		if (hasValue) {
-			auto value = state->debugStringMap[md5FString];
-			lua_pushstring(L, TCHAR_TO_UTF8(*value));
-		}
-		else {
-			lua_pushstring(L, "");
-		}
-		return 1;
-	}
+    int LuaState::getStringFromMD5(lua_State* L) {
+        const char* md5String = lua_tostring(L, 1);
+        LuaState* state = LuaState::get(L);
+        FString md5FString = UTF8_TO_TCHAR(md5String);
+        bool hasValue = state->debugStringMap.Contains(md5FString);
+        if (hasValue) {
+            auto value = state->debugStringMap[md5FString];
+            lua_pushstring(L, TCHAR_TO_UTF8(*value));
+        }
+        else {
+            lua_pushstring(L, "");
+        }
+        return 1;
+    }
     #endif
 
-	int LuaState::increaseCallStack()
-	{
-		newObjectsInCallStack.Push(ObjectSet());
-		return currentCallStack++;
-	}
+    int LuaState::increaseCallStack()
+    {
+        newObjectsInCallStack.Push(ObjectSet());
+        return currentCallStack++;
+    }
 
-	void LuaState::decreaseCallStack()
-	{
-		currentCallStack--;
-		newObjectsInCallStack.Pop(false);
-	}
+    void LuaState::decreaseCallStack()
+    {
+        currentCallStack--;
+        newObjectsInCallStack.Pop(false);
+    }
 
-	bool LuaState::hasObjectInStack(const UObject* obj, int stackLayer)
-	{
-		return newObjectsInCallStack[stackLayer].Contains(const_cast<UObject*>(obj));
-	}
+    bool LuaState::hasObjectInStack(const UObject* obj, int stackLayer)
+    {
+        return newObjectsInCallStack[stackLayer].Contains(const_cast<UObject*>(obj));
+    }
 
-	int LuaState::loader(lua_State* L) {
+    int LuaState::loader(lua_State* L) {
         LuaState* state = LuaState::get(L);
         const char* fn = lua_tostring(L,1);
         FString filepath;
-		TArray<uint8> buf = state->loadFile(fn, filepath);
+        TArray<uint8> buf = state->loadFile(fn, filepath);
         if(buf.Num() > 0) {
             char chunk[256];
             snprintf(chunk,256,"@%s",TCHAR_TO_UTF8(*filepath));
@@ -152,29 +153,117 @@ namespace NS_SLUA {
         return 0;
     }
     
-	TArray<uint8> LuaState::loadFile(const char* fn,FString& filepath) {
+    TArray<uint8> LuaState::loadFile(const char* fn,FString& filepath) {
         if(loadFileDelegate) return loadFileDelegate(fn,filepath);
         return TArray<uint8>();
+    }
+
+    int LuaState::import(lua_State *L) {
+        const char* name = LuaObject::checkValue<const char*>(L, 1);
+        if (name) {
+            LuaState* state = LuaState::get(L);
+            ImportedObjectCache* cacheImportedItem = state->cacheImportedMap.Find(name);
+            if (cacheImportedItem)
+            {
+                UObject* cacheObj = cacheImportedItem->cacheObjectPtr.Get();
+                if (cacheObj) {
+                    switch (cacheImportedItem->importedType) 
+                    {
+                    case ImportedClass:
+                    {
+                        UClass* uclass = Cast<UClass>(cacheObj);
+                        if (uclass) {
+                            LuaObject::pushClass(L, uclass);
+                            return 1;
+                        }
+                        break;
+                    }
+                    case ImportedStruct:
+                    {
+                        UScriptStruct* ustruct = Cast<UScriptStruct>(cacheObj);
+                        if (ustruct) {
+                            LuaObject::pushStruct(L, ustruct);
+                            return 1;
+                        }
+                        break;
+                    }
+                    case ImportedEnum:
+                    {
+                        UEnum* uenum = Cast<UEnum>(cacheObj);
+                        if (uenum) {
+                            LuaObject::pushEnum(L, uenum);
+                            return 1;
+                        }
+                        break;
+                    }
+                    default:
+                        break;
+                    }
+                }
+            }
+
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>0
+            static UPackage* AnyPackage = (UPackage*)-1;
+#else
+            static UPackage* AnyPackage = ANY_PACKAGE;
+#endif
+            FString path = UTF8_TO_TCHAR(name);
+            if (!FindObject<UObject>(AnyPackage, *path)) {
+                // Try to load object if not found!
+                LoadObject<UObject>(NULL, *path);
+            }
+
+            UClass* uclass = FindObject<UClass>(AnyPackage, *path);
+            if (uclass) {
+                LuaObject::pushClass(L, uclass);
+                state->cacheImportedMap.Add(name, ImportedObjectCache {uclass, ImportedClass});
+                return 1;
+            }
+            UScriptStruct* ustruct = FindObject<UScriptStruct>(AnyPackage, *path);
+            if (ustruct) {
+                LuaObject::pushStruct(L, ustruct);
+                state->cacheImportedMap.Add(name, ImportedObjectCache {ustruct, ImportedStruct});
+                return 1;
+            }
+
+            UEnum* uenum = FindObject<UEnum>(AnyPackage, *path);
+            if (uenum) {
+                LuaObject::pushEnum(L, uenum);
+                state->cacheImportedMap.Add(name, ImportedObjectCache{ uenum, ImportedEnum });
+                return 1;
+            }
+
+            luaL_error(L, "Can't find class named %s", name);
+        }
+        return 0;
     }
 
     LuaState* LuaState::mainState = nullptr;
     TMap<int,LuaState*> stateMapFromIndex;
     static int StateIndex = 0;
 
-	LuaState::LuaState(const char* name, UGameInstance* gameInstance)
-		: loadFileDelegate(nullptr)
-		, errorDelegate(nullptr)
-		, L(nullptr)
-		, cacheObjRef(LUA_NOREF)
-		, cacheFuncRef(LUA_NOREF)
-		, stackCount(0)
-		, si(0)
-		, deadLoopCheck(nullptr)
-		, latentDelegate(nullptr)
-		, currentCallStack(0)
+    LuaState::LuaState(const char* name, UGameInstance* gameInstance)
+        : loadFileDelegate(nullptr)
+        , L(nullptr)
+        , cacheObjRef(LUA_NOREF)
+        , cacheEnumRef(LUA_NOREF)
+        , cacheClassPropRef(LUA_NOREF)
+        , cacheClassFuncRef(LUA_NOREF)
+        , si(0)
+        , deadLoopCheck(nullptr)
+        , overrider(nullptr)
+        , stepGCTimeLimit(0.0)
+        , stepGCCountLimit(0)
+        , fullGCInterval(0.0)
+        , lastFullGCSeconds(0.0)
+        , latentDelegate(nullptr)
+        , currentCallStack(0)
     {
         if(name) stateName=UTF8_TO_TCHAR(name);
-		this->pGI = gameInstance;
+        this->gameInstance = gameInstance;
+#if UE_BUILD_DEVELOPMENT
+        bRefTraceEnable = false;
+#endif
     }
 
     LuaState::~LuaState()
@@ -197,74 +286,232 @@ namespace NS_SLUA {
         return nullptr;
     }
 
-	LuaState* LuaState::get(UGameInstance* pGI) {
-		for (auto& pair : stateMapFromIndex) {
-			auto state = pair.Value;
-			if (state->pGI && state->pGI == pGI)
-				return state;
-		}
-		return nullptr;
-	}
+    LuaState* LuaState::get(UGameInstance* pGI) {
+        for (auto& pair : stateMapFromIndex) {
+            auto state = pair.Value;
+            if (state->gameInstance.Get() == pGI)
+                return state;
+        }
+        return nullptr;
+    }
+
+    UGameInstance* LuaState::getObjectGameInstance(const UObject* obj)
+    {
+        auto* outer = obj->GetOuter();
+        auto* world = outer ? outer->GetWorld() : nullptr;
+        if (!world)
+        {
+            world = GWorld;
+        }
+        return world ? world->GetGameInstance() : nullptr;
+    }
 
     // check lua top , this function can omit
-    void LuaState::Tick(float dtime) {
-		ensure(IsInGameThread());
-		if (!L) return;
-
-		int top = lua_gettop(L);
-		if (top != stackCount) {
-			stackCount = top;
-			Log::Error("Error: lua stack count should be zero , now is %d, top is %s", top, luaL_typename(L,-1));
-		}
+    void LuaState::tick(float dtime) {
+        ensure(IsInGameThread());
+        if (!L) return;
+        int top = lua_gettop(L);
+        if(top != 0) {
+            for (int i = -1; i >= -top; i--) {
+                Log::Error("Error: lua stack count should be zero , now is %d, %d is %s", top, i, luaL_typename(L,i));
+                switch (lua_type(L, i)) {
+                case LUA_TNUMBER:
+                    Log::Error("Error: lua stack %d value is %lf", i, lua_tonumber(L, i));
+                    break;
+                case LUA_TSTRING:
+                    Log::Error("Error: lua stack %d value is %s", i, lua_tostring(L, i));
+                    break;
+                default:
+                    break;
+                }
+            }
+            lua_settop(L, 0);
+        }
 
 #ifdef ENABLE_PROFILER
-		LuaProfiler::tick(this);
+#if !UE_BUILD_SHIPPING
+        LuaProfiler::tick(this);
+#endif
 #endif
 
-		PROFILER_WATCHER(w1);
-		if (stateTickFunc.isFunction())
-		{
-			PROFILER_WATCHER_X(w2,"TickFunc");
-			stateTickFunc.call(dtime);
-		}
+        if (stateTickFunc.isFunction()) {
+            stateTickFunc.call(dtime);
+        }
+        tickGC(dtime);
+        tickLuaActors(dtime);
+    }
 
-		// try lua gc
-		PROFILER_WATCHER_X(w3, "LuaGC");
-		if (!enableMultiThreadGC) lua_gc(L, LUA_GCSTEP, 128);
+    void LuaState::tickGC(float dtime) {
+        if (stepGCTimeLimit > 0.0) {
+            QUICK_SCOPE_CYCLE_COUNTER(Lua_StepGC)
+#if !UE_BUILD_SHIPPING
+            PROFILER_WATCHER_X(stepGC, "StepGC");
+#endif
+            auto runStepGC = [&]()
+            {
+                // use step gc every frame
+                int runtimes = 0;
+                double stepCost = 0.0;
+                int stepCount = 0;
+                for (double start = FPlatformTime::Seconds(), now = start; stepCount < stepGCCountLimit &&
+                    now - start + stepCost < stepGCTimeLimit; stepCount++)
+                {
+                    if (lua_gc(L, LUA_GCSTEP, 0)) {
+                        lastFullGCSeconds = FPlatformTime::Seconds();
+#if !UE_BUILD_SHIPPING
+                        PROFILER_WATCHER_X(fullGC, "FullGC");
+#endif
+                        break;
+                    }
+
+                    double currentSeconds = FPlatformTime::Seconds();
+                    stepCost = currentSeconds - now;
+                    now = currentSeconds;
+                    runtimes++;
+
+#if LUA_VERSION_NUM <= 503
+                    if (stepCost * 10.0 > stepGCTimeLimit && L->l_G->gcfinnum > 4)
+                    {
+                        L->l_G->gcfinnum = 4;
+                    }
+#endif
+                }
+
+                // Log::Log("Step GC runtimes: %d", runtimes);
+            };
+
+            if (fullGCInterval > 0.0f)
+            {
+                if (FPlatformTime::Seconds() - lastFullGCSeconds > fullGCInterval)
+                {
+                    runStepGC();
+                }
+                else if (L->l_G->gcstate != GCSpause)
+                {
+                    runStepGC();
+                }
+            }
+            else
+            {
+                runStepGC();
+            }
+        }
+
+        {
+            QUICK_SCOPE_CYCLE_COUNTER(Lua_DeferGCStruct)
+            double stepCost = 0.0;
+            for (double start = FPlatformTime::Seconds(), now = start; now - start + stepCost < GCStructTimeLimit;)
+            {
+                if (deferGCStruct.Num() == 0)
+                {
+                    break;
+                }
+
+                auto luaStruct = deferGCStruct[0];
+                deferGCStruct.RemoveAtSwap(0);
+                delete luaStruct;
+
+                double currentSeconds = FPlatformTime::Seconds();
+                stepCost = currentSeconds - now;
+                now = currentSeconds;
+            }
+        }
+    }
+
+    void LuaState::tickLuaActors(float dtime) {
+        tickInternalTime += dtime;
+
+        tickActors.RemoveAll([](LuaTickInfo& info)
+        {
+            return info.bRemoved;
+        });
+        
+        for (int i = 0; i < tickActors.Num(); ++i)
+        {
+            LuaTickInfo& tickInfo = tickActors[i];
+            if (tickInfo.bRemoved) {
+                continue;
+            }
+            auto obj = tickInfo.obj.Get();
+            check(obj);
+            if (obj && (tickInternalTime > tickInfo.expire)) {
+                callLuaTick(obj, tickInfo.tickFunc, tickInternalTime - tickInfo.preExecuteTime);
+                tickInfo.preExecuteTime = tickInternalTime;
+                tickInfo.expire = tickInternalTime + tickInfo.interval;
+            }
+        }
+    }
+
+    void LuaState::registLuaTick(UObject* obj, float tickInterval) {
+        unRegistLuaTick(obj);
+        tickActors.Add(LuaTickInfo(obj, tickInterval, tickInternalTime, tickInternalTime));
+    }
+
+    void LuaState::unRegistLuaTick(const UObject* obj) {
+        for (int i = 0; i < tickActors.Num();i++) {
+            LuaTickInfo& info = tickActors[i];
+            if (info.obj == obj) {
+                info.bRemoved = true;
+                break;
+            }
+        }
+    }
+    
+    void LuaState::callLuaTick(UObject* obj, NS_SLUA::LuaVar& tickFunc, float dtime) {
+        ILuaOverriderInterface* overrideInterface = Cast<ILuaOverriderInterface>(obj);
+        if (!overrideInterface) {
+            Log::Error("callLuaTick cast fail: %s. if obj implement ILuaOverriderInterface in BP, change to c++ instead.", TCHAR_TO_UTF8(*obj->GetName()));
+            return;
+        }
+        NS_SLUA::LuaVar self = overrideInterface->GetSelfTable();
+        if (!tickFunc.isFunction()) {
+            NS_SLUA::LuaVar tick = self.getFromTable<NS_SLUA::LuaVar>("LuaTick");
+            if (tick.isFunction()) {
+                tickFunc = tick;
+            }
+        }
+        if (tickFunc.isFunction()) {
+            tickFunc.call(self, dtime);
+        }
     }
 
     void LuaState::close() {
         if(mainState==this) mainState = nullptr;
 
-		latentDelegate = nullptr;
+        latentDelegate = nullptr;
 
-		freeDeferObject();
+#if WITH_EDITOR
+        if (overrider)
+            overrider->removeOverrides();
+#endif
+        SafeDelete(overrider);
 
-		releaseAllLink();
+        releaseAllLink();
 
-		cleanupThreads();
+        cleanupThreads();
         
         if(L) {
- #ifdef ENABLE_PROFILER
- 			LuaProfiler::clean(this);
- #endif
+#ifdef ENABLE_PROFILER
+#if !UE_BUILD_SHIPPING
+             LuaProfiler::clean(this);
+#endif
+#endif
             lua_close(L);
-			GUObjectArray.RemoveUObjectCreateListener(this);
-			GUObjectArray.RemoveUObjectDeleteListener(this);
-			FCoreUObjectDelegates::GetPostGarbageCollect().Remove(pgcHandler);
-			FWorldDelegates::OnWorldCleanup.Remove(wcHandler);
+            GUObjectArray.RemoveUObjectCreateListener(this);
+            GUObjectArray.RemoveUObjectDeleteListener(this);
+            FCoreUObjectDelegates::GetPostGarbageCollect().Remove(pgcHandler);
+            FWorldDelegates::OnWorldCleanup.Remove(wcHandler);
             stateMapFromIndex.Remove(si);
             L=nullptr;
         }
-		freeDeferObject();
-		objRefs.Empty();
-		SafeDelete(deadLoopCheck);
+        objRefs.Empty();
+        SafeDelete(deadLoopCheck);
 
-		LuaMemoryProfile::stop();
+        LuaMemoryProfile::stop();
     }
 
 
-    bool LuaState::init(bool gcFlag) {
+    bool LuaState::init() {
 
         if(deadLoopCheck)
             return false;
@@ -272,53 +519,56 @@ namespace NS_SLUA {
         if(!mainState) 
             mainState = this;
 
-		enableMultiThreadGC = gcFlag;
-		pgcHandler = FCoreUObjectDelegates::GetPostGarbageCollect().AddRaw(this, &LuaState::onEngineGC);
-		wcHandler = FWorldDelegates::OnWorldCleanup.AddRaw(this, &LuaState::onWorldCleanup);
-		GUObjectArray.AddUObjectDeleteListener(this);
-		GUObjectArray.AddUObjectCreateListener(this);
+        pgcHandler = FCoreUObjectDelegates::GetPostGarbageCollect().AddRaw(this, &LuaState::onEngineGC);
+        wcHandler = FWorldDelegates::OnWorldCleanup.AddRaw(this, &LuaState::onWorldCleanup);
+        GUObjectArray.AddUObjectDeleteListener(this);
+        GUObjectArray.AddUObjectCreateListener(this);
 
-		latentDelegate = NewObject<ULatentDelegate>((UObject*)GetTransientPackage(), ULatentDelegate::StaticClass());
-		latentDelegate->bindLuaState(this);
+        latentDelegate = NewObject<ULatentDelegate>((UObject*)GetTransientPackage(), ULatentDelegate::StaticClass());
+        latentDelegate->bindLuaState(this);
 
-        stackCount = 0;
         si = ++StateIndex;
 
-		propLinks.Empty();
-		classMap.clear();
-		objRefs.Empty();
+        propLinks.Empty();
+        classMap.clear();
+        objRefs.Empty();
 
 #if WITH_EDITOR
-		// used for debug
-		debugStringMap.Empty();
+        // used for debug
+        debugStringMap.Empty();
+
+        if(!IsRunningCommandlet())
+        {
+            deadLoopCheck = new FDeadLoopCheck();
+        }
 #endif
 
-		deadLoopCheck = new FDeadLoopCheck();
-
         // use custom memory alloc func to profile memory footprint
+#if ENABLE_PROFILER && !UE_BUILD_SHIPPING
         L = lua_newstate(LuaMemoryProfile::alloc,this);
+#else
+        L = luaL_newstate();
+#endif
+        
         lua_atpanic(L,_atPanic);
         // bind this to L
         *((void**)lua_getextraspace(L)) = this;
         stateMapFromIndex.Add(si,this);
 
         // init obj cache table
-        lua_newtable(L);
-        lua_newtable(L);
-        lua_pushstring(L,"kv");
-        lua_setfield(L,-2,"__mode");
-        lua_setmetatable(L,-2);
-        // register it
-        cacheObjRef = luaL_ref(L,LUA_REGISTRYINDEX);
+        cacheObjRef = newCacheTable(L);
 
-		// init func cache table
-		lua_newtable(L);
-		lua_newtable(L);
-		lua_pushstring(L, "kv");
-		lua_setfield(L, -2, "__mode");
-		lua_setmetatable(L, -2);
-		// register it
-		cacheFuncRef = luaL_ref(L, LUA_REGISTRYINDEX);
+        // init enum cache table
+        lua_newtable(L);
+        cacheEnumRef = luaL_ref(L, LUA_REGISTRYINDEX);
+
+        // init cls prop cache metatable
+        lua_newtable(L);
+        cacheClassPropRef = luaL_ref(L, LUA_REGISTRYINDEX);
+
+        // init cls function cache metatable
+        lua_newtable(L);
+        cacheClassFuncRef = luaL_ref(L, LUA_REGISTRYINDEX);
 
         ensure(lua_gettop(L)==0);
         
@@ -330,15 +580,14 @@ namespace NS_SLUA {
         lua_pushcfunction(L,print);
         lua_setglobal(L, "print");
 
-		lua_pushcfunction(L, dofile);
-		lua_setglobal(L, "dofile");
+        overrider = new LuaOverrider(this);
 
         #if WITH_EDITOR
         // used for debug
-		lua_pushcfunction(L, getStringFromMD5);
-		lua_setglobal(L, "getStringFromMD5");
+        lua_pushcfunction(L, getStringFromMD5);
+        lua_setglobal(L, "getStringFromMD5");
         #endif
-		
+        
         lua_pushcfunction(L,loader);
         int loaderFunc = lua_gettop(L);
 
@@ -353,31 +602,33 @@ namespace NS_SLUA {
         }
         lua_pushvalue(L,loaderFunc);
         lua_rawseti(L,loaderTable,2);
-		lua_settop(L, 0);
-        
-		LuaSocket::init(L);
+        lua_settop(L, 0);
+
+        InitExtLib(L);
+
         LuaObject::init(L);
+        LuaProtobuf::init(L);
         SluaUtil::openLib(L);
         LuaClass::reg(L);
         LuaArray::reg(L);
         LuaMap::reg(L);
+        LuaSet::reg(L);
 #ifdef ENABLE_PROFILER
-		LuaProfiler::init(this);
+#if !UE_BUILD_SHIPPING
+        LuaProfiler::init(this);
+#endif    
 #endif
-		
-		onInitEvent.Broadcast();
-
-		// disable gc in main thread
-		if (enableMultiThreadGC) lua_gc(L, LUA_GCSTOP, 0);
 
         lua_settop(L,0);
+
+        onInitEvent.Broadcast(L);
 
         return true;
     }
 
-	void LuaState::attach(UGameInstance* GI) {
-		this->pGI = GI;
-	}
+    void LuaState::attach(UGameInstance* GI) {
+        this->gameInstance = GI;
+    }
 
     int LuaState::_atPanic(lua_State* L) {
         const char* err = lua_tostring(L,-1);
@@ -385,89 +636,83 @@ namespace NS_SLUA {
         return 0;
     }
 
-	void LuaState::setLoadFileDelegate(LoadFileDelegate func) {
-		loadFileDelegate = func;
-	}
+    void LuaState::setLoadFileDelegate(LoadFileDelegate func) {
+        loadFileDelegate = func;
+    }
 
-	void LuaState::setErrorDelegate(ErrorDelegate func) {
-		errorDelegate = func;
-	}
+    LuaState::ErrorDelegate* LuaState::getErrorDelegate()
+    {
+        return &errorDelegate;
+    }
 
-	static void* findParent(GenericUserData* parent) {
-		auto pp = parent;
-		while(true) {
-			if (!pp->parent)
-				break;
-			pp = reinterpret_cast<GenericUserData*>(pp->parent);
-		}
-		return pp;
-	}
+    void LuaState::addLink(void* address) {
+        if (!propLinks.Contains(address))
+            propLinks.Add(address);
+    }
 
-	void LuaState::linkProp(void* parent, void* prop) {
-		auto parentud = findParent(reinterpret_cast<GenericUserData*>(parent));
-		auto propud = reinterpret_cast<GenericUserData*>(prop);
-		propud->parent = parentud;
-		auto& propList = propLinks.FindOrAdd(parentud);
-		propList.Add(propud);
-	}
+    void LuaState::releaseLink(void* address) {
+        auto propLinksPtr = propLinks.Find(address); 
+        if (!propLinksPtr) {
+            return;
+        }
+        
+        auto& propList = *propLinksPtr;
+        for (auto& cprop : propList) {
+            reinterpret_cast<GenericUserData*>(cprop)->flag |= UD_HADFREE;
+        }
+        propList.Empty();
+        propLinks.Remove(address);
+    }
 
-	void LuaState::releaseLink(void* prop) {
-		auto propud = reinterpret_cast<GenericUserData*>(prop);
-		if (propud->flag & UD_AUTOGC) {
-			auto propListPtr = propLinks.Find(propud);
-			if (propListPtr) 
-				for (auto& cprop : *propListPtr) 
-					reinterpret_cast<GenericUserData*>(cprop)->flag |= UD_HADFREE;
-		} else {
-			propud->flag |= UD_HADFREE;
-			auto propListPtr = propLinks.Find(propud->parent);
-			if (propListPtr) 
-				propListPtr->Remove(propud);
-		}
-	}
+    void LuaState::releaseAllLink() {
+        for (auto& pair : propLinks) {
+            for (auto& prop : pair.Value) {
+                reinterpret_cast<GenericUserData*>(prop)->flag |= UD_HADFREE;
+            }
+        }
+        propLinks.Empty();
+    }
 
-	void LuaState::releaseAllLink() {
-		for (auto& pair : propLinks) 
-			for (auto& prop : pair.Value) 
-				reinterpret_cast<GenericUserData*>(prop)->flag |= UD_HADFREE;
-		propLinks.Empty();
-	}
+    void LuaState::linkProp(void* parentAddress, void* prop) {
+        auto propud = reinterpret_cast<GenericUserData*>(prop);
+        propud->parent = parentAddress;
 
-	// engine will call this function on post gc
-	void LuaState::onEngineGC()
-	{
-		PROFILER_WATCHER(w1);
-		// find freed uclass
-		for (ClassCache::CacheFuncMap::TIterator it(classMap.cacheFuncMap); it; ++it)
-			if (!it.Key().IsValid())
-				it.RemoveCurrent();
-		
-		for (ClassCache::CachePropMap::TIterator it(classMap.cachePropMap); it; ++it)
-			if (!it.Key().IsValid())
-				it.RemoveCurrent();		
-		
-		freeDeferObject();
+        auto& propList = propLinks.FindChecked(parentAddress);
+        propList.Add(propud);
+    }
 
-		Log::Log("Unreal engine GC, lua used %d KB",lua_gc(L, LUA_GCCOUNT, 0));
-	}
+    void LuaState::unlinkProp(void* prop) {
+        auto propud = reinterpret_cast<GenericUserData*>(prop);
+        check(propud->parent);
+        auto propLinksPtr = propLinks.Find(propud->parent);
+        if (!propLinksPtr) {
+            return;
+        }
 
-	void LuaState::onWorldCleanup(UWorld * World, bool bSessionEnded, bool bCleanupResources)
-	{
-		PROFILER_WATCHER(w1);
-		unlinkUObject(World);
-	}
+        auto& propList = *propLinksPtr;
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
+        propList.RemoveSwap(propud);
+#else
+        propList.RemoveSwap(propud, false);
+#endif
+    }
 
-	void LuaState::freeDeferObject()
-	{
-		// really delete FGCObject
-		for (auto ptr : deferDelete)
-			delete ptr;
-		deferDelete.Empty();
-	}
+    // engine will call this function on post gc
+    void LuaState::onEngineGC()
+    {
+        for (CacheImportedMap::TIterator it(cacheImportedMap); it; ++it)
+            if (!it.Value().cacheObjectPtr.IsValid())
+                it.RemoveCurrent();
+    }
+    
+    void LuaState::onWorldCleanup(UWorld * World, bool bSessionEnded, bool bCleanupResources)
+    {
+        unlinkUObject(World);
+    }
 
-	LuaVar LuaState::doBuffer(const uint8* buf, uint32 len, const char* chunk, LuaVar* pEnv) {
+    LuaVar LuaState::doBuffer(const uint8* buf,uint32 len, const char* chunk, LuaVar* pEnv) {
         AutoStack g(L);
-        int errfunc = pushErrorHandler(L);
+        pushErrorHandler(L);
 
         if(luaL_loadbuffer(L, (const char *)buf, len, chunk)) {
             const char* err = lua_tostring(L,-1);
@@ -475,8 +720,8 @@ namespace NS_SLUA {
             return LuaVar();
         }
         
-		LuaVar f(L, -1);
-		return f.call();
+        LuaVar f(L, -1);
+        return f.call();
     }
 
     LuaVar LuaState::doString(const char* str, LuaVar* pEnv) {
@@ -487,8 +732,8 @@ namespace NS_SLUA {
         // like this, WTF!
         uint32 len = strlen(str);
         #if WITH_EDITOR
-		FString md5FString = FMD5::HashAnsiString(UTF8_TO_TCHAR(str));
-		debugStringMap.Add(md5FString, UTF8_TO_TCHAR(str));
+        FString md5FString = FMD5::HashAnsiString(UTF8_TO_TCHAR(str));
+        debugStringMap.Add(md5FString, UTF8_TO_TCHAR(str));
         return doBuffer((const uint8*)str,len,TCHAR_TO_UTF8(*md5FString),pEnv);
         #else
         return doBuffer((const uint8*)str,len,str,pEnv);
@@ -497,7 +742,7 @@ namespace NS_SLUA {
 
     LuaVar LuaState::doFile(const char* fn, LuaVar* pEnv) {
         FString filepath;
-		TArray<uint8> buf = loadFile(fn, filepath);
+        TArray<uint8> buf = loadFile(fn, filepath);
         if (buf.Num() > 0) {
             char chunk[256];
             snprintf(chunk,256,"@%s",TCHAR_TO_UTF8(*filepath));
@@ -508,295 +753,382 @@ namespace NS_SLUA {
         return LuaVar();
     }
 
-	void LuaState::NotifyUObjectDeleted(const UObjectBase * Object, int32 Index)
-	{
-		PROFILER_WATCHER(w1);
-		unlinkUObject((const UObject*)Object);
-		LuaObject::removeFuncCache(L, (UFunction*)Object);
+    LuaVar LuaState::requireModule(const char* fn, LuaVar* pEnv) {
+        int top = LuaState::pushErrorHandler(L);
+        lua_getglobal(L, "require");
+        lua_pushstring(L, fn);
+        
+        if (lua_pcall(L, 1, 1, top))
+            lua_pop(L, 1);
 
-		if (currentCallStack > 0)
-		{
-			ObjectSet& objSet = newObjectsInCallStack.Last();
-			if (objSet.Contains(const_cast<UObjectBase*>(Object)))
-			{
-				objSet.Remove(const_cast<UObjectBase*>(Object));
-			}
-		}
-	}
+        lua_remove(L, top);
 
-	void LuaState::NotifyUObjectCreated(const UObjectBase *Object, int32 Index)
-	{
-		if (!IsInGameThread())
-		{
-			return;
-		}
+        int retCount = lua_gettop(L) - top + 1;
+        LuaVar luaModule(L, -retCount);
+        lua_pop(L, retCount);
+        return MoveTemp(luaModule);
+    }
 
-		if (currentCallStack > 0)
-		{
-			ObjectSet& objSet = newObjectsInCallStack.Last();
-			objSet.Add(const_cast<UObjectBase*>(Object));
-		}
-	}
-
-	void LuaState::unlinkUObject(const UObject * Object,void* userdata/*=nullptr*/)
-	{
-		// find Object from objRefs, maybe nothing
-		auto udptr = objRefs.Find(Object);
-		// maybe Object not push to lua
-		if (!udptr) {
-			return;
-		}
-
-		GenericUserData* ud = *udptr;
-		if (userdata && userdata != (void*)ud) {
-			return;
-		}
-
-		// remove should put here avoid ud is invalid
-		// remove ref, Object must be an UObject in slua
-		objRefs.Remove(const_cast<UObject*>(Object));
-
-		if (!ud || ud->flag & UD_HADFREE)
-			return;
-
-		// indicate ud had be free
-		ud->flag |= UD_HADFREE;
-		// remove cache
-		ensure(ud->ud == Object);
-		LuaObject::removeObjCache(L, (void*)Object);
-	}
-
-	void LuaState::AddReferencedObjects(FReferenceCollector & Collector)
-	{
-		if (latentDelegate)
-		{
-			Collector.AddReferencedObject(latentDelegate);
-		}
-
-		for (UObjectRefMap::TIterator it(objRefs); it; ++it)
-		{
-			UObject* item = it.Key();
-			GenericUserData* userData = it.Value();
-			if (userData && !(userData->flag & UD_REFERENCE))
-			{
-				continue;
-			}
-			Collector.AddReferencedObject(item);
-		}
-		// do more gc step in collecting thread
-		// lua_gc can be call async in bg thread in some isolate position
-		// but this position equivalent to main thread
-		// we just try and find some proper async position
-		if (enableMultiThreadGC && L) lua_gc(L, LUA_GCSTEP, 128);
-	}
-#if (ENGINE_MINOR_VERSION>=23) && (ENGINE_MAJOR_VERSION>=4)
-	void LuaState::OnUObjectArrayShutdown() {
-		// remove listeners to avoid crash on pc when app exit
-		GUObjectArray.RemoveUObjectCreateListener(this);
-		GUObjectArray.RemoveUObjectDeleteListener(this);
-	}
+#if !((ENGINE_MINOR_VERSION<23) && (ENGINE_MAJOR_VERSION==4))
+    void LuaState::OnUObjectArrayShutdown()
+    {
+        // remove listeners to avoid crash on pc when app exit
+        GUObjectArray.RemoveUObjectCreateListener(this);
+        GUObjectArray.RemoveUObjectDeleteListener(this);
+    }
 #endif
 
-	int LuaState::pushErrorHandler(lua_State* L) {
+    void LuaState::NotifyUObjectDeleted(const UObjectBase * Object, int32 Index)
+    {
+        classMap.cachePropMap.Remove((UStruct*)Object);
+        LuaObject::removeCache(L, Object, cacheClassPropRef);
+        LuaObject::removeCache(L, Object, cacheClassFuncRef);
+        LuaFunctionAccelerator::remove((UFunction*)Object);
+
+        // indicate ud and all child had be free
+        releaseLink((void*)Object);
+        
+        unlinkUObject((const UObject*)Object);
+
+        if (currentCallStack > 0)
+        {
+            ObjectSet& objSet = newObjectsInCallStack.Last();
+            if (objSet.Contains(const_cast<UObjectBase*>(Object)))
+            {
+                objSet.Remove(const_cast<UObjectBase*>(Object));
+            }
+        }
+    }
+
+    void LuaState::NotifyUObjectCreated(const UObjectBase *Object, int32 Index)
+    {
+        if (!IsInGameThread())
+        {
+            return;
+        }
+
+        if (currentCallStack > 0)
+        {
+            ObjectSet& objSet = newObjectsInCallStack.Last();
+            objSet.Add(const_cast<UObjectBase*>(Object));
+        }
+    }
+
+    void LuaState::unlinkUObject(const UObject * Object,void* userdata/*=nullptr*/)
+    {
+        // find Object from objRefs, maybe nothing
+        auto udptr = objRefs.Find(Object);
+        // maybe Object not push to lua
+        if (!udptr) {
+            return;
+        }
+
+        GenericUserData* ud = *udptr;
+        if (userdata && userdata != (void*)ud) {
+            return;
+        }
+
+        // remove should put here avoid ud is invalid
+        // remove ref, Object must be an UObject in slua
+        objRefs.Remove(Object);
+
+        if (!ud || ud->flag & UD_HADFREE)
+            return;
+
+        ud->flag |= UD_HADFREE;
+        // remove cache
+        ensure(ud->ud == Object);
+        LuaObject::removeObjCache(L, (void*)Object);
+    }
+
+    void LuaState::AddReferencedObjects(FReferenceCollector & Collector)
+    {
+        if (latentDelegate)
+        {
+            Collector.AddReferencedObject(latentDelegate);
+        }
+
+        // erase all null reference
+        // Collector.AddReferencedObjects will set inner item to nullptr
+        // so check and remove it
+        for (UObjectRefMap::TIterator it(objRefs); it; ++it)
+        {
+            UObject* item = it.Key();
+            GenericUserData* userData = it.Value();
+            if (userData && !(userData->flag & UD_REFERENCE))
+            {
+                continue;
+            }
+            Collector.AddReferencedObject(item);
+        }
+    }
+
+    int LuaState::pushErrorHandler(lua_State* L) {
         auto ls = get(L);
         ensure(ls!=nullptr);
         return ls->_pushErrorHandler(L);
     }
-	
-	TStatId LuaState::GetStatId() const
-	{
-		RETURN_QUICK_DECLARE_CYCLE_STAT(LuaState, STATGROUP_Game);
-	}
 
-	int LuaState::addThread(lua_State *thread)
-	{
-		int isMainThread = lua_pushthread(thread);
-		if (isMainThread == 1)
-		{
-			lua_pop(thread, 1);
+    int LuaState::addThread(lua_State *thread)
+    {
+        int isMainThread = lua_pushthread(thread);
+        if (isMainThread == 1)
+        {
+            lua_pop(thread, 1);
 
-			luaL_error(thread, "Can't call latent action in main lua thread!");
-			return LUA_REFNIL;
-		}
+            luaL_error(thread, "Can't call latent action in main lua thread!");
+            return LUA_REFNIL;
+        }
 
-		lua_xmove(thread, L, 1);
-		lua_pop(thread, 1);
+        lua_xmove(thread, L, 1);
+        lua_pop(thread, 1);
 
-		ensure(lua_isthread(L, -1));
+        ensure(lua_isthread(L, -1));
 
-		int threadRef = luaL_ref(L, LUA_REGISTRYINDEX);
-		threadToRef.Add(thread, threadRef);
-		refToThread.Add(threadRef, thread);
+        int threadRef = luaL_ref(L, LUA_REGISTRYINDEX);
+        threadToRef.Add(thread, threadRef);
+        refToThread.Add(threadRef, thread);
 
-		return threadRef;
-	}
+        return threadRef;
+    }
 
-	void LuaState::resumeThread(int threadRef)
-	{
-		QUICK_SCOPE_CYCLE_COUNTER(Lua_LatentCallback);
+    void LuaState::resumeThread(int threadRef)
+    {
+        QUICK_SCOPE_CYCLE_COUNTER(Lua_LatentCallback);
 
-		lua_State **threadPtr = refToThread.Find(threadRef);
-		if (threadPtr)
-		{
-			lua_State *thread = *threadPtr;
-			bool threadIsDead = false;
+        lua_State **threadPtr = refToThread.Find(threadRef);
+        if (threadPtr)
+        {
+            lua_State *thread = *threadPtr;
+            bool threadIsDead = false;
 
-			if (lua_status(thread) == LUA_OK && lua_gettop(thread) == 0)
-			{
-				Log::Error("cannot resume dead coroutine");
-				threadIsDead = true;
-			}
-			else
-			{
-				int status = lua_resume(thread, L, 0);
-				if (status == LUA_OK || status == LUA_YIELD)
-				{
-					int nres = lua_gettop(thread);
-					if (!lua_checkstack(L, nres + 1))
-					{
-						lua_pop(thread, nres);  /* remove results anyway */
-						Log::Error("too many results to resume");
-						threadIsDead = true;
-					}
-					else
-					{
-						lua_xmove(thread, L, nres);  /* move yielded values */
+            if (lua_status(thread) == LUA_OK && lua_gettop(thread) == 0)
+            {
+                Log::Error("cannot resume dead coroutine");
+                threadIsDead = true;
+            }
+            else
+            {
+#if LUA_VERSION_NUM > 503
+                int nres = 0;
+                int status = lua_resume(thread, L, 0, &nres);
+#else
+                int status = lua_resume(thread, L, 0);
+#endif
+                if (status == LUA_OK || status == LUA_YIELD)
+                {
+                    if (status == LUA_OK)
+                    {
+                        threadIsDead = true;
+                    }
+                }
+            }
 
-						if (status == LUA_OK)
-						{
-							threadIsDead = true;
-						}
-					}
-				}
-				else
-				{
-					lua_xmove(thread, L, 1);  /* move error message */
-					const char* err = lua_tostring(L, -1);
-					luaL_traceback(L, thread, err, 0);
-					err = lua_tostring(L, -1);
-					Log::Error("%s", err);
-					lua_pop(L, 1);
+            if (threadIsDead)
+            {
+                threadToRef.Remove(thread);
+                refToThread.Remove(threadRef);
+                luaL_unref(L, LUA_REGISTRYINDEX, threadRef);
+            }
+        }
+    }
 
-					threadIsDead = true;
-				}
-			}
+    int LuaState::findThread(lua_State *thread)
+    {
+        int32 *threadRefPtr = threadToRef.Find(thread);
+        return threadRefPtr ? *threadRefPtr : LUA_REFNIL;
+    }
 
-			if (threadIsDead)
-			{
-				threadToRef.Remove(thread);
-				refToThread.Remove(threadRef);
-				luaL_unref(L, LUA_REGISTRYINDEX, threadRef);
-			}
-		}
-	}
+    void LuaState::cleanupThreads()
+    {
+        for (TMap<lua_State*, int32>::TIterator It(threadToRef); It; ++It)
+        {
+            int32 threadRef = It.Value();
+            if (threadRef != LUA_REFNIL)
+            {
+                luaL_unref(L, LUA_REGISTRYINDEX, threadRef);
+            }
+        }
+        threadToRef.Empty();
+        refToThread.Empty();
+    }
 
-	int LuaState::findThread(lua_State *thread)
-	{
-		int32 *threadRefPtr = threadToRef.Find(thread);
-		return threadRefPtr ? *threadRefPtr : LUA_REFNIL;
-	}
+    ULatentDelegate* LuaState::getLatentDelegate() const
+    {
+        return latentDelegate;
+    }
 
-	void LuaState::cleanupThreads()
-	{
-		for (TMap<lua_State*, int32>::TIterator It(threadToRef); It; ++It)
-		{
-			lua_State *thread = It.Key();
-			int32 threadRef = It.Value();
-			if (threadRef != LUA_REFNIL)
-			{
-				luaL_unref(L, LUA_REGISTRYINDEX, threadRef);
-			}
-		}
-		threadToRef.Empty();
-		refToThread.Empty();
-	}
+    bool LuaState::hookObject(LuaState* inState, const UObjectBaseUtility* obj, bool bIsPostLoad/* = true*/, bool bCDOLua/* = true*/, bool bHookInstancedObj/* = false*/)
+    {
+        auto hook = [&](NS_SLUA::LuaState* state)
+        {
+            if (!state || !state->overrider)
+            {
+                return false;
+            }
+            return state->overrider->tryHook(obj, bIsPostLoad, bCDOLua, bHookInstancedObj);
+        };
+#if WITH_EDITOR
+        auto luaStateArrPtr = delayHookStateMap.Find((UObject*)obj);
+        if (luaStateArrPtr)
+        {
+            for (int i = 0; i < (*luaStateArrPtr).Num(); ++i)
+            {
+                NS_SLUA::LuaState* state = (*luaStateArrPtr)[i];
+                hook(state);
+            }
+            delayHookStateMap.Remove((UObject*)obj);
+            return true;
+        }
+        else
+        {    
+            NS_SLUA::LuaState* state = inState;
+            if (!state) {
+                auto* gameInstance = NS_SLUA::LuaState::getObjectGameInstance((UObject*)obj);
+                state = gameInstance ? NS_SLUA::LuaState::get(gameInstance) : nullptr;
+                if (!state)
+                {
+                    state = NS_SLUA::LuaState::get();
+                }
+            }
+            
+            return hook(state);
+        }
+#else
+        NS_SLUA::LuaState* state = NS_SLUA::LuaState::get();
+        hook(state);
+        return true;
+#endif
+    }
 
-	ULatentDelegate* LuaState::getLatentDelegate() const
-	{
-		return latentDelegate;
-	}
+#if UE_BUILD_DEVELOPMENT
+    void LuaState::addRefTraceback(int ref)
+    {
+        if (!bRefTraceEnable) {
+            return;
+        }
 
-	int LuaState::_pushErrorHandler(lua_State* state) {
+        luaL_traceback(L, L, nullptr, 0);
+        const char* stacktrace = lua_tostring(L, -1);
+
+        refTraceback.Add(ref, FString(UTF8_TO_TCHAR(stacktrace)));
+
+        lua_pop(L, 1);
+    }
+
+    void LuaState::removeRefTraceback(int ref)
+    {
+        if (!bRefTraceEnable) {
+            return;
+        }
+        if (refTraceback.Contains(ref)) {
+            refTraceback.Remove(ref);
+        }
+    }
+
+    FString LuaState::getRefTraceback(int ref)
+    {
+        FString *result = refTraceback.Find(ref);
+        if (result)
+        {
+            return *result;
+        }
+
+        return FString();
+    }
+
+    bool LuaState::isRefTraceEnable() const
+    {
+        return bRefTraceEnable;
+    }
+
+    void LuaState::setRefTraceEnable(bool enable)
+    {
+        bRefTraceEnable = enable;
+    }
+
+#endif
+
+    LuaVar LuaState::initInnerCode(const char * str)
+    {
+        uint32 len = strlen(str);
+        return doBuffer((const uint8*)str, len, SLUA_LUACODE);
+    }
+
+    int LuaState::_pushErrorHandler(lua_State* state) {
         lua_pushcfunction(state,error);
         return lua_gettop(state);
     }
 
-	LuaVar LuaState::get(const char* key) {
-		// push global table
-		lua_pushglobaltable(L);
-		FString path(key);
-		FString left, right;
-		LuaVar rt;
-		bool found = false;
-		while (strSplit(path, ".", &left, &right)) {
-			if (lua_type(L, -1) != LUA_TTABLE) break;
-			lua_pushstring(L, TCHAR_TO_UTF8(*left));
-			lua_gettable(L, -2);
-			lua_remove(L, -2);
-			found = true;
-			if (lua_type(L, -1) == LUA_TNIL)
-			{
-				break;
-			}
-			path = right;
-		}
-		if (found)
-		{
-			rt.set(L, -1);
-		}
-		lua_pop(L, 1);
-		return rt;
-	}
+    LuaVar LuaState::get(const char* key) {
+        // push global table
+        lua_pushglobaltable(L);
 
-	bool LuaState::set(const char * key, LuaVar v)
-	{
-		// push global table
-		AutoStack as(L);
-		lua_pushglobaltable(L);
+        FString path(key);
+        FString left,right;
+        LuaVar rt;
+        while(strSplit(path,".",&left,&right)) {
+            if(lua_type(L,-1)!=LUA_TTABLE) break;
+            lua_pushstring(L,TCHAR_TO_UTF8(*left));
+            lua_gettable(L,-2);
+            rt.set(L,-1);
+            lua_remove(L,-2);
+            if(rt.isNil()) break;
+            path = right;
+        }
+        lua_pop(L,1);
+        return rt;
+    }
 
-		FString path(key);
-		FString left, right;
-		LuaVar rt;
-		while (strSplit(path, ".", &left, &right)) {
-			if (lua_type(L, -1) != LUA_TTABLE) return false;
-			lua_pushstring(L, TCHAR_TO_UTF8(*left));
-			lua_gettable(L, -2);
-			if (lua_isnil(L, -1))
-			{
-				// pop nil
-				lua_pop(L, 1);
-				if (right.IsEmpty()) {
-					lua_pushstring(L, TCHAR_TO_UTF8(*left));
-					v.push(L);
-					lua_rawset(L, -3);
-					return true;
-				}
-				else {
-					lua_newtable(L);
-					lua_pushstring(L, TCHAR_TO_UTF8(*left));
-					// push table again
-					lua_pushvalue(L, -2);
-					lua_rawset(L, -4);
-					// stack leave table for next get
-				}
-			}
-			else
-			{
-				// if sub field isn't table, set failed
-				if (!right.IsEmpty() && !lua_istable(L, -1))
-					return false;
+    bool LuaState::set(const char * key, LuaVar v)
+    {
+        // push global table
+        AutoStack as(L);
+        lua_pushglobaltable(L);
 
-				if (lua_istable(L, -1) && right.IsEmpty()) {
-					lua_pushstring(L, TCHAR_TO_UTF8(*left));
-					v.push(L);
-					lua_rawset(L, -3);
-					return true;
-				}
-			}
-			path = right;
-		}
-		return false;
-	}
+        FString path(key);
+        FString left, right;
+        LuaVar rt;
+        while (strSplit(path, ".", &left, &right)) {
+            if (lua_type(L, -1) != LUA_TTABLE) return false;
+            lua_pushstring(L, TCHAR_TO_UTF8(*left));
+            lua_gettable(L, -2);
+            if (lua_isnil(L, -1))
+            {
+                // pop nil
+                lua_pop(L, 1);
+                if (right.IsEmpty()) {
+                    lua_pushstring(L, TCHAR_TO_UTF8(*left));
+                    v.push(L);
+                    lua_rawset(L, -3);
+                    return true;
+                }
+                else {
+                    lua_newtable(L);
+                    lua_pushstring(L, TCHAR_TO_UTF8(*left));
+                    // push table again
+                    lua_pushvalue(L, -2);
+                    lua_rawset(L, -4);
+                    // stack leave table for next get
+                }
+            }
+            else
+            {
+                // if sub field isn't table, set failed
+                if (!right.IsEmpty() && !lua_istable(L, -1))
+                    return false;
+
+                if (lua_istable(L, -1) && right.IsEmpty()) {
+                    lua_pushstring(L, TCHAR_TO_UTF8(*left));
+                    v.push(L);
+                    lua_rawset(L, -3);
+                    return true;
+                }
+            }
+            path = right;
+        }
+        return false;
+    }
 
     LuaVar LuaState::createTable() {
         lua_newtable(L);
@@ -805,169 +1137,201 @@ namespace NS_SLUA {
         return ret;
     }
 
-	LuaVar LuaState::createTable(const char * key)
-	{
-		lua_newtable(L);
-		LuaVar ret(L, -1);
-		set(key, ret);
-		lua_pop(L, 1);
-		return ret;
-	}
+    LuaVar LuaState::createTable(const char * key)
+    {
+        lua_newtable(L);
+        LuaVar ret(L, -1);
+        set(key, ret);
+        lua_pop(L, 1);
+        return ret;
+    }
 
-	void LuaState::setTickFunction(LuaVar func)
-	{
-		stateTickFunc = func;
-	}
+    void LuaState::setGCParam(double limitSeconds, int limitCount, double interval)
+    {
+        stepGCTimeLimit = limitSeconds;
+        stepGCCountLimit = limitCount;
+        fullGCInterval = interval;
+    }
 
-	void LuaState::addRef(UObject* obj, void* ud, bool ref)
-	{
-		auto* udptr = objRefs.Find(obj);
-		// if any obj find in objRefs, it should be flag freed and removed
-		if (udptr) {
-			(*udptr)->flag |= UD_HADFREE;
-			objRefs.Remove(obj);
-		}
+    void LuaState::setTickFunction(LuaVar func)
+    {
+        stateTickFunc = func;
+    }
 
-		GenericUserData* userData = (GenericUserData*)ud;
-		if (ref && userData) {
-			userData->flag |= UD_REFERENCE;
-		}
-		objRefs.Add(obj,userData);
-	}
+    void LuaState::addRef(UObject* obj, void* ud, bool ref)
+    {
+        auto* udptr = objRefs.Find(obj);
+        // if any obj find in objRefs, it should be flag freed and removed
+        if (udptr) {
+            (*udptr)->flag |= UD_HADFREE;
+            objRefs.Remove(obj);
+        }
 
-	FDeadLoopCheck::FDeadLoopCheck()
-		: timeoutEvent(nullptr)
-		, timeoutCounter(0)
-		, stopCounter(0)
-		, frameCounter(0)
-	{
-		thread = FRunnableThread::Create(this, TEXT("FLuaDeadLoopCheck"), 0, TPri_BelowNormal);
-	}
+        GenericUserData* userData = (GenericUserData*)ud;
+        if (ref && userData) {
+            userData->flag |= UD_REFERENCE;
+        }
+        objRefs.Add(obj,userData);
+    }
 
-	FDeadLoopCheck::~FDeadLoopCheck()
-	{
-		Stop();
-		thread->WaitForCompletion();
-		SafeDelete(thread);
-	}
+    int32 FDeadLoopCheck::NameCounter = 0;
+    FDeadLoopCheck::FDeadLoopCheck()
+        : timeoutEvent(nullptr)
+        , timeoutCounter(0)
+        , stopCounter(0)
+        , frameCounter(0)
+    {
+        thread = FRunnableThread::Create(this, *FString::Printf(TEXT("FLuaDeadLoopCheck_%d"), NameCounter++), 0, TPri_BelowNormal);
+    }
 
-	uint32 FDeadLoopCheck::Run()
-	{
-		while (stopCounter.GetValue() == 0) {
-			FPlatformProcess::Sleep(1.0f);
-			if (frameCounter.GetValue() != 0) {
-				timeoutCounter.Increment();
-				if(timeoutCounter.GetValue() >= MaxLuaExecTime)
-					onScriptTimeout();
-			}
-		}
-		return 0;
-	}
+    FDeadLoopCheck::~FDeadLoopCheck()
+    {
+        Stop();
+        thread->WaitForCompletion();
+        SafeDelete(thread);
+    }
 
-	void FDeadLoopCheck::Stop()
-	{
-		stopCounter.Increment();
-	}
+    uint32 FDeadLoopCheck::Run()
+    {
+        while (stopCounter.GetValue() == 0) {
+            FPlatformProcess::Sleep(1.0f);
+            if (frameCounter.GetValue() != 0) {
+                timeoutCounter.Increment();
+                if(timeoutCounter.GetValue() >= MaxLuaExecTime)
+                    onScriptTimeout();
+            }
+        }
+        return 0;
+    }
 
-	int FDeadLoopCheck::scriptEnter(ScriptTimeoutEvent* pEvent)
-	{
-		int ret = frameCounter.Increment();
-		if ( ret == 1) {
-			timeoutCounter.Set(0);
-			timeoutEvent.store(pEvent);
-		}
-		return ret;
-	}
+    void FDeadLoopCheck::Stop()
+    {
+        stopCounter.Increment();
+    }
 
-	int FDeadLoopCheck::scriptLeave()
-	{
-		return frameCounter.Decrement();
-	}
+    int FDeadLoopCheck::scriptEnter(ScriptTimeoutEvent* pEvent)
+    {
+        int ret = frameCounter.Increment();
+        if ( ret == 1) {
+            timeoutCounter.Set(0);
+            timeoutEvent.store(pEvent);
+        }
+        return ret;
+    }
 
-	void FDeadLoopCheck::onScriptTimeout()
-	{
-		auto pEvent = timeoutEvent.load();
-		if (pEvent) {
-			timeoutEvent.store(nullptr);
-			pEvent->onTimeout();
-		}
-	}
+    int FDeadLoopCheck::scriptLeave()
+    {
+        return frameCounter.Decrement();
+    }
 
-	LuaScriptCallGuard::LuaScriptCallGuard(lua_State * L_)
-		:L(L_)
-	{
-		auto ls = LuaState::get(L);
-		ls->deadLoopCheck->scriptEnter(this);
-	}
+    void FDeadLoopCheck::onScriptTimeout()
+    {
+        auto pEvent = timeoutEvent.load();
+        if (pEvent) {
+            timeoutEvent.store(nullptr);
+            pEvent->onTimeout();
+        }
+    }
 
-	LuaScriptCallGuard::~LuaScriptCallGuard()
-	{
-		auto ls = LuaState::get(L);
-		ls->deadLoopCheck->scriptLeave();
-	}
+    LuaScriptCallGuard::LuaScriptCallGuard(lua_State * L_)
+        :L(L_)
+    {
+        auto ls = LuaState::get(L);
+        if (ls->deadLoopCheck)
+        {
+            ls->deadLoopCheck->scriptEnter(this);
+        }
+    }
 
-	void LuaScriptCallGuard::onTimeout()
-	{
-		auto hook = lua_gethook(L);
-		// if debugger isn't exists
-		if (hook == nullptr) {
-			// this function thread safe
-			lua_sethook(L, scriptTimeout, LUA_MASKLINE, 0);
-		}
-	}
+    LuaScriptCallGuard::~LuaScriptCallGuard()
+    {
+        auto ls = LuaState::get(L);
+        if(ls->deadLoopCheck)
+        {
+            ls->deadLoopCheck->scriptLeave();
+        }
+    }
 
-	void LuaScriptCallGuard::scriptTimeout(lua_State *L, lua_Debug *ar)
-	{
-		// only report once
-		lua_sethook(L, nullptr, 0, 0);
-		luaL_error(L, "script exec timeout");
-	}
+    void LuaScriptCallGuard::onTimeout()
+    {
+        auto hook = lua_gethook(L);
+        // if debugger isn't exists
+        if (hook == nullptr) {
+            // this function thread safe
+            lua_sethook(L, scriptTimeout, LUA_MASKLINE, 0);
+        }
+    }
 
-	UFunction* LuaState::ClassCache::findFunc(UClass* uclass, const char* fname)
-	{
-		auto item = cacheFuncMap.Find(uclass);
-		if (!item) return nullptr;
-		auto func = item->Find(UTF8_TO_TCHAR(fname));
-		if(func!=nullptr)
-			return func->IsValid() ? func->Get() : nullptr;
-		return nullptr;
-	}
+    void LuaScriptCallGuard::scriptTimeout(lua_State *L, lua_Debug *ar)
+    {
+        // only report once
+        lua_sethook(L, nullptr, 0, 0);
+        luaL_error(L, "script exec timeout");
+    }
 
-	UProperty* LuaState::ClassCache::findProp(UClass* uclass, const char* pname)
-	{
-		auto item = cachePropMap.Find(uclass);
-		if (!item) return nullptr;
-		auto prop = item->Find(UTF8_TO_TCHAR(pname));
-		if (prop != nullptr)
-			return prop->IsValid() ? prop->Get() : nullptr;
-		return nullptr;
-	}
+    FProperty* LuaState::ClassCache::findProp(UStruct* ustruct, const char* pname)
+    {
+        auto item = cachePropMap.Find(ustruct);
+        if (!item) {
+            // cache property's
+            item = &cachePropMap.Add(ustruct);
+            auto propertyLink = ustruct->PropertyLink;
+            static const uint64 ScriptStructCastFlags = UScriptStruct::StaticClassCastFlags();
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
+            auto scriptStruct = ustruct->GetClass()->HasAnyCastFlag(ScriptStructCastFlags) ? Cast<UScriptStruct>(ustruct) : nullptr;
+#else
+            auto scriptStruct = ustruct->HasAnyCastFlags(ScriptStructCastFlags) ? Cast<UScriptStruct>(ustruct) : nullptr;
+#endif
+            if (scriptStruct && !scriptStruct->IsNative()) {
+                for (FProperty* prop = propertyLink; prop != nullptr; prop = prop->PropertyLinkNext) {
+                    item->Add(TCHAR_TO_UTF8(*getPropertyFriendlyName(prop)), prop);
+                }
+            }
+            else {
+                for (FProperty* prop = propertyLink; prop != nullptr; prop = prop->PropertyLinkNext) {
+                    item->Add(TCHAR_TO_UTF8(*prop->GetName()), prop);
+                }
+            }
+        }
+        auto prop = item->Find(pname);
+        if (prop != nullptr)
+            return *prop;
+        return nullptr;
+    }
 
-	void LuaState::ClassCache::cacheFunc(UClass* uclass, const char* fname, UFunction* func)
-	{
-		auto& item = cacheFuncMap.FindOrAdd(uclass);
-		item.Add(UTF8_TO_TCHAR(fname), func);
-	}
+    NewObjectRecorder::NewObjectRecorder(lua_State* inL)
+        : luaState(LuaState::get(inL->l_G->mainthread))
+    {
+        stackLayer = luaState->increaseCallStack();
+    }
 
-	void LuaState::ClassCache::cacheProp(UClass* uclass, const char* pname, UProperty* prop)
-	{
-		auto& item = cachePropMap.FindOrAdd(uclass);
-		item.Add(UTF8_TO_TCHAR(pname), prop);
-	}
+    NewObjectRecorder::~NewObjectRecorder()
+    {
+        luaState->decreaseCallStack();
+    }
 
-	NewObjectRecorder::NewObjectRecorder(lua_State* L_)
-		: luaState(LuaState::get(G(L_)->mainthread))
-	{
-		stackLayer = luaState->increaseCallStack();
-	}
+    bool NewObjectRecorder::hasObject(const UObject* obj) const
+    {
+        return luaState->hasObjectInStack(obj, stackLayer);
+    }
 
-	NewObjectRecorder::~NewObjectRecorder()
-	{
-		luaState->decreaseCallStack();
-	}
+    void LuaState::InitExtLib(lua_State* ls)
+    {
+        AutoStack as(ls);
 
-	bool NewObjectRecorder::hasObject(const UObject* obj) const
-	{
-		return luaState->hasObjectInStack(obj, stackLayer);
-	}
+        lua_getglobal(ls, "package");
+        lua_getfield(ls, -1, "preload");
+
+        static const luaL_Reg s_lib_preload[] = {
+            { "socket.core", luaopen_socket_core },
+            { NULL, NULL }
+        };
+
+        const luaL_Reg* lib;
+        for (lib = s_lib_preload; lib->func; lib++) {
+            lua_pushcfunction(ls, lib->func);
+            lua_setfield(ls, -2, lib->name);
+        }
+        lua_pop(ls, 2);
+    }
 }

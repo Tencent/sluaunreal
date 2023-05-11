@@ -16,37 +16,42 @@
 #include "LuaObject.h"
 #include "LuaVar.h"
 #include "LuaDelegate.h"
+#include "UObject/Package.h"
 #include <chrono>
 
 namespace NS_SLUA {
-	FString getUObjName(UObject* obj) {
-#if WITH_EDITOR
-		if (auto ld = Cast<ULuaDelegate>(obj)) {
-			return ld->getPropName();
-		}
-		else {
-			return obj->GetFName().ToString();
-		}
+    FString getUObjName(UObject* obj) {
+#if UE_BUILD_DEVELOPMENT
+        if (auto ld = Cast<ULuaDelegate>(obj)) {
+            return ld->getPropName();
+        }
+        else {
+            return obj->GetFName().ToString();
+        }
 #else
-		return obj->GetFName().ToString();
+        return obj->GetFName().ToString();
 #endif
-	}
+    }
 
-	bool isUnrealStruct(const char* tn, UScriptStruct** out) {
-		ensure(tn != nullptr && strlen(tn) > 0);
-		// if prefix is the unreal prefix
-		if (tn[0] == 'F') {
-			// if can find it by name in package
-			UScriptStruct* ustruct = FindObject<UScriptStruct>(ANY_PACKAGE, UTF8_TO_TCHAR(tn+1));
-			if (ustruct) {
-				if(out) *out = ustruct;
-				return true;
-			}
-		}
-		return false;
-	}
+    bool isUnrealStruct(const char* tn, UScriptStruct** out) {
+        ensure(tn != nullptr && strlen(tn) > 0);
+        // if prefix is the unreal prefix
+        if (tn[0] == 'F') {
+            // if can find it by name in package
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>0
+            UScriptStruct* ustruct = FindObject<UScriptStruct>((UPackage*)-1, UTF8_TO_TCHAR(tn+1));
+#else
+            UScriptStruct* ustruct = FindObject<UScriptStruct>(ANY_PACKAGE, UTF8_TO_TCHAR(tn+1));
+#endif
+            if (ustruct) {
+                if(out) *out = ustruct;
+                return true;
+            }
+        }
+        return false;
+    }
 
-	int64_t getTime() {
-		return std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000;
-	}
+    int64_t getTime() {
+        return std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000;
+    }
 }

@@ -13,46 +13,46 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "lua/lua.hpp"
+#include "lua.h"
 
 namespace NS_SLUA {
 
 //#if WITH_EDITOR
-	struct LuaMemInfo {
+    struct LuaMemInfo {
         FString hint;
         int size;
         int64 ptr;
         int lineNumber;
         bool bAlloc;
-	};
+    };
     
     // << used to binary for LuaMemInfo data
     FORCEINLINE FArchive& operator<<(FArchive &Ar, LuaMemInfo& Info)
     {
         Ar << Info.hint;
         Ar << Info.size;
-		Ar << Info.ptr;
+        Ar << Info.ptr;
         Ar << Info.lineNumber;
         Ar << Info.bAlloc;
         
         return Ar;
     }
 
-	typedef TMap<void*, LuaMemInfo> MemoryDetail;
+    typedef TMap<void*, LuaMemInfo> MemoryDetail;
 //#endif
 
     class SLUA_UNREAL_API LuaMemoryProfile { 
     public:
         static void* alloc (void *ud, void *ptr, size_t osize, size_t nsize);
-		static size_t total();
-
-		static void start();
-		static void onStart();
-		static void stop();
-		static void tick(class LuaState* LS);
-		static const MemoryDetail& memDetail(class LuaState* LS);
-		static TArray<LuaMemInfo>& memIncreaceThisFrame(class LuaState* LS);
-
+        static size_t total();
+//#if WITH_EDITOR
+        static void start();
+        static void onStart();
+        static void stop();
+        static void tick(class LuaState* LS);
+        static const MemoryDetail& memDetail(class LuaState* LS);
+        static TArray<LuaMemInfo>& memIncreaceThisFrame(class LuaState* LS);
+        //#endif
     };
 
 }

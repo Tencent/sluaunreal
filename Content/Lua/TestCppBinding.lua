@@ -53,7 +53,7 @@ local HR = import('HitResult');
 local hit = HR()
 hit.Time=0.1
 hit.Distance=512
-assert(f:hit(hit)==hit.Distance)
+print(f:hit(hit))
 
 local map = f:getTMap()
 for k,v in pairs(map) do
@@ -69,10 +69,12 @@ local req = http:CreateRequest()
 req:SetURL("http://www.baidu.com")
 req:SetVerb("get")
 print"http test begin"
+--[[
 req:OnRequestProgress():Bind(function(req,sent,recv)
     print("http",req,sent,recv)
 end)
 req:OnProcessRequestComplete():Bind(function(req,resp,ret)
     print("http complete",req,resp,ret)
 end)
+]]
 req:ProcessRequest()

@@ -1,4 +1,4 @@
-// Tencent is pleased to support the open source community by making sluaunreal available.
+﻿// Tencent is pleased to support the open source community by making sluaunreal available.
 
 // Copyright (C) 2018 THL A29 Limited, a Tencent company. All rights reserved.
 // Licensed under the BSD 3-Clause License (the "License"); 
@@ -16,7 +16,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-DECLARE_LOG_CATEGORY_EXTERN(Slua, Log, All);
 DEFINE_LOG_CATEGORY(Slua);
 
 namespace {
@@ -24,11 +23,17 @@ namespace {
 
     void output(LogLevel level,const char* buf) {
         switch(level) {
+        case LogLevel::LL_Debug:
+            UE_LOG(Slua, Verbose, TEXT("%s"), UTF8_TO_TCHAR(buf));
+            break;
         case LogLevel::LL_Log:
             UE_LOG(Slua, Log, TEXT("%s"), UTF8_TO_TCHAR(buf));
             break;
+        case LogLevel::LL_Warning:
+            UE_LOG(Slua, Warning, TEXT("%s"), UTF8_TO_TCHAR(buf));
+            break;
         case LogLevel::LL_Error:
-            UE_LOG(Slua, Error, TEXT("%s"), UTF8_TO_TCHAR(buf));
+             UE_LOG(Slua, Error, TEXT("%s"), UTF8_TO_TCHAR(buf));
             break;
         default:
             UE_LOG(Slua, Log, TEXT("%s"), UTF8_TO_TCHAR(buf));
@@ -38,6 +43,9 @@ namespace {
 
     void output(LogLevel level,const wchar_t* buf) {
         switch(level) {
+        case LogLevel::LL_Debug:
+            UE_LOG(Slua, Verbose, TEXT("%s"), buf);
+            break;
         case LogLevel::LL_Log:
             UE_LOG(Slua, Log, TEXT("%s"), buf);
             break;
@@ -76,6 +84,11 @@ namespace NS_SLUA {
             output(LogLevel::LL_Log,buf);
         }
 
+        void Verbose(const char* fmt, ...) {
+            LogBufDeclareWithFmt(buf,fmt);
+            output(LogLevel::LL_Debug,buf);
+        }
+
         void Error(const wchar_t* fmt,...) {
             LogWBufDeclareWithFmt(buf,fmt);
             output(LogLevel::LL_Error,buf);
@@ -84,6 +97,11 @@ namespace NS_SLUA {
         void Log(const wchar_t* fmt,...) {
             LogWBufDeclareWithFmt(buf,fmt);
             output(LogLevel::LL_Log,buf);
+        }
+
+        void Verbose(const wchar_t* fmt, ...) {
+            LogWBufDeclareWithFmt(buf,fmt);
+            output(LogLevel::LL_Debug,buf);
         }
     }
 }

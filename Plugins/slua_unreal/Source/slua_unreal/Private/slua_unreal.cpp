@@ -13,21 +13,29 @@
 
 #include "slua_unreal.h"
 
+#include "SluaProfilerDataManager.h"
+
 #define LOCTEXT_NAMESPACE "Fslua_unrealModule"
 
 void Fslua_unrealModule::StartupModule()
 {
-	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
-	
+    // This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
+#if WITH_EDITOR
+    Simulate.OnStartupModule();
+#endif
+    SluaProfilerDataManager::StartManager();
 }
 
 void Fslua_unrealModule::ShutdownModule()
 {
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
-	
+    // This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
+    // we call this function before unloading the module.
+#if WITH_EDITOR
+    Simulate.OnShutdownModule();
+#endif
+    SluaProfilerDataManager::StopManager();
 }
 
 #undef LOCTEXT_NAMESPACE
-	
+
 IMPLEMENT_MODULE(Fslua_unrealModule, slua_unreal)

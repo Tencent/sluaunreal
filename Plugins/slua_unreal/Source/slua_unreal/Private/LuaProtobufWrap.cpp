@@ -11,23 +11,28 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 
-#pragma once
-#include "CoreMinimal.h"
-#include "lua/lua.hpp"
+#include "LuaProtobufWrap.h"
 
-class UWidgetTree;
+#include "lauxlib.h"
+#include "luaprotobuf/lpb.h"
 
 namespace NS_SLUA {
 
-    class SLUA_UNREAL_API LuaWidgetTree {
-    public:
-        static int push(lua_State* L,UWidgetTree* tree);
-    private:
-        static int setupMT(lua_State* L);
-        static int FindWidget(lua_State* L);
-        static int RemoveWidget(lua_State* L);
-        static int GetAllWidgets(lua_State* L);
-    };
+    namespace LuaProtobuf {
 
+        void init(lua_State *L) {
+            luaL_requiref(L, "pb", luaopen_pb, 0);
+            lua_pop(L, 1);
+            
+            luaL_requiref(L, "pb.slice", luaopen_pb_slice, 0);
+            lua_pop(L, 1);
+            
+            luaL_requiref(L, "pb.buffer", luaopen_pb_buffer, 0);
+            lua_pop(L, 1);
+            
+            luaL_requiref(L, "pb.conv", luaopen_pb_conv, 0);
+            lua_pop(L, 1);
 
+        }
+    }
 }

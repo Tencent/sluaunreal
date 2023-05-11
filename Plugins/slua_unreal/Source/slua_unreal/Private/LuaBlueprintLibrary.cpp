@@ -21,6 +21,7 @@
 #include "Blueprint/BlueprintSupport.h"
 #include "LuaState.h"
 #include "Internationalization/Internationalization.h"
+#include "Kismet/GameplayStatics.h"
 
 namespace {
     const FName GetVarOutOfBoundsWarning = FName("GetVarOutOfBoundsWarning");    
@@ -30,57 +31,69 @@ namespace {
 #define LOCTEXT_NAMESPACE "ULuaBlueprintLibrary"
 
 ULuaBlueprintLibrary::ULuaBlueprintLibrary(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+    : Super(ObjectInitializer)
 {
     FBlueprintSupport::RegisterBlueprintWarning(
-		FBlueprintWarningDeclaration (
-			GetVarOutOfBoundsWarning,
-			LOCTEXT("GetOutOfBoundsWarning", "BpVar read access out of bounds")
-		)
-	);
-	FBlueprintSupport::RegisterBlueprintWarning(
-		FBlueprintWarningDeclaration (
-			GetVarTypeErrorWarning,
-			LOCTEXT("GetVarTypeErrorWarning", "BpVar is not speicified type")
-		)
-	);
+        FBlueprintWarningDeclaration (
+            GetVarOutOfBoundsWarning,
+            LOCTEXT("GetOutOfBoundsWarning", "BpVar read access out of bounds")
+        )
+    );
+    FBlueprintSupport::RegisterBlueprintWarning(
+        FBlueprintWarningDeclaration (
+            GetVarTypeErrorWarning,
+            LOCTEXT("GetVarTypeErrorWarning", "BpVar is not speicified type")
+        )
+    );
 
 }
 
 FLuaBPVar ULuaBlueprintLibrary::CallToLuaWithArgs(UObject* WorldContextObject, FString funcname,const TArray<FLuaBPVar>& args,FString StateName) {
     using namespace NS_SLUA;
     // get main state
-	auto actor = Cast<AActor>(WorldContextObject);
-	ensure(actor);
-    auto ls = LuaState::get(actor->GetGameInstance());
-    if(StateName.Len()!=0) ls = LuaState::get(StateName);
-    if(!ls) return FLuaBPVar();
+    auto gameInstance = UGameplayStatics::GetGameInstance(WorldContextObject);
+    if (!gameInstance)
+    {
+        return LuaVar();
+    }
+    
+    auto ls = LuaState::get(gameInstance);
+    if (StateName.Len() != 0) ls = LuaState::get(StateName);
+    if (!ls) return FLuaBPVar();
     LuaVar f = ls->get(TCHAR_TO_UTF8(*funcname));
-    if(!f.isFunction()) {
-		Log::Error("Can't find lua member function named %s to call", TCHAR_TO_UTF8(*funcname));
+    if (!f.isFunction()) {
+        Log::Error("Can't find lua member function named %s to call", TCHAR_TO_UTF8(*funcname));
         return LuaVar();
     }
 
-    for(auto& arg:args) {
-        arg.value.push(ls->getLuaState());
-    }
-    return f.callWithNArg(args.Num());
+    auto fillParam = [&]
+    {
+        for (auto& arg : args) {
+            arg.value.push(ls->getLuaState());
+        }
+        return args.Num();
+    };
+    return f.callWithNArg(fillParam);
 }
 
 FLuaBPVar ULuaBlueprintLibrary::CallToLua(UObject* WorldContextObject, FString funcname,FString StateName) {
     using namespace NS_SLUA;
     // get main state
-	auto actor = Cast<AActor>(WorldContextObject);
-	ensure(actor);
-	auto ls = LuaState::get(actor->GetGameInstance());
+    auto gameInstance = UGameplayStatics::GetGameInstance(WorldContextObject);
+    if (!gameInstance)
+    {
+        return LuaVar();
+    }
+    
+    auto ls = LuaState::get(gameInstance);
     if(StateName.Len()!=0) ls = LuaState::get(StateName);
     if(!ls) return FLuaBPVar();
     LuaVar f = ls->get(TCHAR_TO_UTF8(*funcname));
-	if (!f.isFunction()) {
-		Log::Error("Can't find lua member function named %s to call", TCHAR_TO_UTF8(*funcname));
+    if (!f.isFunction()) {
+        Log::Error("Can't find lua member function named %s to call", TCHAR_TO_UTF8(*funcname));
         return LuaVar();
     }
-    return f.callWithNArg(0);
+    return f.callWithNArg(nullptr);
 }
 
 
@@ -110,9 +123,13 @@ FLuaBPVar ULuaBlueprintLibrary::CreateVarFromBool(bool b) {
 
 FLuaBPVar ULuaBlueprintLibrary::CreateVarFromObject(UObject* WorldContextObject, UObject* o) {
     using namespace NS_SLUA;
-	auto actor = Cast<AActor>(WorldContextObject);
-	ensure(actor);
-	auto ls = LuaState::get(actor->GetGameInstance());
+    auto gameInstance = UGameplayStatics::GetGameInstance(WorldContextObject);
+    if (!gameInstance)
+    {
+        return LuaVar();
+    }
+    
+    auto ls = LuaState::get(gameInstance);
     if(!ls) return FLuaBPVar();
     LuaObject::push(ls->getLuaState(),o);
     LuaVar ret(ls->getLuaState(),-1);
@@ -120,12 +137,12 @@ FLuaBPVar ULuaBlueprintLibrary::CreateVarFromObject(UObject* WorldContextObject,
     return FLuaBPVar(ret);
 }
 
-int FLuaBPVar::checkValue(NS_SLUA::lua_State* L, UStructProperty* p, uint8* params, int i)
+void* FLuaBPVar::checkValue(NS_SLUA::lua_State* L, NS_SLUA::FStructProperty* p, uint8* params, int i)
 {
-	FLuaBPVar ret;
-	ret.value.set(L, i);
-	p->CopyCompleteValue(params, &ret);
-	return 0;
+    FLuaBPVar ret;
+    ret.value.set(L, i);
+    p->CopyCompleteValue(params, &ret);
+    return nullptr;
 }
 
 

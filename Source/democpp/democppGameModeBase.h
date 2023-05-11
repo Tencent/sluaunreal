@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "LuaActor.h"
+#include "LuaGameMode.h"
 #include "democppGameModeBase.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class DEMOCPP_API AdemocppGameModeBase : public ALuaGameModeBase
+class DEMOCPP_API AdemocppGameModeBase : public ALuaGameMode
 {
 	GENERATED_BODY()
 };

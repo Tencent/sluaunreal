@@ -1,9 +1,9 @@
-local gamemode={}
+local LuaGameMode = {}
 
-function gamemode:ReceiveBeginPlay()
+function LuaGameMode:ReceiveBeginPlay()
     -- call super ReceiveBeginPlay
     self.Super:ReceiveBeginPlay()
     print("gamemode:ReceiveBeginPlay")
 end
 
-return gamemode
+return Class(nil, nil, LuaGameMode)

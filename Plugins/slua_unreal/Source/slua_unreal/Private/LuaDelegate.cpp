@@ -16,7 +16,6 @@
 #include "LuaFunctionAccelerator.h"
 #include "LuaObject.h"
 #include "LuaState.h"
-#include "LuaVar.h"
 #include "SluaUtil.h"
 
 ULuaDelegate::ULuaDelegate(const FObjectInitializer& ObjectInitializer)
@@ -138,7 +137,10 @@ namespace NS_SLUA {
         
         if (!map.Contains(obj) || !obj->IsValidLowLevel())
         {
+#if UE_BUILD_DEVELOPMENT
             luaL_error(L, "Invalid ULuaDelegate!");
+#endif
+            return 0;
         }
 
         FScriptDelegate Delegate;

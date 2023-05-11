@@ -4,8 +4,7 @@
 #include "Misc/Paths.h"
 #include "HAL/PlatformFileManager.h"
 #include "GenericPlatform/GenericPlatformFile.h"
-#include "HAL/FileManager.h"
-
+#include "Misc/FileHelper.h"
 
 
 // read file content

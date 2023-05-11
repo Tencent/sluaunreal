@@ -15,6 +15,7 @@
 
 #include "SluaMicro.h"
 #include "lua.h"
+#include "lauxlib.h"
 #include "UObject/UnrealType.h"
 #include "UObject/GCObject.h"
 #include "PropertyUtil.h"

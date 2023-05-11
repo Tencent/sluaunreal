@@ -11,12 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 #pragma once
+
+#include "SluaMicro.h"
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION<=4)
 #include "UObject/WeakObjectPtr.h"
 #else
 #include "UObject/WeakFieldPtr.h"
 #endif
-#include "SluaMicro.h"
 
 #if !((ENGINE_MINOR_VERSION<22) && (ENGINE_MAJOR_VERSION==4))
 #include "EPropertyClassUEnum.h"

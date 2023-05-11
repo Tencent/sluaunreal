@@ -16,11 +16,8 @@
 #include "CoreMinimal.h"
 #include "LuaObject.h"
 #include "lua.h"
+#include "LuaVar.h"
 #include "LuaDelegate.generated.h"
-
-namespace NS_SLUA {
-    class LuaVar;
-}
 
 UCLASS()
 class SLUA_UNREAL_API ULuaDelegate : public UObject {

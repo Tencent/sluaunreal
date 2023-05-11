@@ -43,21 +43,21 @@ public:
     
     friend FArchive& operator<<(FArchive& Ar, const LuaBitArray& A)
     {
-        int32 BitSize = 0;
+        int32 RealBitSize = 0;
         if (Ar.IsSaving())
         {
             for (int32 Index = A.BitSize - 1; Index >= 0; --Index)
             {
                 if (A.BitData[Index] != 0)
                 {
-                    BitSize = Index + 1;
+                    RealBitSize = Index + 1;
                     break;
                 }
             }
         }
 
-        Ar << BitSize;
-        for (int32 Index = 0; Index < BitSize; ++Index)
+        Ar << RealBitSize;
+        for (int32 Index = 0; Index < RealBitSize; ++Index)
         {
             if (Index < A.BitSize)
             {

@@ -115,7 +115,7 @@ namespace NS_SLUA
         void onAsyncLoadingFlushUpdate();
         void onEngineGC();
 
-        bool bindOverrideFuncs(const UObjectBase* obj, UClass* cls, bool bHookInstancedObj);
+        bool bindOverrideFuncs(const UObjectBase* objBase, UClass* cls, bool bHookInstancedObj);
         void setmetatable(const LuaVar& luaSelfTable, void* objPtr);
 
         bool hookBpScript(UFunction* func, UClass* cls, FNativeFuncPtr hookFunc);

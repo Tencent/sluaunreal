@@ -14,6 +14,7 @@
 #pragma once
 
 #include "lua.h"
+#include "lauxlib.h"
 #include "SluaMicro.h"
 #include "UObject/UnrealType.h"
 #include "UObject/GCObject.h"

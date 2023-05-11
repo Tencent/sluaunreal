@@ -30,14 +30,6 @@
 #define SLUA_CPPINST "__cppinst"
 #endif 
 
-#ifndef FORCE_INLINE
-#if WITH_EDITOR
-#define SLUA_FORCE_INLINE
-#else
-#define SLUA_FORCE_INLINE FORCEINLINE
-#endif
-#endif 
-
 // checkUD will report error if ud had been freed
 #define CheckUD(Type,L,P) auto UD = LuaObject::checkUD<Type>(L,P);
 // UD may be freed by Engine, so skip it in gc phase
@@ -362,8 +354,8 @@ namespace NS_SLUA {
 
         static int classIndex(lua_State* L);
         static int classNewindex(lua_State* L);
-        SLUA_FORCE_INLINE static int objectIndex(lua_State* L, UObject* obj, const char* name, bool cacheToLua=false);
-        SLUA_FORCE_INLINE static bool objectNewIndex(lua_State* L, UObject* obj, const char* name, int valueIdx, bool checkValid = true);
+        static int objectIndex(lua_State* L, UObject* obj, const char* name, bool cacheToLua=false);
+        static bool objectNewIndex(lua_State* L, UObject* obj, const char* name, int valueIdx, bool checkValid = true);
 
         static void newType(lua_State* L, const char* tn);
         static void newTypeWithBase(lua_State* L, const char* tn, std::initializer_list<const char*> bases);

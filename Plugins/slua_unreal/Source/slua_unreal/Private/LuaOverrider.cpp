@@ -693,7 +693,7 @@ namespace NS_SLUA
         }
 
         auto tempClassHookLinker = currentHook;
-        while (tempClassHookLinker->obj == obj)
+        while (tempClassHookLinker->obj == obj || tempClassHookLinker->cls == cls)
         {
             ensure(tempClassHookLinker->cls == cls);
             auto overrider = tempClassHookLinker->overrider;

@@ -150,7 +150,7 @@ namespace NS_SLUA
             {
                 pre->next = this;
                 clsConstructor = cls->ClassConstructor;
-                while (clsConstructor == CustomClassConstructor && _pre->obj == obj)
+                while (clsConstructor == CustomClassConstructor && (_pre->obj == obj || _pre->cls == cls))
                 {
                     clsConstructor = _pre->clsConstructor;
                     _pre = _pre->pre;

@@ -160,6 +160,16 @@ namespace NS_SLUA
         return false;
     }
 
+    void LuaFunctionAccelerator::clear()
+    {
+        for (auto iter : cache)
+        {
+            delete iter.Value;
+        }
+
+        cache.Empty();
+    }
+
     int LuaFunctionAccelerator::call(lua_State* L, int offset, UObject* obj, bool& isLatentFunction, NewObjectRecorder* objRecorder)
     {
         isLatentFunction = false;

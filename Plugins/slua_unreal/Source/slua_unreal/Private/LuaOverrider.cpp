@@ -532,7 +532,7 @@ namespace NS_SLUA
 
         if (!obj->HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
         {
-            tryHook(obj);
+            tryHook(obj, false, false);
         }
 
         // Process UInputComponent
@@ -601,6 +601,12 @@ namespace NS_SLUA
                 if (!obj->HasAnyFlags(RF_NeedPostLoad) || bHookInstancedObj)
                 {
                     //NS_SLUA::Log::Log("LuaOverrider::NotifyUObjectCreated %s", TCHAR_TO_UTF8(*obj->GetFName().ToString()));
+                    UGameInstance* gameInstance = LuaState::getObjectGameInstance((UObject*)obj);
+                    if (gameInstance && gameInstance != sluaState->getGameInstance())
+                    {
+                        return false;
+                    }
+
                     UClass* cls = obj->GetClass();
                     if (bHookInstancedObj)
                     {
@@ -693,7 +699,7 @@ namespace NS_SLUA
         }
 
         auto tempClassHookLinker = currentHook;
-        while (tempClassHookLinker->obj == obj)
+        while (tempClassHookLinker->obj == obj || tempClassHookLinker->cls == cls)
         {
             ensure(tempClassHookLinker->cls == cls);
             auto overrider = tempClassHookLinker->overrider;
@@ -859,17 +865,22 @@ namespace NS_SLUA
         uint32 newIndex = 0;
         while (asyncLoadedObjects.IsValidIndex(curIndex))
         {
-            AsyncLoadedObject& actorInfo = asyncLoadedObjects[curIndex];
-            if (actorInfo.obj && !actorInfo.obj->HasAnyFlags(RF_NeedPostLoad))
+            AsyncLoadedObject& objInfo = asyncLoadedObjects[curIndex];
+            if (objInfo.obj && !objInfo.obj->HasAnyFlags(RF_NeedPostLoad))
             {
                 // NS_SLUA::Log::Log("LuaOverrider::OnAsyncLoadingFlushUpdate %s", TCHAR_TO_UTF8(*actorInfo.obj->GetFName().ToString()));
-                UClass* cls = actorInfo.obj->GetClass();
-                bindOverrideFuncs(actorInfo.obj, cls, true);
+                auto obj = objInfo.obj;
+                UGameInstance* gameInstance = LuaState::getObjectGameInstance(obj);
+                if (!gameInstance || gameInstance == sluaState->getGameInstance())
+                {
+                    UClass* cls = objInfo.obj->GetClass();
+                    bindOverrideFuncs(objInfo.obj, cls, true);
+                }
             }
             else
             {
                 // need to handle next time
-                asyncLoadedObjects[newIndex] = actorInfo;
+                asyncLoadedObjects[newIndex] = objInfo;
                 newIndex++;
             }
             curIndex++;

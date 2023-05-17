@@ -508,6 +508,11 @@ namespace NS_SLUA {
         SafeDelete(deadLoopCheck);
 
         LuaMemoryProfile::stop();
+
+        if (!mainState)
+        {
+            LuaFunctionAccelerator::clear();
+        }
     }
 
 

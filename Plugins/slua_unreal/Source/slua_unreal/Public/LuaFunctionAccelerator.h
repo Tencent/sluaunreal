@@ -24,6 +24,7 @@ namespace NS_SLUA {
 
         static LuaFunctionAccelerator* findOrAdd(UFunction* inFunc);
         static bool remove(UFunction* inFunc);
+        static void clear();
 
         int call(lua_State* L, int offset, UObject* obj, bool& isLatentFunction, NewObjectRecorder* objRecorder);
 

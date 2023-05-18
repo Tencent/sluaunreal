@@ -12,7 +12,6 @@
 #include "LuaOverriderInterface.h"
 #include "LuaOverriderSuper.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "LuaInstancedActorComponent.h"
 #include "Engine/GameEngine.h"
 #include "Engine/NetDriver.h"
 #include "GameFramework/InputSettings.h"
@@ -532,7 +531,7 @@ namespace NS_SLUA
 
         if (!obj->HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
         {
-            tryHook(obj, false, false);
+            tryHook(obj, false);
         }
 
         // Process UInputComponent
@@ -592,13 +591,13 @@ namespace NS_SLUA
         }
     }
 
-    bool LuaOverrider::tryHook(const UObjectBaseUtility* obj, bool bIsPostLoad/* = false*/, bool bCDOLua/* = true*/, bool bHookInstancedObj/* = false*/)
+    bool LuaOverrider::tryHook(const UObjectBaseUtility* obj, bool bHookImmediate/* = false*/, bool bPostLoad/* = false*/)
     {
         if (isHookable(obj))
         {
-            if (IsInGameThread() && !bIsPostLoad)
+            if (IsInGameThread() && !bPostLoad)
             {
-                if (!obj->HasAnyFlags(RF_NeedPostLoad) || bHookInstancedObj)
+                if (!obj->HasAnyFlags(RF_NeedPostLoad) || bHookImmediate)
                 {
                     //NS_SLUA::Log::Log("LuaOverrider::NotifyUObjectCreated %s", TCHAR_TO_UTF8(*obj->GetFName().ToString()));
                     UGameInstance* gameInstance = LuaState::getObjectGameInstance((UObject*)obj);
@@ -608,9 +607,9 @@ namespace NS_SLUA
                     }
 
                     UClass* cls = obj->GetClass();
-                    if (bHookInstancedObj)
+                    if (bHookImmediate)
                     {
-                        bindOverrideFuncs(obj, cls, bHookInstancedObj);
+                        bindOverrideFuncs(obj, cls);
                         return true;
                     }
 
@@ -626,7 +625,7 @@ namespace NS_SLUA
             }
 
             FScopeLock lock(&asyncLoadedObjectCS);
-            asyncLoadedObjects.Add(AsyncLoadedObject{ (UObject*)obj, bCDOLua });
+            asyncLoadedObjects.Add(AsyncLoadedObject{ (UObject*)obj });
         }
 
         return false;
@@ -661,7 +660,7 @@ namespace NS_SLUA
 
             FUObjectThreadContext& ThreadContext = FUObjectThreadContext::Get();
             auto lastConstructedObject = ThreadContext.ConstructedObject;
-            // set InstanceGraph(in UE4)/SubobjectOverrides(in UE5)¡¢ComponentInits to initialize to avoid destructor twice
+            // set InstanceGraph(in UE4)/SubobjectOverrides(in UE5) and ComponentInits to initialize to avoid destructor twice
             new (&ObjectInitializerProxy) FObjectInitializer();
 
             ThreadContext.PopInitializer();
@@ -698,13 +697,18 @@ namespace NS_SLUA
 #endif
         }
 
+        bool bActorComponent = Cast<UActorComponent>(obj) != nullptr;
+
         auto tempClassHookLinker = currentHook;
         while (tempClassHookLinker->obj == obj || tempClassHookLinker->cls == cls)
         {
             ensure(tempClassHookLinker->cls == cls);
             auto overrider = tempClassHookLinker->overrider;
             auto currentLinker = tempClassHookLinker;
-            overrider->bindOverrideFuncs(obj, cls, false);
+            if (!bActorComponent)
+            {
+                overrider->bindOverrideFuncs(obj, cls);
+            }
 
             tempClassHookLinker = tempClassHookLinker->pre;
             if (currentLinker == currentHook)
@@ -873,8 +877,8 @@ namespace NS_SLUA
                 UGameInstance* gameInstance = LuaState::getObjectGameInstance(obj);
                 if (!gameInstance || gameInstance == sluaState->getGameInstance())
                 {
-                    UClass* cls = objInfo.obj->GetClass();
-                    bindOverrideFuncs(objInfo.obj, cls, true);
+                    UClass* cls = obj->GetClass();
+                    bindOverrideFuncs(obj, cls);
                 }
             }
             else
@@ -1044,7 +1048,7 @@ namespace NS_SLUA
         return newFunc;
     }
 
-    bool LuaOverrider::bindOverrideFuncs(const UObjectBase* objBase, UClass* cls, bool bHookInstancedObj) {
+    bool LuaOverrider::bindOverrideFuncs(const UObjectBase* objBase, UClass* cls) {
         SCOPE_CYCLE_COUNTER(STAT_LuaOverrider_bindOverrideFuncs);
 
         //UE_LOG(Slua, Log, TEXT("LuaOverrider::BindOverrideFuncs %s"), *objBase->GetFName().ToString());
@@ -1058,23 +1062,7 @@ namespace NS_SLUA
             return true;
         }
 
-        if (!bHookInstancedObj && cls->ImplementsInterface(UInstancedLuaInterface::StaticClass()))
-        {
-            //NS_SLUA::Log::Log("LuaOverrider::BindOverrideFuncs Delay Hook for Instanced Obj %s", TCHAR_TO_UTF8(*obj->GetFName().ToString()));
-            auto objPtr = sluaState->delayHookStateMap.Find(obj);
-            if (objPtr)
-            {
-                (*objPtr).Add(sluaState);
-            }
-            else
-            {
-                TArray<LuaState*> arr;
-                arr.Add(sluaState);
-                sluaState->delayHookStateMap.Add(obj, arr);
-            }
-            return false;
-        }
-
+        bool bHookInstancedObj;
         FString luaFilePath = getLuaFilePath(obj, cls, false, bHookInstancedObj);
         if (luaFilePath.IsEmpty()) {
             //NS_SLUA::Log::Log("LuaOverrider::BindOverrideFuncs LuaFilePath empty of Object[%s]", TCHAR_TO_UTF8(*(obj->GetFName().ToString())));

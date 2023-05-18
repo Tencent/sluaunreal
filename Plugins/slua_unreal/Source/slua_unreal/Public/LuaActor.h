@@ -13,9 +13,11 @@ class SLUA_UNREAL_API ALuaActor : public AActor, public ILuaOverriderInterface
     GENERATED_UCLASS_BODY()
 
 public:
-    virtual void PostInitializeComponents() override;
-
     virtual FString GetLuaFilePath_Implementation() const override;
+    void PostInitializeComponents() override;
+    void PostLuaHook() override
+    {
+    }
 
     UFUNCTION(Blueprintcallable)
         void RegistLuaTick(float TickInterval);

@@ -237,7 +237,7 @@ namespace NS_SLUA {
         // call this function on script error
         void onError(const char* err);
         
-        static bool hookObject(LuaState* inState, const class UObjectBaseUtility* obj, bool bIsPostLoad = false, bool bCDOLua = true, bool bHookInstancedObj = false);
+        static bool hookObject(LuaState* inState, const class UObjectBaseUtility* obj, bool bHookImmediate = true, bool bPostHook = false);
 
 #if UE_BUILD_DEVELOPMENT
         void addRefTraceback(int ref);

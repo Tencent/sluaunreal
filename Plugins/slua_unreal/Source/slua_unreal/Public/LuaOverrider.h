@@ -72,7 +72,6 @@ namespace NS_SLUA
     struct AsyncLoadedObject
     {
         UObject* obj;
-        bool bCDOLua;
     };
     
     class SLUA_UNREAL_API LuaOverrider
@@ -94,7 +93,7 @@ namespace NS_SLUA
         void NotifyUObjectDeleted(const UObjectBase* Object, int32 Index) override;
 
         static bool isHookable(const UObjectBaseUtility* obj);
-        bool tryHook(const UObjectBaseUtility* obj, bool bIsPostLoad = false, bool bCDOLua = true, bool bHookInstancedObj = false);
+        bool tryHook(const UObjectBaseUtility* obj, bool bHookImmediate = true, bool bPostLoad = false);
         static FString getLuaFilePath(UObject* obj, class UClass* cls, bool bCDOLua, bool& bHookInstancedObj);
 
 #if WITH_EDITOR
@@ -115,7 +114,7 @@ namespace NS_SLUA
         void onAsyncLoadingFlushUpdate();
         void onEngineGC();
 
-        bool bindOverrideFuncs(const UObjectBase* objBase, UClass* cls, bool bHookInstancedObj);
+        bool bindOverrideFuncs(const UObjectBase* objBase, UClass* cls);
         void setmetatable(const LuaVar& luaSelfTable, void* objPtr);
 
         bool hookBpScript(UFunction* func, UClass* cls, FNativeFuncPtr hookFunc);

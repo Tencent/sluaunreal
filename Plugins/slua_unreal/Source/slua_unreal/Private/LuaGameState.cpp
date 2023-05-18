@@ -11,14 +11,6 @@ FString ALuaGameState::GetLuaFilePath_Implementation() const
     return LuaFilePath;
 }
 
-void ALuaGameState::PostInitializeComponents()
-{
-    Super::PostInitializeComponents();
-
-    CallReceivePreRep(LuaFilePath);
-    TryHookActorComponents();
-}
-
 void ALuaGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);

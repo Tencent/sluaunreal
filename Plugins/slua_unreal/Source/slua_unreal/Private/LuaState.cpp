@@ -42,9 +42,6 @@
 #include "luasocket/luasocket.h"
 
 namespace NS_SLUA {
-
-    LuaState::DelayHookMap LuaState::delayHookStateMap;
-
     FLuaStateInitEvent LuaState::onInitEvent;
     
     const int MaxLuaExecTime = 60; // in second
@@ -457,15 +454,15 @@ namespace NS_SLUA {
         }
     }
     
-    void LuaState::callLuaTick(UObject* obj, NS_SLUA::LuaVar& tickFunc, float dtime) {
+    void LuaState::callLuaTick(UObject* obj, LuaVar& tickFunc, float dtime) {
         ILuaOverriderInterface* overrideInterface = Cast<ILuaOverriderInterface>(obj);
         if (!overrideInterface) {
             Log::Error("callLuaTick cast fail: %s. if obj implement ILuaOverriderInterface in BP, change to c++ instead.", TCHAR_TO_UTF8(*obj->GetName()));
             return;
         }
-        NS_SLUA::LuaVar self = overrideInterface->GetSelfTable();
+        LuaVar self = overrideInterface->GetSelfTable();
         if (!tickFunc.isFunction()) {
-            NS_SLUA::LuaVar tick = self.getFromTable<NS_SLUA::LuaVar>("LuaTick");
+            LuaVar tick = self.getFromTable<LuaVar>("LuaTick");
             if (tick.isFunction()) {
                 tickFunc = tick;
             }
@@ -963,47 +960,27 @@ namespace NS_SLUA {
         return latentDelegate;
     }
 
-    bool LuaState::hookObject(LuaState* inState, const UObjectBaseUtility* obj, bool bIsPostLoad/* = true*/, bool bCDOLua/* = true*/, bool bHookInstancedObj/* = false*/)
+    bool LuaState::hookObject(LuaState* inState, const UObjectBaseUtility* obj, bool bHookImmediate/* = false*/, bool bPostLoad/* = false*/)
     {
-        auto hook = [&](NS_SLUA::LuaState* state)
+        auto hook = [&](LuaState* state)
         {
             if (!state || !state->overrider)
             {
                 return false;
             }
-            return state->overrider->tryHook(obj, bIsPostLoad, bCDOLua, bHookInstancedObj);
+            return state->overrider->tryHook(obj, bHookImmediate, bPostLoad);
         };
-#if WITH_EDITOR
-        auto luaStateArrPtr = delayHookStateMap.Find((UObject*)obj);
-        if (luaStateArrPtr)
-        {
-            for (int i = 0; i < (*luaStateArrPtr).Num(); ++i)
+        LuaState* state = inState;
+        if (!state) {
+            auto* gameInstance = getObjectGameInstance((UObject*)obj);
+            state = gameInstance ? get(gameInstance) : nullptr;
+            if (!state)
             {
-                NS_SLUA::LuaState* state = (*luaStateArrPtr)[i];
-                hook(state);
+                state = get();
             }
-            delayHookStateMap.Remove((UObject*)obj);
-            return true;
         }
-        else
-        {    
-            NS_SLUA::LuaState* state = inState;
-            if (!state) {
-                auto* gameInstance = NS_SLUA::LuaState::getObjectGameInstance((UObject*)obj);
-                state = gameInstance ? NS_SLUA::LuaState::get(gameInstance) : nullptr;
-                if (!state)
-                {
-                    state = NS_SLUA::LuaState::get();
-                }
-            }
-            
-            return hook(state);
-        }
-#else
-        NS_SLUA::LuaState* state = NS_SLUA::LuaState::get();
-        hook(state);
-        return true;
-#endif
+        
+        return hook(state);
     }
 
 #if UE_BUILD_DEVELOPMENT

@@ -244,6 +244,13 @@ namespace NS_SLUA {
         int index = 1;
         UClass* WidgetClass = UUserWidget::StaticClass();
         for (auto& it : map) {
+            GenericUserData* userData = it.Value;
+			// Only stastics object with UD_REFERENCE flag
+            if (userData && !(userData->flag & UD_REFERENCE))
+            {
+                continue;
+            }
+
             UObject* obj = it.Key;
             UClass* cls = obj->GetClass();
             if (cls && cls->IsValidLowLevel() && (cls == WidgetClass || cls->IsChildOf(WidgetClass))) {

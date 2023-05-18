@@ -63,4 +63,8 @@ function TestMap:ReceiveBeginPlay()
     test()
 end
 
+function TestMap:update()
+	
+end
+
 return Class(ni, nil, TestMap)

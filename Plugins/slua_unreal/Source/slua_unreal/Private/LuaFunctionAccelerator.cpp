@@ -152,8 +152,8 @@ namespace NS_SLUA
         auto funcPtr = cache.Find(inFunc);
         if (funcPtr)
         {
-            cache.Remove(inFunc);
             delete *funcPtr;
+            cache.Remove(inFunc);
             return true;
         }
 

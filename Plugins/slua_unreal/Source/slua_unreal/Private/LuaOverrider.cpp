@@ -581,9 +581,7 @@ namespace NS_SLUA
         {
             if (overridedClasses.Contains(cls))
             {
-#if WITH_EDITOR
-                removeOneOverride(cls);
-#endif
+                removeOneOverride(cls, true);
                 overridedClasses.Remove(cls);
             }
 
@@ -725,24 +723,13 @@ namespace NS_SLUA
         cls->ClassConstructor = clsConstructor;
     }
 
-#if WITH_EDITOR
-    void clearSuperFuncCache(UClass* cls)
-    {
-        if (!IsValid(cls))
-        {
-            return;
-        }
-        cls->ClearFunctionMapsCaches();
-        clearSuperFuncCache(cls->GetSuperClass());
-    }
-    
-    void LuaOverrider::removeOneOverride(UClass* cls)
+    void LuaOverrider::removeOneOverride(UClass* cls, bool bObjectDeleted)
     {
         auto &duplicatedFuncs = overridedClasses.FindChecked(cls);
         auto ProcessFunc = [cls, this, &duplicatedFuncs](UFunction* func)
         {
             if (!func || !(func->FunctionFlags & OverrideFuncFlags)) return;
-
+#if WITH_EDITOR
             if (luaNet->luaRPCFuncs.Contains(func))
             {
                 for (auto FieldAddress = &cls->Children; (FieldAddress && *FieldAddress); FieldAddress = &((*FieldAddress)->Next))
@@ -762,6 +749,7 @@ namespace NS_SLUA
                 func->RemoveFromRoot();
             }
             else
+#endif
             {
                 if (duplicatedFuncs.Contains(func))
                 {
@@ -777,6 +765,8 @@ namespace NS_SLUA
                 {
                     func->Script.RemoveAt(0, CodeSize, false);
                 }
+
+#if WITH_EDITOR
                 // func hooked by SetNativeFunc
                 if (func->GetNativeFunc() == (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc)
                 {
@@ -786,37 +776,53 @@ namespace NS_SLUA
                     if (!nativeFunc) return;
                     func->SetNativeFunc(*nativeFunc);
                 }
+#endif
             }
         };
 
-        if (auto funcNames = classHookedFuncNames.Find(cls))
+        if (!bObjectDeleted)
         {
-            for (const FName& funcName : *funcNames)
+            if (auto funcNames = classHookedFuncNames.Find(cls))
             {
-                UFunction* supercallFunc = cls->FindFunctionByName(FName(*(SUPER_CALL_FUNC_NAME_PREFIX + funcName.ToString())));
-                ProcessFunc(supercallFunc);
-                UFunction* func = cls->FindFunctionByName(funcName);
-                ProcessFunc(func);
+                for (const FName& funcName : *funcNames)
+                {
+                    UFunction* supercallFunc = cls->FindFunctionByName(FName(*(SUPER_CALL_FUNC_NAME_PREFIX + funcName.ToString())));
+                    ProcessFunc(supercallFunc);
+                    UFunction* func = cls->FindFunctionByName(funcName);
+                    ProcessFunc(func);
+                }
             }
         }
         duplicatedFuncs.Empty();
         
         classHookedFuncNames.Remove(cls);
+#if WITH_EDITOR
         cacheNativeFuncs.Remove(cls);
+#endif
 
         if (NS_SLUA::LuaNet::classLuaReplicatedMap.Contains(cls))
-        {
+        {    
+            auto &classLuaReplicated = NS_SLUA::LuaNet::classLuaReplicatedMap.FindChecked(cls);
+            if (classLuaReplicated.ustruct.IsValid())
             {
-                auto &classLuaReplicated = NS_SLUA::LuaNet::classLuaReplicatedMap.FindChecked(cls);
-                if (classLuaReplicated.ustruct.IsValid())
-                {
-                    classLuaReplicated.ustruct->RemoveFromRoot();
-                }
+                classLuaReplicated.ustruct->RemoveFromRoot();
             }
+
             NS_SLUA::LuaNet::classLuaReplicatedMap.Remove(cls);
         }
     }
 
+#if WITH_EDITOR
+    void clearSuperFuncCache(UClass* cls)
+    {
+        if (!IsValid(cls))
+        {
+            return;
+        }
+        cls->ClearFunctionMapsCaches();
+        clearSuperFuncCache(cls->GetSuperClass());
+    }
+    
     void LuaOverrider::removeOverrides()
     {
         for (auto iter = overridedClasses.CreateIterator(); iter; ++iter)
@@ -824,27 +830,8 @@ namespace NS_SLUA
             UClass* OverrideClass = iter.Key();
             if (!OverrideClass)
                 continue;
-            removeOneOverride(OverrideClass);
+            removeOneOverride(OverrideClass, false);
             clearSuperFuncCache(OverrideClass);
-        }
-
-        for (auto luaRPC : luaNet->luaRPCFuncs)
-        {
-            if (UClass* cls = Cast<UClass>(luaRPC->GetOuter()))
-            {
-                for (auto fieldAddress = &cls->Children; (fieldAddress && *fieldAddress); fieldAddress = &((*fieldAddress)->Next))
-                {
-                    if (*fieldAddress == luaRPC)
-                    {
-                        *fieldAddress = luaRPC->Next;
-                        luaRPC->Next = nullptr;
-                        break;
-                    }
-                }
-                cls->RemoveFunctionFromFunctionMap(luaRPC);
-                cls->NetFields.Remove(luaRPC);
-                luaRPC->RemoveFromRoot();
-            }
         }
 
         luaNet->luaRPCFuncs.Empty();

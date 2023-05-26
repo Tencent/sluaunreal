@@ -99,8 +99,8 @@ namespace NS_SLUA
 #if WITH_EDITOR
         ULuaOverrider::ClassNativeMap cacheNativeFuncs;
         void removeOverrides();
-        void removeOneOverride(UClass* cls);
 #endif
+        void removeOneOverride(UClass* cls, bool bObjectDeleted);
 
     protected:
         friend class LuaObject;

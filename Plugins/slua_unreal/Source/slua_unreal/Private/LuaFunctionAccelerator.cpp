@@ -35,19 +35,19 @@ namespace NS_SLUA
             FProperty* prop = *it;
             uint64 propflag = prop->GetPropertyFlags();
 
-            FOutParmRec* out = nullptr;
             if (prop->HasAnyPropertyFlags(CPF_OutParm))
             {
                 outParmRecProps.Add(prop);
             }
 
-            FCheckerInfo checkerInfo = {false, false, false, propIndex, prop->GetOffset_ForInternal(), prop};
+            FCheckerInfo checkerInfo = {false, false, false, false, propIndex, prop->GetOffset_ForInternal(), prop};
             FCheckerInfo* checkerRef = &checkerInfo;
-            if (!prop->HasAnyPropertyFlags(CPF_NoDestructor) &&
-                !(IsReferenceParam(prop->PropertyFlags, func) && LuaObject::getReferencer(prop)))
+            if (!prop->HasAnyPropertyFlags(CPF_NoDestructor))
             {
                 checkerInfo.bInit = true;
+                checkerInfo.bReference = IsReferenceParam(prop->PropertyFlags, func) && LuaObject::getReferencer(prop);
                 paramsChecker.Add(checkerInfo);
+                
                 checkerRef = &paramsChecker.Top();
             }
 
@@ -152,8 +152,8 @@ namespace NS_SLUA
         auto funcPtr = cache.Find(inFunc);
         if (funcPtr)
         {
-            cache.Remove(inFunc);
             delete *funcPtr;
+            cache.Remove(inFunc);
             return true;
         }
 
@@ -230,7 +230,7 @@ namespace NS_SLUA
         for (auto& checkerInfo : paramsChecker)
         {
             auto prop = checkerInfo.prop;
-            if (checkerInfo.bInit && (lua_type(L, i) == LUA_TUSERDATA))
+            if (checkerInfo.bInit && !(checkerInfo.bReference && (lua_type(L, i) == LUA_TUSERDATA)))
             {
                 if (!prop->HasAnyPropertyFlags(CPF_ZeroConstructor))
                 {
@@ -353,7 +353,7 @@ namespace NS_SLUA
         for (auto& checkerInfo : paramsChecker)
         {
             auto prop = checkerInfo.prop;
-            if (checkerInfo.bInit && (lua_type(L, i) == LUA_TUSERDATA))
+            if (checkerInfo.bInit && !(checkerInfo.bReference && (lua_type(L, i) == LUA_TUSERDATA)))
             {
                 if (!prop->HasAnyPropertyFlags(CPF_ZeroConstructor))
                 {

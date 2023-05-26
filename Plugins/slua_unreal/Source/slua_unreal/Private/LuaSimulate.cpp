@@ -70,7 +70,7 @@ namespace NS_SLUA {
         if (!Obj->HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
         {
             StartSimulateLua();
-            NS_SLUA::LuaState::hookObject(SluaState, Obj);
+            NS_SLUA::LuaState::hookObject(SluaState, Obj, true);
             SimulatingObj = Obj;
         }
     }

@@ -12,8 +12,6 @@ class SLUA_UNREAL_API ALuaGameMode : public AGameMode, public ILuaOverriderInter
     GENERATED_UCLASS_BODY()
 
 public:
-    virtual void PostInitializeComponents() override;
-
     virtual FString GetLuaFilePath_Implementation() const override;
 
 protected:

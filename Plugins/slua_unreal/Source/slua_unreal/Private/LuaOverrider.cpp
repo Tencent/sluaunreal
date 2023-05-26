@@ -12,7 +12,6 @@
 #include "LuaOverriderInterface.h"
 #include "LuaOverriderSuper.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "LuaInstancedActorComponent.h"
 #include "Engine/GameEngine.h"
 #include "Engine/NetDriver.h"
 #include "GameFramework/InputSettings.h"
@@ -532,7 +531,7 @@ namespace NS_SLUA
 
         if (!obj->HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
         {
-            tryHook(obj, false, false);
+            tryHook(obj, false);
         }
 
         // Process UInputComponent
@@ -582,9 +581,7 @@ namespace NS_SLUA
         {
             if (overridedClasses.Contains(cls))
             {
-#if WITH_EDITOR
-                removeOneOverride(cls);
-#endif
+                removeOneOverride(cls, true);
                 overridedClasses.Remove(cls);
             }
 
@@ -592,13 +589,13 @@ namespace NS_SLUA
         }
     }
 
-    bool LuaOverrider::tryHook(const UObjectBaseUtility* obj, bool bIsPostLoad/* = false*/, bool bCDOLua/* = true*/, bool bHookInstancedObj/* = false*/)
+    bool LuaOverrider::tryHook(const UObjectBaseUtility* obj, bool bHookImmediate/* = false*/, bool bPostLoad/* = false*/)
     {
         if (isHookable(obj))
         {
-            if (IsInGameThread() && !bIsPostLoad)
+            if (IsInGameThread() && !bPostLoad)
             {
-                if (!obj->HasAnyFlags(RF_NeedPostLoad) || bHookInstancedObj)
+                if (!obj->HasAnyFlags(RF_NeedPostLoad) || bHookImmediate)
                 {
                     //NS_SLUA::Log::Log("LuaOverrider::NotifyUObjectCreated %s", TCHAR_TO_UTF8(*obj->GetFName().ToString()));
                     UGameInstance* gameInstance = LuaState::getObjectGameInstance((UObject*)obj);
@@ -608,9 +605,9 @@ namespace NS_SLUA
                     }
 
                     UClass* cls = obj->GetClass();
-                    if (bHookInstancedObj)
+                    if (bHookImmediate)
                     {
-                        bindOverrideFuncs(obj, cls, bHookInstancedObj);
+                        bindOverrideFuncs(obj, cls);
                         return true;
                     }
 
@@ -626,7 +623,7 @@ namespace NS_SLUA
             }
 
             FScopeLock lock(&asyncLoadedObjectCS);
-            asyncLoadedObjects.Add(AsyncLoadedObject{ (UObject*)obj, bCDOLua });
+            asyncLoadedObjects.Add(AsyncLoadedObject{ (UObject*)obj });
         }
 
         return false;
@@ -661,7 +658,7 @@ namespace NS_SLUA
 
             FUObjectThreadContext& ThreadContext = FUObjectThreadContext::Get();
             auto lastConstructedObject = ThreadContext.ConstructedObject;
-            // set InstanceGraph(in UE4)/SubobjectOverrides(in UE5)¡¢ComponentInits to initialize to avoid destructor twice
+            // set InstanceGraph(in UE4)/SubobjectOverrides(in UE5) and ComponentInits to initialize to avoid destructor twice
             new (&ObjectInitializerProxy) FObjectInitializer();
 
             ThreadContext.PopInitializer();
@@ -698,13 +695,18 @@ namespace NS_SLUA
 #endif
         }
 
+        bool bActorComponent = Cast<UActorComponent>(obj) != nullptr;
+
         auto tempClassHookLinker = currentHook;
         while (tempClassHookLinker->obj == obj || tempClassHookLinker->cls == cls)
         {
             ensure(tempClassHookLinker->cls == cls);
             auto overrider = tempClassHookLinker->overrider;
             auto currentLinker = tempClassHookLinker;
-            overrider->bindOverrideFuncs(obj, cls, false);
+            if (!bActorComponent)
+            {
+                overrider->bindOverrideFuncs(obj, cls);
+            }
 
             tempClassHookLinker = tempClassHookLinker->pre;
             if (currentLinker == currentHook)
@@ -721,24 +723,13 @@ namespace NS_SLUA
         cls->ClassConstructor = clsConstructor;
     }
 
-#if WITH_EDITOR
-    void clearSuperFuncCache(UClass* cls)
-    {
-        if (!IsValid(cls))
-        {
-            return;
-        }
-        cls->ClearFunctionMapsCaches();
-        clearSuperFuncCache(cls->GetSuperClass());
-    }
-    
-    void LuaOverrider::removeOneOverride(UClass* cls)
+    void LuaOverrider::removeOneOverride(UClass* cls, bool bObjectDeleted)
     {
         auto &duplicatedFuncs = overridedClasses.FindChecked(cls);
         auto ProcessFunc = [cls, this, &duplicatedFuncs](UFunction* func)
         {
             if (!func || !(func->FunctionFlags & OverrideFuncFlags)) return;
-
+#if WITH_EDITOR
             if (luaNet->luaRPCFuncs.Contains(func))
             {
                 for (auto FieldAddress = &cls->Children; (FieldAddress && *FieldAddress); FieldAddress = &((*FieldAddress)->Next))
@@ -758,6 +749,7 @@ namespace NS_SLUA
                 func->RemoveFromRoot();
             }
             else
+#endif
             {
                 if (duplicatedFuncs.Contains(func))
                 {
@@ -773,6 +765,8 @@ namespace NS_SLUA
                 {
                     func->Script.RemoveAt(0, CodeSize, false);
                 }
+
+#if WITH_EDITOR
                 // func hooked by SetNativeFunc
                 if (func->GetNativeFunc() == (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc)
                 {
@@ -782,37 +776,53 @@ namespace NS_SLUA
                     if (!nativeFunc) return;
                     func->SetNativeFunc(*nativeFunc);
                 }
+#endif
             }
         };
 
-        if (auto funcNames = classHookedFuncNames.Find(cls))
+        if (!bObjectDeleted)
         {
-            for (const FName& funcName : *funcNames)
+            if (auto funcNames = classHookedFuncNames.Find(cls))
             {
-                UFunction* supercallFunc = cls->FindFunctionByName(FName(*(SUPER_CALL_FUNC_NAME_PREFIX + funcName.ToString())));
-                ProcessFunc(supercallFunc);
-                UFunction* func = cls->FindFunctionByName(funcName);
-                ProcessFunc(func);
+                for (const FName& funcName : *funcNames)
+                {
+                    UFunction* supercallFunc = cls->FindFunctionByName(FName(*(SUPER_CALL_FUNC_NAME_PREFIX + funcName.ToString())));
+                    ProcessFunc(supercallFunc);
+                    UFunction* func = cls->FindFunctionByName(funcName);
+                    ProcessFunc(func);
+                }
             }
         }
         duplicatedFuncs.Empty();
         
         classHookedFuncNames.Remove(cls);
+#if WITH_EDITOR
         cacheNativeFuncs.Remove(cls);
+#endif
 
         if (NS_SLUA::LuaNet::classLuaReplicatedMap.Contains(cls))
-        {
+        {    
+            auto &classLuaReplicated = NS_SLUA::LuaNet::classLuaReplicatedMap.FindChecked(cls);
+            if (classLuaReplicated.ustruct.IsValid())
             {
-                auto &classLuaReplicated = NS_SLUA::LuaNet::classLuaReplicatedMap.FindChecked(cls);
-                if (classLuaReplicated.ustruct.IsValid())
-                {
-                    classLuaReplicated.ustruct->RemoveFromRoot();
-                }
+                classLuaReplicated.ustruct->RemoveFromRoot();
             }
+
             NS_SLUA::LuaNet::classLuaReplicatedMap.Remove(cls);
         }
     }
 
+#if WITH_EDITOR
+    void clearSuperFuncCache(UClass* cls)
+    {
+        if (!IsValid(cls))
+        {
+            return;
+        }
+        cls->ClearFunctionMapsCaches();
+        clearSuperFuncCache(cls->GetSuperClass());
+    }
+    
     void LuaOverrider::removeOverrides()
     {
         for (auto iter = overridedClasses.CreateIterator(); iter; ++iter)
@@ -820,27 +830,8 @@ namespace NS_SLUA
             UClass* OverrideClass = iter.Key();
             if (!OverrideClass)
                 continue;
-            removeOneOverride(OverrideClass);
+            removeOneOverride(OverrideClass, false);
             clearSuperFuncCache(OverrideClass);
-        }
-
-        for (auto luaRPC : luaNet->luaRPCFuncs)
-        {
-            if (UClass* cls = Cast<UClass>(luaRPC->GetOuter()))
-            {
-                for (auto fieldAddress = &cls->Children; (fieldAddress && *fieldAddress); fieldAddress = &((*fieldAddress)->Next))
-                {
-                    if (*fieldAddress == luaRPC)
-                    {
-                        *fieldAddress = luaRPC->Next;
-                        luaRPC->Next = nullptr;
-                        break;
-                    }
-                }
-                cls->RemoveFunctionFromFunctionMap(luaRPC);
-                cls->NetFields.Remove(luaRPC);
-                luaRPC->RemoveFromRoot();
-            }
         }
 
         luaNet->luaRPCFuncs.Empty();
@@ -873,8 +864,8 @@ namespace NS_SLUA
                 UGameInstance* gameInstance = LuaState::getObjectGameInstance(obj);
                 if (!gameInstance || gameInstance == sluaState->getGameInstance())
                 {
-                    UClass* cls = objInfo.obj->GetClass();
-                    bindOverrideFuncs(objInfo.obj, cls, true);
+                    UClass* cls = obj->GetClass();
+                    bindOverrideFuncs(obj, cls);
                 }
             }
             else
@@ -1044,7 +1035,7 @@ namespace NS_SLUA
         return newFunc;
     }
 
-    bool LuaOverrider::bindOverrideFuncs(const UObjectBase* objBase, UClass* cls, bool bHookInstancedObj) {
+    bool LuaOverrider::bindOverrideFuncs(const UObjectBase* objBase, UClass* cls) {
         SCOPE_CYCLE_COUNTER(STAT_LuaOverrider_bindOverrideFuncs);
 
         //UE_LOG(Slua, Log, TEXT("LuaOverrider::BindOverrideFuncs %s"), *objBase->GetFName().ToString());
@@ -1058,23 +1049,7 @@ namespace NS_SLUA
             return true;
         }
 
-        if (!bHookInstancedObj && cls->ImplementsInterface(UInstancedLuaInterface::StaticClass()))
-        {
-            //NS_SLUA::Log::Log("LuaOverrider::BindOverrideFuncs Delay Hook for Instanced Obj %s", TCHAR_TO_UTF8(*obj->GetFName().ToString()));
-            auto objPtr = sluaState->delayHookStateMap.Find(obj);
-            if (objPtr)
-            {
-                (*objPtr).Add(sluaState);
-            }
-            else
-            {
-                TArray<LuaState*> arr;
-                arr.Add(sluaState);
-                sluaState->delayHookStateMap.Add(obj, arr);
-            }
-            return false;
-        }
-
+        bool bHookInstancedObj;
         FString luaFilePath = getLuaFilePath(obj, cls, false, bHookInstancedObj);
         if (luaFilePath.IsEmpty()) {
             //NS_SLUA::Log::Log("LuaOverrider::BindOverrideFuncs LuaFilePath empty of Object[%s]", TCHAR_TO_UTF8(*(obj->GetFName().ToString())));

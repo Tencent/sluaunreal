@@ -8,13 +8,6 @@ ULuaActorComponent::ULuaActorComponent(const FObjectInitializer& ObjectInitializ
     bWantsInitializeComponent = true;
 }
 
-void ULuaActorComponent::InitializeComponent()
-{
-    Super::InitializeComponent();
-
-    CallReceivePreRep(LuaFilePath);
-}
-
 void ULuaActorComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     Super::EndPlay(EndPlayReason);
@@ -40,6 +33,13 @@ void ULuaActorComponent::UnRegistLuaTick()
 {
     auto state = NS_SLUA::LuaState::get();
     state->unRegistLuaTick(this);
+}
+
+void ULuaActorComponent::InitializeComponent()
+{
+    Super::InitializeComponent();
+
+    TryHook();
 }
 
 void ULuaActorComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

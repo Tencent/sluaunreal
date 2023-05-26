@@ -7,17 +7,6 @@
 #include "LuaOverriderInterface.generated.h"
 
 UINTERFACE()
-class SLUA_UNREAL_API UInstancedLuaInterface : public UInterface
-{
-    GENERATED_UINTERFACE_BODY()
-};
-
-class SLUA_UNREAL_API IInstancedLuaInterface
-{
-    GENERATED_BODY()
-};
-
-UINTERFACE()
 class SLUA_UNREAL_API ULuaOverriderInterface : public UInterface
 {
     GENERATED_UINTERFACE_BODY()
@@ -33,18 +22,9 @@ public:
 
     NS_SLUA::LuaVar GetSelfTable() const;
 
-    virtual void PostLuaHook()
-    {
-    }
-
-    /**
-    *  Provide the ReceivePreRep interface before OnRep, Initialization sequence: bindOverrideFuncs->ReceivePreRep->OnRep->BeginPlay
-    */
-    bool CallReceivePreRep(const FString& LuaFilePath);
+    virtual void PostLuaHook();
 
     void TryHook();
-
-    void TryHookActorComponents();
 
     NS_SLUA::LuaVar GetCachedLuaFunc(NS_SLUA::lua_State* L, const NS_SLUA::LuaVar selfTable, const FString& FunctionName) {
 #if WITH_EDITOR
@@ -54,7 +34,7 @@ public:
 #endif
         if (!FuncMap.Contains(FunctionName))
         {
-            FuncMap.Add(FunctionName, getFromTableIndex<NS_SLUA::LuaVar>(L, selfTable, FunctionName));
+            return FuncMap.Add(FunctionName, getFromTableIndex<NS_SLUA::LuaVar>(L, selfTable, FunctionName));
         }
         return FuncMap[FunctionName];
     }
@@ -162,8 +142,6 @@ private:
 
         return RET();
     }
-
-    bool bTryHookSuccess = false;
 
 public:
     TMap<FString, NS_SLUA::LuaVar> FuncMap;

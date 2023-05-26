@@ -71,9 +71,10 @@ namespace NS_SLUA {
 
         struct FCheckerInfo
         {
-            bool bLatent;
-            bool bInit;
-            bool bCheck;
+            bool bLatent : 1;
+            bool bInit : 1;
+            bool bReference : 1;
+            bool bCheck : 1;
             int32 index;
             int32 offset;
             FProperty* prop;

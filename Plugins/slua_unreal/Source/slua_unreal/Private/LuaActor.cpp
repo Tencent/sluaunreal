@@ -7,14 +7,6 @@ ALuaActor::ALuaActor(const FObjectInitializer& ObjectInitializer)
 {
 }
 
-void ALuaActor::PostInitializeComponents()
-{
-    Super::PostInitializeComponents();
-
-    CallReceivePreRep(LuaFilePath);
-    TryHookActorComponents();
-}
-
 void ALuaActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     Super::EndPlay(EndPlayReason);
@@ -28,6 +20,12 @@ void ALuaActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 FString ALuaActor::GetLuaFilePath_Implementation() const
 {
     return LuaFilePath;
+}
+
+void ALuaActor::PostInitializeComponents()
+{
+    Super::PostInitializeComponents();
+    ILuaOverriderInterface::PostLuaHook();
 }
 
 void ALuaActor::RegistLuaTick(float TickInterval)

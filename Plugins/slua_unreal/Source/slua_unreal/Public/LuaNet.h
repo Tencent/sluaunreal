@@ -65,7 +65,7 @@ namespace NS_SLUA
         static TMap<FString, EFunctionFlags> luaRPCTypeMap;
         static TSet<TWeakObjectPtr<UClass>> addedRPCClasses;
 #if WITH_EDITOR
-        TSet<UFunction*> luaRPCFuncs;
+        TSet<TWeakObjectPtr<UFunction>> luaRPCFuncs;
 #endif
     };
 }

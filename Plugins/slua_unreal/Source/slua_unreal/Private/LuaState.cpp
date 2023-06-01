@@ -304,7 +304,7 @@ namespace NS_SLUA {
     }
 
     // check lua top , this function can omit
-    void LuaState::tick(float dtime) {
+    void LuaState::Tick(float dtime) {
         ensure(IsInGameThread());
         if (!L) return;
         int top = lua_gettop(L);
@@ -336,6 +336,11 @@ namespace NS_SLUA {
         }
         tickGC(dtime);
         tickLuaActors(dtime);
+    }
+
+    TStatId LuaState::GetStatId() const
+    {
+        RETURN_QUICK_DECLARE_CYCLE_STAT(LuaState, STATGROUP_Game);
     }
 
     void LuaState::tickGC(float dtime) {

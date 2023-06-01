@@ -368,7 +368,7 @@ void FProfileDataProcessRunnable::ClearData()
 
 void FProfileDataProcessRunnable::SaveData()
 {
-    SaveDataWithData(cpuViewBeginIndex, memViewBeginIndex, allProfileData, allLuaMemNodeList, "ModuleSave");
+    SaveDataWithData(cpuViewBeginIndex, memViewBeginIndex, allProfileData, allLuaMemNodeList, "");
 }
 
 
@@ -378,10 +378,10 @@ void FProfileDataProcessRunnable::SaveDataWithData(int CpuViewBeginIndex, int Me
     bool tempRecording = bIsRecording;
     bIsRecording = false;
     FDateTime Now = FDateTime::Now();
-    FString FilePath = FPaths::ProjectSavedDir()
+    FString FilePath = FPaths::ProfilingDir() + "/Sluastats/"
         / FString::FromInt(Now.GetYear()) + FString::FromInt(Now.GetMonth()) + FString::FromInt(Now.GetDay())
         + FString::FromInt(Now.GetHour()) + FString::FromInt(Now.GetMinute()) + FString::FromInt(Now.GetSecond())
-        + FString::FromInt(Now.GetMillisecond()) + SavePath + "DtataModule.sluastat";
+        + FString::FromInt(Now.GetMillisecond()) + SavePath + ".sluastat";
     FBufferArchive* BufferArchive = new FBufferArchive();
 
     SerializeSave(BufferArchive, CpuViewBeginIndex, MemViewBeginIndex, ProfileData, LuaMemNodeList);
@@ -413,7 +413,7 @@ FArchiveSaveCompressedProxy CompressProxyLZ4 = FArchiveSaveCompressedProxy(Compr
     BufferArchive->Close();
     CompressProxyLZ4.Close();
     bIsRecording = tempRecording;
-    UE_LOG(Slua, Log, TEXT("END SAVE DATA "));
+    UE_LOG(Slua, Log, TEXT("END SAVE DATA %s"), *FilePath);
 
 }
 

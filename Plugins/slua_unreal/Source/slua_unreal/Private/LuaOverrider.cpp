@@ -695,7 +695,11 @@ namespace NS_SLUA
 #endif
         }
 
-        bool bActorComponent = Cast<UActorComponent>(obj) != nullptr;
+        auto actorComponent = Cast<UActorComponent>(obj);
+        if (actorComponent)
+        {
+            actorComponent->bWantsInitializeComponent = true;
+        }
 
         auto tempClassHookLinker = currentHook;
         while (tempClassHookLinker->obj == obj || tempClassHookLinker->cls == cls)
@@ -703,7 +707,7 @@ namespace NS_SLUA
             ensure(tempClassHookLinker->cls == cls);
             auto overrider = tempClassHookLinker->overrider;
             auto currentLinker = tempClassHookLinker;
-            if (!bActorComponent)
+            if (!actorComponent)
             {
                 overrider->bindOverrideFuncs(obj, cls);
             }

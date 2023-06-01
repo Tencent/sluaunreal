@@ -481,6 +481,7 @@ void FProfileDataProcessRunnable::SerializeSave(FBufferArchive* BufferArchive, i
             for (auto InnerIter = InnerMap.CreateIterator(); InnerIter; ++InnerIter)
             {
                 *BufferArchive << InnerIter->Key;
+                InnerIter->Value->Serialize(*BufferArchive);
             }
         }
         TMap<FString, TSharedPtr<FileMemInfo>> ParentFileMap = MemNode->parentFileMap;
@@ -488,8 +489,8 @@ void FProfileDataProcessRunnable::SerializeSave(FBufferArchive* BufferArchive, i
         *BufferArchive << ParentFileMapNum;
         for (auto Iter = ParentFileMap.CreateIterator(); Iter; ++Iter)
         {
-            *BufferArchive << Iter->Key; // FString
-            //FileMemInfo::StaticStruct()->SerializeBin(*BufferArchive, Iter->Value.Get());
+            *BufferArchive << Iter->Key;
+            Iter->Value->Serialize(*BufferArchive);
         }
     }
     int64 BufferSize = BufferArchive->TotalSize();
@@ -562,7 +563,7 @@ void FProfileDataProcessRunnable::DeserializeCompressedSave(FBufferArchive* BufA
                 *MemoryReader << InnerMapKey;
 
                 FileMemInfo* Info = new FileMemInfo();
-                //FileMemInfo::StaticStruct()->SerializeBin(*MemoryReader, Info);
+                Info->Serialize(*MemoryReader);
                 InnerMap.Add(InnerMapKey, MakeShareable(Info));
             }
             InfoMap.Add(InfoMapKey, InnerMap);
@@ -577,7 +578,7 @@ void FProfileDataProcessRunnable::DeserializeCompressedSave(FBufferArchive* BufA
             FString ParentFileMapKey;
             *MemoryReader << ParentFileMapKey;
             FileMemInfo* Info = new FileMemInfo();
-            //FileMemInfo::StaticStruct()->SerializeBin(*MemoryReader, Info);
+            Info->Serialize(*MemoryReader);
             ParentFileMap.Add(ParentFileMapKey, MakeShareable(Info));
         }
 
@@ -716,7 +717,6 @@ void FProfileDataProcessRunnable::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemI
     else if (lastLuaMemNode.IsValid())
     {
         //copy lastLuaMemNode to memNode
-        // *(memNode.Get()) = *(lastLuaMemNode.Get());
         FProflierMemNode& last = *lastLuaMemNode;
         FProflierMemNode& current = *memNode;
         current.totalSize = last.totalSize;

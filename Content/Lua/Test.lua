@@ -1,6 +1,9 @@
 -- open profile
 require 'TestProfile'
 
+--- step gc 1ms in one frame, limit of 1000 times. Just do one gc cycle in 60 seconds.
+slua.setGCParam(0.001, 1000, 60)
+
 -- some.field come from c++
 some.field.y = 103
 EPropertyClass = import"EPropertyClass"

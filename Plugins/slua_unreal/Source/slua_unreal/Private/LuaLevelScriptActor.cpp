@@ -24,7 +24,7 @@ void ALuaLevelScriptActor::onLuaStateInit(NS_SLUA::lua_State* L)
 {
     if (!HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
     {
-        NS_SLUA::LuaState::hookObject(nullptr, this, true);
+        TryHook();
     }
 }
 

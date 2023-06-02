@@ -23,6 +23,7 @@
 #include "UObject/WeakFieldPtr.h"
 #endif
 #include "HAL/Runnable.h"
+#include "Tickable.h"
 
 #define SLUA_LUACODE "[sluacode]"
 #define SLUA_CPPINST "__cppinst"
@@ -92,6 +93,7 @@ namespace NS_SLUA {
         : public FUObjectArray::FUObjectDeleteListener
         , public FUObjectArray::FUObjectCreateListener
         , public FGCObject
+        , public FTickableGameObject
     {
     public:
         LuaState(const char* name=nullptr,UGameInstance* pGI=nullptr);
@@ -143,7 +145,11 @@ namespace NS_SLUA {
         void unRegistLuaTick(const UObject* obj);
         FORCEINLINE void callLuaTick(UObject* obj, NS_SLUA::LuaVar& tickFunc, float dtime);
         // tick function
-        virtual void tick(float dtime);
+        virtual void Tick(float dtime);
+        virtual TStatId GetStatId() const;
+#if (ENGINE_MINOR_VERSION<=18) && (ENGINE_MAJOR_VERSION==4)
+		virtual bool IsTickable() const override { return true; }
+#endif
         void tickGC(float dtime);
         void tickLuaActors(float dtime);
 

@@ -437,17 +437,17 @@ bool FLuaNetSerialization::Read(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeria
                 ClassLuaReplicated::ReplicateIndexType index = *It;
                 if (SerializeVersion)
                 {
-                    if (preIndex == index)
-                    {
-                        continue;
-                    }
-
                     if (!flatProperties.IsValidIndex(index))
                     {
                         UE_LOG(Slua, Error, TEXT("FLuaNetSerialization::Read Error: Object[%s]'s flatProperties index[%d] is out of range[%d]!"), *object->GetFullName(), index, flatProperties.Num());
                         break;
                     }
+
                     index = flatProperties[index].propIndex;
+                    if (preIndex == index)
+                    {
+                        continue;
+                    }
                     preIndex = index;
 
                     proxy->dirtyMark.Add(index);

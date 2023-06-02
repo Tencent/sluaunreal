@@ -168,35 +168,48 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
         if (superFunction)
         {
             uint8* savedCode = Stack.Code;
+            auto savedNode = Stack.Node;
+            auto savedPropertyChain = Stack.PropertyChainForCompiledIn;
             uint8* newCode = superFunction->Script.GetData();
+
+            FOutParmRec* lastOut = Stack.OutParms;
+            if (lastOut)
+            {
+                func = superFunction;
+                for (FProperty* prop = (FProperty*)superFunction->Children; prop && (prop->PropertyFlags & (CPF_Parm)) == CPF_Parm; prop = (FProperty*)prop->Next)
+                {
+                    if (prop->HasAnyPropertyFlags(CPF_OutParm))
+                    {
+                        // Fixed OutParam Property in Script
+                        lastOut->Property = prop;
+                        lastOut = lastOut->NextOutParm;
+                    }
+                }
+            }
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
+            Stack.PropertyChainForCompiledIn = superFunction->Children;
+#else
+            Stack.PropertyChainForCompiledIn = superFunction->ChildProperties;
+#endif
+
             if (superFunction->GetNativeFunc() == (NS_SLUA::FNativeFuncPtr)&UObject::ProcessInternal)
             {
                 if (newCode)
                 {
-                    FOutParmRec* lastOut = Stack.OutParms;
-                    if (lastOut)
-                    {
-                        func = superFunction;
-                        for ( FProperty* prop = (FProperty*)superFunction->Children; prop && (prop->PropertyFlags&(CPF_Parm)) == CPF_Parm; prop = (FProperty*)prop->Next )
-                        {
-                            if ( prop->HasAnyPropertyFlags(CPF_OutParm) )
-                            {
-                                // Fixed OutParam Property in Script
-                                lastOut->Property = prop;
-                                lastOut = lastOut->NextOutParm;
-                            }
-                        }
-                    }
-
                     Stack.Code = newCode;
+                    Stack.Node = superFunction;
                     superFunction->Invoke(obj, Stack, RESULT_PARAM);
                 }
             }
             else
             {
                 Stack.Code = newCode;
+                Stack.Node = superFunction;
                 superFunction->Invoke(obj, Stack, RESULT_PARAM);
             }
+
+            Stack.PropertyChainForCompiledIn = savedPropertyChain;
+            Stack.Node = savedNode;
             Stack.Code = savedCode;
         }
         else
@@ -695,7 +708,11 @@ namespace NS_SLUA
 #endif
         }
 
-        bool bActorComponent = Cast<UActorComponent>(obj) != nullptr;
+        auto actorComponent = Cast<UActorComponent>(obj);
+        if (actorComponent)
+        {
+            actorComponent->bWantsInitializeComponent = true;
+        }
 
         auto tempClassHookLinker = currentHook;
         while (tempClassHookLinker->obj == obj || tempClassHookLinker->cls == cls)
@@ -703,7 +720,7 @@ namespace NS_SLUA
             ensure(tempClassHookLinker->cls == cls);
             auto overrider = tempClassHookLinker->overrider;
             auto currentLinker = tempClassHookLinker;
-            if (!bActorComponent)
+            if (!actorComponent)
             {
                 overrider->bindOverrideFuncs(obj, cls);
             }

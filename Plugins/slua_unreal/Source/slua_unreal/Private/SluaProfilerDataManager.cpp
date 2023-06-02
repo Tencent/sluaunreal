@@ -368,7 +368,7 @@ void FProfileDataProcessRunnable::ClearData()
 
 void FProfileDataProcessRunnable::SaveData()
 {
-    SaveDataWithData(cpuViewBeginIndex, memViewBeginIndex, allProfileData, allLuaMemNodeList, "ModuleSave");
+    SaveDataWithData(cpuViewBeginIndex, memViewBeginIndex, allProfileData, allLuaMemNodeList, "");
 }
 
 
@@ -378,10 +378,10 @@ void FProfileDataProcessRunnable::SaveDataWithData(int CpuViewBeginIndex, int Me
     bool tempRecording = bIsRecording;
     bIsRecording = false;
     FDateTime Now = FDateTime::Now();
-    FString FilePath = FPaths::ProjectSavedDir()
+    FString FilePath = FPaths::ProfilingDir() + "/Sluastats/"
         / FString::FromInt(Now.GetYear()) + FString::FromInt(Now.GetMonth()) + FString::FromInt(Now.GetDay())
         + FString::FromInt(Now.GetHour()) + FString::FromInt(Now.GetMinute()) + FString::FromInt(Now.GetSecond())
-        + FString::FromInt(Now.GetMillisecond()) + SavePath + "DtataModule.sluastat";
+        + FString::FromInt(Now.GetMillisecond()) + SavePath + ".sluastat";
     FBufferArchive* BufferArchive = new FBufferArchive();
 
     SerializeSave(BufferArchive, CpuViewBeginIndex, MemViewBeginIndex, ProfileData, LuaMemNodeList);
@@ -413,7 +413,7 @@ FArchiveSaveCompressedProxy CompressProxyLZ4 = FArchiveSaveCompressedProxy(Compr
     BufferArchive->Close();
     CompressProxyLZ4.Close();
     bIsRecording = tempRecording;
-    UE_LOG(Slua, Log, TEXT("END SAVE DATA "));
+    UE_LOG(Slua, Log, TEXT("END SAVE DATA %s"), *FilePath);
 
 }
 
@@ -481,6 +481,7 @@ void FProfileDataProcessRunnable::SerializeSave(FBufferArchive* BufferArchive, i
             for (auto InnerIter = InnerMap.CreateIterator(); InnerIter; ++InnerIter)
             {
                 *BufferArchive << InnerIter->Key;
+                InnerIter->Value->Serialize(*BufferArchive);
             }
         }
         TMap<FString, TSharedPtr<FileMemInfo>> ParentFileMap = MemNode->parentFileMap;
@@ -488,8 +489,8 @@ void FProfileDataProcessRunnable::SerializeSave(FBufferArchive* BufferArchive, i
         *BufferArchive << ParentFileMapNum;
         for (auto Iter = ParentFileMap.CreateIterator(); Iter; ++Iter)
         {
-            *BufferArchive << Iter->Key; // FString
-            //FileMemInfo::StaticStruct()->SerializeBin(*BufferArchive, Iter->Value.Get());
+            *BufferArchive << Iter->Key;
+            Iter->Value->Serialize(*BufferArchive);
         }
     }
     int64 BufferSize = BufferArchive->TotalSize();
@@ -562,7 +563,7 @@ void FProfileDataProcessRunnable::DeserializeCompressedSave(FBufferArchive* BufA
                 *MemoryReader << InnerMapKey;
 
                 FileMemInfo* Info = new FileMemInfo();
-                //FileMemInfo::StaticStruct()->SerializeBin(*MemoryReader, Info);
+                Info->Serialize(*MemoryReader);
                 InnerMap.Add(InnerMapKey, MakeShareable(Info));
             }
             InfoMap.Add(InfoMapKey, InnerMap);
@@ -577,7 +578,7 @@ void FProfileDataProcessRunnable::DeserializeCompressedSave(FBufferArchive* BufA
             FString ParentFileMapKey;
             *MemoryReader << ParentFileMapKey;
             FileMemInfo* Info = new FileMemInfo();
-            //FileMemInfo::StaticStruct()->SerializeBin(*MemoryReader, Info);
+            Info->Serialize(*MemoryReader);
             ParentFileMap.Add(ParentFileMapKey, MakeShareable(Info));
         }
 
@@ -716,7 +717,6 @@ void FProfileDataProcessRunnable::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemI
     else if (lastLuaMemNode.IsValid())
     {
         //copy lastLuaMemNode to memNode
-        // *(memNode.Get()) = *(lastLuaMemNode.Get());
         FProflierMemNode& last = *lastLuaMemNode;
         FProflierMemNode& current = *memNode;
         current.totalSize = last.totalSize;

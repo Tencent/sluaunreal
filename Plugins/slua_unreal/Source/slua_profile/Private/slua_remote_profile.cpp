@@ -19,8 +19,16 @@
 #include "SluaUtil.h"
 #include "LuaProfiler.h"
 
+FAutoConsoleVariableRef CVarSluaProfilerPort(
+    TEXT("slua.ProfilerPort"),
+    NS_SLUA::FProfileServer::Port,
+    TEXT("Slua profiler server port.\n"),
+    ECVF_Default);
+
 namespace NS_SLUA
 {
+    int32 FProfileServer::Port = 8081;
+
     FProfileServer::FProfileServer()
         : Thread(nullptr)
         , bStop(true)
@@ -46,7 +54,7 @@ namespace NS_SLUA
         bStop = false;
 
         ListenEndpoint.Address = FIPv4Address(0, 0, 0, 0);
-        ListenEndpoint.Port = 8081;
+        ListenEndpoint.Port = (std::numeric_limits<uint16>::min() < Port) && (Port < std::numeric_limits<uint16>::max()) ? Port : 8081;
         Listener = new FTcpListener(ListenEndpoint);
         Listener->OnConnectionAccepted().BindRaw(this, &FProfileServer::HandleConnectionAccepted);
         return true;

@@ -41,6 +41,8 @@ namespace NS_SLUA {
         FOnProfileMessageDelegate& OnProfileMessageRecv();
 
         TArray<TSharedPtr<FProfileConnection>> GetConnections();
+
+        static int32 Port;
         
     protected:
         bool Init() override;

@@ -32,10 +32,6 @@ void ILuaOverriderInterface::TryHook()
     {
         return;
     }
-    if (obj->HasAnyFlags(RF_ArchetypeObject))
-    {
-        return;
-    }
 
     NS_SLUA::LuaState::hookObject(nullptr, obj, true);
 }

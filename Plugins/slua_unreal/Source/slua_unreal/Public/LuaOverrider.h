@@ -71,7 +71,7 @@ namespace NS_SLUA
 
     struct AsyncLoadedObject
     {
-        UObject* obj;
+        TWeakObjectPtr<UObject> obj;
     };
     
     class SLUA_UNREAL_API LuaOverrider
@@ -162,6 +162,7 @@ namespace NS_SLUA
                 ensure(clsConstructor != CustomClassConstructor);
             }
         };
+        static FRWLock classHookMutex;
         static ClassHookLinker* currentHook;
 
         static int __index(lua_State* L);

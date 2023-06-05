@@ -471,6 +471,7 @@ namespace NS_SLUA
     const char* LuaOverrider::CACHE_NAME = "__cache";
     const uint8 LuaOverrider::Code[] = { (uint8)Ex_LuaOverride, EX_Return, EX_Nothing };
     const int32 LuaOverrider::CodeSize = sizeof(Code);
+    FRWLock LuaOverrider::classHookMutex;
     LuaOverrider::ClassHookLinker* LuaOverrider::currentHook = new LuaOverrider::ClassHookLinker();
 
     const TCHAR* LuaOverrider::EInputEventNames[] = { TEXT("Pressed"), TEXT("Released"), TEXT("Repeat"), TEXT("DoubleClick"), TEXT("Axis"), TEXT("Max") };
@@ -625,6 +626,7 @@ namespace NS_SLUA
                     }
 
 #if USE_CIRCULAR_DEPENDENCY_LOAD_DEFERRING
+                    FRWScopeLock(classHookMutex, SLT_Write);
                     auto classHookerLink = new ClassHookLinker(this, (UObject*)obj, cls, currentHook);
                     currentHook = classHookerLink;
                     return true;
@@ -652,19 +654,29 @@ namespace NS_SLUA
 
     void LuaOverrider::CustomClassConstructor(const FObjectInitializer& ObjectInitializer)
     {
-        ensure(currentHook->pre != currentHook);
-
         auto obj = ObjectInitializer.GetObj();
-        auto cls = obj->GetClass();
-        auto &current = *currentHook;
+        UClass::ClassConstructorType clsConstructor;
+        
+        {
+            FRWScopeLock(classHookMutex, SLT_ReadOnly);
+            ensure(currentHook->pre != currentHook);
+            auto &current = *currentHook;
 
         ensure(currentHook->obj == obj);
 
-        auto clsConstructor = current.clsConstructor;
+            clsConstructor  = current.clsConstructor;
+        }
+        
+        auto cls = obj->GetClass();
+        
         ensure(clsConstructor != CustomClassConstructor);
         if (clsConstructor != CustomClassConstructor)
         {
             clsConstructor(ObjectInitializer);
+            if (!IsInGameThread())
+            {
+                return;
+            }
             ObjectInitializer.~FObjectInitializer();
 
             auto &ObjectInitializerProxy = *const_cast<FObjectInitializer*>(&ObjectInitializer);
@@ -714,6 +726,7 @@ namespace NS_SLUA
             actorComponent->bWantsInitializeComponent = true;
         }
 
+        FRWScopeLock(classHookMutex, SLT_Write);
         auto tempClassHookLinker = currentHook;
         while (tempClassHookLinker->obj == obj || tempClassHookLinker->cls == cls)
         {
@@ -874,10 +887,10 @@ namespace NS_SLUA
         while (asyncLoadedObjects.IsValidIndex(curIndex))
         {
             AsyncLoadedObject& objInfo = asyncLoadedObjects[curIndex];
-            if (objInfo.obj && !objInfo.obj->HasAnyFlags(RF_NeedPostLoad))
+            auto obj = objInfo.obj.Get();
+            if (obj && !obj->HasAnyFlags(RF_NeedPostLoad))
             {
                 // NS_SLUA::Log::Log("LuaOverrider::OnAsyncLoadingFlushUpdate %s", TCHAR_TO_UTF8(*actorInfo.obj->GetFName().ToString()));
-                auto obj = objInfo.obj;
                 UGameInstance* gameInstance = LuaState::getObjectGameInstance(obj);
                 if (!gameInstance || gameInstance == sluaState->getGameInstance())
                 {
@@ -885,7 +898,7 @@ namespace NS_SLUA
                     bindOverrideFuncs(obj, cls);
                 }
             }
-            else
+            else if (obj)
             {
                 // need to handle next time
                 asyncLoadedObjects[newIndex] = objInfo;

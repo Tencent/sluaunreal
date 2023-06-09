@@ -45,6 +45,7 @@ namespace NS_SLUA
 {
     const FString SUPER_CALL_FUNC_NAME_PREFIX("__overrider_");
     LuaOverrider::OverridedClassMap LuaOverrider::overridedClasses;
+    LuaOverrider::ClassHookedFuncNames LuaOverrider::classHookedFuncNames;
 }
 
 TMap<NS_SLUA::lua_State*, ULuaOverrider::ObjectTableMap> ULuaOverrider::objectTableMap;
@@ -790,13 +791,13 @@ namespace NS_SLUA
                 if (!func->IsValidLowLevel()) return;
                 func->RemoveFromRoot();
             }
-            else
 #endif
             {
                 if (duplicatedFuncs.Contains(func))
                 {
                     cls->RemoveFunctionFromFunctionMap(func);
                     func->ConditionalBeginDestroy();
+                    duplicatedFuncs.Remove(func);
                     return;
                 }
 
@@ -1536,6 +1537,7 @@ namespace NS_SLUA
     void LuaOverrider::overrideActionInputs(AActor* actor, UInputComponent* inputComponent, const TSet<FName>& luaFunctions)
     {
         UClass *actorClass = actor->GetClass();
+        auto &duplicatedFuncs = overridedClasses.FindOrAdd(actorClass);
 
         TSet<FName> actionNames;
         int32 numActionBindings = inputComponent->GetNumActionBindings();
@@ -1549,7 +1551,8 @@ namespace NS_SLUA
             FName funcName = FName(*FString::Printf(TEXT("%s_%s"), *actionName, EInputEventNames[inputActionBinding.KeyEvent]));
             if (luaFunctions.Find(funcName))
             {
-                duplicateUFunction(inputActionFunc, actorClass, funcName, (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
+                auto inputFunc = duplicateUFunction(inputActionFunc, actorClass, funcName, (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
+                duplicatedFuncs.Add(inputFunc);
                 inputActionBinding.ActionDelegate.BindDelegate(actor, funcName);
             }
 
@@ -1559,7 +1562,8 @@ namespace NS_SLUA
                 funcName = FName(*FString::Printf(TEXT("%s_%s"), *actionName, EInputEventNames[inputEvent]));
                 if (luaFunctions.Find(funcName))
                 {
-                    duplicateUFunction(inputActionFunc, actorClass, funcName, (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
+                    auto inputFunc = duplicateUFunction(inputActionFunc, actorClass, funcName, (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
+                    duplicatedFuncs.Add(inputFunc);
                     FInputActionBinding AB(name, inputEvent);
                     AB.ActionDelegate.BindDelegate(actor, funcName);
                     inputComponent->AddActionBinding(AB);
@@ -1577,7 +1581,8 @@ namespace NS_SLUA
                 FName funcName = FName(*FString::Printf(TEXT("%s_%s"), *actionName.ToString(), EInputEventNames[InputEvents[i]]));
                 if (luaFunctions.Find(funcName))
                 {
-                    duplicateUFunction(inputActionFunc, actorClass, funcName, (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
+                    auto inputFunc = duplicateUFunction(inputActionFunc, actorClass, funcName, (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
+                    duplicatedFuncs.Add(inputFunc);
                     FInputActionBinding inputActionBinding(actionName, InputEvents[i]);
                     inputActionBinding.ActionDelegate.BindDelegate(actor, funcName);
                     inputComponent->AddActionBinding(inputActionBinding);

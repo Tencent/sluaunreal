@@ -174,7 +174,7 @@ namespace NS_SLUA
         class LuaNet* luaNet;
         
         typedef TMap<UClass*, TSet<FName>> ClassHookedFuncNames;
-        ClassHookedFuncNames classHookedFuncNames;
+        static ClassHookedFuncNames classHookedFuncNames;
         typedef TMap<UClass*, TSet<TWeakObjectPtr<UFunction>>> OverridedClassMap;
         static OverridedClassMap overridedClasses;
 

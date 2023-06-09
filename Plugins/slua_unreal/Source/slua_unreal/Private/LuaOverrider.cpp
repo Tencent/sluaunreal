@@ -45,6 +45,7 @@ namespace NS_SLUA
 {
     const FString SUPER_CALL_FUNC_NAME_PREFIX("__overrider_");
     LuaOverrider::OverridedClassMap LuaOverrider::overridedClasses;
+    LuaOverrider::ClassHookedFuncNames LuaOverrider::classHookedFuncNames;
 }
 
 TMap<NS_SLUA::lua_State*, ULuaOverrider::ObjectTableMap> ULuaOverrider::objectTableMap;
@@ -88,7 +89,11 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
 
                 returnProperty = func->GetReturnProperty();
 
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
                 for (auto it = (FProperty*)func->Children; *Stack.Code != EX_EndFunctionParms; it = (FProperty*)it->Next)
+#else
+                for (auto it = CastField<FProperty>(func->ChildProperties); *Stack.Code != EX_EndFunctionParms; it = CastField<FProperty>(it->Next))
+#endif
                 {
                     Stack.Step(Stack.Object, it->ContainerPtrToValuePtr<uint8>(locals));
 
@@ -176,7 +181,11 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
             if (lastOut)
             {
                 func = superFunction;
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
                 for (FProperty* prop = (FProperty*)superFunction->Children; prop && (prop->PropertyFlags & (CPF_Parm)) == CPF_Parm; prop = (FProperty*)prop->Next)
+#else
+                for (FProperty* prop = CastField<FProperty>(superFunction->ChildProperties); prop && (prop->PropertyFlags & (CPF_Parm)) == CPF_Parm; prop = CastField<FProperty>(prop->Next))
+#endif
                 {
                     if (prop->HasAnyPropertyFlags(CPF_OutParm))
                     {
@@ -471,6 +480,7 @@ namespace NS_SLUA
     const char* LuaOverrider::CACHE_NAME = "__cache";
     const uint8 LuaOverrider::Code[] = { (uint8)Ex_LuaOverride, EX_Return, EX_Nothing };
     const int32 LuaOverrider::CodeSize = sizeof(Code);
+    FRWLock LuaOverrider::classHookMutex;
     LuaOverrider::ClassHookLinker* LuaOverrider::currentHook = new LuaOverrider::ClassHookLinker();
 
     const TCHAR* LuaOverrider::EInputEventNames[] = { TEXT("Pressed"), TEXT("Released"), TEXT("Repeat"), TEXT("DoubleClick"), TEXT("Axis"), TEXT("Max") };
@@ -625,6 +635,7 @@ namespace NS_SLUA
                     }
 
 #if USE_CIRCULAR_DEPENDENCY_LOAD_DEFERRING
+                    FRWScopeLock(classHookMutex, SLT_Write);
                     auto classHookerLink = new ClassHookLinker(this, (UObject*)obj, cls, currentHook);
                     currentHook = classHookerLink;
                     return true;
@@ -652,19 +663,41 @@ namespace NS_SLUA
 
     void LuaOverrider::CustomClassConstructor(const FObjectInitializer& ObjectInitializer)
     {
-        ensure(currentHook->pre != currentHook);
-
         auto obj = ObjectInitializer.GetObj();
         auto cls = obj->GetClass();
-        auto &current = *currentHook;
 
-        ensure(currentHook->obj == obj);
+        UClass::ClassConstructorType clsConstructor;
+        
+        {
+            FRWScopeLock(classHookMutex, SLT_ReadOnly);
+            ensure(currentHook->pre != currentHook);
+            auto &current = *currentHook;
 
-        auto clsConstructor = current.clsConstructor;
+            // maybe in async thread!
+            if (currentHook->obj != obj)
+            {
+                auto tempHook = currentHook;
+                while (tempHook->cls != cls && tempHook->next != tempHook)
+                {
+                    tempHook = tempHook->next;
+                }
+                check(tempHook->next != tempHook && !IsInGameThread());
+                clsConstructor = tempHook->clsConstructor;
+            }
+            else
+            {
+                clsConstructor  = current.clsConstructor;
+            }
+        }
+        
         ensure(clsConstructor != CustomClassConstructor);
         if (clsConstructor != CustomClassConstructor)
         {
             clsConstructor(ObjectInitializer);
+            if (!IsInGameThread())
+            {
+                return;
+            }
             ObjectInitializer.~FObjectInitializer();
 
             auto &ObjectInitializerProxy = *const_cast<FObjectInitializer*>(&ObjectInitializer);
@@ -714,6 +747,7 @@ namespace NS_SLUA
             actorComponent->bWantsInitializeComponent = true;
         }
 
+        FRWScopeLock(classHookMutex, SLT_Write);
         auto tempClassHookLinker = currentHook;
         while (tempClassHookLinker->obj == obj || tempClassHookLinker->cls == cls)
         {
@@ -765,13 +799,13 @@ namespace NS_SLUA
                 if (!func->IsValidLowLevel()) return;
                 func->RemoveFromRoot();
             }
-            else
 #endif
             {
                 if (duplicatedFuncs.Contains(func))
                 {
                     cls->RemoveFunctionFromFunctionMap(func);
                     func->ConditionalBeginDestroy();
+                    duplicatedFuncs.Remove(func);
                     return;
                 }
 
@@ -874,10 +908,10 @@ namespace NS_SLUA
         while (asyncLoadedObjects.IsValidIndex(curIndex))
         {
             AsyncLoadedObject& objInfo = asyncLoadedObjects[curIndex];
-            if (objInfo.obj && !objInfo.obj->HasAnyFlags(RF_NeedPostLoad))
+            auto obj = objInfo.obj.Get();
+            if (obj && !obj->HasAnyFlags(RF_NeedPostLoad))
             {
                 // NS_SLUA::Log::Log("LuaOverrider::OnAsyncLoadingFlushUpdate %s", TCHAR_TO_UTF8(*actorInfo.obj->GetFName().ToString()));
-                auto obj = objInfo.obj;
                 UGameInstance* gameInstance = LuaState::getObjectGameInstance(obj);
                 if (!gameInstance || gameInstance == sluaState->getGameInstance())
                 {
@@ -885,7 +919,7 @@ namespace NS_SLUA
                     bindOverrideFuncs(obj, cls);
                 }
             }
-            else
+            else if (obj)
             {
                 // need to handle next time
                 asyncLoadedObjects[newIndex] = objInfo;
@@ -1511,6 +1545,7 @@ namespace NS_SLUA
     void LuaOverrider::overrideActionInputs(AActor* actor, UInputComponent* inputComponent, const TSet<FName>& luaFunctions)
     {
         UClass *actorClass = actor->GetClass();
+        auto &duplicatedFuncs = overridedClasses.FindOrAdd(actorClass);
 
         TSet<FName> actionNames;
         int32 numActionBindings = inputComponent->GetNumActionBindings();
@@ -1524,7 +1559,8 @@ namespace NS_SLUA
             FName funcName = FName(*FString::Printf(TEXT("%s_%s"), *actionName, EInputEventNames[inputActionBinding.KeyEvent]));
             if (luaFunctions.Find(funcName))
             {
-                duplicateUFunction(inputActionFunc, actorClass, funcName, (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
+                auto inputFunc = duplicateUFunction(inputActionFunc, actorClass, funcName, (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
+                duplicatedFuncs.Add(inputFunc);
                 inputActionBinding.ActionDelegate.BindDelegate(actor, funcName);
             }
 
@@ -1534,7 +1570,8 @@ namespace NS_SLUA
                 funcName = FName(*FString::Printf(TEXT("%s_%s"), *actionName, EInputEventNames[inputEvent]));
                 if (luaFunctions.Find(funcName))
                 {
-                    duplicateUFunction(inputActionFunc, actorClass, funcName, (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
+                    auto inputFunc = duplicateUFunction(inputActionFunc, actorClass, funcName, (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
+                    duplicatedFuncs.Add(inputFunc);
                     FInputActionBinding AB(name, inputEvent);
                     AB.ActionDelegate.BindDelegate(actor, funcName);
                     inputComponent->AddActionBinding(AB);
@@ -1552,7 +1589,8 @@ namespace NS_SLUA
                 FName funcName = FName(*FString::Printf(TEXT("%s_%s"), *actionName.ToString(), EInputEventNames[InputEvents[i]]));
                 if (luaFunctions.Find(funcName))
                 {
-                    duplicateUFunction(inputActionFunc, actorClass, funcName, (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
+                    auto inputFunc = duplicateUFunction(inputActionFunc, actorClass, funcName, (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
+                    duplicatedFuncs.Add(inputFunc);
                     FInputActionBinding inputActionBinding(actionName, InputEvents[i]);
                     inputActionBinding.ActionDelegate.BindDelegate(actor, funcName);
                     inputComponent->AddActionBinding(inputActionBinding);

@@ -71,7 +71,7 @@ namespace NS_SLUA
 
     struct AsyncLoadedObject
     {
-        UObject* obj;
+        TWeakObjectPtr<UObject> obj;
     };
     
     class SLUA_UNREAL_API LuaOverrider
@@ -162,6 +162,7 @@ namespace NS_SLUA
                 ensure(clsConstructor != CustomClassConstructor);
             }
         };
+        static FRWLock classHookMutex;
         static ClassHookLinker* currentHook;
 
         static int __index(lua_State* L);
@@ -173,7 +174,7 @@ namespace NS_SLUA
         class LuaNet* luaNet;
         
         typedef TMap<UClass*, TSet<FName>> ClassHookedFuncNames;
-        ClassHookedFuncNames classHookedFuncNames;
+        static ClassHookedFuncNames classHookedFuncNames;
         typedef TMap<UClass*, TSet<TWeakObjectPtr<UFunction>>> OverridedClassMap;
         static OverridedClassMap overridedClasses;
 

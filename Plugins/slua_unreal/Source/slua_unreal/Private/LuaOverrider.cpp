@@ -655,6 +655,8 @@ namespace NS_SLUA
     void LuaOverrider::CustomClassConstructor(const FObjectInitializer& ObjectInitializer)
     {
         auto obj = ObjectInitializer.GetObj();
+        auto cls = obj->GetClass();
+
         UClass::ClassConstructorType clsConstructor;
         
         {
@@ -662,12 +664,22 @@ namespace NS_SLUA
             ensure(currentHook->pre != currentHook);
             auto &current = *currentHook;
 
-        ensure(currentHook->obj == obj);
-
-            clsConstructor  = current.clsConstructor;
+            // maybe in async thread!
+            if (currentHook->obj != obj)
+            {
+                auto tempHook = currentHook;
+                while (tempHook->cls != cls && tempHook->next != tempHook)
+                {
+                    tempHook = tempHook->next;
+                }
+                check(tempHook->next != tempHook && !IsInGameThread());
+                clsConstructor = tempHook->clsConstructor;
+            }
+            else
+            {
+                clsConstructor  = current.clsConstructor;
+            }
         }
-        
-        auto cls = obj->GetClass();
         
         ensure(clsConstructor != CustomClassConstructor);
         if (clsConstructor != CustomClassConstructor)

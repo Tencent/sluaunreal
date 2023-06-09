@@ -89,7 +89,11 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
 
                 returnProperty = func->GetReturnProperty();
 
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
                 for (auto it = (FProperty*)func->Children; *Stack.Code != EX_EndFunctionParms; it = (FProperty*)it->Next)
+#else
+                for (auto it = CastField<FProperty>(func->ChildProperties); *Stack.Code != EX_EndFunctionParms; it = CastField<FProperty>(it->Next))
+#endif
                 {
                     Stack.Step(Stack.Object, it->ContainerPtrToValuePtr<uint8>(locals));
 
@@ -177,7 +181,11 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
             if (lastOut)
             {
                 func = superFunction;
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
                 for (FProperty* prop = (FProperty*)superFunction->Children; prop && (prop->PropertyFlags & (CPF_Parm)) == CPF_Parm; prop = (FProperty*)prop->Next)
+#else
+                for (FProperty* prop = CastField<FProperty>(superFunction->ChildProperties); prop && (prop->PropertyFlags & (CPF_Parm)) == CPF_Parm; prop = CastField<FProperty>(prop->Next))
+#endif
                 {
                     if (prop->HasAnyPropertyFlags(CPF_OutParm))
                     {

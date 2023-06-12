@@ -742,6 +742,7 @@ namespace NS_SLUA
         }
 
         auto actorComponent = Cast<UActorComponent>(obj);
+        auto luaInterface = Cast<ILuaOverriderInterface>(obj);
         if (actorComponent)
         {
             actorComponent->bWantsInitializeComponent = true;
@@ -754,7 +755,7 @@ namespace NS_SLUA
             ensure(tempClassHookLinker->cls == cls);
             auto overrider = tempClassHookLinker->overrider;
             auto currentLinker = tempClassHookLinker;
-            if (!actorComponent)
+            if (!actorComponent || !luaInterface)
             {
                 overrider->bindOverrideFuncs(obj, cls);
             }

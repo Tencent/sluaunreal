@@ -21,6 +21,8 @@ namespace NS_SLUA
     class SLUA_UNREAL_API LuaNet
     {
     public:
+        typedef TFunction<void ()> PrepareParamCallback;
+
         // Only support c++ native UClass
         static void addLuaRepilcateClass(const UClass* someBase);
         static bool isLuaReplicateObject(UObject* obj);
@@ -37,8 +39,12 @@ namespace NS_SLUA
         static void removeObjectTable(UObject* obj);
         static void onObjectDeleted(UClass* cls);
 
+        static void onPropModify(lua_State* L, FLuaNetSerializationProxy* proxy, ClassLuaReplicated::ReplicateIndexType index, PrepareParamCallback callback);
+
     protected:
         friend class LuaOverrider;
+        static const char* ADD_LISTENER_FUNC;
+        static const char* REMOVE_LISTENER_FUNC;
         
         void addClassRPC(lua_State* L, UClass* cls, const FString& luaFilePath);
         bool addClassRPCRecursive(lua_State* L, UClass* cls, const FString& luaFilePath, LuaVar& cppSuperModule);
@@ -51,6 +57,10 @@ namespace NS_SLUA
 
         static int __index(lua_State* L, UObject* obj, const char* keyName);
         static int __newindex(lua_State* L, UObject* obj, const char* keyName);
+
+        static int setupFunctions(lua_State* L);
+        static int addListener(lua_State* L);
+        static int removeListener(lua_State* L);
         
         typedef TMap<TWeakObjectPtr<UClass>, ClassLuaReplicated, FDefaultSetAllocator, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<UClass>, ClassLuaReplicated>> ClassLuaReplicatedMap;
         static ClassLuaReplicatedMap classLuaReplicatedMap;

@@ -115,7 +115,7 @@ namespace NS_SLUA
         void onEngineGC();
 
         bool bindOverrideFuncs(const UObjectBase* objBase, UClass* cls);
-        void setmetatable(const LuaVar& luaSelfTable, void* objPtr);
+        void setmetatable(const LuaVar& luaSelfTable, void* objPtr, bool bNetReplicated);
 
         bool hookBpScript(UFunction* func, UClass* cls, FNativeFuncPtr hookFunc);
 

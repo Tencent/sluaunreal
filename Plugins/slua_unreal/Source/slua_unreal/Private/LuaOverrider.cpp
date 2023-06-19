@@ -1196,12 +1196,14 @@ namespace NS_SLUA
             classHookedFuncNames.Add(cls, funcNames);
         }
 
+        bool bNetReplicated = false;
         if (auto classReplicated = LuaNet::addClassReplicatedProps(L, obj, luaModule))
         {
             LuaNet::initLuaReplicatedProps(L, obj, *classReplicated, luaSelfTable);
+            bNetReplicated = true;
         }
 
-        setmetatable(luaSelfTable, (void*)obj);
+        setmetatable(luaSelfTable, (void*)obj, bNetReplicated);
         ULuaOverrider::addObjectTable(L, obj, luaSelfTable, bHookInstancedObj);
 
         if (auto luaInterface = Cast<ILuaOverriderInterface>(obj))
@@ -1212,7 +1214,7 @@ namespace NS_SLUA
         return true;
     }
 
-    void LuaOverrider::setmetatable(const LuaVar& luaSelfTable, void* objPtr)
+    void LuaOverrider::setmetatable(const LuaVar& luaSelfTable, void* objPtr, bool bNetReplicated)
     {
         lua_State* L = sluaState->getLuaState();
         // setup __cppinst
@@ -1221,6 +1223,11 @@ namespace NS_SLUA
         lua_pushstring(L, SLUA_CPPINST);
         lua_pushlightuserdata(L, objPtr);
         lua_rawset(L, -3);
+
+        if (bNetReplicated)
+        {
+            LuaNet::setupFunctions(L);
+        }
 
         lua_pushstring(L, SUPER_NAME);
         LuaObject::pushType(L, new LuaSuperCall((UObject*)objPtr), "LuaSuperCall", LuaSuperCall::setupMetatable, LuaSuperCall::genericGC);

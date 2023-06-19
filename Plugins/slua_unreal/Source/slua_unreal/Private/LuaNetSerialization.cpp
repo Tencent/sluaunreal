@@ -40,6 +40,19 @@ void FLuaNetSerializationProxy::AddReferencedObjects(FReferenceCollector& Collec
     NS_SLUA::LuaReference::addRefByStruct(Collector, contentStruct.Get(), values.GetData());
 }
 
+FLuaNetSerializationProxy::~FLuaNetSerializationProxy()
+{
+    for (auto Iter : propListeners)
+    {
+        for (auto funcIter : Iter.Value)
+        {
+            delete funcIter;
+        }
+    }
+
+    propListeners.Empty();
+}
+
 bool NetSerializeItem(NS_SLUA::FProperty* Prop, FArchive& Ar, UPackageMap* Map, void* Data)
 {
     if (auto StructProp = CastField<NS_SLUA::FStructProperty>(Prop))
@@ -275,6 +288,13 @@ bool FLuaNetSerialization::NetDeltaSerialize(FNetDeltaSerializeInfo& deltaParms)
                     auto& prop = properties[index];
                     CallOnRep(L, luaTable, propName, prop, oldData + prop->GetOffset_ForInternal());
                 }
+
+                NS_SLUA::AutoStack as(L);
+                NS_SLUA::LuaNet::onPropModify(L, proxy, index, [&]()
+                {
+                    auto& prop = properties[index];
+                    NS_SLUA::LuaObject::push(L, prop, data + prop->GetOffset_ForInternal(), nullptr);
+                });
             }
         }
 
@@ -466,6 +486,13 @@ bool FLuaNetSerialization::Read(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeria
                     auto& prop = properties[index];
                     CallOnRep(L, luaTable, propName, prop, oldData + prop->GetOffset_ForInternal());
                 }
+
+                NS_SLUA::AutoStack as(L);
+                NS_SLUA::LuaNet::onPropModify(L, proxy, index, [&]()
+                {
+                    auto& prop = properties[index];
+                    NS_SLUA::LuaObject::push(L, prop, data + prop->GetOffset_ForInternal(), nullptr);
+                });
             }
         }
     }

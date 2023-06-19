@@ -167,6 +167,7 @@ struct FLuaNetSerializationProxy : public FGCObject
     
     LuaBitArray flatDirtyMark;
     TMap<int32, LuaBitArray> arrayDirtyMark;
+    TMap<ClassLuaReplicated::ReplicateIndexType, TArray<NS_SLUA::LuaVar*>> propListeners;
     
     TWeakObjectPtr<UStruct> contentStruct;
 
@@ -187,7 +188,7 @@ struct FLuaNetSerializationProxy : public FGCObject
 #endif
 
     virtual void AddReferencedObjects( FReferenceCollector& Collector );
-    
+    ~FLuaNetSerializationProxy();
 };
 
 USTRUCT()

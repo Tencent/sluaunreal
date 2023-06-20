@@ -147,7 +147,9 @@ namespace NS_SLUA
                 , obj(_obj)
                 , cls(_cls)
             {
-                pre->next = this;
+                _pre->next = this;
+                next->pre = this;
+
                 clsConstructor = cls->ClassConstructor;
                 while (clsConstructor == CustomClassConstructor && (_pre->obj == obj || _pre->cls == cls))
                 {

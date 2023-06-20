@@ -635,7 +635,7 @@ namespace NS_SLUA
                     }
 
 #if USE_CIRCULAR_DEPENDENCY_LOAD_DEFERRING
-                    FRWScopeLock(classHookMutex, SLT_Write);
+                    FRWScopeLock lock(classHookMutex, SLT_Write);
                     auto classHookerLink = new ClassHookLinker(this, (UObject*)obj, cls, currentHook);
                     currentHook = classHookerLink;
                     return true;
@@ -669,7 +669,7 @@ namespace NS_SLUA
         UClass::ClassConstructorType clsConstructor;
         
         {
-            FRWScopeLock(classHookMutex, SLT_ReadOnly);
+            FRWScopeLock lock(classHookMutex, SLT_ReadOnly);
             ensure(currentHook->pre != currentHook);
             auto &current = *currentHook;
 
@@ -677,11 +677,11 @@ namespace NS_SLUA
             if (currentHook->obj != obj)
             {
                 auto tempHook = currentHook;
-                while (tempHook->cls != cls && tempHook->next != tempHook)
+                while (tempHook->cls != cls && tempHook->next != currentHook)
                 {
                     tempHook = tempHook->next;
                 }
-                check(tempHook->next != tempHook && !IsInGameThread());
+                check(tempHook->cls == cls && !IsInGameThread());
                 clsConstructor = tempHook->clsConstructor;
             }
             else
@@ -748,7 +748,7 @@ namespace NS_SLUA
             actorComponent->bWantsInitializeComponent = true;
         }
 
-        FRWScopeLock(classHookMutex, SLT_Write);
+        FRWScopeLock lock(classHookMutex, SLT_Write);
         auto tempClassHookLinker = currentHook;
         while (tempClassHookLinker->obj == obj || tempClassHookLinker->cls == cls)
         {

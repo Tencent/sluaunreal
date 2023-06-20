@@ -72,9 +72,9 @@ namespace NS_SLUA {
         const char* err = lua_tostring(L,1);
         luaL_traceback(L,L,err,1);
         err = lua_tostring(L,2);
-        lua_pop(L,1);
         auto ls = LuaState::get(L);
         ls->onError(err);
+        lua_pop(L,1);
         return 0;
     }
     

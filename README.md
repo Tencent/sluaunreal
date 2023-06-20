@@ -169,7 +169,7 @@ return Class(nil, nil, LuaActor)
 
 ## 性能
 
-slua-unreal提供3中技术绑定lua接口，包括：
+slua-unreal提供3种技术绑定lua接口，包括：
 
 1）蓝图反射方法
 

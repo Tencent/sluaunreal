@@ -169,11 +169,7 @@ namespace NS_SLUA {
 
         FORCEINLINE bool operator == (const SimpleString& Other) const
         {
-#if defined(_WIN32)
-            return _stricmp(data.GetData(), Other.data.GetData()) == 0;
-#else
-            return strcasecmp(data.GetData(), Other.data.GetData()) == 0;
-#endif
+            return FPlatformString::Stricmp(data.GetData(), Other.data.GetData()) == 0;
         }
     };
 

@@ -2180,7 +2180,29 @@ namespace NS_SLUA {
         return pushGCObject<UScriptStruct*>(L,cls,"UScriptStruct",setupStructMT,gcStructClass,true, nullptr);
     }
 
-    int LuaObject::pushEnum(lua_State * L, UEnum * e)
+    int enumIndex(lua_State* L)
+    {
+        const char* key = lua_tostring(L, 2);
+        lua_pushvalue(L, 1);
+        lua_pushnil(L);
+        while (lua_next(L, -2) != 0) 
+        {
+            const char* name = lua_tostring(L, -2);
+            if (FPlatformString::Stricmp(key, name) == 0)
+            {
+                lua_pushvalue(L, 2);
+                lua_pushvalue(L, -2);
+                lua_rawset(L, 1);
+                return 1;
+            }
+
+            lua_pop(L, 1);
+        }
+
+        return 0;
+    }
+
+    int LuaObject::pushEnum(lua_State* L, UEnum* e)
     {
         LuaState* ls = LuaState::get(L);
         ensure(ls->cacheEnumRef!=LUA_NOREF);
@@ -2202,6 +2224,13 @@ namespace NS_SLUA {
             lua_pushinteger(L, value);
             lua_setfield(L, -2, TCHAR_TO_UTF8(*name));
         }
+
+        if (luaL_newmetatable(L, "UEnum"))
+        {
+            lua_pushcfunction(L, enumIndex);
+            lua_setfield(L, -2, "__index");
+        }
+        lua_setmetatable(L, -2);
 
         addCache(L, e, ls->cacheEnumRef);
         return 1;

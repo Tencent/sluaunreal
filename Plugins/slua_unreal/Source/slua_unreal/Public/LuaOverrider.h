@@ -82,6 +82,7 @@ namespace NS_SLUA
         static const char* UOBJECT_NAME;
         static const char* SUPER_NAME;
         static const char* CACHE_NAME;
+        static const char* INSTANCE_CACHE_NAME;
         
         LuaOverrider(LuaState* luaState);
         ~LuaOverrider();

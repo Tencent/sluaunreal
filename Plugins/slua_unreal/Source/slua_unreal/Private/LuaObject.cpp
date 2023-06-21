@@ -1030,11 +1030,46 @@ namespace NS_SLUA {
         auto* objTable = ULuaOverrider::getObjectTable(obj, L);
         if (objTable && objTable->table.getState() == L->l_G->mainthread) {
             objTable->table.push(L); // push self
-            int type = lua_getfield(L, -1, name);
+            if (objTable->isInstance)
+            {
+                lua_pushstring(L, LuaOverrider::INSTANCE_CACHE_NAME);
+                if (lua_rawget(L, -2))
+                {
+                    lua_pushvalue(L, 2);
+                    if (lua_rawget(L, -2) != LUA_TNIL)
+                    {
+                        return 1;
+                    }
+                    lua_pop(L, 1);
+                }
+                lua_pop(L, 1);
+            }
+
+            lua_pushvalue(L, 2);
+            int type = lua_gettable(L, -2);
             if (type != LUA_TNIL) {
                 if (type == LUA_TFUNCTION) {
                     lua_pushcclosure(L, luaFuncClosure, 1);
-                    if (!objTable->isInstance)
+                    if (objTable->isInstance)
+                    {
+                        // cache instance function in self.__instance_cache
+                        lua_pushstring(L, LuaOverrider::INSTANCE_CACHE_NAME);
+                        if (lua_rawget(L, -3) == LUA_TNIL)
+                        {
+                            lua_pop(L, 1);
+
+                            lua_newtable(L);
+                            lua_pushstring(L, LuaOverrider::INSTANCE_CACHE_NAME);
+                            lua_pushvalue(L, -2);
+                            lua_rawset(L, -5);
+                        }
+                        lua_pushvalue(L, 2);
+                        lua_pushvalue(L, -3);
+                        lua_rawset(L, -3);
+                        
+                        lua_pop(L, 1); // pop __instance_cache
+                    }
+                    else
                     {
                         cacheFunction(L, nullptr);
                     }
@@ -1264,7 +1299,15 @@ namespace NS_SLUA {
         
         auto* cls = ls->uss;
         FProperty* up = LuaObject::findCacheProperty(L, cls, name);
-        if(!up) return 0;
+        if(!up) {
+            // index self metatable.
+            lua_getmetatable(L, 1);
+            lua_pushvalue(L, 2);
+            if (lua_gettable(L, -2)) {
+                return 1;
+            }
+            return 0;
+        }
 
         if (GSluaEnableReference)
         {
@@ -1369,9 +1412,10 @@ namespace NS_SLUA {
 
     int instanceIndexSelf(lua_State* L) {
         lua_getmetatable(L,1);
-        const char* name = lua_tostring(L, 2);
-        
-        lua_getfield(L,-1,name);
+
+        lua_pushvalue(L, 2); // push key name
+        lua_gettable(L, -2);
+
         lua_remove(L,-2); // remove mt of ud
         return 1;
     }

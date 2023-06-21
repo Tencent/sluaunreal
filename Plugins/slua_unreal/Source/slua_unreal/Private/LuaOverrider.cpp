@@ -478,6 +478,7 @@ namespace NS_SLUA
     const char* LuaOverrider::UOBJECT_NAME = "Object";
     const char* LuaOverrider::SUPER_NAME = "Super";
     const char* LuaOverrider::CACHE_NAME = "__cache";
+    const char* LuaOverrider::INSTANCE_CACHE_NAME = "__instance_cache";
     const uint8 LuaOverrider::Code[] = { (uint8)Ex_LuaOverride, EX_Return, EX_Nothing };
     const int32 LuaOverrider::CodeSize = sizeof(Code);
     FRWLock LuaOverrider::classHookMutex;

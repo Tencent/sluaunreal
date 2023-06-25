@@ -160,6 +160,7 @@ static int forlimit (const TValue *obj, lua_Integer *p, lua_Integer step,
 void luaV_finishget (lua_State *L, const TValue *t, TValue *key, StkId val,
                       const TValue *slot) {
   int loop;  /* counter to avoid infinite loops */
+  const TValue *self = t;
   const TValue *tm;  /* metamethod */
   for (loop = 0; loop < MAXTAGLOOP; loop++) {
     if (slot == NULL) {  /* 't' is not a table? */
@@ -179,7 +180,7 @@ void luaV_finishget (lua_State *L, const TValue *t, TValue *key, StkId val,
       /* else will try the metamethod */
     }
     if (ttisfunction(tm)) {  /* is metamethod a function? */
-      luaT_callTM(L, tm, t, key, val, 1);  /* call it */
+      luaT_callTM(L, tm, self, key, val, 1);  /* call it */
       return;
     }
     t = tm;  /* else try to access 'tm[key]' */
@@ -203,6 +204,7 @@ void luaV_finishget (lua_State *L, const TValue *t, TValue *key, StkId val,
 void luaV_finishset (lua_State *L, const TValue *t, TValue *key,
                      StkId val, const TValue *slot) {
   int loop;  /* counter to avoid infinite loops */
+  const TValue *self = t;
   for (loop = 0; loop < MAXTAGLOOP; loop++) {
     const TValue *tm;  /* '__newindex' metamethod */
     if (slot != NULL) {  /* is 't' a table? */
@@ -226,7 +228,7 @@ void luaV_finishset (lua_State *L, const TValue *t, TValue *key,
     }
     /* try the metamethod */
     if (ttisfunction(tm)) {
-      luaT_callTM(L, tm, t, key, val, 0);
+      luaT_callTM(L, tm, self, key, val, 0);
       return;
     }
     t = tm;  /* else repeat assignment over 'tm' */

@@ -21,7 +21,11 @@ public class slua_unreal : ModuleRules
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         // enable exception
         bEnableExceptions = true;
+#if UE_5_2_OR_LATER
+        IWYUSupport = IWYUSupport.None;
+#else
         bEnforceIWYU = false;
+#endif
         bEnableUndefinedIdentifierWarnings = false;
 
         var externalSource = Path.Combine(ModuleDirectory, "../../External");

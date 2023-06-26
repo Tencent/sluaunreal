@@ -121,52 +121,10 @@ namespace NS_SLUA
         bool hookBpScript(UFunction* func, UClass* cls, FNativeFuncPtr hookFunc);
 
         static void CustomClassConstructor(const FObjectInitializer& ObjectInitializer);
-        
-        struct ClassHookLinker
-        {
-            ClassHookLinker* pre;
-            ClassHookLinker* next;
-            LuaOverrider* overrider;
-            UObject* obj;
-            UClass* cls;
-            UClass::ClassConstructorType clsConstructor;
 
-            ClassHookLinker()
-                : pre(this)
-                , next(this)
-                , overrider(nullptr)
-                , obj(nullptr)
-                , cls(nullptr)
-                , clsConstructor(nullptr)
-            {
-            }
-
-            ClassHookLinker(LuaOverrider* _overrider, UObject* _obj, UClass* _cls, ClassHookLinker* _pre)
-                : pre(_pre)
-                , next(_pre->next)
-                , overrider(_overrider)
-                , obj(_obj)
-                , cls(_cls)
-            {
-                _pre->next = this;
-                next->pre = this;
-
-                clsConstructor = cls->ClassConstructor;
-                while (clsConstructor == CustomClassConstructor && (_pre->obj == obj || _pre->cls == cls))
-                {
-                    clsConstructor = _pre->clsConstructor;
-                    _pre = _pre->pre;
-                }
-
-                if (clsConstructor != CustomClassConstructor)
-                {
-                    cls->ClassConstructor = CustomClassConstructor;
-                }
-                ensure(clsConstructor != CustomClassConstructor);
-            }
-        };
         static FRWLock classHookMutex;
-        static ClassHookLinker* currentHook;
+        static TMap<TWeakObjectPtr<UClass>, UClass::ClassConstructorType> classConstructors;
+        static TMap<UObject*, TArray<LuaOverrider*>> objectOverriders;
 
         static int __index(lua_State* L);
         static int classIndex(lua_State* L);

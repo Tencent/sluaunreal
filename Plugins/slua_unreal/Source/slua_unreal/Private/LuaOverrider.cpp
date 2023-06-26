@@ -9,6 +9,7 @@
 #include "LuaVar.h"
 #include "LuaNet.h"
 #include "UObject/UObjectBaseUtility.h"
+#include "UObject/UObjectThreadContext.h"
 #include "LuaOverriderInterface.h"
 #include "LuaOverriderSuper.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
@@ -482,7 +483,8 @@ namespace NS_SLUA
     const uint8 LuaOverrider::Code[] = { (uint8)Ex_LuaOverride, EX_Return, EX_Nothing };
     const int32 LuaOverrider::CodeSize = sizeof(Code);
     FRWLock LuaOverrider::classHookMutex;
-    LuaOverrider::ClassHookLinker* LuaOverrider::currentHook = new LuaOverrider::ClassHookLinker();
+    TMap<TWeakObjectPtr<UClass>, UClass::ClassConstructorType> LuaOverrider::classConstructors;
+    TMap<UObject*, TArray<LuaOverrider*>> LuaOverrider::objectOverriders;
 
     const TCHAR* LuaOverrider::EInputEventNames[] = { TEXT("Pressed"), TEXT("Released"), TEXT("Repeat"), TEXT("DoubleClick"), TEXT("Axis"), TEXT("Max") };
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
@@ -545,6 +547,15 @@ namespace NS_SLUA
         FCoreDelegates::OnAsyncLoadingFlushUpdate.Remove(asyncLoadingFlushUpdateHandle);
         GUObjectArray.RemoveUObjectCreateListener(this);
         GUObjectArray.RemoveUObjectDeleteListener(this);
+
+        FRWScopeLock lock(classHookMutex, SLT_Write);
+        objectOverriders.Empty();
+        for (auto iter : classConstructors)
+        {
+            auto cls = iter.Key.Get();
+            cls->ClassConstructor = iter.Value;
+        }
+        classConstructors.Empty();
     }
 
     void LuaOverrider::NotifyUObjectCreated(const UObjectBase* Object, int32 Index)
@@ -637,11 +648,16 @@ namespace NS_SLUA
 
 #if USE_CIRCULAR_DEPENDENCY_LOAD_DEFERRING
                     FRWScopeLock lock(classHookMutex, SLT_Write);
-                    auto classHookerLink = new ClassHookLinker(this, (UObject*)obj, cls, currentHook);
-                    currentHook = classHookerLink;
+                    if (cls->ClassConstructor != CustomClassConstructor)
+                    {
+                        classConstructors.Add(cls, cls->ClassConstructor);
+                        cls->ClassConstructor = CustomClassConstructor;
+                    }
+                    auto &overriderList = objectOverriders.FindOrAdd((UObject*)obj);
+                    overriderList.Add(this);
                     return true;
 #else
-                    bindOverrideFuncs(obj, cls, bHookInstancedObj);
+                    bindOverrideFuncs(obj, cls);
                     return true;
 #endif
                 }
@@ -670,29 +686,24 @@ namespace NS_SLUA
         UClass::ClassConstructorType clsConstructor;
         
         {
-            FRWScopeLock lock(classHookMutex, SLT_ReadOnly);
-            ensure(currentHook->pre != currentHook);
-            auto &current = *currentHook;
-
-            // maybe in async thread!
-            if (currentHook->obj != obj)
+            FRWScopeLock lock(classHookMutex, SLT_Write);
+            UClass::ClassConstructorType *classConstructorFuncPtr = nullptr;
+            auto superCls = cls;
+            while (classConstructorFuncPtr == nullptr && superCls)
             {
-                auto tempHook = currentHook;
-                while (tempHook->cls != cls && tempHook->next != currentHook)
+                classConstructorFuncPtr = classConstructors.Find(superCls);
+                if (classConstructorFuncPtr && superCls != cls)
                 {
-                    tempHook = tempHook->next;
+                    classConstructors.Add(cls, *classConstructorFuncPtr);
                 }
-                check(tempHook->cls == cls && !IsInGameThread());
-                clsConstructor = tempHook->clsConstructor;
+                superCls = superCls->GetSuperClass();
             }
-            else
-            {
-                clsConstructor  = current.clsConstructor;
-            }
+            check(classConstructorFuncPtr != nullptr);
+            clsConstructor = *classConstructorFuncPtr;
         }
         
-        ensure(clsConstructor != CustomClassConstructor);
-        if (clsConstructor != CustomClassConstructor)
+        check(clsConstructor != CustomClassConstructor);
+        
         {
             clsConstructor(ObjectInitializer);
             if (!IsInGameThread())
@@ -750,30 +761,19 @@ namespace NS_SLUA
         }
 
         FRWScopeLock lock(classHookMutex, SLT_Write);
-        auto tempClassHookLinker = currentHook;
-        while (tempClassHookLinker->obj == obj || tempClassHookLinker->cls == cls)
+        if (!actorComponent || !luaInterface)
         {
-            ensure(tempClassHookLinker->cls == cls);
-            auto overrider = tempClassHookLinker->overrider;
-            auto currentLinker = tempClassHookLinker;
-            if (!actorComponent || !luaInterface)
+            auto overriderListPtr = objectOverriders.Find(obj);
+            if (overriderListPtr)
             {
-                overrider->bindOverrideFuncs(obj, cls);
+                auto overriderList = *overriderListPtr; // copy overrider list, don't use '&' reference
+                for (auto overrider : overriderList)
+                {
+                    overrider->bindOverrideFuncs(obj, cls);
+                }
             }
-
-            tempClassHookLinker = tempClassHookLinker->pre;
-            if (currentLinker == currentHook)
-            {
-                currentHook = tempClassHookLinker;
-            }
-            tempClassHookLinker->next = currentLinker->next;
-            currentLinker->next->pre = tempClassHookLinker;
-
-            delete currentLinker;
         }
-
-        // revert class constructor function
-        cls->ClassConstructor = clsConstructor;
+        objectOverriders.Remove(obj);
     }
 
     void LuaOverrider::removeOneOverride(UClass* cls, bool bObjectDeleted)

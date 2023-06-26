@@ -616,7 +616,10 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
 #endif
         if (SerializeVersion == 1)
         {
-            CompareProperties(obj, *proxy, replicationFrame);
+            if (!conditionMap[COND_ReplayOnly])
+            {
+                CompareProperties(obj, *proxy, replicationFrame);
+            }
             UpdateChangeListMgr_V1(*proxy, replicationFrame);
         }
         else

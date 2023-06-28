@@ -688,18 +688,23 @@ namespace NS_SLUA
         {
             FRWScopeLock lock(classHookMutex, SLT_Write);
             UClass::ClassConstructorType *classConstructorFuncPtr = nullptr;
+            TArray<UClass*, TMemStackAllocator<>> handleClasses;
             auto superCls = cls;
             while (classConstructorFuncPtr == nullptr && superCls)
             {
                 classConstructorFuncPtr = classConstructors.Find(superCls);
-                if (classConstructorFuncPtr && superCls != cls)
+                if (!classConstructorFuncPtr)
                 {
-                    classConstructors.Add(cls, *classConstructorFuncPtr);
+                    handleClasses.Add(superCls);
                 }
                 superCls = superCls->GetSuperClass();
             }
             check(classConstructorFuncPtr != nullptr);
             clsConstructor = *classConstructorFuncPtr;
+            for (auto iter = handleClasses.CreateConstIterator(); iter; ++iter)
+            {
+                classConstructors.Emplace(*iter, clsConstructor);
+            }
         }
         
         check(clsConstructor != CustomClassConstructor);

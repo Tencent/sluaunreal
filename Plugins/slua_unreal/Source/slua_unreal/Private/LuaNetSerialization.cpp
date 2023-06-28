@@ -434,12 +434,11 @@ bool FLuaNetSerialization::Read(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeria
 
         if (SerializeVersion == 0)
         {
-            proxy->dirtyMark = changes;
+            proxy->dirtyMark |= changes;
         }
         else
         {
-            proxy->dirtyMark.Clear();
-            proxy->flatDirtyMark = changes;
+            proxy->flatDirtyMark |= changes;
         }
 
         if (luaTablePtr)
@@ -616,7 +615,9 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
 #endif
         if (SerializeVersion == 1)
         {
+#if !UE_SERVER
             if (!conditionMap[COND_ReplayOnly])
+#endif
             {
                 CompareProperties(obj, *proxy, replicationFrame);
             }

@@ -553,7 +553,10 @@ namespace NS_SLUA
         for (auto iter : classConstructors)
         {
             auto cls = iter.Key.Get();
-            cls->ClassConstructor = iter.Value;
+            if (cls)
+            {
+                cls->ClassConstructor = iter.Value;
+            }
         }
         classConstructors.Empty();
     }

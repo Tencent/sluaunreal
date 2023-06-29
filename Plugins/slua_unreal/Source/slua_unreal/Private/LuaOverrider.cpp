@@ -624,6 +624,9 @@ namespace NS_SLUA
             }
 
             LuaNet::onObjectDeleted(cls);
+
+            FRWScopeLock lock(classHookMutex, SLT_Write);
+            classConstructors.Remove(cls);
         }
     }
 

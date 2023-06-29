@@ -731,7 +731,7 @@ namespace NS_SLUA {
                     FOutParmRec* out = outParams;
                     while (out->Property != prop) {
                         out = out->NextOutParm;
-                        checkSlow(Out);
+                        checkSlow(out);
                     }
                     pushArgByParms(prop, out->PropAddr);
                     nArg++;

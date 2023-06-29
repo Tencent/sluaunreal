@@ -21,7 +21,11 @@ public class slua_profile : ModuleRules
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         // enable exception
         bEnableExceptions = true;
+#if UE_5_2_OR_LATER
+        IWYUSupport = IWYUSupport.None;
+#else
         bEnforceIWYU = false;
+#endif
         bEnableUndefinedIdentifierWarnings = false;
 
         PrivateDependencyModuleNames.AddRange(new string[] { "slua_unreal" });

@@ -788,6 +788,7 @@ namespace NS_SLUA {
     void LuaState::NotifyUObjectDeleted(const UObjectBase * Object, int32 Index)
     {
         classMap.cachePropMap.Remove((UStruct*)Object);
+        LuaObject::removeCache(L, Object, cacheEnumRef);
         LuaObject::removeCache(L, Object, cacheClassPropRef);
         LuaObject::removeCache(L, Object, cacheClassFuncRef);
         LuaFunctionAccelerator::remove((UFunction*)Object);

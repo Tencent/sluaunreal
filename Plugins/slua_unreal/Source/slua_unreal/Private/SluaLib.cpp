@@ -178,27 +178,7 @@ namespace NS_SLUA {
 
     int SluaUtil::createDelegate(lua_State* L) {
         luaL_checktype(L,1,LUA_TFUNCTION);
-		// using GameInstance as default
-		UGameInstance* GameInstance = nullptr;
-        if (!GIsEditor)
-        {
-			UEngine* engine = GEngine;
-			UWorld* world = engine->GetCurrentPlayWorld();
-			if (world)
-			{
-				GameInstance = world->GetGameInstance();
-			}
-        }
-        else
-        {
-#if WITH_EDITOR
-		UUnrealEdEngine* engine = Cast<UUnrealEdEngine>(GEngine);
-		if (engine && engine->PlayWorld) GameInstance = engine->PlayWorld->GetGameInstance();
-#endif
-        }
-
-		if (!GameInstance) luaL_error(L, "gameinstance missing");
-        auto obj = NewObject<ULuaDelegate>((UObject*)GameInstance,ULuaDelegate::StaticClass());
+        auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(),ULuaDelegate::StaticClass());
         obj->bindFunction(L,1);
         return LuaObject::push(L,obj,true);
     }

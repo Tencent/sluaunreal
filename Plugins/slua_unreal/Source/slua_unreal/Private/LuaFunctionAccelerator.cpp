@@ -199,7 +199,7 @@ namespace NS_SLUA
 #endif
         );
 
-        checkSlow(newStack.Locals || Function->ParmsSize == 0);
+        checkSlow(newStack.Locals || func->ParmsSize == 0);
         FOutParmRec** lastOut = &newStack.OutParms;
         AutoDestructor autoDestructor(propertyList, params, func->NumParms);
 

@@ -9,6 +9,7 @@
 #include "LuaVar.h"
 #include "LuaNet.h"
 #include "UObject/UObjectBaseUtility.h"
+#include "UObject/UObjectThreadContext.h"
 #include "LuaOverriderInterface.h"
 #include "LuaOverriderSuper.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
@@ -478,10 +479,12 @@ namespace NS_SLUA
     const char* LuaOverrider::UOBJECT_NAME = "Object";
     const char* LuaOverrider::SUPER_NAME = "Super";
     const char* LuaOverrider::CACHE_NAME = "__cache";
+    const char* LuaOverrider::INSTANCE_CACHE_NAME = "__instance_cache";
     const uint8 LuaOverrider::Code[] = { (uint8)Ex_LuaOverride, EX_Return, EX_Nothing };
     const int32 LuaOverrider::CodeSize = sizeof(Code);
     FRWLock LuaOverrider::classHookMutex;
-    LuaOverrider::ClassHookLinker* LuaOverrider::currentHook = new LuaOverrider::ClassHookLinker();
+    TMap<TWeakObjectPtr<UClass>, UClass::ClassConstructorType> LuaOverrider::classConstructors;
+    TMap<UObject*, TArray<LuaOverrider*>> LuaOverrider::objectOverriders;
 
     const TCHAR* LuaOverrider::EInputEventNames[] = { TEXT("Pressed"), TEXT("Released"), TEXT("Repeat"), TEXT("DoubleClick"), TEXT("Axis"), TEXT("Max") };
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
@@ -544,6 +547,18 @@ namespace NS_SLUA
         FCoreDelegates::OnAsyncLoadingFlushUpdate.Remove(asyncLoadingFlushUpdateHandle);
         GUObjectArray.RemoveUObjectCreateListener(this);
         GUObjectArray.RemoveUObjectDeleteListener(this);
+
+        FRWScopeLock lock(classHookMutex, SLT_Write);
+        objectOverriders.Empty();
+        for (auto iter : classConstructors)
+        {
+            auto cls = iter.Key.Get();
+            if (cls)
+            {
+                cls->ClassConstructor = iter.Value;
+            }
+        }
+        classConstructors.Empty();
     }
 
     void LuaOverrider::NotifyUObjectCreated(const UObjectBase* Object, int32 Index)
@@ -609,6 +624,9 @@ namespace NS_SLUA
             }
 
             LuaNet::onObjectDeleted(cls);
+
+            FRWScopeLock lock(classHookMutex, SLT_Write);
+            classConstructors.Remove(cls);
         }
     }
 
@@ -635,12 +653,17 @@ namespace NS_SLUA
                     }
 
 #if USE_CIRCULAR_DEPENDENCY_LOAD_DEFERRING
-                    FRWScopeLock(classHookMutex, SLT_Write);
-                    auto classHookerLink = new ClassHookLinker(this, (UObject*)obj, cls, currentHook);
-                    currentHook = classHookerLink;
+                    FRWScopeLock lock(classHookMutex, SLT_Write);
+                    if (cls->ClassConstructor != CustomClassConstructor)
+                    {
+                        classConstructors.Add(cls, cls->ClassConstructor);
+                        cls->ClassConstructor = CustomClassConstructor;
+                    }
+                    auto &overriderList = objectOverriders.FindOrAdd((UObject*)obj);
+                    overriderList.Add(this);
                     return true;
 #else
-                    bindOverrideFuncs(obj, cls, bHookInstancedObj);
+                    bindOverrideFuncs(obj, cls);
                     return true;
 #endif
                 }
@@ -669,29 +692,29 @@ namespace NS_SLUA
         UClass::ClassConstructorType clsConstructor;
         
         {
-            FRWScopeLock(classHookMutex, SLT_ReadOnly);
-            ensure(currentHook->pre != currentHook);
-            auto &current = *currentHook;
-
-            // maybe in async thread!
-            if (currentHook->obj != obj)
+            FRWScopeLock lock(classHookMutex, SLT_Write);
+            UClass::ClassConstructorType *classConstructorFuncPtr = nullptr;
+            TArray<UClass*, TMemStackAllocator<>> handleClasses;
+            auto superCls = cls;
+            while (classConstructorFuncPtr == nullptr && superCls)
             {
-                auto tempHook = currentHook;
-                while (tempHook->cls != cls && tempHook->next != tempHook)
+                classConstructorFuncPtr = classConstructors.Find(superCls);
+                if (!classConstructorFuncPtr)
                 {
-                    tempHook = tempHook->next;
+                    handleClasses.Add(superCls);
                 }
-                check(tempHook->next != tempHook && !IsInGameThread());
-                clsConstructor = tempHook->clsConstructor;
+                superCls = superCls->GetSuperClass();
             }
-            else
+            check(classConstructorFuncPtr != nullptr);
+            clsConstructor = *classConstructorFuncPtr;
+            for (auto iter = handleClasses.CreateConstIterator(); iter; ++iter)
             {
-                clsConstructor  = current.clsConstructor;
+                classConstructors.Emplace(*iter, clsConstructor);
             }
         }
         
-        ensure(clsConstructor != CustomClassConstructor);
-        if (clsConstructor != CustomClassConstructor)
+        check(clsConstructor != CustomClassConstructor);
+        
         {
             clsConstructor(ObjectInitializer);
             if (!IsInGameThread())
@@ -742,36 +765,26 @@ namespace NS_SLUA
         }
 
         auto actorComponent = Cast<UActorComponent>(obj);
+        auto luaInterface = Cast<ILuaOverriderInterface>(obj);
         if (actorComponent)
         {
             actorComponent->bWantsInitializeComponent = true;
         }
 
-        FRWScopeLock(classHookMutex, SLT_Write);
-        auto tempClassHookLinker = currentHook;
-        while (tempClassHookLinker->obj == obj || tempClassHookLinker->cls == cls)
+        FRWScopeLock lock(classHookMutex, SLT_Write);
+        if (!actorComponent || !luaInterface)
         {
-            ensure(tempClassHookLinker->cls == cls);
-            auto overrider = tempClassHookLinker->overrider;
-            auto currentLinker = tempClassHookLinker;
-            if (!actorComponent)
+            auto overriderListPtr = objectOverriders.Find(obj);
+            if (overriderListPtr)
             {
-                overrider->bindOverrideFuncs(obj, cls);
+                auto overriderList = *overriderListPtr; // copy overrider list, don't use '&' reference
+                for (auto overrider : overriderList)
+                {
+                    overrider->bindOverrideFuncs(obj, cls);
+                }
             }
-
-            tempClassHookLinker = tempClassHookLinker->pre;
-            if (currentLinker == currentHook)
-            {
-                currentHook = tempClassHookLinker;
-            }
-            tempClassHookLinker->next = currentLinker->next;
-            currentLinker->next->pre = tempClassHookLinker;
-
-            delete currentLinker;
         }
-
-        // revert class constructor function
-        cls->ClassConstructor = clsConstructor;
+        objectOverriders.Remove(obj);
     }
 
     void LuaOverrider::removeOneOverride(UClass* cls, bool bObjectDeleted)
@@ -1195,12 +1208,14 @@ namespace NS_SLUA
             classHookedFuncNames.Add(cls, funcNames);
         }
 
+        bool bNetReplicated = false;
         if (auto classReplicated = LuaNet::addClassReplicatedProps(L, obj, luaModule))
         {
             LuaNet::initLuaReplicatedProps(L, obj, *classReplicated, luaSelfTable);
+            bNetReplicated = true;
         }
 
-        setmetatable(luaSelfTable, (void*)obj);
+        setmetatable(luaSelfTable, (void*)obj, bNetReplicated);
         ULuaOverrider::addObjectTable(L, obj, luaSelfTable, bHookInstancedObj);
 
         if (auto luaInterface = Cast<ILuaOverriderInterface>(obj))
@@ -1211,7 +1226,7 @@ namespace NS_SLUA
         return true;
     }
 
-    void LuaOverrider::setmetatable(const LuaVar& luaSelfTable, void* objPtr)
+    void LuaOverrider::setmetatable(const LuaVar& luaSelfTable, void* objPtr, bool bNetReplicated)
     {
         lua_State* L = sluaState->getLuaState();
         // setup __cppinst
@@ -1220,6 +1235,11 @@ namespace NS_SLUA
         lua_pushstring(L, SLUA_CPPINST);
         lua_pushlightuserdata(L, objPtr);
         lua_rawset(L, -3);
+
+        if (bNetReplicated)
+        {
+            LuaNet::setupFunctions(L);
+        }
 
         lua_pushstring(L, SUPER_NAME);
         LuaObject::pushType(L, new LuaSuperCall((UObject*)objPtr), "LuaSuperCall", LuaSuperCall::setupMetatable, LuaSuperCall::genericGC);

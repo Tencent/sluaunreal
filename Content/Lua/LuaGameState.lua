@@ -47,6 +47,12 @@ function LuaGameState:ctor(selfType)
     self.Name = "LuaGameStateTestName"
 end
 
+function LuaGameState:_PostConstruct()
+    self:AddLuaNetListener("Position", function (Value)
+        print("LuaGameState On Position Assign:", Value.X, Value.Y, Value.Z)
+    end)
+end
+
 function LuaGameState:TestServerRPC(ArgInt, ArgStr, ArgBool)
     print("LuaGameState:TestServerRPC", ArgInt, ArgStr, ArgBool)
 end
@@ -76,7 +82,7 @@ function LuaGameState:ReceiveBeginPlay()
     self.bCanEverTick = true
     -- set bCanBeDamaged property in parent
     self.bCanBeDamaged = false
-    print("actor:ReceiveBeginPlay")
+    print("LuaGameState:ReceiveBeginPlay")
 
     local KismetSystemLibrary = import("KismetSystemLibrary")
     if KismetSystemLibrary.IsDedicatedServer(self) then

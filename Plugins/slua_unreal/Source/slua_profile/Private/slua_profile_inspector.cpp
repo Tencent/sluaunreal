@@ -1578,23 +1578,17 @@ void SProfilerWidget::DrawStdLine(const FGeometry& AllottedGeometry, FSlateWindo
                      1.0f
                     );
 
-//    FSlateColorBrush stBrushWhite_1 = FSlateColorBrush(FColorList::White);
-//    FSlateDrawElement::MakeBox(
-//                    OutDrawElements,
-//                    LayerId,
-//                    AllottedGeometry.ToPaintGeometry(FVector2D(0, positionY - 10), FVector2D(80, 15)),
-//                    &stBrushWhite_1,
-//                    ESlateDrawEffect::None,
-//                    FLinearColor::Black
-//                    );
-
     FSlateFontInfo FontInfo = FCoreStyle::Get().GetFontStyle("NormalFont");
     FontInfo.Size = 10.0f;
 
     FSlateDrawElement::MakeText(
                     OutDrawElements,
                     LayerId,
+#if (ENGINE_MINOR_VERSION>=2) && (ENGINE_MAJOR_VERSION==5)
+                    AllottedGeometry.ToPaintGeometry(AllottedGeometry.Size, FSlateLayoutTransform(1.0f, TransformPoint(1.0f, FVector2D(0, positionY - 10)))),
+#else
                     AllottedGeometry.ToPaintGeometry(FVector2D(0, positionY - 10), AllottedGeometry.Size),
+#endif
                     stdStr,
                     FontInfo,
                     ESlateDrawEffect::None,
@@ -1696,7 +1690,11 @@ int32 SProfilerWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
         FSlateDrawElement::MakeText(
                                     OutDrawElements,
                                     LayerId,
+#if (ENGINE_MINOR_VERSION>=2) && (ENGINE_MAJOR_VERSION==5)
+                                    AllottedGeometry.ToPaintGeometry(AllottedGeometry.Size, FSlateLayoutTransform(1.0f, TransformPoint(1.0f, FVector2D(0, 95.0f)))),
+#else 
                                     AllottedGeometry.ToPaintGeometry(FVector2D(0, 95.0f), AllottedGeometry.Size),
+#endif
                                     m_stdMemStr[0] + TEXT(" —"),
                                     FontInfo,
                                     ESlateDrawEffect::None,
@@ -1706,7 +1704,11 @@ int32 SProfilerWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
         FSlateDrawElement::MakeText(
                                     OutDrawElements,
                                     LayerId,
+#if (ENGINE_MINOR_VERSION>=2) && (ENGINE_MAJOR_VERSION==5)
+                                    AllottedGeometry.ToPaintGeometry(AllottedGeometry.Size, FSlateLayoutTransform(1.0f, TransformPoint(1.0f, FVector2D(0, 0)))),
+#else 
                                     AllottedGeometry.ToPaintGeometry(FVector2D(0, 0), AllottedGeometry.Size),
+#endif
                                     m_stdMemStr[1],
                                     FontInfo,
                                     ESlateDrawEffect::None,
@@ -1739,7 +1741,11 @@ int32 SProfilerWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
             FSlateDrawElement::MakeBox(
                                        OutDrawElements,
                                        LayerId,
-                                       AllottedGeometry.ToPaintGeometry(boxBeginPoint, FVector2D(length, cMaxViewHeight)),
+#if (ENGINE_MINOR_VERSION>=2) && (ENGINE_MAJOR_VERSION==5)
+                                        AllottedGeometry.ToPaintGeometry(FVector2D(length, cMaxViewHeight), FSlateLayoutTransform(1.0f, TransformPoint(1.0f, boxBeginPoint))),
+#else 
+                                        AllottedGeometry.ToPaintGeometry(boxBeginPoint, FVector2D(length, cMaxViewHeight)),
+#endif
                                        &stBrushWhite_1,
                                        ESlateDrawEffect::None,
                                        boxColor

@@ -18,6 +18,8 @@
 
 namespace NS_SLUA
 {
+    const char* LuaNet::ADD_LISTENER_FUNC = "AddLuaNetListener";
+    const char* LuaNet::REMOVE_LISTENER_FUNC = "RemoveLuaNetListener";
     LuaNet::ClassLuaReplicatedMap LuaNet::classLuaReplicatedMap;
     LuaNet::LuaNetSerializationMap LuaNet::luaNetSerializationMap;
     LuaNet::ObjectToLuaNetAddressMap LuaNet::objectToLuaNetAddressMap;
@@ -765,7 +767,6 @@ namespace NS_SLUA
 
     int LuaNet::__newindex(lua_State* L, UObject* obj, const char* keyName)
     {
-        
         // Try to assign net replicated prop first.
         if (LuaNet::isLuaReplicateObject(obj))
         {
@@ -794,6 +795,7 @@ namespace NS_SLUA
                                     checker(L, p, data + propOffset, 3, true);
                                     proxy->dirtyMark.Add(luaReplicatedIndex);
                                     proxy->assignTimes++;
+                                    onPropModify(L, proxy, luaReplicatedIndex, nullptr);
                                 }
                             }
                         }
@@ -805,6 +807,152 @@ namespace NS_SLUA
         }
 
         return 0;
+    }
+
+    int LuaNet::setupFunctions(lua_State* L)
+    {
+        lua_pushstring(L, LuaNet::ADD_LISTENER_FUNC);
+        lua_pushcfunction(L, LuaNet::addListener);
+        lua_rawset(L, -3);
+
+        lua_pushstring(L, LuaNet::REMOVE_LISTENER_FUNC);
+        lua_pushcfunction(L, LuaNet::removeListener);
+        lua_rawset(L, -3);
+        return 0;
+    }
+
+    int LuaNet::addListener(lua_State* L)
+    {
+        lua_pushstring(L, SLUA_CPPINST);
+        lua_rawget(L, 1);
+        void* ud = lua_touserdata(L, -1);
+        lua_pop(L, 1);
+
+        auto obj = (UObject*)ud;
+
+        if (!NS_SLUA::LuaObject::isUObjectValid(obj))
+        {
+            return 0;
+        }
+
+        if (NS_SLUA::LuaNet::isLuaReplicateObject(obj))
+        {
+            auto classLuaReplciated = LuaNet::getClassReplicatedProps(obj);
+            if (classLuaReplciated)
+            {
+                auto prop = classLuaReplciated->ownerProperty.Get();
+                if (prop && classLuaReplciated->replicatedNameToIndexMap.Num())
+                {
+                    const char* keyName = lua_tostring(L, 2);
+                    auto luaReplicatedIndex = classLuaReplciated->replicatedNameToIndexMap.Find(UTF8_TO_TCHAR(keyName));
+                    
+                    if (luaReplicatedIndex)
+                    {
+                        FLuaNetSerialization* luaNetSerialization = prop->ContainerPtrToValuePtr<FLuaNetSerialization>(obj);
+                        auto proxy = LuaNet::getLuaNetSerializationProxy(luaNetSerialization);
+                        if (proxy)
+                        {
+                            int index = *luaReplicatedIndex;
+                            {
+                                auto &listeners = proxy->propListeners.FindOrAdd(index);
+                                listeners.Add(new LuaVar(L, 3));
+                                return 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    int LuaNet::removeListener(lua_State* L)
+    {
+        lua_pushstring(L, SLUA_CPPINST);
+        lua_rawget(L, 1);
+        void* ud = lua_touserdata(L, -1);
+        lua_pop(L, 1);
+
+        auto obj = (UObject*)ud;
+
+        if (!NS_SLUA::LuaObject::isUObjectValid(obj))
+        {
+            return 0;
+        }
+
+        if (NS_SLUA::LuaNet::isLuaReplicateObject(obj))
+        {
+            auto classLuaReplciated = LuaNet::getClassReplicatedProps(obj);
+            if (classLuaReplciated)
+            {
+                auto prop = classLuaReplciated->ownerProperty.Get();
+                if (prop && classLuaReplciated->replicatedNameToIndexMap.Num())
+                {
+                    const char* keyName = lua_tostring(L, 2);
+                    auto luaReplicatedIndex = classLuaReplciated->replicatedNameToIndexMap.Find(UTF8_TO_TCHAR(keyName));
+                    
+                    if (luaReplicatedIndex)
+                    {
+                        FLuaNetSerialization* luaNetSerialization = prop->ContainerPtrToValuePtr<FLuaNetSerialization>(obj);
+                        auto proxy = LuaNet::getLuaNetSerializationProxy(luaNetSerialization);
+                        if (proxy)
+                        {
+                            int index = *luaReplicatedIndex;
+                            {
+                                auto &listeners = proxy->propListeners.FindOrAdd(index);
+                                auto funcToRemove = LuaVar(L, 3);
+                                auto indexToRemove = listeners.IndexOfByPredicate([&](const LuaVar* Item)
+                                {
+                                    if (*Item == funcToRemove)
+                                    {
+                                        delete Item;
+                                        return true;
+                                    }
+
+                                    return false;
+                                });
+                                if (indexToRemove >= 0)
+                                {
+                                    listeners.RemoveAt(indexToRemove);
+                                    return 1;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    void LuaNet::onPropModify(lua_State* L, FLuaNetSerializationProxy* proxy, ClassLuaReplicated::ReplicateIndexType index, PrepareParamCallback callback)
+    {
+        auto *listeners = proxy->propListeners.Find(index);
+        if (listeners)
+        {
+            if (listeners->Num() <= 0)
+            {
+                return;
+            }
+
+            if (callback)
+            {
+                callback();
+            }
+
+            auto listenersCopy = *listeners;
+            auto fillParam = [L]()
+            {
+                lua_pushvalue(L, -3);
+                return 1;
+            };
+            for (auto listener : listenersCopy)
+            {
+                listener->callWithNArg(fillParam);
+            }
+        }
     }
 }
 

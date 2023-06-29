@@ -771,19 +771,28 @@ namespace NS_SLUA
             actorComponent->bWantsInitializeComponent = true;
         }
 
-        FRWScopeLock lock(classHookMutex, SLT_Write);
         if (!actorComponent || !luaInterface)
         {
-            auto overriderListPtr = objectOverriders.Find(obj);
-            if (overriderListPtr)
+            if (!actorComponent || !luaInterface)
             {
-                auto overriderList = *overriderListPtr; // copy overrider list, don't use '&' reference
+                TArray<LuaOverrider*> overriderList;
+                {
+                    FRWScopeLock lock(classHookMutex, SLT_ReadOnly);
+                    auto overriderListPtr = objectOverriders.Find(obj);
+                    if (overriderListPtr)
+                    {
+                        overriderList = *overriderListPtr; // copy overrider list, don't use '&' reference
+                    }
+                }
+
                 for (auto overrider : overriderList)
                 {
                     overrider->bindOverrideFuncs(obj, cls);
                 }
             }
         }
+
+        FRWScopeLock lock(classHookMutex, SLT_Write);
         objectOverriders.Remove(obj);
     }
 

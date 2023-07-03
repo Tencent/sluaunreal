@@ -13,10 +13,35 @@
 
 #pragma once
 #include "lua.h"
-
-#define LUA_WRAPPER_DEBUG
+#include "SluaUtil.h"
 
 namespace NS_SLUA {
+
+    DefTypeName(FRotator);
+    DefTypeName(FQuat);
+    DefTypeName(FTransform);
+    DefTypeName(FLinearColor);
+    DefTypeName(FColor);
+    DefTypeName(FPlane);
+    DefTypeName(FVector);
+    DefTypeName(FVector2D);
+    DefTypeName(FVector4);
+    DefTypeName(FRandomStream);
+    DefTypeName(FGuid);
+    DefTypeName(FBox2D);
+    DefTypeName(FFallbackStruct);
+    DefTypeName(FFloatRangeBound);
+    DefTypeName(FFloatRange);
+    DefTypeName(FInt32RangeBound);
+    DefTypeName(FInt32Range);
+    DefTypeName(FFloatInterval);
+    DefTypeName(FInt32Interval);
+    DefTypeName(FFrameNumber);
+    DefTypeName(FPrimaryAssetType);
+    DefTypeName(FPrimaryAssetId);
+    DefTypeName(FDateTime);
+    DefTypeName(FSoftObjectPath);
+    DefTypeName(FSoftClassPath);
 
     struct LuaWrapper {
 
@@ -27,4 +52,3 @@ namespace NS_SLUA {
     };
 
 }
-

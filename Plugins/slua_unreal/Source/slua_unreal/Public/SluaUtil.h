@@ -244,25 +244,7 @@ namespace NS_SLUA {
     DefTypeName(FGeometry);
     DefTypeName(FSlateColor);
     DefTypeName(FAnchors);
-    DefTypeName(FRotator);
-    DefTypeName(FTransform);
-    DefTypeName(FLinearColor);
-    DefTypeName(FColor);
-    DefTypeName(FVector);
-    DefTypeName(FVector2D);
-    DefTypeName(FRandomStream);
-    DefTypeName(FGuid);
-    DefTypeName(FBox2D);
-    DefTypeName(FFloatRangeBound);
-    DefTypeName(FFloatRange);
-    DefTypeName(FInt32RangeBound);
-    DefTypeName(FInt32Range);
-    DefTypeName(FFloatInterval);
-    DefTypeName(FInt32Interval);
-    DefTypeName(FPrimaryAssetType);
-    DefTypeName(FPrimaryAssetId);
     DefTypeName(FActorComponentTickFunction);
-    DefTypeName(FDateTime);
     
     template<typename T,ESPMode mode>
     struct TypeName<TSharedPtr<T, mode>, false> {

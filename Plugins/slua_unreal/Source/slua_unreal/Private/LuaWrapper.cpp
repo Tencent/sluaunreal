@@ -585,6 +585,14 @@ namespace NS_SLUA {
             return 0;
         }
 
+        static int clone(lua_State* L) {
+            CheckSelf(FRotator);
+            auto ret = __newFRotator();
+            *ret = *self;
+            LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
+        }
+
         static int __gc(lua_State* L) {
             CheckSelfSafe(FRotator);
             SLUA_GCSTRUCT(FRotator);
@@ -1226,6 +1234,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "CompressAxisToShort", CompressAxisToShort, false);
             LuaObject::addMethod(L, "DecompressAxisFromShort", DecompressAxisFromShort, false);
             LuaObject::addMethod(L, "MakeFromEuler", MakeFromEuler, false);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FRotator", __ctor, __gc);
         }
 
@@ -1266,6 +1275,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FQuat() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FQuat);
+            auto ret = __newFQuat();
+            *ret = *self;
+            LuaObject::push<FQuat>(L, "FQuat", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -2373,6 +2390,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "Squad", Squad, false);
             LuaObject::addMethod(L, "SquadFullPath", SquadFullPath, false);
             LuaObject::addMethod(L, "CalcTangents", CalcTangents, false);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FQuat", __ctor, __gc);
         }
 
@@ -2429,6 +2447,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FTransform() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FTransform);
+            auto ret = __newFTransform();
+            *ret = *self;
+            LuaObject::push<FTransform>(L, "FTransform", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -3770,6 +3796,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "AreScale3DsEqual", AreScale3DsEqual, false);
             LuaObject::addMethod(L, "AddTranslations", AddTranslations, false);
             LuaObject::addMethod(L, "SubtractTranslations", SubtractTranslations, false);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FTransform", __ctor, __gc);
         }
 
@@ -3802,6 +3829,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FLinearColor() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FLinearColor);
+            auto ret = __newFLinearColor();
+            *ret = *self;
+            LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -4316,9 +4351,9 @@ namespace NS_SLUA {
                 auto V = LuaObject::checkValue<int>(L, 3);
                 auto ret = __newFLinearColor();
 #if (ENGINE_MINOR_VERSION<22) && (ENGINE_MAJOR_VERSION==4)
-                *ret = FLinearColor::FGetHSV(HVal, SVal, VVal);
+                *ret = FLinearColor::FGetHSV(H, S, V);
 #else
-                *ret = FLinearColor::MakeFromHSV8(HVal, SVal, VVal);
+                *ret = FLinearColor::MakeFromHSV8(H, S, V);
 #endif
                 LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
@@ -4445,6 +4480,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "MakeFromColorTemperature", MakeFromColorTemperature, false);
             LuaObject::addMethod(L, "Dist", Dist, false);
             LuaObject::addMethod(L, "LerpUsingHSV", LerpUsingHSV, false);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FLinearColor", __ctor, __gc);
         }
 
@@ -4477,6 +4513,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FColor() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FColor);
+            auto ret = __newFColor();
+            *ret = *self;
+            LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -4807,6 +4851,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "MakeRandomColor", MakeRandomColor, false);
             LuaObject::addMethod(L, "MakeRedToGreenColorFromScalar", MakeRedToGreenColorFromScalar, false);
             LuaObject::addMethod(L, "MakeFromColorTemperature", MakeFromColorTemperature, false);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FColor", __ctor, __gc);
         }
 
@@ -4862,6 +4907,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FPlane() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FPlane);
+            auto ret = __newFPlane();
+            *ret = *self;
+            LuaObject::push<FPlane>(L, "FPlane", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -5094,6 +5147,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "Normalize", Normalize, true);
             LuaObject::addMethod(L, "Flip", Flip, true);
             LuaObject::addMethod(L, "Equals", Equals, true);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FPlane", __ctor, __gc);
         }
 
@@ -5132,6 +5186,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FVector() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FVector);
+            auto ret = __newFVector();
+            *ret = *self;
+            LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -6904,6 +6966,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "Triple", Triple, false);
             LuaObject::addMethod(L, "RadiansToDegrees", RadiansToDegrees, false);
             LuaObject::addMethod(L, "DegreesToRadians", DegreesToRadians, false);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FVector", __ctor, __gc);
         }
 
@@ -6933,6 +6996,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FVector2D() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FVector2D);
+            auto ret = __newFVector2D();
+            *ret = *self;
+            LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -7595,6 +7666,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "CrossProduct", CrossProduct, false);
             LuaObject::addMethod(L, "Max", Max, false);
             LuaObject::addMethod(L, "Min", Min, false);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FVector2D", __ctor, __gc);
         }
 
@@ -7638,6 +7710,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FVector4() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FVector4);
+            auto ret = __newFVector4();
+            *ret = *self;
+            LuaObject::push<FVector4>(L, "FVector4", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -8124,6 +8204,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "Reflect3", Reflect3, true);
             LuaObject::addMethod(L, "FindBestAxisVectors3", FindBestAxisVectors3, true);
             LuaObject::addMethod(L, "DiagnosticCheckNaN", DiagnosticCheckNaN, true);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FVector4", __ctor, __gc);
         }
 
@@ -8146,6 +8227,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FRandomStream() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FRandomStream);
+            auto ret = __newFRandomStream();
+            *ret = *self;
+            LuaObject::push<FRandomStream>(L, "FRandomStream", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -8380,6 +8469,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "VRand", VRand, true);
             LuaObject::addMethod(L, "VRandCone", VRandCone, true);
             LuaObject::addMethod(L, "ToString", ToString, true);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FRandomStream", __ctor, __gc);
         }
 
@@ -8411,6 +8501,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FGuid() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FGuid);
+            auto ret = __newFGuid();
+            *ret = *self;
+            LuaObject::push<FGuid>(L, "FGuid", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -8591,6 +8689,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "NewGuid", NewGuid, false);
             LuaObject::addMethod(L, "Parse", Parse, false);
             LuaObject::addMethod(L, "ParseExact", ParseExact, false);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FGuid", __ctor, __gc);
         }
 
@@ -8631,6 +8730,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FBox2D() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FBox2D);
+            auto ret = __newFBox2D();
+            *ret = *self;
+            LuaObject::push<FBox2D>(L, "FBox2D", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -8960,6 +9067,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "IsInside", IsInside, true);
             LuaObject::addMethod(L, "ShiftBy", ShiftBy, true);
             LuaObject::addMethod(L, "ToString", ToString, true);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FBox2D", __ctor, __gc);
         }
 
@@ -8973,6 +9081,14 @@ namespace NS_SLUA {
             return 0;
         }
 
+        static int clone(lua_State* L) {
+            CheckSelf(FFallbackStruct);
+            auto ret = __newFFallbackStruct();
+            *ret = *self;
+            LuaObject::push<FFallbackStruct>(L, "FFallbackStruct", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
+        }
+
         static int __gc(lua_State* L) {
             CheckSelfSafe(FFallbackStruct);
             SLUA_GCSTRUCT(FFallbackStruct);
@@ -8982,6 +9098,7 @@ namespace NS_SLUA {
         static void bind(lua_State* L) {
             AutoStack autoStack(L);
             LuaObject::newType(L, "FFallbackStruct");
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FFallbackStruct", __ctor, __gc);
         }
 
@@ -9004,6 +9121,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FFloatRangeBound() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FFloatRangeBound);
+            auto ret = __newFFloatRangeBound();
+            *ret = *self;
+            LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -9175,6 +9300,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "MaxUpper", MaxUpper, false);
             LuaObject::addMethod(L, "MinLower", MinLower, false);
             LuaObject::addMethod(L, "MinUpper", MinUpper, false);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FFloatRangeBound", __ctor, __gc);
         }
 
@@ -9204,6 +9330,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FFloatRange() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FFloatRange);
+            auto ret = __newFFloatRange();
+            *ret = *self;
+            LuaObject::push<FFloatRange>(L, "FFloatRange", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -9269,6 +9403,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "All", All, false);
             LuaObject::addMethod(L, "AtLeast", AtLeast, false);
             LuaObject::addMethod(L, "AtMost", AtMost, false);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FFloatRange", __ctor, __gc);
         }
 
@@ -9291,6 +9426,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FInt32RangeBound() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FInt32RangeBound);
+            auto ret = __newFInt32RangeBound();
+            *ret = *self;
+            LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -9462,6 +9605,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "MaxUpper", MaxUpper, false);
             LuaObject::addMethod(L, "MinLower", MinLower, false);
             LuaObject::addMethod(L, "MinUpper", MinUpper, false);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FInt32RangeBound", __ctor, __gc);
         }
 
@@ -9491,6 +9635,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FInt32Range() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FInt32Range);
+            auto ret = __newFInt32Range();
+            *ret = *self;
+            LuaObject::push<FInt32Range>(L, "FInt32Range", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -9556,6 +9708,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "All", All, false);
             LuaObject::addMethod(L, "AtLeast", AtLeast, false);
             LuaObject::addMethod(L, "AtMost", AtMost, false);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FInt32Range", __ctor, __gc);
         }
 
@@ -9581,6 +9734,14 @@ namespace NS_SLUA {
             return 0;
         }
 
+        static int clone(lua_State* L) {
+            CheckSelf(FFloatInterval);
+            auto ret = __newFFloatInterval();
+            *ret = *self;
+            LuaObject::push<FFloatInterval>(L, "FFloatInterval", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
+        }
+
         static int __gc(lua_State* L) {
             CheckSelfSafe(FFloatInterval);
             SLUA_GCSTRUCT(FFloatInterval);
@@ -9590,6 +9751,7 @@ namespace NS_SLUA {
         static void bind(lua_State* L) {
             AutoStack autoStack(L);
             LuaObject::newType(L, "FFloatInterval");
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FFloatInterval", __ctor, __gc);
         }
 
@@ -9615,6 +9777,14 @@ namespace NS_SLUA {
             return 0;
         }
 
+        static int clone(lua_State* L) {
+            CheckSelf(FInt32Interval);
+            auto ret = __newFInt32Interval();
+            *ret = *self;
+            LuaObject::push<FInt32Interval>(L, "FInt32Interval", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
+        }
+
         static int __gc(lua_State* L) {
             CheckSelfSafe(FInt32Interval);
             SLUA_GCSTRUCT(FInt32Interval);
@@ -9624,6 +9794,7 @@ namespace NS_SLUA {
         static void bind(lua_State* L) {
             AutoStack autoStack(L);
             LuaObject::newType(L, "FInt32Interval");
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FInt32Interval", __ctor, __gc);
         }
 
@@ -9640,6 +9811,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FFrameNumber() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FFrameNumber);
+            auto ret = __newFFrameNumber();
+            *ret = *self;
+            LuaObject::push<FFrameNumber>(L, "FFrameNumber", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -9668,6 +9847,7 @@ namespace NS_SLUA {
             AutoStack autoStack(L);
             LuaObject::newType(L, "FFrameNumber");
             LuaObject::addField(L, "Value", get_Value, set_Value, true);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FFrameNumber", __ctor, __gc);
         }
 
@@ -9691,6 +9871,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FPrimaryAssetType() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FPrimaryAssetType);
+            auto ret = __newFPrimaryAssetType();
+            *ret = *self;
+            LuaObject::push<FPrimaryAssetType>(L, "FPrimaryAssetType", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -9746,6 +9934,7 @@ namespace NS_SLUA {
             LuaObject::addOperator(L, "__eq", __eq);
             LuaObject::addMethod(L, "IsValid", IsValid, true);
             LuaObject::addMethod(L, "ToString", ToString, true);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FPrimaryAssetType", __ctor, __gc);
         }
 
@@ -9768,6 +9957,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FPrimaryAssetId() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FPrimaryAssetId);
+            auto ret = __newFPrimaryAssetId();
+            *ret = *self;
+            LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -9868,6 +10065,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "ToString", ToString, true);
             LuaObject::addMethod(L, "ParseTypeAndName", ParseTypeAndName, false);
             LuaObject::addMethod(L, "FromString", FromString, false);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FPrimaryAssetId", __ctor, __gc);
         }
 
@@ -9902,6 +10100,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FDateTime() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FDateTime);
+            auto ret = __newFDateTime();
+            *ret = *self;
+            LuaObject::push<FDateTime>(L, "FDateTime", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -10428,6 +10634,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "Today", Today, false);
             LuaObject::addMethod(L, "UtcNow", UtcNow, false);
             LuaObject::addMethod(L, "Validate", Validate, false);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FDateTime", __ctor, __gc);
         }
 
@@ -10455,6 +10662,14 @@ namespace NS_SLUA {
             }
             luaL_error(L, "call FSoftObjectPath() error, argc=%d", argc);
             return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FSoftObjectPath);
+            auto ret = __newFSoftObjectPath();
+            *ret = *self;
+            LuaObject::push<FSoftObjectPath>(L, "FSoftObjectPath", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
         }
 
         static int __gc(lua_State* L) {
@@ -10694,6 +10909,7 @@ namespace NS_SLUA {
             LuaObject::addMethod(L, "GetCurrentTag", GetCurrentTag, false);
             LuaObject::addMethod(L, "InvalidateTag", InvalidateTag, false);
             LuaObject::addMethod(L, "ClearPIEPackageNames", ClearPIEPackageNames, false);
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FSoftObjectPath", __ctor, __gc);
         }
 
@@ -10723,6 +10939,14 @@ namespace NS_SLUA {
             return 0;
         }
 
+        static int clone(lua_State* L) {
+            CheckSelf(FSoftClassPath);
+            auto ret = __newFSoftClassPath();
+            *ret = *self;
+            LuaObject::push<FSoftClassPath>(L, "FSoftClassPath", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
+        }
+
         static int __gc(lua_State* L) {
             CheckSelfSafe(FSoftClassPath);
             SLUA_GCSTRUCT(FSoftClassPath);
@@ -10732,6 +10956,7 @@ namespace NS_SLUA {
         static void bind(lua_State* L) {
             AutoStack autoStack(L);
             LuaObject::newTypeWithBase(L, "FSoftClassPath", std::initializer_list<const char*>{ "FSoftObjectPath" });
+            LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FSoftClassPath", __ctor, __gc);
         }
 

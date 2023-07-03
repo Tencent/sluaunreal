@@ -21,7 +21,7 @@
 #include "SluaMicro.h"
 #include "UObject/UnrealType.h"
 #include "UObject/WeakObjectPtr.h"
-#include "SluaUtil.h"
+#include "LuaWrapper.h"
 #include "LuaArray.h"
 #include "LuaMap.h"
 #include "LuaSet.h"

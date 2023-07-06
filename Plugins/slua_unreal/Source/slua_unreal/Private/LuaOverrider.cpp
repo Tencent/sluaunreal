@@ -931,7 +931,7 @@ namespace NS_SLUA
         {
             AsyncLoadedObject& objInfo = asyncLoadedObjects[curIndex];
             auto obj = objInfo.obj.Get();
-            if (obj && !obj->HasAnyFlags(RF_NeedPostLoad))
+            if (obj && !obj->HasAnyFlags(RF_NeedPostLoad) && !obj->HasAnyFlags(RF_NeedInitialization))
             {
                 // NS_SLUA::Log::Log("LuaOverrider::OnAsyncLoadingFlushUpdate %s", TCHAR_TO_UTF8(*actorInfo.obj->GetFName().ToString()));
                 UGameInstance* gameInstance = LuaState::getObjectGameInstance(obj);

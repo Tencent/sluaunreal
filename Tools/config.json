@@ -29,7 +29,19 @@
         {
             "type": "FVector",
             "methods": [ "GenerateClusterCenters" ]
-        }
+        },
+		{
+			"type": "FLinearColor",
+			"methods": ["ComputeLuminanceFast", "ComputeLuminance"]
+		},
+		{
+			"type": "FRandomStream",
+			"methods": ["FRandRange"]
+		},
+		{
+			"type": "FDoubleRange",
+			"methods": ["Split", "Difference", "Hull", "Intersection", "Union", "GreaterThan", "LessThan"]
+		}
     ],
     "output_dir": "{solution_dir}/Plugins/slua_unreal/Source/slua_unreal/Private/",
     "win": {

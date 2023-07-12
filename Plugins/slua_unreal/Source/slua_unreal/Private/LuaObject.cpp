@@ -38,7 +38,6 @@
 #include "lstate.h"
 #include "LuaBlueprintLibrary.h" // Comment For PUBG Mobile
 #include "LuaFunctionAccelerator.h"
-#include "LuaProfiler.h"
 #include "LuaOverrider.h"
 #include "Engine/UserDefinedEnum.h"
 
@@ -1410,6 +1409,22 @@ namespace NS_SLUA {
         return 3;
     }
 
+    int instanceStructClone(lua_State* L) {
+        LuaStruct* luaStruct = LuaObject::checkValue<LuaStruct*>(L, 1);
+        auto uss = luaStruct->uss;
+
+        uint32 size = luaStruct->size;
+        uint8* buf = (uint8*)FMemory::Malloc(size);
+        uss->InitializeStruct(buf);
+        uss->CopyScriptStruct(buf, luaStruct->buf);
+        
+        LuaStruct* luaStructCopy = new LuaStruct();
+        luaStructCopy->Init(buf, size, uss, false);
+        int ret = LuaObject::push(L, luaStructCopy);
+        LuaObject::addLink(L,buf);
+        return ret;
+    }
+
     int instanceIndexSelf(lua_State* L) {
         lua_getmetatable(L,1);
 
@@ -1524,14 +1539,6 @@ namespace NS_SLUA {
         ensure(p);
         FWeakObjectPtr v = p->GetPropertyValue(parms);
         return LuaObject::push(L, v);
-    }
-
-    int pushUSoftObjectProperty(lua_State *L, FProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
-        auto p = CastField<FSoftObjectProperty>(prop);
-        ensure(p);
-        FSoftObjectPtr v = p->GetPropertyValue(parms);
-        FSoftObjectPtr* softObjectPtr = new FSoftObjectPtr(v);
-        return LuaObject::push<FSoftObjectPtr>(L, "FSoftObjectPtr", softObjectPtr, UD_AUTOGC | UD_VALUETYPE);
     }
 
     void* checkUArrayProperty(lua_State* L,FProperty* prop,uint8* parms,int i,bool bForceCopy) {
@@ -2409,7 +2416,6 @@ namespace NS_SLUA {
         regPusher(FEnumProperty::StaticClass(), pushEnumProperty);
         regPusher(FClassProperty::StaticClass(), pushUClassProperty);
         regPusher(FWeakObjectProperty::StaticClass(), pushUWeakProperty);
-        regPusher(FSoftObjectProperty::StaticClass(), pushUSoftObjectProperty);
         
         regChecker<FIntProperty>();
         regChecker<FUInt32Property>();
@@ -2660,6 +2666,8 @@ namespace NS_SLUA {
         lua_setfield(L, -2, "__next");
         lua_pushcfunction(L, instanceStructPairs);
         lua_setfield(L, -2, "__pairs");
+        lua_pushcfunction(L, instanceStructClone);
+        lua_setfield(L, -2, "clone");
         return 0;
     }
 }

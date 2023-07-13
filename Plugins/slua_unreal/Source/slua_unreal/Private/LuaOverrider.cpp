@@ -480,6 +480,12 @@ namespace NS_SLUA
     const char* LuaOverrider::SUPER_NAME = "Super";
     const char* LuaOverrider::CACHE_NAME = "__cache";
     const char* LuaOverrider::INSTANCE_CACHE_NAME = "__instance_cache";
+#if WITH_EDITOR
+    ULuaOverrider::ClassNativeMap LuaOverrider::cacheNativeFuncs;
+    TMap<UClass*, TArray<UFunction*>> LuaOverrider::classAddedFuncs;
+    TMap<UClass*, TArray<UFunction*>> LuaOverrider::classHookedFuncs;
+#endif
+
     const uint8 LuaOverrider::Code[] = { (uint8)Ex_LuaOverride, EX_Return, EX_Nothing };
     const int32 LuaOverrider::CodeSize = sizeof(Code);
     FRWLock LuaOverrider::classHookMutex;
@@ -617,9 +623,9 @@ namespace NS_SLUA
         UClass* cls = (UClass*)Object;;
         if (cls )
         {
+            removeOneOverride(cls, true);
             if (overridedClasses.Contains(cls))
             {
-                removeOneOverride(cls, true);
                 overridedClasses.Remove(cls);
             }
 
@@ -798,80 +804,69 @@ namespace NS_SLUA
 
     void LuaOverrider::removeOneOverride(UClass* cls, bool bObjectDeleted)
     {
-        auto &duplicatedFuncs = overridedClasses.FindChecked(cls);
-        auto ProcessFunc = [cls, this, &duplicatedFuncs](UFunction* func)
-        {
-            if (!func || !(func->FunctionFlags & OverrideFuncFlags)) return;
 #if WITH_EDITOR
-            if (luaNet->luaRPCFuncs.Contains(func))
-            {
-                for (auto FieldAddress = &cls->Children; (FieldAddress && *FieldAddress); FieldAddress = &((*FieldAddress)->Next))
-                {
-                    if (*FieldAddress == func)
-                    {
-                        *FieldAddress = func->Next;
-                        func->Next = nullptr;
-                        break;
-                    }
-                }
-                cls->RemoveFunctionFromFunctionMap(func);
-                cls->NetFields.Remove(func);
-                luaNet->luaRPCFuncs.Remove(func);
-
-                if (!func->IsValidLowLevel()) return;
-                func->RemoveFromRoot();
-            }
-#endif
-            {
-                if (duplicatedFuncs.Contains(func))
-                {
-                    cls->RemoveFunctionFromFunctionMap(func);
-                    func->ConditionalBeginDestroy();
-                    duplicatedFuncs.Remove(func);
-                    return;
-                }
-
-                int scriptNum = func->Script.Num();
-                
-                // func hooked by insert code
-                if (scriptNum >= CodeSize && func->Script[0] == Ex_LuaOverride)
-                {
-                    func->Script.RemoveAt(0, CodeSize, false);
-                }
-
-#if WITH_EDITOR
-                // func hooked by SetNativeFunc
-                if (func->GetNativeFunc() == (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc)
-                {
-                    auto nativeMap = cacheNativeFuncs.Find(cls);
-                    if (!nativeMap) return;
-                    auto nativeFunc = nativeMap->Find(func->GetName());
-                    if (!nativeFunc) return;
-                    func->SetNativeFunc(*nativeFunc);
-                }
-#endif
-            }
-        };
-
         if (!bObjectDeleted)
         {
-            if (auto funcNames = classHookedFuncNames.Find(cls))
+            auto hookedFuncsPtr = classHookedFuncs.Find(cls);
+            if (hookedFuncsPtr)
             {
-                for (const FName& funcName : *funcNames)
+                // Revert hooked functions
+                for (auto func : *hookedFuncsPtr)
                 {
-                    UFunction* supercallFunc = cls->FindFunctionByName(FName(*(SUPER_CALL_FUNC_NAME_PREFIX + funcName.ToString())));
-                    ProcessFunc(supercallFunc);
-                    UFunction* func = cls->FindFunctionByName(funcName);
-                    ProcessFunc(func);
+                    int scriptNum = func->Script.Num();
+                
+                    // func hooked by insert code
+                    if (scriptNum >= CodeSize && func->Script[0] == Ex_LuaOverride)
+                    {
+                        func->Script.RemoveAt(0, CodeSize, false);
+                    }
+                    
+                    // func hooked by SetNativeFunc
+                    if (func->GetNativeFunc() == (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc)
+                    {
+                        auto nativeMap = cacheNativeFuncs.Find(cls);
+                        if (!nativeMap) return;
+                        auto nativeFunc = nativeMap->Find(func->GetName());
+                        if (!nativeFunc) return;
+                        func->SetNativeFunc(*nativeFunc);
+                    }
+                }
+            }
+
+            auto addedFuncsPtr = classAddedFuncs.Find(cls);
+            if (addedFuncsPtr)
+            {
+                // Remove functions added to class
+                for (auto func : *addedFuncsPtr)
+                {
+                    if (luaNet->luaRPCFuncs.Contains(func))
+                    {
+                        for (auto FieldAddress = &cls->Children; (FieldAddress && *FieldAddress); FieldAddress = &((*FieldAddress)->Next))
+                        {
+                            if (*FieldAddress == func)
+                            {
+                                *FieldAddress = func->Next;
+                                func->Next = nullptr;
+                                break;
+                            }
+                        }
+
+                        cls->NetFields.Remove(func);
+                        luaNet->luaRPCFuncs.Remove(func);
+                    }
+
+                    cls->RemoveFunctionFromFunctionMap(func);
+                    func->RemoveFromRoot();
+                    func->ConditionalBeginDestroy();
                 }
             }
         }
-        duplicatedFuncs.Empty();
-        
-        classHookedFuncNames.Remove(cls);
-#if WITH_EDITOR
+
+        classHookedFuncs.Remove(cls);
+        classAddedFuncs.Remove(cls);
         cacheNativeFuncs.Remove(cls);
 #endif
+        classHookedFuncNames.Remove(cls);
 
         if (NS_SLUA::LuaNet::classLuaReplicatedMap.Contains(cls))
         {    
@@ -898,19 +893,25 @@ namespace NS_SLUA
     
     void LuaOverrider::removeOverrides()
     {
-        for (auto iter = overridedClasses.CreateIterator(); iter; ++iter)
+        TArray<UClass*> classArray;
+        classHookedFuncs.GetKeys(classArray);
+        for (auto cls : classArray)
         {
-            UClass* OverrideClass = iter.Key();
-            if (!OverrideClass)
-                continue;
-            removeOneOverride(OverrideClass, false);
-            clearSuperFuncCache(OverrideClass);
+            removeOneOverride(cls, false);
+            clearSuperFuncCache(cls);
         }
 
-        luaNet->luaRPCFuncs.Empty();
-        NS_SLUA::LuaNet::addedRPCClasses.Empty();
-        
+        classAddedFuncs.GetKeys(classArray);
+        for (auto cls : classArray)
+        {
+            removeOneOverride(cls, false);
+            clearSuperFuncCache(cls);
+        }
+
         overridedClasses.Empty();
+
+        luaNet->luaRPCFuncs.Empty();
+        LuaNet::addedRPCClasses.Empty();
     }
 #endif
 
@@ -1084,6 +1085,10 @@ namespace NS_SLUA
         }
 
         outerClass->AddFunctionToFunctionMap(newFunc, newFuncName);
+#if WITH_EDITOR
+        auto &funcs = LuaOverrider::classAddedFuncs.FindOrAdd(outerClass);
+        funcs.Add(newFunc);
+#endif
         
         if (newFunc->HasAnyFunctionFlags(FUNC_NetMulticast))
         {
@@ -1198,12 +1203,10 @@ namespace NS_SLUA
             getLuaFunctions(L, funcNames, luaModule);
 
             int hookCounter = 0;
-            auto &duplicatedFuncs = overridedClasses.FindOrAdd(cls);
             for (auto& funcName : funcNames) {
                 UFunction* func = cls->FindFunctionByName(funcName, EIncludeSuperFlag::IncludeSuper);
                 if (!func && (funcName.ToString()).StartsWith(TEXT("AnimNotify_"))) {
                     func = duplicateUFunction(animNotifyTemplate, cls, funcName, (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
-                    duplicatedFuncs.Add(func);
                 }
                 if (func && (func->FunctionFlags & OverrideFuncFlags)) {
                     if (hookBpScript(func, cls, (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc)) {
@@ -1322,8 +1325,6 @@ namespace NS_SLUA
 
         // duplicate UFunction for super call
         auto supercallFunc = duplicateUFunction(func, cls, FName(*(SUPER_CALL_FUNC_NAME_PREFIX + func->GetName())), func->GetNativeFunc());
-        auto &duplicatedFuncs = overridedClasses.FindOrAdd(cls);
-        duplicatedFuncs.Add(supercallFunc);
 #if WITH_EDITOR
         if (func->HasAnyFunctionFlags(FUNC_NetMulticast))
         {
@@ -1345,11 +1346,15 @@ namespace NS_SLUA
             }
             overrideFunc->Script.Insert(Code, CodeSize, 0);
             hooked = true;
+
+#if WITH_EDITOR
+            auto &hookedFuncs = classHookedFuncs.FindOrAdd(cls);
+            hookedFuncs.Add(func);
+#endif
         }
         else if (!overrideFunc)
         {
             overrideFunc = duplicateUFunction(func, cls, func->GetFName(), (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
-            duplicatedFuncs.Add(overrideFunc);
 #if WITH_EDITOR
             if (func->HasAnyFunctionFlags(FUNC_NetMulticast))
             {
@@ -1574,7 +1579,6 @@ namespace NS_SLUA
     void LuaOverrider::overrideActionInputs(AActor* actor, UInputComponent* inputComponent, const TSet<FName>& luaFunctions)
     {
         UClass *actorClass = actor->GetClass();
-        auto &duplicatedFuncs = overridedClasses.FindOrAdd(actorClass);
 
         TSet<FName> actionNames;
         int32 numActionBindings = inputComponent->GetNumActionBindings();
@@ -1589,7 +1593,6 @@ namespace NS_SLUA
             if (luaFunctions.Find(funcName))
             {
                 auto inputFunc = duplicateUFunction(inputActionFunc, actorClass, funcName, (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
-                duplicatedFuncs.Add(inputFunc);
                 inputActionBinding.ActionDelegate.BindDelegate(actor, funcName);
             }
 
@@ -1600,7 +1603,6 @@ namespace NS_SLUA
                 if (luaFunctions.Find(funcName))
                 {
                     auto inputFunc = duplicateUFunction(inputActionFunc, actorClass, funcName, (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
-                    duplicatedFuncs.Add(inputFunc);
                     FInputActionBinding AB(name, inputEvent);
                     AB.ActionDelegate.BindDelegate(actor, funcName);
                     inputComponent->AddActionBinding(AB);
@@ -1619,7 +1621,6 @@ namespace NS_SLUA
                 if (luaFunctions.Find(funcName))
                 {
                     auto inputFunc = duplicateUFunction(inputActionFunc, actorClass, funcName, (FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
-                    duplicatedFuncs.Add(inputFunc);
                     FInputActionBinding inputActionBinding(actionName, InputEvents[i]);
                     inputActionBinding.ActionDelegate.BindDelegate(actor, funcName);
                     inputComponent->AddActionBinding(inputActionBinding);

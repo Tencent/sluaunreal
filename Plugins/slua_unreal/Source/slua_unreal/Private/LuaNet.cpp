@@ -708,6 +708,8 @@ namespace NS_SLUA
             cls->NetFields.Add(func);
 #if WITH_EDITOR
             luaRPCFuncs.Add(func);
+            auto &funcs = LuaOverrider::classAddedFuncs.FindOrAdd(cls);
+            funcs.Add(func);
 #endif
             func->SetNativeFunc((FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
             func->Script.Insert(LuaOverrider::Code, LuaOverrider::CodeSize, 0);

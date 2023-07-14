@@ -49,6 +49,7 @@ function testcase()
     require 'TestUI'
     require 'TestCase'
     require 'TestStruct'
+    require 'TestInterface'
     require 'TestCppBinding'
     TestBp=require 'TestBlueprint'
     TestBp:test(gworld,gactor)

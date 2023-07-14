@@ -1541,6 +1541,22 @@ namespace NS_SLUA {
         return LuaObject::push(L, v);
     }
 
+    int pushUSoftObjectProperty(lua_State *L, FProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
+        auto p = CastField<FSoftObjectProperty>(prop);
+        ensure(p);
+        FSoftObjectPtr v = p->GetPropertyValue(parms);
+        FSoftObjectPtr* softObjectPtr = new FSoftObjectPtr(v);
+        return LuaObject::push<FSoftObjectPtr>(L, "FSoftObjectPtr", softObjectPtr, UD_AUTOGC | UD_VALUETYPE);
+    }
+    
+    int pushUSoftClassProperty(lua_State *L, FProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
+        auto p = CastField<FSoftClassProperty>(prop);
+        ensure(p);
+        FSoftObjectPtr v = p->GetPropertyValue(parms);
+        FSoftObjectPtr* softObjectPtr = new FSoftObjectPtr(v);
+        return LuaObject::push<FSoftObjectPtr>(L, "FSoftObjectPtr", softObjectPtr, UD_AUTOGC | UD_VALUETYPE);
+    }
+
     void* checkUArrayProperty(lua_State* L,FProperty* prop,uint8* parms,int i,bool bForceCopy) {
         auto p = CastField<FArrayProperty>(prop);
         ensure(p);
@@ -1784,6 +1800,30 @@ namespace NS_SLUA {
         return LuaObject::pushReference<LuaStruct*>(L, ls, parentAddress);
     }
 
+    int referencePusherUSoftObjectProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress) {
+        auto p = CastField<FSoftObjectProperty>(prop);
+        ensure(p);
+        
+        NewUD(FSoftObjectPtr, &p->GetPropertyValue(parms), UD_NOFLAG);
+        udptr->parent = parentAddress;
+        luaL_getmetatable(L,"FSoftObjectPtr");
+        lua_setmetatable(L, -2);
+        LuaObject::linkProp(L, parentAddress, ud);
+        return 1;
+    }
+
+    int referencePusherUSoftClassProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress) {
+        auto p = CastField<FSoftClassProperty>(prop);
+        ensure(p);
+
+        NewUD(FSoftObjectPtr, &p->GetPropertyValue(parms), UD_NOFLAG);
+        udptr->parent = parentAddress;
+        luaL_getmetatable(L,"FSoftObjectPtr");
+        lua_setmetatable(L, -2);
+        LuaObject::linkProp(L, parentAddress, ud);
+        return 1;
+    }
+
     int pushUStructProperty(lua_State* L,FProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
         auto p = CastField<FStructProperty>(prop);
         ensure(p);
@@ -1999,6 +2039,23 @@ namespace NS_SLUA {
         }
         return ls->buf;
     }
+
+    const char* getType(lua_State* L, int p) {
+        if (!lua_isuserdata(L, p)) {
+            lua_pop(L, 1);
+            return "";
+        }
+        int tt = luaL_getmetafield(L, p, "__name");
+        if (tt==LUA_TSTRING)
+        {
+            const char* typeName = lua_tostring(L, -1);
+            lua_pop(L, 1);
+            return typeName;
+        }
+        if(tt!=LUA_TNIL)
+            lua_pop(L, 1);
+        return "";
+    }
     
     int pushUClassProperty(lua_State* L, FProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
         auto p = CastField<FClassProperty>(prop);
@@ -2017,8 +2074,44 @@ namespace NS_SLUA {
     void* checkUSoftObjectProperty(lua_State* L, FProperty* prop, uint8* parms, int i, bool bForceCopy) {
         auto p = CastField<FSoftObjectProperty>(prop);
         ensure(p);
-        const UObject* Obj = LuaObject::checkUD<UObject>(L, i);;
-        p->SetPropertyValue(parms, FSoftObjectPtr(Obj));
+        auto t = lua_type(L, i);
+        if (t == LUA_TSTRING) {
+            const char* path = lua_tostring(L, i);
+            auto softObjectPtr = FSoftObjectPtr(FSoftObjectPath(UTF8_TO_TCHAR(path)));
+            p->SetPropertyValue(parms, softObjectPtr);
+            return nullptr;
+        }
+        auto typeName = getType(L, i);
+        if (strcmp(typeName, "UObject") == 0) {
+            const UObject* Obj = LuaObject::checkUD<UObject>(L, i);;
+            p->SetPropertyValue(parms, FSoftObjectPtr(Obj));
+        }
+        else if (strcmp(typeName, "FSoftObjectPtr") == 0) {
+            auto softObjectPtr = LuaObject::checkUD<FSoftObjectPtr>(L, i);
+            p->SetPropertyValue(parms, *softObjectPtr);
+        }
+        return nullptr;
+    }
+
+    void* checkUSoftClassProperty(lua_State* L, FProperty* prop, uint8* parms, int i, bool bForceCopy) {
+        auto p = CastField<FSoftClassProperty>(prop);
+        ensure(p);
+        auto t = lua_type(L, i);
+        if (t == LUA_TSTRING) {
+            const char* path = lua_tostring(L, i);
+            auto softObjectPtr = FSoftObjectPtr(FSoftObjectPath(UTF8_TO_TCHAR(path)));
+            p->SetPropertyValue(parms, softObjectPtr);
+            return nullptr;
+        }
+        auto typeName = getType(L, i);
+        if (strcmp(typeName, "UObject") == 0) {
+            const UObject* Obj = LuaObject::checkUD<UObject>(L, i);;
+            p->SetPropertyValue(parms, FSoftObjectPtr(Obj));
+        }
+        else if (strcmp(typeName, "FSoftObjectPtr") == 0) {
+            auto softObjectPtr = LuaObject::checkUD<FSoftObjectPtr>(L, i);
+            p->SetPropertyValue(parms, *softObjectPtr);
+        }
         return nullptr;
     }
 
@@ -2028,22 +2121,6 @@ namespace NS_SLUA {
         const UObject* UD = LuaObject::checkUD<UObject>(L, i);;
         p->SetPropertyValue(parms, FWeakObjectPtr(UD));
         return nullptr;
-    }
-
-    bool checkType(lua_State* L, int p, const char* tn) {
-        if (!lua_isuserdata(L, p)) {
-            lua_pop(L, 1);
-            return false;
-        }
-        int tt = luaL_getmetafield(L, p, "__name");
-        if (tt==LUA_TSTRING && strcmp(tn, lua_tostring(L, -1)) == 0)
-        {
-            lua_pop(L, 1);
-            return true;
-        }
-        if(tt!=LUA_TNIL)
-            lua_pop(L, 1);
-        return false;
     }
 
     // search obj from registry, push cached obj and return true if find it
@@ -2416,6 +2493,8 @@ namespace NS_SLUA {
         regPusher(FEnumProperty::StaticClass(), pushEnumProperty);
         regPusher(FClassProperty::StaticClass(), pushUClassProperty);
         regPusher(FWeakObjectProperty::StaticClass(), pushUWeakProperty);
+        regPusher(FSoftObjectProperty::StaticClass(), pushUSoftObjectProperty);
+        regPusher(FSoftClassProperty::StaticClass(), pushUSoftClassProperty);
         
         regChecker<FIntProperty>();
         regChecker<FUInt32Property>();
@@ -2441,6 +2520,7 @@ namespace NS_SLUA {
         regChecker(FStructProperty::StaticClass(),checkUStructProperty);
         regChecker(FClassProperty::StaticClass(), checkUClassProperty);
         regChecker(FSoftObjectProperty::StaticClass(), checkUSoftObjectProperty);
+        regChecker(FSoftClassProperty::StaticClass(), checkUSoftClassProperty);
         regChecker(FWeakObjectProperty::StaticClass(), checkUWeakObjectProperty);
 
         regReferencer(FArrayProperty::StaticClass(), referenceUArrayProperty);
@@ -2452,8 +2532,10 @@ namespace NS_SLUA {
         regReferencePusher(FMapProperty::StaticClass(), referencePusherUMapProperty);
         regReferencePusher(FSetProperty::StaticClass(), referencePusherUSetProperty);
         regReferencePusher(FStructProperty::StaticClass(), referencePusherUStructProperty);
+        regReferencePusher(FSoftObjectProperty::StaticClass(), referencePusherUSoftObjectProperty);
+        regReferencePusher(FSoftClassProperty::StaticClass(), referencePusherUSoftClassProperty);
         
-        LuaWrapper::init(L);
+        LuaWrapper::initExt(L);
         // For PUBG Mobile
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         LuaEnums::init(L);

@@ -27,10 +27,12 @@ namespace NS_SLUA {
 #elif ((ENGINE_MINOR_VERSION>=2) && (ENGINE_MAJOR_VERSION==5))
     #include "LuaWrapper5.2Head.inc"
 #endif
+    DefTypeName(FSoftObjectPtr);
 
     struct LuaWrapper {
 
         static void init(lua_State* L);
+        static void initExt(lua_State* L);
         static int pushValue(lua_State* L, FStructProperty* p, UScriptStruct* uss, uint8* parms);
         static void* checkValue(lua_State* L, FStructProperty* p, UScriptStruct* uss, uint8* parms, int i);
 

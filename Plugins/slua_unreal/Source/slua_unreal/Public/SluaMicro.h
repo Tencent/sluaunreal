@@ -44,6 +44,7 @@ namespace NS_SLUA
     typedef UDelegateProperty FDelegateProperty;
     typedef UStructProperty FStructProperty;
     typedef UClassProperty FClassProperty;
+    typedef UInterfaceProperty FInterfaceProperty;
 #else
     typedef FProperty FProperty;
     typedef FStructProperty FStructProperty;

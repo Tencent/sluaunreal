@@ -1557,6 +1557,15 @@ namespace NS_SLUA {
         return LuaObject::push<FSoftObjectPtr>(L, "FSoftObjectPtr", softObjectPtr, UD_AUTOGC | UD_VALUETYPE);
     }
 
+    int pushUInterfaceProperty(lua_State *L, FProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
+        auto p = CastField<FInterfaceProperty>(prop);
+        ensure(p);
+        auto &scriptInterface = p->GetPropertyValue(parms);
+        UObject *obj = scriptInterface.GetObject();
+        bool ref = objRecorder ? objRecorder->hasObject(obj) : false;
+        return LuaObject::push(L, obj, ref);
+    }
+
     void* checkUArrayProperty(lua_State* L,FProperty* prop,uint8* parms,int i,bool bForceCopy) {
         auto p = CastField<FArrayProperty>(prop);
         ensure(p);
@@ -2115,11 +2124,20 @@ namespace NS_SLUA {
         return nullptr;
     }
 
+    void* checkUInterfaceProperty(lua_State* L, FProperty* prop, uint8* parms, int i, bool bForceCopy) {
+        auto p = CastField<FInterfaceProperty>(prop);
+        ensure(p);
+        UObject* obj = LuaObject::checkUD<UObject>(L, i);
+        void* interfacePtr = obj->GetInterfaceAddress(p->InterfaceClass);
+        p->SetPropertyValue(parms, FScriptInterface(obj, interfacePtr));
+        return nullptr;
+    }
+
     void* checkUWeakObjectProperty(lua_State* L, FProperty* prop, uint8* parms, int i, bool bForceCopy) {
         auto p = CastField<FWeakObjectProperty>(prop);
         ensure(p);
-        const UObject* UD = LuaObject::checkUD<UObject>(L, i);;
-        p->SetPropertyValue(parms, FWeakObjectPtr(UD));
+        const UObject* obj = LuaObject::checkUD<UObject>(L, i);;
+        p->SetPropertyValue(parms, FWeakObjectPtr(obj));
         return nullptr;
     }
 
@@ -2495,6 +2513,7 @@ namespace NS_SLUA {
         regPusher(FWeakObjectProperty::StaticClass(), pushUWeakProperty);
         regPusher(FSoftObjectProperty::StaticClass(), pushUSoftObjectProperty);
         regPusher(FSoftClassProperty::StaticClass(), pushUSoftClassProperty);
+        regPusher(FInterfaceProperty::StaticClass(), pushUInterfaceProperty);
         
         regChecker<FIntProperty>();
         regChecker<FUInt32Property>();
@@ -2519,9 +2538,10 @@ namespace NS_SLUA {
         regChecker(FDelegateProperty::StaticClass(),checkUDelegateProperty);
         regChecker(FStructProperty::StaticClass(),checkUStructProperty);
         regChecker(FClassProperty::StaticClass(), checkUClassProperty);
+        regChecker(FWeakObjectProperty::StaticClass(), checkUWeakObjectProperty);
         regChecker(FSoftObjectProperty::StaticClass(), checkUSoftObjectProperty);
         regChecker(FSoftClassProperty::StaticClass(), checkUSoftClassProperty);
-        regChecker(FWeakObjectProperty::StaticClass(), checkUWeakObjectProperty);
+        regChecker(FInterfaceProperty::StaticClass(), checkUInterfaceProperty);
 
         regReferencer(FArrayProperty::StaticClass(), referenceUArrayProperty);
         regReferencer(FMapProperty::StaticClass(), referenceUMapProperty);

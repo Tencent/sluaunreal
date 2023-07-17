@@ -2092,11 +2092,22 @@ namespace NS_SLUA {
         }
         auto typeName = getType(L, i);
         if (strcmp(typeName, "UObject") == 0) {
-            const UObject* Obj = LuaObject::checkUD<UObject>(L, i);;
-            p->SetPropertyValue(parms, FSoftObjectPtr(Obj));
+            const UObject* obj = LuaObject::checkUD<UObject>(L, i);;
+            if (obj && obj->GetClass() != p->PropertyClass && !obj->GetClass()->IsChildOf(p->PropertyClass))
+                luaL_error(L, "arg %d expect %s, but got %s", i,
+                    p->PropertyClass ? TCHAR_TO_UTF8(*p->PropertyClass->GetName()) : "", 
+                    obj->GetClass() ? TCHAR_TO_UTF8(*obj->GetClass()->GetName()) : "");
+            p->SetPropertyValue(parms, FSoftObjectPtr(obj));
         }
         else if (strcmp(typeName, "FSoftObjectPtr") == 0) {
             auto softObjectPtr = LuaObject::checkUD<FSoftObjectPtr>(L, i);
+#if WITH_EDITOR
+            auto obj = softObjectPtr->LoadSynchronous();
+            if (obj && obj->GetClass() != p->PropertyClass && !obj->GetClass()->IsChildOf(p->PropertyClass))
+                luaL_error(L, "arg %d expect %s, but got %s", i,
+                    p->PropertyClass ? TCHAR_TO_UTF8(*p->PropertyClass->GetName()) : "", 
+                    obj->GetClass() ? TCHAR_TO_UTF8(*obj->GetClass()->GetName()) : "");
+#endif
             p->SetPropertyValue(parms, *softObjectPtr);
         }
         return nullptr;
@@ -2113,12 +2124,23 @@ namespace NS_SLUA {
             return nullptr;
         }
         auto typeName = getType(L, i);
-        if (strcmp(typeName, "UObject") == 0) {
-            const UObject* Obj = LuaObject::checkUD<UObject>(L, i);;
-            p->SetPropertyValue(parms, FSoftObjectPtr(Obj));
+        if (strcmp(typeName, "UClass") == 0) {
+            const UClass* cls = LuaObject::checkUD<UClass>(L, i);;
+            if (cls && cls != p->MetaClass && !cls->IsChildOf(p->MetaClass))
+                luaL_error(L, "arg %d expect class of %s, but got %s", i,
+                    p->MetaClass ? TCHAR_TO_UTF8(*p->MetaClass->GetName()) : "", 
+                    cls ? TCHAR_TO_UTF8(*cls->GetName()) : "");
+            p->SetPropertyValue(parms, FSoftObjectPtr(cls));
         }
         else if (strcmp(typeName, "FSoftObjectPtr") == 0) {
             auto softObjectPtr = LuaObject::checkUD<FSoftObjectPtr>(L, i);
+#if WITH_EDITOR
+            auto cls = Cast<UClass>(softObjectPtr->LoadSynchronous());
+            if (cls && cls != p->MetaClass && !cls->IsChildOf(p->MetaClass))
+                luaL_error(L, "arg %d expect class of %s, but got %s", i,
+                    p->MetaClass ? TCHAR_TO_UTF8(*p->MetaClass->GetName()) : "", 
+                    cls ? TCHAR_TO_UTF8(*cls->GetName()) : "");
+#endif
             p->SetPropertyValue(parms, *softObjectPtr);
         }
         return nullptr;
@@ -2129,6 +2151,9 @@ namespace NS_SLUA {
         ensure(p);
         UObject* obj = LuaObject::checkUD<UObject>(L, i);
         void* interfacePtr = obj->GetInterfaceAddress(p->InterfaceClass);
+        if (!interfacePtr)
+            luaL_error(L, "arg %d expect interface class of %s, but got %s", TCHAR_TO_UTF8(*p->InterfaceClass->GetName()), 
+                        obj->GetClass() ? TCHAR_TO_UTF8(*obj->GetClass()->GetName()) : "");
         p->SetPropertyValue(parms, FScriptInterface(obj, interfacePtr));
         return nullptr;
     }

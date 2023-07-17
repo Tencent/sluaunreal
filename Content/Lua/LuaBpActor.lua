@@ -25,6 +25,15 @@ function LuaBpActor:ReceiveBeginPlay()
     print(self.SoftClassTest:ToString())
 end
 
+function LuaBpActor:ChangeSoftObject()
+    self.SoftObjectTest = slua.loadObject('/Game/ParticleSystemForTest.ParticleSystemForTest')
+end
+
+function LuaBpActor:ChangeSoftClass()
+    self.SoftClassTest = import('/Game/LuaActor.LuaActor_C')
+    -- self.SoftClassTest = import('/Game/Item.Item_C')
+end
+
 -- override event from blueprint
 function LuaBpActor:ReceiveEndPlay(reason)
     print("bpactor:ReceiveEndPlay")

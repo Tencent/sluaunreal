@@ -839,7 +839,7 @@ namespace NS_SLUA
                 // Remove functions added to class
                 for (auto func : *addedFuncsPtr)
                 {
-                    if (luaNet->luaRPCFuncs.Contains(func))
+                    if (LuaNet::luaRPCFuncs.Contains(func))
                     {
                         for (auto FieldAddress = &cls->Children; (FieldAddress && *FieldAddress); FieldAddress = &((*FieldAddress)->Next))
                         {
@@ -852,7 +852,7 @@ namespace NS_SLUA
                         }
 
                         cls->NetFields.Remove(func);
-                        luaNet->luaRPCFuncs.Remove(func);
+                        LuaNet::luaRPCFuncs.Remove(func);
                     }
 
                     cls->RemoveFunctionFromFunctionMap(func);
@@ -910,7 +910,6 @@ namespace NS_SLUA
 
         overridedClasses.Empty();
 
-        luaNet->luaRPCFuncs.Empty();
         LuaNet::addedRPCClasses.Empty();
     }
 #endif
@@ -1328,7 +1327,7 @@ namespace NS_SLUA
 #if WITH_EDITOR
         if (func->HasAnyFunctionFlags(FUNC_NetMulticast))
         {
-            luaNet->luaRPCFuncs.Add(supercallFunc);
+            LuaNet::luaRPCFuncs.Add(supercallFunc);
         }
 #endif
 
@@ -1358,7 +1357,7 @@ namespace NS_SLUA
 #if WITH_EDITOR
             if (func->HasAnyFunctionFlags(FUNC_NetMulticast))
             {
-                luaNet->luaRPCFuncs.Add(overrideFunc);
+                LuaNet::luaRPCFuncs.Add(overrideFunc);
             }
 #endif
             if (!overrideFunc->HasAnyFunctionFlags(FUNC_Native))

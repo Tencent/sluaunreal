@@ -25,6 +25,9 @@ namespace NS_SLUA
     LuaNet::ObjectToLuaNetAddressMap LuaNet::objectToLuaNetAddressMap;
     TArray<const UClass*> LuaNet::luaReplicateClasses;
     TSet<TWeakObjectPtr<UClass>> LuaNet::addedRPCClasses;
+#if WITH_EDITOR
+    TSet<TWeakObjectPtr<UFunction>> LuaNet::luaRPCFuncs;
+#endif
     TMap<FString, EFunctionFlags> LuaNet::luaRPCTypeMap = {
         {TEXT("MulticastRPC"), FUNC_NetMulticast},
         {TEXT("ServerRPC"), FUNC_NetServer},

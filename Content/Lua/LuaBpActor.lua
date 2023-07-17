@@ -16,6 +16,7 @@ function LuaBpActor:ReceiveBeginPlay()
     print("ChangeSoftObject")
     self:ChangeSoftObject()
     print(self.SoftObjectTest:ToString())
+    -- self.SoftObjectTest = FSoftObjectPtr("/Game/BallActor.BallActor")
 
     print("SoftClassTest:", self.SoftClassTest:ToString())
     print("ChangeSoftClass")

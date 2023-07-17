@@ -40,6 +40,7 @@ namespace NS_SLUA
     typedef UMapProperty FMapProperty;
     typedef USetProperty FSetProperty;
     typedef USoftObjectProperty FSoftObjectProperty;
+    typedef USoftClassProperty FSoftClassProperty;
     typedef UWeakObjectProperty FWeakObjectProperty;
     typedef UDelegateProperty FDelegateProperty;
     typedef UStructProperty FStructProperty;

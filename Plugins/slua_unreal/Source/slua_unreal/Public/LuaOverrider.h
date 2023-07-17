@@ -99,8 +99,8 @@ namespace NS_SLUA
 
 #if WITH_EDITOR
         static ULuaOverrider::ClassNativeMap cacheNativeFuncs;
-        static TMap<UClass*, TArray<UFunction*>> classAddedFuncs;
-        static TMap<UClass*, TArray<UFunction*>> classHookedFuncs;
+        static TMap<UClass*, TArray<TWeakObjectPtr<UFunction>>> classAddedFuncs;
+        static TMap<UClass*, TArray<TWeakObjectPtr<UFunction>>> classHookedFuncs;
 
         void removeOverrides();
 #endif

@@ -482,8 +482,8 @@ namespace NS_SLUA
     const char* LuaOverrider::INSTANCE_CACHE_NAME = "__instance_cache";
 #if WITH_EDITOR
     ULuaOverrider::ClassNativeMap LuaOverrider::cacheNativeFuncs;
-    TMap<UClass*, TArray<UFunction*>> LuaOverrider::classAddedFuncs;
-    TMap<UClass*, TArray<UFunction*>> LuaOverrider::classHookedFuncs;
+    TMap<UClass*, TArray<TWeakObjectPtr<UFunction>>> LuaOverrider::classAddedFuncs;
+    TMap<UClass*, TArray<TWeakObjectPtr<UFunction>>> LuaOverrider::classHookedFuncs;
 #endif
 
     const uint8 LuaOverrider::Code[] = { (uint8)Ex_LuaOverride, EX_Return, EX_Nothing };
@@ -811,8 +811,14 @@ namespace NS_SLUA
             if (hookedFuncsPtr)
             {
                 // Revert hooked functions
-                for (auto func : *hookedFuncsPtr)
+                for (auto weakFunc : *hookedFuncsPtr)
                 {
+                    auto func = weakFunc.Get();
+                    if (!func)
+                    {
+                        continue;
+                    }
+
                     int scriptNum = func->Script.Num();
                 
                     // func hooked by insert code
@@ -837,8 +843,14 @@ namespace NS_SLUA
             if (addedFuncsPtr)
             {
                 // Remove functions added to class
-                for (auto func : *addedFuncsPtr)
+                for (auto weakFunc : *addedFuncsPtr)
                 {
+                    auto func = weakFunc.Get();
+                    if (!func)
+                    {
+                        continue;
+                    }
+
                     if (LuaNet::luaRPCFuncs.Contains(func))
                     {
                         for (auto FieldAddress = &cls->Children; (FieldAddress && *FieldAddress); FieldAddress = &((*FieldAddress)->Next))

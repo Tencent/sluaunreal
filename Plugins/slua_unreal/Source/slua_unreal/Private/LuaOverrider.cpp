@@ -1210,6 +1210,8 @@ namespace NS_SLUA
         if (!overridedClasses.Contains(cls)) {
             SCOPE_CYCLE_COUNTER(STAT_LuaOverrider_do_bindOverrideFuncs);
 
+            overridedClasses.Add(cls);
+
             TSet<FName> funcNames;
             getLuaFunctions(L, funcNames, luaModule);
 

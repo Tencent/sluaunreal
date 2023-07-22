@@ -11,7 +11,7 @@
         {
             "type": "FTransform",
             "ctors": [ 3 ],
-            "methods": [ "Accumulate", "LerpTranslationScale3D", "AccumulateWithShortestRotation", "AccumulateWithAdditiveScale", "BlendFromIdentityAndAccumulate" ],
+            "methods": [ "Accumulate", "LerpTranslationScale3D", "AccumulateWithShortestRotation", "AccumulateWithAdditiveScale", "BlendFromIdentityAndAccumulate", "SetTranslationRegister", "SetRotationRegister", "DebugEqualMatrix" ],
             "operators": [ "*:float" ]
         },
         {
@@ -41,7 +41,15 @@
 		{
 			"type": "FDoubleRange",
 			"methods": ["Split", "Difference", "Hull", "Intersection", "Union", "GreaterThan", "LessThan"]
-		}
+		},
+		{
+			"type": "FQuat",
+			"methods": ["MakeFromVectorRegister"]
+		},
+		{
+			"type": "FTopLevelAssetPath",
+			"ctors": [1]
+		},
     ],
     "output_dir": "{solution_dir}/Plugins/slua_unreal/Source/slua_unreal/Private/",
     "win": {

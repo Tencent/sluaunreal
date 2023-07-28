@@ -1063,6 +1063,29 @@
                 LuaObject::push<FTransform>(L, "FTransform", self, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
+            if (argc == 4) {
+                auto InRotation = LuaObject::checkValue<FRotator*>(L, 2);
+                if (!InRotation) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& InRotationRef = *InRotation;
+                auto InTranslation = LuaObject::checkValue<FVector*>(L, 3);
+                if (!InTranslation) {
+                    luaL_error(L, "%s argument 3 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& InTranslationRef = *InTranslation;
+                auto InScale3D = LuaObject::checkValue<FVector*>(L, 4);
+                if (!InScale3D) {
+                    luaL_error(L, "%s argument 4 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& InScale3DRef = *InScale3D;
+                auto self = new FTransform(InRotationRef, InTranslationRef, InScale3DRef);
+                LuaObject::push<FTransform>(L, "FTransform", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
             if (argc == 5) {
                 auto InX = LuaObject::checkValue<FVector*>(L, 2);
                 if (!InX) {

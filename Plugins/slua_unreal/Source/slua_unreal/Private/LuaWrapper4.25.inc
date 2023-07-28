@@ -11,7 +11,6 @@
     static UScriptStruct* FRandomStreamStruct = nullptr;
     static UScriptStruct* FGuidStruct = nullptr;
     static UScriptStruct* FBox2DStruct = nullptr;
-    static UScriptStruct* FFallbackStructStruct = nullptr;
     static UScriptStruct* FFloatRangeBoundStruct = nullptr;
     static UScriptStruct* FFloatRangeStruct = nullptr;
     static UScriptStruct* FInt32RangeBoundStruct = nullptr;
@@ -265,26 +264,6 @@
         auto v = LuaObject::checkValue<FBox2D*>(L, i);
         if (!v) {
             luaL_error(L, "check FBox2D nil value");
-            return nullptr;
-        }
-        p->CopyCompleteValue(parms, v);
-        return v;
-    }
-
-    static inline FFallbackStruct* __newFFallbackStruct() {
-        return new FFallbackStruct();
-    }
-
-    static void __pushFFallbackStruct(lua_State* L, FStructProperty* p, uint8* parms) {
-        auto ptr = __newFFallbackStruct();
-        p->CopyCompleteValue(ptr, parms);
-        LuaObject::push<FFallbackStruct>(L, "FFallbackStruct", ptr, UD_AUTOGC | UD_VALUETYPE);
-    }
-
-    static void* __checkFFallbackStruct(lua_State* L, FStructProperty* p, uint8* parms, int i) {
-        auto v = LuaObject::checkValue<FFallbackStruct*>(L, i);
-        if (!v) {
-            luaL_error(L, "check FFallbackStruct nil value");
             return nullptr;
         }
         p->CopyCompleteValue(parms, v);
@@ -2386,6 +2365,29 @@
                 }
                 auto& InTranslationRef = *InTranslation;
                 auto self = new FTransform(InTranslationRef);
+                LuaObject::push<FTransform>(L, "FTransform", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            if (argc == 4) {
+                auto InRotation = LuaObject::checkValue<FQuat*>(L, 2);
+                if (!InRotation) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& InRotationRef = *InRotation;
+                auto InTranslation = LuaObject::checkValue<FVector*>(L, 3);
+                if (!InTranslation) {
+                    luaL_error(L, "%s argument 3 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& InTranslationRef = *InTranslation;
+                auto InScale3D = LuaObject::checkValue<FVector*>(L, 4);
+                if (!InScale3D) {
+                    luaL_error(L, "%s argument 4 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& InScale3DRef = *InScale3D;
+                auto self = new FTransform(InRotationRef, InTranslationRef, InScale3DRef);
                 LuaObject::push<FTransform>(L, "FTransform", self, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
@@ -9006,37 +9008,6 @@
 
     };
 
-    struct FFallbackStructWrapper {
-
-        static int __ctor(lua_State* L) {
-            auto argc = lua_gettop(L);
-            luaL_error(L, "call FFallbackStruct() error, argc=%d", argc);
-            return 0;
-        }
-
-        static int clone(lua_State* L) {
-            CheckSelf(FFallbackStruct);
-            auto ret = __newFFallbackStruct();
-            *ret = *self;
-            LuaObject::push<FFallbackStruct>(L, "FFallbackStruct", ret, UD_AUTOGC | UD_VALUETYPE);
-            return 1;
-        }
-
-        static int __gc(lua_State* L) {
-            CheckSelfSafe(FFallbackStruct);
-            SLUA_GCSTRUCT(FFallbackStruct);
-            return 0;
-        }
-
-        static void bind(lua_State* L) {
-            AutoStack autoStack(L);
-            LuaObject::newType(L, "FFallbackStruct");
-            LuaObject::addMethod(L, "clone", clone, true);
-            LuaObject::finishType(L, "FFallbackStruct", __ctor, __gc);
-        }
-
-    };
-
     struct FFloatRangeBoundWrapper {
 
         static int __ctor(lua_State* L) {
@@ -10376,10 +10347,9 @@
         static int FromJulianDay(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
-                auto JulianDay = LuaObject::checkValue<float>(L, 1);
-                auto JulianDayVal = (double)JulianDay;
+                auto JulianDay = LuaObject::checkValue<double>(L, 1);
                 auto ret = __newFDateTime();
-                *ret = FDateTime::FromJulianDay(JulianDayVal);
+                *ret = FDateTime::FromJulianDay(JulianDay);
                 LuaObject::push<FDateTime>(L, "FDateTime", ret, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
@@ -10998,13 +10968,6 @@
             _pushStructMap.Add(FBox2DStruct, __pushFBox2D);
             _checkStructMap.Add(FBox2DStruct, __checkFBox2D);
             FBox2DWrapper::bind(L);
-        }
-
-        FFallbackStructStruct = StaticGetBaseStructureInternal(TEXT("FallbackStruct"));
-        if (FFallbackStructStruct) {
-            _pushStructMap.Add(FFallbackStructStruct, __pushFFallbackStruct);
-            _checkStructMap.Add(FFallbackStructStruct, __checkFFallbackStruct);
-            FFallbackStructWrapper::bind(L);
         }
 
         FFloatRangeBoundStruct = StaticGetBaseStructureInternal(TEXT("FloatRangeBound"));

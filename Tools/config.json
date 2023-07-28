@@ -10,7 +10,6 @@
     "filter": [
         {
             "type": "FTransform",
-            "ctors": [ 3 ],
             "methods": [ "Accumulate", "LerpTranslationScale3D", "AccumulateWithShortestRotation", "AccumulateWithAdditiveScale", "BlendFromIdentityAndAccumulate", "SetTranslationRegister", "SetRotationRegister", "DebugEqualMatrix" ],
             "operators": [ "*:float" ]
         },

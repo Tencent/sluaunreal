@@ -1,4 +1,6 @@
-local LuaBpActor = {}
+local LuaBpActor =
+{
+}
 
 -- override event from blueprint
 function LuaBpActor:ReceiveBeginPlay()
@@ -9,6 +11,28 @@ function LuaBpActor:ReceiveBeginPlay()
     print("bpactor:ReceiveBeginPlay")
     -- call super ReceiveBeginPlay
     self.Super:ReceiveBeginPlay()
+
+    print("SoftObjectTest:", self.SoftObjectTest:ToString())
+    print("ChangeSoftObject")
+    self:ChangeSoftObject()
+    print(self.SoftObjectTest:ToString())
+    -- self.SoftObjectTest = FSoftObjectPtr("/Game/BallActor.BallActor")
+
+    print("SoftClassTest:", self.SoftClassTest:ToString())
+    print("ChangeSoftClass")
+    self:ChangeSoftClass()
+    print(self.SoftClassTest:ToString())
+    self.SoftClassTest = FSoftObjectPtr("/Game/BallActor.BallActor_C")
+    print(self.SoftClassTest:ToString())
+end
+
+function LuaBpActor:ChangeSoftObject()
+    self.SoftObjectTest = slua.loadObject('/Game/ParticleSystemForTest.ParticleSystemForTest')
+end
+
+function LuaBpActor:ChangeSoftClass()
+    self.SoftClassTest = import('/Game/LuaActor.LuaActor_C')
+    -- self.SoftClassTest = import('/Game/Item.Item_C')
 end
 
 -- override event from blueprint

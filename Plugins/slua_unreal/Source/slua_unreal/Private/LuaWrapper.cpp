@@ -40,4 +40,125 @@ namespace NS_SLUA {
 #elif ((ENGINE_MINOR_VERSION>=2) && (ENGINE_MAJOR_VERSION==5))
     #include "LuaWrapper5.2.inc"
 #endif
+
+    static inline FSoftObjectPtr* __newFSoftObjectPtr() {
+        return new FSoftObjectPtr();
+    }
+
+    static void __pushFSoftObjectPtr(lua_State* L, FStructProperty* p, uint8* parms) {
+        auto ptr = __newFSoftObjectPtr();
+        p->CopyCompleteValue(ptr, parms);
+        LuaObject::push<FSoftObjectPtr>(L, "FSoftObjectPtr", ptr, UD_AUTOGC | UD_VALUETYPE);
+    }
+
+    static void* __checkFSoftObjectPtr(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        auto v = LuaObject::checkValue<FSoftObjectPtr*>(L, i);
+        if (!v) {
+            luaL_error(L, "check FSoftObjectPtr nil value");
+            return nullptr;
+        }
+        p->CopyCompleteValue(parms, v);
+        return v;
+    }
+
+    struct FSoftObjectPtrWrapper {
+
+        static int __ctor(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                auto self = new FSoftObjectPtr();
+                LuaObject::push<FSoftObjectPtr>(L, "FSoftObjectPtr", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            if (argc == 2) {
+                auto path = lua_tostring(L, 2);
+                FSoftObjectPath softObjectPath(UTF8_TO_TCHAR(path));
+                auto self = new FSoftObjectPtr(softObjectPath);
+                LuaObject::push<FSoftObjectPtr>(L, "FSoftObjectPtr", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPtr() error, argc=%d", argc);
+            return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FSoftObjectPtr);
+            auto ret = __newFSoftObjectPtr();
+            *ret = *self;
+            LuaObject::push<FSoftObjectPtr>(L, "FSoftObjectPtr", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
+        }
+
+        static int __gc(lua_State* L) {
+            CheckSelfSafe(FSoftObjectPtr);
+            SLUA_GCSTRUCT(FSoftObjectPtr);
+            return 0;
+        }
+
+        static int ToSoftObjectPath(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FSoftObjectPtr);
+                auto ret = __newFSoftObjectPath();
+                *ret = self->ToSoftObjectPath();
+                LuaObject::push<FSoftObjectPath>(L, "FSoftObjectPath", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPtr::ToSoftObjectPath error, argc=%d", argc);
+            return 0;
+        }
+
+        static int ToString(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FSoftObjectPtr);
+                auto ret = self->ToString();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPtr::ToString error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetLongPackageName(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FSoftObjectPtr);
+                auto ret = self->GetLongPackageName();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPtr::GetLongPackageName error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetAssetName(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FSoftObjectPtr);
+                auto ret = self->GetAssetName();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPtr::GetAssetName error, argc=%d", argc);
+            return 0;
+        }
+
+        static void bind(lua_State* L) {
+            AutoStack autoStack(L);
+            LuaObject::newType(L, "FSoftObjectPtr");
+            LuaObject::addMethod(L, "ToSoftObjectPath", ToSoftObjectPath, true);
+            LuaObject::addMethod(L, "ToString", ToString, true);
+            LuaObject::addMethod(L, "GetLongPackageName", GetLongPackageName, true);
+            LuaObject::addMethod(L, "GetAssetName", GetAssetName, true);
+            LuaObject::addMethod(L, "clone", clone, true);
+            LuaObject::finishType(L, "FSoftObjectPtr", __ctor, __gc);
+        }
+    };
+
+    void LuaWrapper::initExt(lua_State* L)
+    {
+        init(L);
+        FSoftObjectPtrWrapper::bind(L);
+    }
 }

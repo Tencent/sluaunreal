@@ -136,7 +136,6 @@ namespace NS_SLUA {
         T ud; 
     };
 
-    DefTypeName(FSoftObjectPtr);
     DefTypeName(LuaArray);
     DefTypeName(LuaMap);
     DefTypeName(LuaSet);

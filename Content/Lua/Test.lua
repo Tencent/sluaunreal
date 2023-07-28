@@ -27,6 +27,9 @@ function begin(uworld,uactor)
     for k,v in pairs(e) do
         print("eeee",k,v)
     end
+	
+	local copy = v:clone()
+	print("copy of v: ", copy.X, copy.Y, copy.Z)
   
     assert(TestEnum.TE_COUNT==2)
     assert(TestEnum2.COUNT==2)
@@ -46,6 +49,7 @@ function testcase()
     require 'TestUI'
     require 'TestCase'
     require 'TestStruct'
+    require 'TestInterface'
     require 'TestCppBinding'
     TestBp=require 'TestBlueprint'
     TestBp:test(gworld,gactor)

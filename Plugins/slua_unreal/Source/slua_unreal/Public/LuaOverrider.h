@@ -98,7 +98,10 @@ namespace NS_SLUA
         static FString getLuaFilePath(UObject* obj, class UClass* cls, bool bCDOLua, bool& bHookInstancedObj);
 
 #if WITH_EDITOR
-        ULuaOverrider::ClassNativeMap cacheNativeFuncs;
+        static ULuaOverrider::ClassNativeMap cacheNativeFuncs;
+        static TMap<UClass*, TArray<TWeakObjectPtr<UFunction>>> classAddedFuncs;
+        static TMap<UClass*, TArray<TWeakObjectPtr<UFunction>>> classHookedFuncs;
+
         void removeOverrides();
 #endif
         void removeOneOverride(UClass* cls, bool bObjectDeleted);
@@ -136,7 +139,7 @@ namespace NS_SLUA
         
         typedef TMap<UClass*, TSet<FName>> ClassHookedFuncNames;
         static ClassHookedFuncNames classHookedFuncNames;
-        typedef TMap<UClass*, TSet<TWeakObjectPtr<UFunction>>> OverridedClassMap;
+        typedef TSet<UClass*> OverridedClassMap;
         static OverridedClassMap overridedClasses;
 
         bool bOnAsyncLoadingFlushUpdate = false;

@@ -10,7 +10,6 @@
     DefTypeName(FRandomStream);
     DefTypeName(FGuid);
     DefTypeName(FBox2D);
-    DefTypeName(FFallbackStruct);
     DefTypeName(FFloatRangeBound);
     DefTypeName(FFloatRange);
     DefTypeName(FInt32RangeBound);

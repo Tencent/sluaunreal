@@ -25,6 +25,9 @@ namespace NS_SLUA
     LuaNet::ObjectToLuaNetAddressMap LuaNet::objectToLuaNetAddressMap;
     TArray<const UClass*> LuaNet::luaReplicateClasses;
     TSet<TWeakObjectPtr<UClass>> LuaNet::addedRPCClasses;
+#if WITH_EDITOR
+    TSet<TWeakObjectPtr<UFunction>> LuaNet::luaRPCFuncs;
+#endif
     TMap<FString, EFunctionFlags> LuaNet::luaRPCTypeMap = {
         {TEXT("MulticastRPC"), FUNC_NetMulticast},
         {TEXT("ServerRPC"), FUNC_NetServer},
@@ -708,6 +711,8 @@ namespace NS_SLUA
             cls->NetFields.Add(func);
 #if WITH_EDITOR
             luaRPCFuncs.Add(func);
+            auto &funcs = LuaOverrider::classAddedFuncs.FindOrAdd(cls);
+            funcs.Add(func);
 #endif
             func->SetNativeFunc((FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);
             func->Script.Insert(LuaOverrider::Code, LuaOverrider::CodeSize, 0);

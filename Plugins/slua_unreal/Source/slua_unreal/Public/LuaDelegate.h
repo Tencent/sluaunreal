@@ -35,7 +35,7 @@ public:
 
     void dispose();
 
-#if UE_BUILD_DEVELOPMENT
+#if WITH_EDITOR
     void setPropName(const FString& name) {
         pName = name;
     }
@@ -50,7 +50,7 @@ protected:
     
     UFunction* ufunction;
 
-#if UE_BUILD_DEVELOPMENT
+#if WITH_EDITOR
     FString pName;
 #endif
 };

@@ -66,7 +66,7 @@ assert(t.strs:Get(0)=="1")
 strs:Clear()
 assert(t.strs:Num()==0)
 
-TestArray={}
+local TestArray={}
 
 function TestArray.update()
     -- test memory valid?

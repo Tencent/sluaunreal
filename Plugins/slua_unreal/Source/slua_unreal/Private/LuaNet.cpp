@@ -561,12 +561,12 @@ namespace NS_SLUA
     {
         if (A.isTable() && !B.isTable())
         {
-            return A;
+            return B;
         }
 
         if (!A.isTable() && B.isTable())
         {
-            return B;
+            return A;
         }
 
         LuaVar temp1 = A;

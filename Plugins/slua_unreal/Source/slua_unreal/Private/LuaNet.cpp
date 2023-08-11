@@ -521,8 +521,9 @@ namespace NS_SLUA
 
         // if LuaModule equals to CppSuperModule, then LuaRPCs are already hooked in Super Class. No need to hook again.
         if (luaModule != cppSuperModule) 
-        { 
-            bAdded |= addModuleRPCRecursive(L, cls, luaModule, cppSuperModule);
+        {
+            auto commonModule = findFirstCommomModule(L, luaModule, cppSuperModule);
+            bAdded |= addModuleRPCRecursive(L, cls, luaModule, commonModule);
             cppSuperModule = luaModule;
         }
 
@@ -556,6 +557,47 @@ namespace NS_SLUA
         return ret;
     }
 
+    LuaVar LuaNet::findFirstCommomModule(lua_State* L, const LuaVar& A, const LuaVar& B)
+    {
+        if (A.isTable() && !B.isTable())
+        {
+            return B;
+        }
+
+        if (!A.isTable() && B.isTable())
+        {
+            return A;
+        }
+
+        LuaVar temp1 = A;
+        LuaVar temp2 = B;
+
+        while (temp1 != temp2)
+        {
+            auto impl = getLuaImpl(L, temp1);
+            temp1 = impl.isTable() ? impl.getFromTable<LuaVar>("__super") : LuaVar();
+
+            if (temp1 == B) // Adapt to most situations and prune.
+            {
+                break;
+            }
+
+            if (!temp1.isTable())
+            {
+                temp1 = B;
+            }
+            
+            impl = getLuaImpl(L, temp2);
+            temp2 = impl.isTable() ? impl.getFromTable<LuaVar>("__super") : LuaVar();
+            if (!temp2.isTable())
+            {
+                temp2 = A;
+            }
+        }
+
+        return temp1;
+    }
+
     bool LuaNet::addModuleRPCRecursive(lua_State* L, UClass* cls, const LuaVar& luaModule, const LuaVar& cppSuperModule)
     {
         bool bAdded = false;
@@ -580,6 +622,10 @@ namespace NS_SLUA
 
     bool LuaNet::addClassRPCByType(lua_State* L, UClass* cls, const LuaVar& luaModule, const FString& repType, EFunctionFlags netFlag)
     {
+#if WITH_EDITOR
+        // Don't move this line of code to below!
+        auto& funcs = LuaOverrider::classAddedFuncs.FindOrAdd(cls);
+#endif
         bool bAdded = false;
         if (!luaModule.isTable())
         {
@@ -711,7 +757,6 @@ namespace NS_SLUA
             cls->NetFields.Add(func);
 #if WITH_EDITOR
             luaRPCFuncs.Add(func);
-            auto &funcs = LuaOverrider::classAddedFuncs.FindOrAdd(cls);
             funcs.Add(func);
 #endif
             func->SetNativeFunc((FNativeFuncPtr)&ULuaOverrider::luaOverrideFunc);

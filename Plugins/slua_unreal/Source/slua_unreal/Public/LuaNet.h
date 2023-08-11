@@ -48,6 +48,7 @@ namespace NS_SLUA
         
         void addClassRPC(lua_State* L, UClass* cls, const FString& luaFilePath);
         bool addClassRPCRecursive(lua_State* L, UClass* cls, const FString& luaFilePath, LuaVar& cppSuperModule);
+        LuaVar findFirstCommomModule(lua_State* L, const LuaVar& A, const LuaVar& B);
         bool addModuleRPCRecursive(lua_State* L, UClass* cls, const LuaVar& luaModule, const LuaVar& cppSuperModule);
         bool addClassRPCByType(lua_State* L, UClass* cls, const LuaVar& luaModule, const FString& repType, EFunctionFlags netFlag);
 

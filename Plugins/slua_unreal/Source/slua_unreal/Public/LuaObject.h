@@ -722,8 +722,6 @@ namespace NS_SLUA {
             return ret;
         }
 
-        typedef void SetupMetaTableFunc(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc);
-
         template<class T, bool F = IsUObject<T>::value >
         static int pushType(lua_State* L,T cls,const char* tn,lua_CFunction setupmt=nullptr,lua_CFunction gc=nullptr, short nuvalues=1) {
             if(!cls) {
@@ -743,6 +741,8 @@ namespace NS_SLUA {
             setupMetaTable(L,tn,setupmt,gc);
             return 1;
         }
+
+        static const char* getType(lua_State* L, int p);
 
         // for weak UObject
 

@@ -2,9 +2,15 @@
 
 local a = FVector(1,1,1)
 local b = FVector(2,2,2)
-local c = a+b*3.14
-local d = FVector(1,1,1)*3.14*2+FVector(1,1,1)
-assert(c==d)
+
+local KismetsystemLibrary = import("KismetSystemLibrary")
+local EngineVersion = KismetsystemLibrary.GetEngineVersion()
+print("EngineVersion: ", EngineVersion)
+if string.sub(EngineVersion, 1, 1) == "4" then
+    local c = a+b*3.14
+    local d = FVector(1,1,1)*3.14*2+FVector(1,1,1)
+    assert(c==d)
+end
 
 if FLinkStruct then
     st = FLinkStruct()

@@ -267,17 +267,47 @@ namespace NS_SLUA {
             return LuaObject::push(L, false);
         }
 
+        const char* typeName = LuaObject::getType(L, 1);
+#if UE_BUILD_DEVELOPMENT
+        if (FPlatformString::Strcmp(typeName, "UObject") != 0 && FPlatformString::Strcmp(typeName, "UClass") != 0)
+        {
+            bool bSluaType = true;
+            lua_pushglobaltable(L);
+            lua_pushstring(L, typeName);
+            if (lua_rawget(L, -2) == LUA_TNIL) // not lua wrapper type
+            {
+                bSluaType = false;
+
+                static const char* LuaTypeName[] = {
+                    "LuaStruct", "LuaArray", "LuaMap", "LuaSet", "LuaDelegateWrap", "LuaMultiDelegateWrap"
+                };
+                for (int i = 0; i < 6; ++i)
+                {
+                    if (FPlatformString::Strcmp(typeName, LuaTypeName[i]) == 0)
+                    {
+                        bSluaType = true;
+                        break;
+                    }
+                }
+            }
+
+            lua_pop(L, 2);
+            if (!bSluaType)
+            {
+                luaL_error(L, "arg 1 expect valid slua type, but got %s", typeName);
+            }
+        }
+#endif
+
         GenericUserData *gud = (GenericUserData*)lua_touserdata(L, 1);
         bool bIsValid = !(gud->flag & UD_HADFREE);
         if(!bIsValid)
             return LuaObject::push(L, bIsValid);
         // if this ud is boxed UObject
         if (gud->flag & UD_UOBJECT) {
-            UObject* obj = LuaObject::checkUD<UObject>(L, 1, false);
-            if (!obj)
-            {
-                 obj = LuaObject::checkUD<UClass>(L, 1, false);
-            }
+            UObject* obj = FPlatformString::Strcmp(typeName, "UObject") == 0
+                               ? LuaObject::checkUD<UObject>(L, 1, false)
+                               : obj = LuaObject::checkUD<UClass>(L, 1, false);
             bIsValid = LuaObject::isUObjectValid(obj);
         }
         else if (gud->flag&UD_WEAKUPTR) {

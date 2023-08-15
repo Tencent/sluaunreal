@@ -483,7 +483,7 @@ namespace NS_SLUA {
         latentDelegate = nullptr;
 
 #if WITH_EDITOR
-        if (overrider)
+        if (!mainState && overrider)
             overrider->removeOverrides();
 #endif
         SafeDelete(overrider);

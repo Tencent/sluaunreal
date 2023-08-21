@@ -1,4 +1,5 @@
     DefTypeName(FIntPoint);
+    DefTypeName(FIntVector4);
     DefTypeName(FLinearColor);
     DefTypeName(FColor);
     DefTypeName(FRandomStream);
@@ -24,8 +25,10 @@
     DefTypeName(FTestUninitializedScriptStructMembersTest);
     DefTypeName(FTopLevelAssetPath);
     DefTypeName(FVector);
+    DefTypeName(FVector4);
     DefTypeName(FPlane);
     DefTypeName(FQuat);
+    DefTypeName(FRotator);
     DefTypeName(FTransform);
     DefTypeName(FMatrix);
     DefTypeName(FSoftObjectPath);

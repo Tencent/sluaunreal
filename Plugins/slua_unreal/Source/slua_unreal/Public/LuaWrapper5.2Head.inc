@@ -26,9 +26,12 @@
     DefTypeName(FTopLevelAssetPath);
     DefTypeName(FVector);
     DefTypeName(FVector4);
+    DefTypeName(FPlane);
     DefTypeName(FQuat);
+    DefTypeName(FRotator);
     DefTypeName(FTransform);
     DefTypeName(FMatrix);
     DefTypeName(FRay);
+    DefTypeName(FSphere);
     DefTypeName(FSoftObjectPath);
     DefTypeName(FSoftClassPath);

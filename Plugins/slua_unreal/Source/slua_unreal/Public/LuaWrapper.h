@@ -24,11 +24,9 @@ namespace NS_SLUA {
     #include "LuaWrapper4.25Head.inc"
 #elif ((ENGINE_MINOR_VERSION==1) && (ENGINE_MAJOR_VERSION==5))
     #include "LuaWrapper5.1Head.inc"
-    DefTypeName(FRotator);
     DefTypeName(VectorRegister4d);
 #elif ((ENGINE_MINOR_VERSION>=2) && (ENGINE_MAJOR_VERSION==5))
     #include "LuaWrapper5.2Head.inc"
-    DefTypeName(FRotator);
     DefTypeName(VectorRegister4d);
 #endif
     DefTypeName(FSoftObjectPtr);

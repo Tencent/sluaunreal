@@ -37,8 +37,10 @@ namespace NS_SLUA {
     #include "LuaWrapper4.25.inc"
 #elif ((ENGINE_MINOR_VERSION==1) && (ENGINE_MAJOR_VERSION==5))
     #include "LuaWrapper5.1.inc"
-#elif ((ENGINE_MINOR_VERSION>=2) && (ENGINE_MAJOR_VERSION==5))
+#elif ((ENGINE_MINOR_VERSION==2) && (ENGINE_MAJOR_VERSION==5))
     #include "LuaWrapper5.2.inc"
+#elif ((ENGINE_MINOR_VERSION>=3) && (ENGINE_MAJOR_VERSION==5))
+    #include "LuaWrapper5.3.inc"
 #endif
 
     static inline FSoftObjectPtr* __newFSoftObjectPtr() {

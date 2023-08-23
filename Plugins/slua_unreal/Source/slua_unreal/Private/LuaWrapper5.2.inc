@@ -27,10 +27,13 @@
     static UScriptStruct* FTopLevelAssetPathStruct = nullptr;
     static UScriptStruct* FVectorStruct = nullptr;
     static UScriptStruct* FVector4Struct = nullptr;
+    static UScriptStruct* FPlaneStruct = nullptr;
     static UScriptStruct* FQuatStruct = nullptr;
+    static UScriptStruct* FRotatorStruct = nullptr;
     static UScriptStruct* FTransformStruct = nullptr;
     static UScriptStruct* FMatrixStruct = nullptr;
     static UScriptStruct* FRayStruct = nullptr;
+    static UScriptStruct* FSphereStruct = nullptr;
     static UScriptStruct* FSoftObjectPathStruct = nullptr;
     static UScriptStruct* FSoftClassPathStruct = nullptr;
 
@@ -600,6 +603,26 @@
         return v;
     }
 
+    static inline FPlane* __newFPlane() {
+        return new FPlane();
+    }
+
+    static void __pushFPlane(lua_State* L, FStructProperty* p, uint8* parms) {
+        auto ptr = __newFPlane();
+        p->CopyCompleteValue(ptr, parms);
+        LuaObject::push<FPlane>(L, "FPlane", ptr, UD_AUTOGC | UD_VALUETYPE);
+    }
+
+    static void* __checkFPlane(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        auto v = LuaObject::checkValue<FPlane*>(L, i);
+        if (!v) {
+            luaL_error(L, "check FPlane nil value");
+            return nullptr;
+        }
+        p->CopyCompleteValue(parms, v);
+        return v;
+    }
+
     static inline FQuat* __newFQuat() {
         return new FQuat();
     }
@@ -614,6 +637,26 @@
         auto v = LuaObject::checkValue<FQuat*>(L, i);
         if (!v) {
             luaL_error(L, "check FQuat nil value");
+            return nullptr;
+        }
+        p->CopyCompleteValue(parms, v);
+        return v;
+    }
+
+    static inline FRotator* __newFRotator() {
+        return new FRotator();
+    }
+
+    static void __pushFRotator(lua_State* L, FStructProperty* p, uint8* parms) {
+        auto ptr = __newFRotator();
+        p->CopyCompleteValue(ptr, parms);
+        LuaObject::push<FRotator>(L, "FRotator", ptr, UD_AUTOGC | UD_VALUETYPE);
+    }
+
+    static void* __checkFRotator(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        auto v = LuaObject::checkValue<FRotator*>(L, i);
+        if (!v) {
+            luaL_error(L, "check FRotator nil value");
             return nullptr;
         }
         p->CopyCompleteValue(parms, v);
@@ -674,6 +717,26 @@
         auto v = LuaObject::checkValue<FRay*>(L, i);
         if (!v) {
             luaL_error(L, "check FRay nil value");
+            return nullptr;
+        }
+        p->CopyCompleteValue(parms, v);
+        return v;
+    }
+
+    static inline FSphere* __newFSphere() {
+        return new FSphere();
+    }
+
+    static void __pushFSphere(lua_State* L, FStructProperty* p, uint8* parms) {
+        auto ptr = __newFSphere();
+        p->CopyCompleteValue(ptr, parms);
+        LuaObject::push<FSphere>(L, "FSphere", ptr, UD_AUTOGC | UD_VALUETYPE);
+    }
+
+    static void* __checkFSphere(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        auto v = LuaObject::checkValue<FSphere*>(L, i);
+        if (!v) {
+            luaL_error(L, "check FSphere nil value");
             return nullptr;
         }
         p->CopyCompleteValue(parms, v);
@@ -1775,10 +1838,13 @@
             auto argc = lua_gettop(L);
             if (argc == 3) {
                 auto H = LuaObject::checkValue<int>(L, 1);
+                auto HVal = (unsigned char)H;
                 auto S = LuaObject::checkValue<int>(L, 2);
+                auto SVal = (unsigned char)S;
                 auto V = LuaObject::checkValue<int>(L, 3);
+                auto VVal = (unsigned char)V;
                 auto ret = __newFLinearColor();
-                *ret = FLinearColor::MakeFromHSV8(H, S, V);
+                *ret = FLinearColor::MakeFromHSV8(HVal, SVal, VVal);
                 LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
@@ -1955,10 +2021,14 @@
             }
             if (argc == 5) {
                 auto InR = LuaObject::checkValue<int>(L, 2);
+                auto InRVal = (unsigned char)InR;
                 auto InG = LuaObject::checkValue<int>(L, 3);
+                auto InGVal = (unsigned char)InG;
                 auto InB = LuaObject::checkValue<int>(L, 4);
+                auto InBVal = (unsigned char)InB;
                 auto InA = LuaObject::checkValue<int>(L, 5);
-                auto self = new FColor(InR, InG, InB, InA);
+                auto InAVal = (unsigned char)InA;
+                auto self = new FColor(InRVal, InGVal, InBVal, InAVal);
                 LuaObject::push<FColor>(L, "FColor", self, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
@@ -1997,35 +2067,19 @@
             return 1;
         }
 
-        static int get_A(lua_State* L) {
+        static int get_B(lua_State* L) {
             CheckSelf(FColor);
-            auto& A = self->A;
-            LuaObject::push(L, A);
+            auto& B = self->B;
+            LuaObject::push(L, B);
             return 1;
         }
 
-        static int set_A(lua_State* L) {
+        static int set_B(lua_State* L) {
             CheckSelf(FColor);
-            auto& A = self->A;
-            auto AIn = LuaObject::checkValue<uint8>(L, 2);
-            A = AIn;
-            LuaObject::push(L, AIn);
-            return 1;
-        }
-
-        static int get_R(lua_State* L) {
-            CheckSelf(FColor);
-            auto& R = self->R;
-            LuaObject::push(L, R);
-            return 1;
-        }
-
-        static int set_R(lua_State* L) {
-            CheckSelf(FColor);
-            auto& R = self->R;
-            auto RIn = LuaObject::checkValue<uint8>(L, 2);
-            R = RIn;
-            LuaObject::push(L, RIn);
+            auto& B = self->B;
+            auto BIn = LuaObject::checkValue<uint8>(L, 2);
+            B = BIn;
+            LuaObject::push(L, BIn);
             return 1;
         }
 
@@ -2045,19 +2099,35 @@
             return 1;
         }
 
-        static int get_B(lua_State* L) {
+        static int get_R(lua_State* L) {
             CheckSelf(FColor);
-            auto& B = self->B;
-            LuaObject::push(L, B);
+            auto& R = self->R;
+            LuaObject::push(L, R);
             return 1;
         }
 
-        static int set_B(lua_State* L) {
+        static int set_R(lua_State* L) {
             CheckSelf(FColor);
-            auto& B = self->B;
-            auto BIn = LuaObject::checkValue<uint8>(L, 2);
-            B = BIn;
-            LuaObject::push(L, BIn);
+            auto& R = self->R;
+            auto RIn = LuaObject::checkValue<uint8>(L, 2);
+            R = RIn;
+            LuaObject::push(L, RIn);
+            return 1;
+        }
+
+        static int get_A(lua_State* L) {
+            CheckSelf(FColor);
+            auto& A = self->A;
+            LuaObject::push(L, A);
+            return 1;
+        }
+
+        static int set_A(lua_State* L) {
+            CheckSelf(FColor);
+            auto& A = self->A;
+            auto AIn = LuaObject::checkValue<uint8>(L, 2);
+            A = AIn;
+            LuaObject::push(L, AIn);
             return 1;
         }
 
@@ -2175,8 +2245,9 @@
             if (argc == 2) {
                 CheckSelf(FColor);
                 auto Alpha = LuaObject::checkValue<int>(L, 2);
+                auto AlphaVal = (unsigned char)Alpha;
                 auto ret = __newFColor();
-                *ret = self->WithAlpha(Alpha);
+                *ret = self->WithAlpha(AlphaVal);
                 LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
@@ -2438,10 +2509,10 @@
             AutoStack autoStack(L);
             LuaObject::newType(L, "FColor");
             LuaObject::addOperator(L, "__eq", __eq);
-            LuaObject::addField(L, "A", get_A, set_A, true);
-            LuaObject::addField(L, "R", get_R, set_R, true);
-            LuaObject::addField(L, "G", get_G, set_G, true);
             LuaObject::addField(L, "B", get_B, set_B, true);
+            LuaObject::addField(L, "G", get_G, set_G, true);
+            LuaObject::addField(L, "R", get_R, set_R, true);
+            LuaObject::addField(L, "A", get_A, set_A, true);
             LuaObject::addField(L, "White", get_White, nullptr, false);
             LuaObject::addField(L, "Black", get_Black, nullptr, false);
             LuaObject::addField(L, "Transparent", get_Transparent, nullptr, false);
@@ -2752,10 +2823,14 @@
             }
             if (argc == 5) {
                 auto InA = LuaObject::checkValue<int>(L, 2);
+                auto InAVal = (unsigned int)InA;
                 auto InB = LuaObject::checkValue<int>(L, 3);
+                auto InBVal = (unsigned int)InB;
                 auto InC = LuaObject::checkValue<int>(L, 4);
+                auto InCVal = (unsigned int)InC;
                 auto InD = LuaObject::checkValue<int>(L, 5);
-                auto self = new FGuid(InA, InB, InC, InD);
+                auto InDVal = (unsigned int)InD;
+                auto self = new FGuid(InAVal, InBVal, InCVal, InDVal);
                 LuaObject::push<FGuid>(L, "FGuid", self, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
@@ -3156,7 +3231,7 @@
         static int Exclusive(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
-                auto Value = LuaObject::checkValue<int>(L, 1);
+                auto Value = LuaObject::checkValue<float>(L, 1);
                 auto ret = __newFFloatRangeBound();
                 *ret = FFloatRangeBound::Exclusive(Value);
                 LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
@@ -3169,7 +3244,7 @@
         static int Inclusive(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
-                auto Value = LuaObject::checkValue<int>(L, 1);
+                auto Value = LuaObject::checkValue<float>(L, 1);
                 auto ret = __newFFloatRangeBound();
                 *ret = FFloatRangeBound::Inclusive(Value);
                 LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
@@ -3332,14 +3407,14 @@
                 return 1;
             }
             if (argc == 2) {
-                auto A = LuaObject::checkValue<int>(L, 2);
+                auto A = LuaObject::checkValue<float>(L, 2);
                 auto self = new FFloatRange(A);
                 LuaObject::push<FFloatRange>(L, "FFloatRange", self, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
             if (argc == 3) {
-                auto A = LuaObject::checkValue<int>(L, 2);
-                auto B = LuaObject::checkValue<int>(L, 3);
+                auto A = LuaObject::checkValue<float>(L, 2);
+                auto B = LuaObject::checkValue<float>(L, 3);
                 auto self = new FFloatRange(A, B);
                 LuaObject::push<FFloatRange>(L, "FFloatRange", self, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
@@ -3389,7 +3464,7 @@
         static int AtLeast(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
-                auto Value = LuaObject::checkValue<int>(L, 1);
+                auto Value = LuaObject::checkValue<float>(L, 1);
                 auto ret = __newFFloatRange();
                 *ret = FFloatRange::AtLeast(Value);
                 LuaObject::push<FFloatRange>(L, "FFloatRange", ret, UD_AUTOGC | UD_VALUETYPE);
@@ -3402,7 +3477,7 @@
         static int AtMost(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
-                auto Value = LuaObject::checkValue<int>(L, 1);
+                auto Value = LuaObject::checkValue<float>(L, 1);
                 auto ret = __newFFloatRange();
                 *ret = FFloatRange::AtMost(Value);
                 LuaObject::push<FFloatRange>(L, "FFloatRange", ret, UD_AUTOGC | UD_VALUETYPE);
@@ -3461,7 +3536,7 @@
         static int Exclusive(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
-                auto Value = LuaObject::checkValue<int>(L, 1);
+                auto Value = LuaObject::checkValue<double>(L, 1);
                 auto ret = __newFDoubleRangeBound();
                 *ret = FDoubleRangeBound::Exclusive(Value);
                 LuaObject::push<FDoubleRangeBound>(L, "FDoubleRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
@@ -3474,7 +3549,7 @@
         static int Inclusive(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
-                auto Value = LuaObject::checkValue<int>(L, 1);
+                auto Value = LuaObject::checkValue<double>(L, 1);
                 auto ret = __newFDoubleRangeBound();
                 *ret = FDoubleRangeBound::Inclusive(Value);
                 LuaObject::push<FDoubleRangeBound>(L, "FDoubleRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
@@ -3637,14 +3712,14 @@
                 return 1;
             }
             if (argc == 2) {
-                auto A = LuaObject::checkValue<int>(L, 2);
+                auto A = LuaObject::checkValue<double>(L, 2);
                 auto self = new FDoubleRange(A);
                 LuaObject::push<FDoubleRange>(L, "FDoubleRange", self, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
             if (argc == 3) {
-                auto A = LuaObject::checkValue<int>(L, 2);
-                auto B = LuaObject::checkValue<int>(L, 3);
+                auto A = LuaObject::checkValue<double>(L, 2);
+                auto B = LuaObject::checkValue<double>(L, 3);
                 auto self = new FDoubleRange(A, B);
                 LuaObject::push<FDoubleRange>(L, "FDoubleRange", self, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
@@ -3694,7 +3769,7 @@
         static int AtLeast(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
-                auto Value = LuaObject::checkValue<int>(L, 1);
+                auto Value = LuaObject::checkValue<double>(L, 1);
                 auto ret = __newFDoubleRange();
                 *ret = FDoubleRange::AtLeast(Value);
                 LuaObject::push<FDoubleRange>(L, "FDoubleRange", ret, UD_AUTOGC | UD_VALUETYPE);
@@ -3707,7 +3782,7 @@
         static int AtMost(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
-                auto Value = LuaObject::checkValue<int>(L, 1);
+                auto Value = LuaObject::checkValue<double>(L, 1);
                 auto ret = __newFDoubleRange();
                 *ret = FDoubleRange::AtMost(Value);
                 LuaObject::push<FDoubleRange>(L, "FDoubleRange", ret, UD_AUTOGC | UD_VALUETYPE);
@@ -4422,6 +4497,16 @@
                 LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", ret, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
+            if (argc == 2) {
+                auto TypeAndName = LuaObject::checkValue<const char*>(L, 1);
+                auto TypeAndNameVal = FString(UTF8_TO_TCHAR(TypeAndName));
+                auto Len = LuaObject::checkValue<int>(L, 2);
+                auto LenVal = (unsigned int)Len;
+                auto ret = __newFPrimaryAssetId();
+                *ret = FPrimaryAssetId::ParseTypeAndName(*TypeAndNameVal, LenVal);
+                LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
             luaL_error(L, "call FPrimaryAssetId::ParseTypeAndName error, argc=%d", argc);
             return 0;
         }
@@ -4465,7 +4550,8 @@
             }
             if (argc == 2) {
                 auto InTicks = LuaObject::checkValue<int>(L, 2);
-                auto self = new FDateTime(InTicks);
+                auto InTicksVal = (long long)InTicks;
+                auto self = new FDateTime(InTicksVal);
                 LuaObject::push<FDateTime>(L, "FDateTime", self, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
@@ -4764,7 +4850,29 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
+            if (argc == 2) {
+                CheckSelf(FDateTime);
+                auto Format = LuaObject::checkValue<const char*>(L, 2);
+                auto FormatVal = FString(UTF8_TO_TCHAR(Format));
+                auto ret = self->ToString(*FormatVal);
+                LuaObject::push(L, ret);
+                return 1;
+            }
             luaL_error(L, "call FDateTime::ToString error, argc=%d", argc);
+            return 0;
+        }
+
+        static int ToFormattedString(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FDateTime);
+                auto Format = LuaObject::checkValue<const char*>(L, 2);
+                auto FormatVal = FString(UTF8_TO_TCHAR(Format));
+                auto ret = self->ToFormattedString(*FormatVal);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FDateTime::ToFormattedString error, argc=%d", argc);
             return 0;
         }
 
@@ -4822,8 +4930,9 @@
             auto argc = lua_gettop(L);
             if (argc == 1) {
                 auto UnixTime = LuaObject::checkValue<int>(L, 1);
+                auto UnixTimeVal = (long long)UnixTime;
                 auto ret = __newFDateTime();
-                *ret = FDateTime::FromUnixTimestamp(UnixTime);
+                *ret = FDateTime::FromUnixTimestamp(UnixTimeVal);
                 LuaObject::push<FDateTime>(L, "FDateTime", ret, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
@@ -4917,6 +5026,26 @@
             return 0;
         }
 
+        static int ParseIso8601(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                auto DateTimeString = LuaObject::checkValue<const char*>(L, 1);
+                auto DateTimeStringVal = FString(UTF8_TO_TCHAR(DateTimeString));
+                auto OutDateTime = LuaObject::checkValue<FDateTime*>(L, 2);
+                if (!OutDateTime) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OutDateTimeRef = *OutDateTime;
+                auto ret = FDateTime::ParseIso8601(*DateTimeStringVal, OutDateTimeRef);
+                LuaObject::push(L, ret);
+                LuaObject::push<FDateTime>(L, "FDateTime", OutDateTime);
+                return 2;
+            }
+            luaL_error(L, "call FDateTime::ParseIso8601 error, argc=%d", argc);
+            return 0;
+        }
+
         static int Today(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 0) {
@@ -4983,6 +5112,7 @@
             LuaObject::addMethod(L, "ToHttpDate", ToHttpDate, true);
             LuaObject::addMethod(L, "ToIso8601", ToIso8601, true);
             LuaObject::addMethod(L, "ToString", ToString, true);
+            LuaObject::addMethod(L, "ToFormattedString", ToFormattedString, true);
             LuaObject::addMethod(L, "ToUnixTimestamp", ToUnixTimestamp, true);
             LuaObject::addMethod(L, "DaysInMonth", DaysInMonth, false);
             LuaObject::addMethod(L, "DaysInYear", DaysInYear, false);
@@ -4994,6 +5124,7 @@
             LuaObject::addMethod(L, "Now", Now, false);
             LuaObject::addMethod(L, "Parse", Parse, false);
             LuaObject::addMethod(L, "ParseHttpDate", ParseHttpDate, false);
+            LuaObject::addMethod(L, "ParseIso8601", ParseIso8601, false);
             LuaObject::addMethod(L, "Today", Today, false);
             LuaObject::addMethod(L, "UtcNow", UtcNow, false);
             LuaObject::addMethod(L, "Validate", Validate, false);
@@ -5480,6 +5611,13 @@
                 self->DiagnosticCheckNaN();
                 return 0;
             }
+            if (argc == 2) {
+                CheckSelf(FVector);
+                auto Message = LuaObject::checkValue<const char*>(L, 2);
+                auto MessageVal = FString(UTF8_TO_TCHAR(Message));
+                self->DiagnosticCheckNaN(*MessageVal);
+                return 0;
+            }
             luaL_error(L, "call FVector::DiagnosticCheckNaN error, argc=%d", argc);
             return 0;
         }
@@ -5963,6 +6101,25 @@
             return 0;
         }
 
+        static int MirrorByPlane(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FVector);
+                auto Plane = LuaObject::checkValue<FPlane*>(L, 2);
+                if (!Plane) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& PlaneRef = *Plane;
+                auto ret = __newFVector();
+                *ret = self->MirrorByPlane(PlaneRef);
+                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FVector::MirrorByPlane error, argc=%d", argc);
+            return 0;
+        }
+
         static int RotateAngleAxis(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 3) {
@@ -6041,6 +6198,19 @@
             return 0;
         }
 
+        static int ToOrientationRotator(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FVector);
+                auto ret = __newFRotator();
+                *ret = self->ToOrientationRotator();
+                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FVector::ToOrientationRotator error, argc=%d", argc);
+            return 0;
+        }
+
         static int ToOrientationQuat(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
@@ -6051,6 +6221,19 @@
                 return 1;
             }
             luaL_error(L, "call FVector::ToOrientationQuat error, argc=%d", argc);
+            return 0;
+        }
+
+        static int Rotation(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FVector);
+                auto ret = __newFRotator();
+                *ret = self->Rotation();
+                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FVector::Rotation error, argc=%d", argc);
             return 0;
         }
 
@@ -6370,6 +6553,24 @@
 
         static int PointPlaneProject(lua_State* L) {
             auto argc = lua_gettop(L);
+            if (argc == 2) {
+                auto Point = LuaObject::checkValue<FVector*>(L, 1);
+                if (!Point) {
+                    luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& PointRef = *Point;
+                auto Plane = LuaObject::checkValue<FPlane*>(L, 2);
+                if (!Plane) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& PlaneRef = *Plane;
+                auto ret = __newFVector();
+                *ret = FVector::PointPlaneProject(PointRef, PlaneRef);
+                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
             if (argc == 3) {
                 auto Point = LuaObject::checkValue<FVector*>(L, 1);
                 if (!Point) {
@@ -6758,11 +6959,14 @@
             LuaObject::addMethod(L, "Reciprocal", Reciprocal, true);
             LuaObject::addMethod(L, "IsUniform", IsUniform, true);
             LuaObject::addMethod(L, "MirrorByVector", MirrorByVector, true);
+            LuaObject::addMethod(L, "MirrorByPlane", MirrorByPlane, true);
             LuaObject::addMethod(L, "RotateAngleAxis", RotateAngleAxis, true);
             LuaObject::addMethod(L, "RotateAngleAxisRad", RotateAngleAxisRad, true);
             LuaObject::addMethod(L, "ProjectOnTo", ProjectOnTo, true);
             LuaObject::addMethod(L, "ProjectOnToNormal", ProjectOnToNormal, true);
+            LuaObject::addMethod(L, "ToOrientationRotator", ToOrientationRotator, true);
             LuaObject::addMethod(L, "ToOrientationQuat", ToOrientationQuat, true);
+            LuaObject::addMethod(L, "Rotation", Rotation, true);
             LuaObject::addMethod(L, "FindBestAxisVectors", FindBestAxisVectors, true);
             LuaObject::addMethod(L, "UnwindEuler", UnwindEuler, true);
             LuaObject::addMethod(L, "ContainsNaN", ContainsNaN, true);
@@ -7090,6 +7294,19 @@
             return 0;
         }
 
+        static int ToOrientationRotator(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FVector4);
+                auto ret = __newFRotator();
+                *ret = self->ToOrientationRotator();
+                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FVector4::ToOrientationRotator error, argc=%d", argc);
+            return 0;
+        }
+
         static int ToOrientationQuat(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
@@ -7100,6 +7317,19 @@
                 return 1;
             }
             luaL_error(L, "call FVector4::ToOrientationQuat error, argc=%d", argc);
+            return 0;
+        }
+
+        static int Rotation(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FVector4);
+                auto ret = __newFRotator();
+                *ret = self->Rotation();
+                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FVector4::Rotation error, argc=%d", argc);
             return 0;
         }
 
@@ -7240,7 +7470,9 @@
             LuaObject::addMethod(L, "InitFromString", InitFromString, true);
             LuaObject::addMethod(L, "GetSafeNormal", GetSafeNormal, true);
             LuaObject::addMethod(L, "GetUnsafeNormal3", GetUnsafeNormal3, true);
+            LuaObject::addMethod(L, "ToOrientationRotator", ToOrientationRotator, true);
             LuaObject::addMethod(L, "ToOrientationQuat", ToOrientationQuat, true);
+            LuaObject::addMethod(L, "Rotation", Rotation, true);
             LuaObject::addMethod(L, "Set", Set, true);
             LuaObject::addMethod(L, "ContainsNaN", ContainsNaN, true);
             LuaObject::addMethod(L, "IsNearlyZero3", IsNearlyZero3, true);
@@ -7251,6 +7483,362 @@
             LuaObject::addMethod(L, "One", One, false);
             LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FVector4", __ctor, __gc);
+        }
+
+    };
+
+    struct FPlaneWrapper {
+
+        static int __ctor(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                auto self = new FPlane();
+                LuaObject::push<FPlane>(L, "FPlane", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            if (argc == 2) {
+                auto V = LuaObject::checkValue<FVector4*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                auto self = new FPlane(VRef);
+                LuaObject::push<FPlane>(L, "FPlane", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            if (argc == 3) {
+                auto InNormal = LuaObject::checkValue<FVector*>(L, 2);
+                auto InNormalVal = *InNormal;
+                auto InW = LuaObject::checkValue<double>(L, 3);
+                auto self = new FPlane(InNormalVal, InW);
+                LuaObject::push<FPlane>(L, "FPlane", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            if (argc == 4) {
+                auto A = LuaObject::checkValue<FVector*>(L, 2);
+                auto AVal = *A;
+                auto B = LuaObject::checkValue<FVector*>(L, 3);
+                auto BVal = *B;
+                auto C = LuaObject::checkValue<FVector*>(L, 4);
+                auto CVal = *C;
+                auto self = new FPlane(AVal, BVal, CVal);
+                LuaObject::push<FPlane>(L, "FPlane", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            if (argc == 5) {
+                auto InX = LuaObject::checkValue<double>(L, 2);
+                auto InY = LuaObject::checkValue<double>(L, 3);
+                auto InZ = LuaObject::checkValue<double>(L, 4);
+                auto InW = LuaObject::checkValue<double>(L, 5);
+                auto self = new FPlane(InX, InY, InZ, InW);
+                LuaObject::push<FPlane>(L, "FPlane", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FPlane() error, argc=%d", argc);
+            return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FPlane);
+            auto ret = __newFPlane();
+            *ret = *self;
+            LuaObject::push<FPlane>(L, "FPlane", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
+        }
+
+        static int __gc(lua_State* L) {
+            CheckSelfSafe(FPlane);
+            SLUA_GCSTRUCT(FPlane);
+            return 0;
+        }
+
+        static int __eq(lua_State* L) {
+            CheckSelf(FPlane);
+            if (LuaObject::matchType(L, 2, "FPlane")) {
+                auto V = LuaObject::checkValue<FPlane*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                auto ret = (*self == VRef);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            LuaObject::push(L, false);
+            return 1;
+        }
+
+        static int __add(lua_State* L) {
+            CheckSelf(FPlane);
+            if (LuaObject::matchType(L, 2, "FPlane")) {
+                auto V = LuaObject::checkValue<FPlane*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                auto ret = __newFPlane();
+                *ret = (*self + VRef);
+                LuaObject::push<FPlane>(L, "FPlane", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "FPlane operator__add error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int __sub(lua_State* L) {
+            CheckSelf(FPlane);
+            if (LuaObject::matchType(L, 2, "FPlane")) {
+                auto V = LuaObject::checkValue<FPlane*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                auto ret = __newFPlane();
+                *ret = (*self - VRef);
+                LuaObject::push<FPlane>(L, "FPlane", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "FPlane operator__sub error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int __div(lua_State* L) {
+            CheckSelf(FPlane);
+            if (lua_isnumber(L, 2)) {
+                auto Scale = LuaObject::checkValue<double>(L, 2);
+                auto ret = __newFPlane();
+                *ret = (*self / Scale);
+                LuaObject::push<FPlane>(L, "FPlane", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "FPlane operator__div error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int __mul(lua_State* L) {
+            CheckSelf(FPlane);
+            if (lua_isnumber(L, 2)) {
+                auto Scale = LuaObject::checkValue<double>(L, 2);
+                auto ret = __newFPlane();
+                *ret = (*self * Scale);
+                LuaObject::push<FPlane>(L, "FPlane", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            if (LuaObject::matchType(L, 2, "FPlane")) {
+                auto V = LuaObject::checkValue<FPlane*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                auto ret = __newFPlane();
+                *ret = (*self * VRef);
+                LuaObject::push<FPlane>(L, "FPlane", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "FPlane operator__mul error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int get_W(lua_State* L) {
+            CheckSelf(FPlane);
+            auto& W = self->W;
+            LuaObject::push(L, W);
+            return 1;
+        }
+
+        static int set_W(lua_State* L) {
+            CheckSelf(FPlane);
+            auto& W = self->W;
+            auto WIn = LuaObject::checkValue<double>(L, 2);
+            W = WIn;
+            LuaObject::push(L, WIn);
+            return 1;
+        }
+
+        static int DiagnosticCheckNaN(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FPlane);
+                self->DiagnosticCheckNaN();
+                return 0;
+            }
+            luaL_error(L, "call FPlane::DiagnosticCheckNaN error, argc=%d", argc);
+            return 0;
+        }
+
+        static int IsValid(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FPlane);
+                auto ret = self->IsValid();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FPlane::IsValid error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetOrigin(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FPlane);
+                auto ret = __newFVector();
+                *ret = self->GetOrigin();
+                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FPlane::GetOrigin error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetNormal(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FPlane);
+                auto ret = __newFVector();
+                *ret = self->GetNormal();
+                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FPlane::GetNormal error, argc=%d", argc);
+            return 0;
+        }
+
+        static int Normalize(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FPlane);
+                auto Tolerance = LuaObject::checkValue<double>(L, 2);
+                auto ret = self->Normalize(Tolerance);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FPlane::Normalize error, argc=%d", argc);
+            return 0;
+        }
+
+        static int Flip(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FPlane);
+                auto ret = __newFPlane();
+                *ret = self->Flip();
+                LuaObject::push<FPlane>(L, "FPlane", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FPlane::Flip error, argc=%d", argc);
+            return 0;
+        }
+
+        static int TransformBy(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FPlane);
+                auto M = LuaObject::checkValue<FMatrix*>(L, 2);
+                if (!M) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& MRef = *M;
+                auto ret = __newFPlane();
+                *ret = self->TransformBy(MRef);
+                LuaObject::push<FPlane>(L, "FPlane", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FPlane::TransformBy error, argc=%d", argc);
+            return 0;
+        }
+
+        static int TransformByUsingAdjointT(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 4) {
+                CheckSelf(FPlane);
+                auto M = LuaObject::checkValue<FMatrix*>(L, 2);
+                if (!M) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& MRef = *M;
+                auto DetM = LuaObject::checkValue<double>(L, 3);
+                auto TA = LuaObject::checkValue<FMatrix*>(L, 4);
+                if (!TA) {
+                    luaL_error(L, "%s argument 4 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& TARef = *TA;
+                auto ret = __newFPlane();
+                *ret = self->TransformByUsingAdjointT(MRef, DetM, TARef);
+                LuaObject::push<FPlane>(L, "FPlane", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FPlane::TransformByUsingAdjointT error, argc=%d", argc);
+            return 0;
+        }
+
+        static int TranslateBy(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FPlane);
+                auto V = LuaObject::checkValue<FVector*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                auto ret = __newFPlane();
+                *ret = self->TranslateBy(VRef);
+                LuaObject::push<FPlane>(L, "FPlane", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FPlane::TranslateBy error, argc=%d", argc);
+            return 0;
+        }
+
+        static int Equals(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 3) {
+                CheckSelf(FPlane);
+                auto V = LuaObject::checkValue<FPlane*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                auto Tolerance = LuaObject::checkValue<double>(L, 3);
+                auto ret = self->Equals(VRef, Tolerance);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FPlane::Equals error, argc=%d", argc);
+            return 0;
+        }
+
+        static void bind(lua_State* L) {
+            AutoStack autoStack(L);
+            LuaObject::newTypeWithBase(L, "FPlane", std::initializer_list<const char*>{ "TVector" });
+            LuaObject::addOperator(L, "__eq", __eq);
+            LuaObject::addOperator(L, "__add", __add);
+            LuaObject::addOperator(L, "__sub", __sub);
+            LuaObject::addOperator(L, "__div", __div);
+            LuaObject::addOperator(L, "__mul", __mul);
+            LuaObject::addField(L, "W", get_W, set_W, true);
+            LuaObject::addMethod(L, "DiagnosticCheckNaN", DiagnosticCheckNaN, true);
+            LuaObject::addMethod(L, "IsValid", IsValid, true);
+            LuaObject::addMethod(L, "GetOrigin", GetOrigin, true);
+            LuaObject::addMethod(L, "GetNormal", GetNormal, true);
+            LuaObject::addMethod(L, "Normalize", Normalize, true);
+            LuaObject::addMethod(L, "Flip", Flip, true);
+            LuaObject::addMethod(L, "TransformBy", TransformBy, true);
+            LuaObject::addMethod(L, "TransformByUsingAdjointT", TransformByUsingAdjointT, true);
+            LuaObject::addMethod(L, "TranslateBy", TranslateBy, true);
+            LuaObject::addMethod(L, "Equals", Equals, true);
+            LuaObject::addMethod(L, "clone", clone, true);
+            LuaObject::finishType(L, "FPlane", __ctor, __gc);
         }
 
     };
@@ -7795,6 +8383,19 @@
             return 0;
         }
 
+        static int Rotator(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FQuat);
+                auto ret = __newFRotator();
+                *ret = self->Rotator();
+                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FQuat::Rotator error, argc=%d", argc);
+            return 0;
+        }
+
         static int ToMatrix(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
@@ -7877,7 +8478,32 @@
                 self->DiagnosticCheckNaN();
                 return 0;
             }
+            if (argc == 2) {
+                CheckSelf(FQuat);
+                auto Message = LuaObject::checkValue<const char*>(L, 2);
+                auto MessageVal = FString(UTF8_TO_TCHAR(Message));
+                self->DiagnosticCheckNaN(*MessageVal);
+                return 0;
+            }
             luaL_error(L, "call FQuat::DiagnosticCheckNaN error, argc=%d", argc);
+            return 0;
+        }
+
+        static int MakeFromRotator(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                auto R = LuaObject::checkValue<FRotator*>(L, 1);
+                if (!R) {
+                    luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& RRef = *R;
+                auto ret = __newFQuat();
+                *ret = FQuat::MakeFromRotator(RRef);
+                LuaObject::push<FQuat>(L, "FQuat", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FQuat::MakeFromRotator error, argc=%d", argc);
             return 0;
         }
 
@@ -8296,12 +8922,14 @@
             LuaObject::addMethod(L, "GetRightVector", GetRightVector, true);
             LuaObject::addMethod(L, "GetUpVector", GetUpVector, true);
             LuaObject::addMethod(L, "Vector", Vector, true);
+            LuaObject::addMethod(L, "Rotator", Rotator, true);
             LuaObject::addMethod(L, "ToMatrix", ToMatrix, true);
             LuaObject::addMethod(L, "GetRotationAxis", GetRotationAxis, true);
             LuaObject::addMethod(L, "ContainsNaN", ContainsNaN, true);
             LuaObject::addMethod(L, "ToString", ToString, true);
             LuaObject::addMethod(L, "InitFromString", InitFromString, true);
             LuaObject::addMethod(L, "DiagnosticCheckNaN", DiagnosticCheckNaN, true);
+            LuaObject::addMethod(L, "MakeFromRotator", MakeFromRotator, false);
             LuaObject::addMethod(L, "MakeFromEuler", MakeFromEuler, false);
             LuaObject::addMethod(L, "MakeFromRotationVector", MakeFromRotationVector, false);
             LuaObject::addMethod(L, "FindBetween", FindBetween, false);
@@ -8318,6 +8946,595 @@
             LuaObject::addMethod(L, "CalcTangents", CalcTangents, false);
             LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FQuat", __ctor, __gc);
+        }
+
+    };
+
+    struct FRotatorWrapper {
+
+        static int __ctor(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                auto self = new FRotator();
+                LuaObject::push<FRotator>(L, "FRotator", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            if (argc == 2) {
+                auto InF = LuaObject::checkValue<double>(L, 2);
+                auto self = new FRotator(InF);
+                LuaObject::push<FRotator>(L, "FRotator", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            if (argc == 4) {
+                auto InPitch = LuaObject::checkValue<double>(L, 2);
+                auto InYaw = LuaObject::checkValue<double>(L, 3);
+                auto InRoll = LuaObject::checkValue<double>(L, 4);
+                auto self = new FRotator(InPitch, InYaw, InRoll);
+                LuaObject::push<FRotator>(L, "FRotator", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FRotator() error, argc=%d", argc);
+            return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FRotator);
+            auto ret = __newFRotator();
+            *ret = *self;
+            LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
+        }
+
+        static int __gc(lua_State* L) {
+            CheckSelfSafe(FRotator);
+            SLUA_GCSTRUCT(FRotator);
+            return 0;
+        }
+
+        static int __add(lua_State* L) {
+            CheckSelf(FRotator);
+            if (LuaObject::matchType(L, 2, "FRotator")) {
+                auto R = LuaObject::checkValue<FRotator*>(L, 2);
+                if (!R) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& RRef = *R;
+                auto ret = __newFRotator();
+                *ret = (*self + RRef);
+                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "FRotator operator__add error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int __sub(lua_State* L) {
+            CheckSelf(FRotator);
+            if (LuaObject::matchType(L, 2, "FRotator")) {
+                auto R = LuaObject::checkValue<FRotator*>(L, 2);
+                if (!R) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& RRef = *R;
+                auto ret = __newFRotator();
+                *ret = (*self - RRef);
+                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "FRotator operator__sub error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int __eq(lua_State* L) {
+            CheckSelf(FRotator);
+            if (LuaObject::matchType(L, 2, "FRotator")) {
+                auto R = LuaObject::checkValue<FRotator*>(L, 2);
+                if (!R) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& RRef = *R;
+                auto ret = (*self == RRef);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            LuaObject::push(L, false);
+            return 1;
+        }
+
+        static int get_Pitch(lua_State* L) {
+            CheckSelf(FRotator);
+            auto& Pitch = self->Pitch;
+            LuaObject::push(L, Pitch);
+            return 1;
+        }
+
+        static int set_Pitch(lua_State* L) {
+            CheckSelf(FRotator);
+            auto& Pitch = self->Pitch;
+            auto PitchIn = LuaObject::checkValue<double>(L, 2);
+            Pitch = PitchIn;
+            LuaObject::push(L, PitchIn);
+            return 1;
+        }
+
+        static int get_Yaw(lua_State* L) {
+            CheckSelf(FRotator);
+            auto& Yaw = self->Yaw;
+            LuaObject::push(L, Yaw);
+            return 1;
+        }
+
+        static int set_Yaw(lua_State* L) {
+            CheckSelf(FRotator);
+            auto& Yaw = self->Yaw;
+            auto YawIn = LuaObject::checkValue<double>(L, 2);
+            Yaw = YawIn;
+            LuaObject::push(L, YawIn);
+            return 1;
+        }
+
+        static int get_Roll(lua_State* L) {
+            CheckSelf(FRotator);
+            auto& Roll = self->Roll;
+            LuaObject::push(L, Roll);
+            return 1;
+        }
+
+        static int set_Roll(lua_State* L) {
+            CheckSelf(FRotator);
+            auto& Roll = self->Roll;
+            auto RollIn = LuaObject::checkValue<double>(L, 2);
+            Roll = RollIn;
+            LuaObject::push(L, RollIn);
+            return 1;
+        }
+
+        static int get_ZeroRotator(lua_State* L) {
+            auto& ZeroRotator = FRotator::ZeroRotator;
+            LuaObject::push<FRotator>(L, "FRotator", &ZeroRotator);
+            return 1;
+        }
+
+        static int DiagnosticCheckNaN(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FRotator);
+                self->DiagnosticCheckNaN();
+                return 0;
+            }
+            if (argc == 2) {
+                CheckSelf(FRotator);
+                auto Message = LuaObject::checkValue<const char*>(L, 2);
+                auto MessageVal = FString(UTF8_TO_TCHAR(Message));
+                self->DiagnosticCheckNaN(*MessageVal);
+                return 0;
+            }
+            luaL_error(L, "call FRotator::DiagnosticCheckNaN error, argc=%d", argc);
+            return 0;
+        }
+
+        static int IsNearlyZero(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FRotator);
+                auto Tolerance = LuaObject::checkValue<double>(L, 2);
+                auto ret = self->IsNearlyZero(Tolerance);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::IsNearlyZero error, argc=%d", argc);
+            return 0;
+        }
+
+        static int IsZero(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FRotator);
+                auto ret = self->IsZero();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::IsZero error, argc=%d", argc);
+            return 0;
+        }
+
+        static int Equals(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 3) {
+                CheckSelf(FRotator);
+                auto R = LuaObject::checkValue<FRotator*>(L, 2);
+                if (!R) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& RRef = *R;
+                auto Tolerance = LuaObject::checkValue<double>(L, 3);
+                auto ret = self->Equals(RRef, Tolerance);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::Equals error, argc=%d", argc);
+            return 0;
+        }
+
+        static int Add(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 4) {
+                CheckSelf(FRotator);
+                auto DeltaPitch = LuaObject::checkValue<double>(L, 2);
+                auto DeltaYaw = LuaObject::checkValue<double>(L, 3);
+                auto DeltaRoll = LuaObject::checkValue<double>(L, 4);
+                auto ret = __newFRotator();
+                *ret = self->Add(DeltaPitch, DeltaYaw, DeltaRoll);
+                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::Add error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetInverse(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FRotator);
+                auto ret = __newFRotator();
+                *ret = self->GetInverse();
+                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::GetInverse error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GridSnap(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FRotator);
+                auto RotGrid = LuaObject::checkValue<FRotator*>(L, 2);
+                if (!RotGrid) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& RotGridRef = *RotGrid;
+                auto ret = __newFRotator();
+                *ret = self->GridSnap(RotGridRef);
+                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::GridSnap error, argc=%d", argc);
+            return 0;
+        }
+
+        static int Vector(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FRotator);
+                auto ret = __newFVector();
+                *ret = self->Vector();
+                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::Vector error, argc=%d", argc);
+            return 0;
+        }
+
+        static int Quaternion(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FRotator);
+                auto ret = __newFQuat();
+                *ret = self->Quaternion();
+                LuaObject::push<FQuat>(L, "FQuat", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::Quaternion error, argc=%d", argc);
+            return 0;
+        }
+
+        static int Euler(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FRotator);
+                auto ret = __newFVector();
+                *ret = self->Euler();
+                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::Euler error, argc=%d", argc);
+            return 0;
+        }
+
+        static int RotateVector(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FRotator);
+                auto V = LuaObject::checkValue<FVector*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                auto ret = __newFVector();
+                *ret = self->RotateVector(VRef);
+                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::RotateVector error, argc=%d", argc);
+            return 0;
+        }
+
+        static int UnrotateVector(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FRotator);
+                auto V = LuaObject::checkValue<FVector*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                auto ret = __newFVector();
+                *ret = self->UnrotateVector(VRef);
+                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::UnrotateVector error, argc=%d", argc);
+            return 0;
+        }
+
+        static int Clamp(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FRotator);
+                auto ret = __newFRotator();
+                *ret = self->Clamp();
+                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::Clamp error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetNormalized(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FRotator);
+                auto ret = __newFRotator();
+                *ret = self->GetNormalized();
+                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::GetNormalized error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetDenormalized(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FRotator);
+                auto ret = __newFRotator();
+                *ret = self->GetDenormalized();
+                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::GetDenormalized error, argc=%d", argc);
+            return 0;
+        }
+
+        static int SetComponentForAxis(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 3) {
+                CheckSelf(FRotator);
+                auto Axis = LuaObject::checkValue<int>(L, 2);
+                auto AxisVal = (EAxis::Type)Axis;
+                auto Component = LuaObject::checkValue<double>(L, 3);
+                self->SetComponentForAxis(AxisVal, Component);
+                return 0;
+            }
+            luaL_error(L, "call FRotator::SetComponentForAxis error, argc=%d", argc);
+            return 0;
+        }
+
+        static int Normalize(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FRotator);
+                self->Normalize();
+                return 0;
+            }
+            luaL_error(L, "call FRotator::Normalize error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetWindingAndRemainder(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 3) {
+                CheckSelf(FRotator);
+                auto Winding = LuaObject::checkValue<FRotator*>(L, 2);
+                if (!Winding) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& WindingRef = *Winding;
+                auto Remainder = LuaObject::checkValue<FRotator*>(L, 3);
+                if (!Remainder) {
+                    luaL_error(L, "%s argument 3 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& RemainderRef = *Remainder;
+                self->GetWindingAndRemainder(WindingRef, RemainderRef);
+                LuaObject::push<FRotator>(L, "FRotator", Winding);
+                LuaObject::push<FRotator>(L, "FRotator", Remainder);
+                return 2;
+            }
+            luaL_error(L, "call FRotator::GetWindingAndRemainder error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetEquivalentRotator(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FRotator);
+                auto ret = __newFRotator();
+                *ret = self->GetEquivalentRotator();
+                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::GetEquivalentRotator error, argc=%d", argc);
+            return 0;
+        }
+
+        static int SetClosestToMe(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FRotator);
+                auto MakeClosest = LuaObject::checkValue<FRotator*>(L, 2);
+                if (!MakeClosest) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& MakeClosestRef = *MakeClosest;
+                self->SetClosestToMe(MakeClosestRef);
+                LuaObject::push<FRotator>(L, "FRotator", MakeClosest);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::SetClosestToMe error, argc=%d", argc);
+            return 0;
+        }
+
+        static int ToString(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FRotator);
+                auto ret = self->ToString();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::ToString error, argc=%d", argc);
+            return 0;
+        }
+
+        static int ToCompactString(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FRotator);
+                auto ret = self->ToCompactString();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::ToCompactString error, argc=%d", argc);
+            return 0;
+        }
+
+        static int InitFromString(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FRotator);
+                auto InSourceString = LuaObject::checkValue<FString>(L, 2);
+                auto ret = self->InitFromString(InSourceString);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::InitFromString error, argc=%d", argc);
+            return 0;
+        }
+
+        static int ContainsNaN(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FRotator);
+                auto ret = self->ContainsNaN();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::ContainsNaN error, argc=%d", argc);
+            return 0;
+        }
+
+        static int CompressAxisToByte(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                auto Angle = LuaObject::checkValue<double>(L, 1);
+                auto ret = FRotator::CompressAxisToByte(Angle);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::CompressAxisToByte error, argc=%d", argc);
+            return 0;
+        }
+
+        static int CompressAxisToShort(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                auto Angle = LuaObject::checkValue<double>(L, 1);
+                auto ret = FRotator::CompressAxisToShort(Angle);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::CompressAxisToShort error, argc=%d", argc);
+            return 0;
+        }
+
+        static int MakeFromEuler(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                auto Euler = LuaObject::checkValue<FVector*>(L, 1);
+                if (!Euler) {
+                    luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& EulerRef = *Euler;
+                auto ret = __newFRotator();
+                *ret = FRotator::MakeFromEuler(EulerRef);
+                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FRotator::MakeFromEuler error, argc=%d", argc);
+            return 0;
+        }
+
+        static void bind(lua_State* L) {
+            AutoStack autoStack(L);
+            LuaObject::newType(L, "FRotator");
+            LuaObject::addOperator(L, "__add", __add);
+            LuaObject::addOperator(L, "__sub", __sub);
+            LuaObject::addOperator(L, "__eq", __eq);
+            LuaObject::addField(L, "Pitch", get_Pitch, set_Pitch, true);
+            LuaObject::addField(L, "Yaw", get_Yaw, set_Yaw, true);
+            LuaObject::addField(L, "Roll", get_Roll, set_Roll, true);
+            LuaObject::addField(L, "ZeroRotator", get_ZeroRotator, nullptr, false);
+            LuaObject::addMethod(L, "DiagnosticCheckNaN", DiagnosticCheckNaN, true);
+            LuaObject::addMethod(L, "IsNearlyZero", IsNearlyZero, true);
+            LuaObject::addMethod(L, "IsZero", IsZero, true);
+            LuaObject::addMethod(L, "Equals", Equals, true);
+            LuaObject::addMethod(L, "Add", Add, true);
+            LuaObject::addMethod(L, "GetInverse", GetInverse, true);
+            LuaObject::addMethod(L, "GridSnap", GridSnap, true);
+            LuaObject::addMethod(L, "Vector", Vector, true);
+            LuaObject::addMethod(L, "Quaternion", Quaternion, true);
+            LuaObject::addMethod(L, "Euler", Euler, true);
+            LuaObject::addMethod(L, "RotateVector", RotateVector, true);
+            LuaObject::addMethod(L, "UnrotateVector", UnrotateVector, true);
+            LuaObject::addMethod(L, "Clamp", Clamp, true);
+            LuaObject::addMethod(L, "GetNormalized", GetNormalized, true);
+            LuaObject::addMethod(L, "GetDenormalized", GetDenormalized, true);
+            LuaObject::addMethod(L, "SetComponentForAxis", SetComponentForAxis, true);
+            LuaObject::addMethod(L, "Normalize", Normalize, true);
+            LuaObject::addMethod(L, "GetWindingAndRemainder", GetWindingAndRemainder, true);
+            LuaObject::addMethod(L, "GetEquivalentRotator", GetEquivalentRotator, true);
+            LuaObject::addMethod(L, "SetClosestToMe", SetClosestToMe, true);
+            LuaObject::addMethod(L, "ToString", ToString, true);
+            LuaObject::addMethod(L, "ToCompactString", ToCompactString, true);
+            LuaObject::addMethod(L, "InitFromString", InitFromString, true);
+            LuaObject::addMethod(L, "ContainsNaN", ContainsNaN, true);
+            LuaObject::addMethod(L, "CompressAxisToByte", CompressAxisToByte, false);
+            LuaObject::addMethod(L, "CompressAxisToShort", CompressAxisToShort, false);
+            LuaObject::addMethod(L, "MakeFromEuler", MakeFromEuler, false);
+            LuaObject::addMethod(L, "clone", clone, true);
+            LuaObject::finishType(L, "FRotator", __ctor, __gc);
         }
 
     };
@@ -9010,7 +10227,7 @@
             if (argc == 2) {
                 CheckSelf(FTransform);
                 auto InAxis = LuaObject::checkValue<int>(L, 2);
-				auto InAxisVal = (EAxis::Type)InAxis;
+                auto InAxisVal = (EAxis::Type)InAxis;
                 auto ret = __newFVector();
                 *ret = self->GetUnitAxis(InAxisVal);
                 LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
@@ -9025,9 +10242,9 @@
             if (argc == 3) {
                 CheckSelf(FTransform);
                 auto MirrorAxis = LuaObject::checkValue<int>(L, 2);
-				auto MirrorAxisVal = (EAxis::Type)MirrorAxis;
+                auto MirrorAxisVal = (EAxis::Type)MirrorAxis;
                 auto FlipAxis = LuaObject::checkValue<int>(L, 3);
-				auto FlipAxisVal = (EAxis::Type)FlipAxis;
+                auto FlipAxisVal = (EAxis::Type)FlipAxis;
                 self->Mirror(MirrorAxisVal, FlipAxisVal);
                 return 0;
             }
@@ -9045,6 +10262,19 @@
                 return 1;
             }
             luaL_error(L, "call FTransform::GetLocation error, argc=%d", argc);
+            return 0;
+        }
+
+        static int Rotator(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FTransform);
+                auto ret = __newFRotator();
+                *ret = self->Rotator();
+                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FTransform::Rotator error, argc=%d", argc);
             return 0;
         }
 
@@ -9411,30 +10641,6 @@
             return 0;
         }
 
-        static int GetTranslationRegister(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FTransform);
-                auto ret = self->GetTranslationRegister();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FTransform::GetTranslationRegister error, argc=%d", argc);
-            return 0;
-        }
-
-        static int GetRotationRegister(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FTransform);
-                auto ret = self->GetRotationRegister();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FTransform::GetRotationRegister error, argc=%d", argc);
-            return 0;
-        }
-
         static int NormalizeRotation(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
@@ -9755,6 +10961,7 @@
             LuaObject::addMethod(L, "GetUnitAxis", GetUnitAxis, true);
             LuaObject::addMethod(L, "Mirror", Mirror, true);
             LuaObject::addMethod(L, "GetLocation", GetLocation, true);
+            LuaObject::addMethod(L, "Rotator", Rotator, true);
             LuaObject::addMethod(L, "SetLocation", SetLocation, true);
             LuaObject::addMethod(L, "ContainsNaN", ContainsNaN, true);
             LuaObject::addMethod(L, "IsValid", IsValid, true);
@@ -9776,8 +10983,6 @@
             LuaObject::addMethod(L, "SetScale3D", SetScale3D, true);
             LuaObject::addMethod(L, "CopyScale3D", CopyScale3D, true);
             LuaObject::addMethod(L, "SetTranslationAndScale3D", SetTranslationAndScale3D, true);
-            LuaObject::addMethod(L, "GetTranslationRegister", GetTranslationRegister, true);
-            LuaObject::addMethod(L, "GetRotationRegister", GetRotationRegister, true);
             LuaObject::addMethod(L, "NormalizeRotation", NormalizeRotation, true);
             LuaObject::addMethod(L, "IsRotationNormalized", IsRotationNormalized, true);
             LuaObject::addMethod(L, "GetRotation", GetRotation, true);
@@ -9816,25 +11021,25 @@
                 return 1;
             }
             if (argc == 5) {
-                auto InX = LuaObject::checkValue<FVector*>(L, 2);
+                auto InX = LuaObject::checkValue<FPlane*>(L, 2);
                 if (!InX) {
                     luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
                     return 0;
                 }
                 auto& InXRef = *InX;
-                auto InY = LuaObject::checkValue<FVector*>(L, 3);
+                auto InY = LuaObject::checkValue<FPlane*>(L, 3);
                 if (!InY) {
                     luaL_error(L, "%s argument 3 is nullptr", __FUNCTION__);
                     return 0;
                 }
                 auto& InYRef = *InY;
-                auto InZ = LuaObject::checkValue<FVector*>(L, 4);
+                auto InZ = LuaObject::checkValue<FPlane*>(L, 4);
                 if (!InZ) {
                     luaL_error(L, "%s argument 4 is nullptr", __FUNCTION__);
                     return 0;
                 }
                 auto& InZRef = *InZ;
-                auto InW = LuaObject::checkValue<FVector*>(L, 5);
+                auto InW = LuaObject::checkValue<FPlane*>(L, 5);
                 if (!InW) {
                     luaL_error(L, "%s argument 5 is nullptr", __FUNCTION__);
                     return 0;
@@ -10263,7 +11468,7 @@
             if (argc == 2) {
                 CheckSelf(FMatrix);
                 auto Axis = LuaObject::checkValue<int>(L, 2);
-				auto AxisVal = (EAxis::Type)Axis;
+                auto AxisVal = (EAxis::Type)Axis;
                 auto ret = __newFVector();
                 *ret = self->GetScaledAxis(AxisVal);
                 LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
@@ -10310,7 +11515,7 @@
             if (argc == 2) {
                 CheckSelf(FMatrix);
                 auto Axis = LuaObject::checkValue<int>(L, 2);
-				auto AxisVal = (EAxis::Type)Axis;
+                auto AxisVal = (EAxis::Type)Axis;
                 auto ret = __newFVector();
                 *ret = self->GetUnitAxis(AxisVal);
                 LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
@@ -10415,6 +11620,19 @@
             return 0;
         }
 
+        static int Rotator(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FMatrix);
+                auto ret = __newFRotator();
+                *ret = self->Rotator();
+                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FMatrix::Rotator error, argc=%d", argc);
+            return 0;
+        }
+
         static int ToQuat(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
@@ -10428,14 +11646,128 @@
             return 0;
         }
 
+        static int GetFrustumNearPlane(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FMatrix);
+                auto OuTPln = LuaObject::checkValue<FPlane*>(L, 2);
+                if (!OuTPln) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OuTPlnRef = *OuTPln;
+                auto ret = self->GetFrustumNearPlane(OuTPlnRef);
+                LuaObject::push(L, ret);
+                LuaObject::push<FPlane>(L, "FPlane", OuTPln);
+                return 2;
+            }
+            luaL_error(L, "call FMatrix::GetFrustumNearPlane error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetFrustumFarPlane(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FMatrix);
+                auto OuTPln = LuaObject::checkValue<FPlane*>(L, 2);
+                if (!OuTPln) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OuTPlnRef = *OuTPln;
+                auto ret = self->GetFrustumFarPlane(OuTPlnRef);
+                LuaObject::push(L, ret);
+                LuaObject::push<FPlane>(L, "FPlane", OuTPln);
+                return 2;
+            }
+            luaL_error(L, "call FMatrix::GetFrustumFarPlane error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetFrustumLeftPlane(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FMatrix);
+                auto OuTPln = LuaObject::checkValue<FPlane*>(L, 2);
+                if (!OuTPln) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OuTPlnRef = *OuTPln;
+                auto ret = self->GetFrustumLeftPlane(OuTPlnRef);
+                LuaObject::push(L, ret);
+                LuaObject::push<FPlane>(L, "FPlane", OuTPln);
+                return 2;
+            }
+            luaL_error(L, "call FMatrix::GetFrustumLeftPlane error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetFrustumRightPlane(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FMatrix);
+                auto OuTPln = LuaObject::checkValue<FPlane*>(L, 2);
+                if (!OuTPln) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OuTPlnRef = *OuTPln;
+                auto ret = self->GetFrustumRightPlane(OuTPlnRef);
+                LuaObject::push(L, ret);
+                LuaObject::push<FPlane>(L, "FPlane", OuTPln);
+                return 2;
+            }
+            luaL_error(L, "call FMatrix::GetFrustumRightPlane error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetFrustumTopPlane(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FMatrix);
+                auto OuTPln = LuaObject::checkValue<FPlane*>(L, 2);
+                if (!OuTPln) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OuTPlnRef = *OuTPln;
+                auto ret = self->GetFrustumTopPlane(OuTPlnRef);
+                LuaObject::push(L, ret);
+                LuaObject::push<FPlane>(L, "FPlane", OuTPln);
+                return 2;
+            }
+            luaL_error(L, "call FMatrix::GetFrustumTopPlane error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetFrustumBottomPlane(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FMatrix);
+                auto OuTPln = LuaObject::checkValue<FPlane*>(L, 2);
+                if (!OuTPln) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OuTPlnRef = *OuTPln;
+                auto ret = self->GetFrustumBottomPlane(OuTPlnRef);
+                LuaObject::push(L, ret);
+                LuaObject::push<FPlane>(L, "FPlane", OuTPln);
+                return 2;
+            }
+            luaL_error(L, "call FMatrix::GetFrustumBottomPlane error, argc=%d", argc);
+            return 0;
+        }
+
         static int Mirror(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 3) {
                 CheckSelf(FMatrix);
                 auto MirrorAxis = LuaObject::checkValue<int>(L, 2);
-				auto MirrorAxisVal = (EAxis::Type)MirrorAxis;
+                auto MirrorAxisVal = (EAxis::Type)MirrorAxis;
                 auto FlipAxis = LuaObject::checkValue<int>(L, 3);
-				auto FlipAxisVal = (EAxis::Type)FlipAxis;
+                auto FlipAxisVal = (EAxis::Type)FlipAxis;
                 self->Mirror(MirrorAxisVal, FlipAxisVal);
                 return 0;
             }
@@ -10515,7 +11847,14 @@
             LuaObject::addMethod(L, "SetOrigin", SetOrigin, true);
             LuaObject::addMethod(L, "GetColumn", GetColumn, true);
             LuaObject::addMethod(L, "SetColumn", SetColumn, true);
+            LuaObject::addMethod(L, "Rotator", Rotator, true);
             LuaObject::addMethod(L, "ToQuat", ToQuat, true);
+            LuaObject::addMethod(L, "GetFrustumNearPlane", GetFrustumNearPlane, true);
+            LuaObject::addMethod(L, "GetFrustumFarPlane", GetFrustumFarPlane, true);
+            LuaObject::addMethod(L, "GetFrustumLeftPlane", GetFrustumLeftPlane, true);
+            LuaObject::addMethod(L, "GetFrustumRightPlane", GetFrustumRightPlane, true);
+            LuaObject::addMethod(L, "GetFrustumTopPlane", GetFrustumTopPlane, true);
+            LuaObject::addMethod(L, "GetFrustumBottomPlane", GetFrustumBottomPlane, true);
             LuaObject::addMethod(L, "Mirror", Mirror, true);
             LuaObject::addMethod(L, "ToString", ToString, true);
             LuaObject::addMethod(L, "DebugPrint", DebugPrint, true);
@@ -10699,6 +12038,207 @@
 
     };
 
+    struct FSphereWrapper {
+
+        static int __ctor(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                auto self = new FSphere();
+                LuaObject::push<FSphere>(L, "FSphere", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            if (argc == 2) {
+                auto _a0 = LuaObject::checkValue<int>(L, 2);
+                auto self = new FSphere(_a0);
+                LuaObject::push<FSphere>(L, "FSphere", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            if (argc == 3) {
+                auto InV = LuaObject::checkValue<FVector*>(L, 2);
+                auto InVVal = *InV;
+                auto InW = LuaObject::checkValue<double>(L, 3);
+                auto self = new FSphere(InVVal, InW);
+                LuaObject::push<FSphere>(L, "FSphere", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FSphere() error, argc=%d", argc);
+            return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FSphere);
+            auto ret = __newFSphere();
+            *ret = *self;
+            LuaObject::push<FSphere>(L, "FSphere", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
+        }
+
+        static int __gc(lua_State* L) {
+            CheckSelfSafe(FSphere);
+            SLUA_GCSTRUCT(FSphere);
+            return 0;
+        }
+
+        static int __eq(lua_State* L) {
+            CheckSelf(FSphere);
+            if (LuaObject::matchType(L, 2, "FSphere")) {
+                auto Other = LuaObject::checkValue<FSphere*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                auto ret = (*self == OtherRef);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            LuaObject::push(L, false);
+            return 1;
+        }
+
+        static int __add(lua_State* L) {
+            CheckSelf(FSphere);
+            if (LuaObject::matchType(L, 2, "FSphere")) {
+                auto Other = LuaObject::checkValue<FSphere*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                auto ret = __newFSphere();
+                *ret = (*self + OtherRef);
+                LuaObject::push<FSphere>(L, "FSphere", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "FSphere operator__add error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int get_Center(lua_State* L) {
+            CheckSelf(FSphere);
+            auto& Center = self->Center;
+            LuaObject::pushAndLink<FVector>(L, udptr->parent ? udptr->parent : self, "FVector", &Center);
+            return 1;
+        }
+
+        static int set_Center(lua_State* L) {
+            CheckSelf(FSphere);
+            auto& Center = self->Center;
+            auto CenterIn = LuaObject::checkValue<FVector*>(L, 2);
+            Center = *CenterIn;
+            LuaObject::push<FVector>(L, "FVector", CenterIn);
+            return 1;
+        }
+
+        static int get_W(lua_State* L) {
+            CheckSelf(FSphere);
+            auto& W = self->W;
+            LuaObject::push(L, W);
+            return 1;
+        }
+
+        static int set_W(lua_State* L) {
+            CheckSelf(FSphere);
+            auto& W = self->W;
+            auto WIn = LuaObject::checkValue<double>(L, 2);
+            W = WIn;
+            LuaObject::push(L, WIn);
+            return 1;
+        }
+
+        static int Equals(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 3) {
+                CheckSelf(FSphere);
+                auto Sphere = LuaObject::checkValue<FSphere*>(L, 2);
+                if (!Sphere) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& SphereRef = *Sphere;
+                auto Tolerance = LuaObject::checkValue<double>(L, 3);
+                auto ret = self->Equals(SphereRef, Tolerance);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSphere::Equals error, argc=%d", argc);
+            return 0;
+        }
+
+        static int IsInside(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 3) {
+                CheckSelf(FSphere);
+                auto Other = LuaObject::checkValue<FSphere*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                auto Tolerance = LuaObject::checkValue<double>(L, 3);
+                auto ret = self->IsInside(OtherRef, Tolerance);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSphere::IsInside error, argc=%d", argc);
+            return 0;
+        }
+
+        static int Intersects(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 3) {
+                CheckSelf(FSphere);
+                auto Other = LuaObject::checkValue<FSphere*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                auto Tolerance = LuaObject::checkValue<double>(L, 3);
+                auto ret = self->Intersects(OtherRef, Tolerance);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSphere::Intersects error, argc=%d", argc);
+            return 0;
+        }
+
+        static int TransformBy(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FSphere);
+                auto M = LuaObject::checkValue<FMatrix*>(L, 2);
+                if (!M) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& MRef = *M;
+                auto ret = __newFSphere();
+                *ret = self->TransformBy(MRef);
+                LuaObject::push<FSphere>(L, "FSphere", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FSphere::TransformBy error, argc=%d", argc);
+            return 0;
+        }
+
+        static void bind(lua_State* L) {
+            AutoStack autoStack(L);
+            LuaObject::newType(L, "FSphere");
+            LuaObject::addOperator(L, "__eq", __eq);
+            LuaObject::addOperator(L, "__add", __add);
+            LuaObject::addField(L, "Center", get_Center, set_Center, true);
+            LuaObject::addField(L, "W", get_W, set_W, true);
+            LuaObject::addMethod(L, "Equals", Equals, true);
+            LuaObject::addMethod(L, "IsInside", IsInside, true);
+            LuaObject::addMethod(L, "Intersects", Intersects, true);
+            LuaObject::addMethod(L, "TransformBy", TransformBy, true);
+            LuaObject::addMethod(L, "clone", clone, true);
+            LuaObject::finishType(L, "FSphere", __ctor, __gc);
+        }
+
+    };
+
     struct FSoftObjectPathWrapper {
 
         static int __ctor(lua_State* L) {
@@ -10877,8 +12417,9 @@
             auto argc = lua_gettop(L);
             if (argc == 2) {
                 CheckSelf(FSoftObjectPath);
-                auto Path = LuaObject::checkValue<FString>(L, 2);
-                self->SetPath(Path);
+                auto Path = LuaObject::checkValue<const char*>(L, 2);
+                auto PathVal = FString(UTF8_TO_TCHAR(Path));
+                self->SetPath(*PathVal);
                 return 0;
             }
             if (argc == 3) {
@@ -11331,11 +12872,25 @@
             FVector4Wrapper::bind(L);
         }
 
+        FPlaneStruct = StaticGetBaseStructureInternal(TEXT("Plane"));
+        if (FPlaneStruct) {
+            _pushStructMap.Add(FPlaneStruct, __pushFPlane);
+            _checkStructMap.Add(FPlaneStruct, __checkFPlane);
+            FPlaneWrapper::bind(L);
+        }
+
         FQuatStruct = StaticGetBaseStructureInternal(TEXT("Quat"));
         if (FQuatStruct) {
             _pushStructMap.Add(FQuatStruct, __pushFQuat);
             _checkStructMap.Add(FQuatStruct, __checkFQuat);
             FQuatWrapper::bind(L);
+        }
+
+        FRotatorStruct = StaticGetBaseStructureInternal(TEXT("Rotator"));
+        if (FRotatorStruct) {
+            _pushStructMap.Add(FRotatorStruct, __pushFRotator);
+            _checkStructMap.Add(FRotatorStruct, __checkFRotator);
+            FRotatorWrapper::bind(L);
         }
 
         FTransformStruct = StaticGetBaseStructureInternal(TEXT("Transform"));
@@ -11357,6 +12912,13 @@
             _pushStructMap.Add(FRayStruct, __pushFRay);
             _checkStructMap.Add(FRayStruct, __checkFRay);
             FRayWrapper::bind(L);
+        }
+
+        FSphereStruct = StaticGetBaseStructureInternal(TEXT("Sphere"));
+        if (FSphereStruct) {
+            _pushStructMap.Add(FSphereStruct, __pushFSphere);
+            _checkStructMap.Add(FSphereStruct, __checkFSphere);
+            FSphereWrapper::bind(L);
         }
 
         FSoftObjectPathStruct = StaticGetBaseStructureInternal(TEXT("SoftObjectPath"));

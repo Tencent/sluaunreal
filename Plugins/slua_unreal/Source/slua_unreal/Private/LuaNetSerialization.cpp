@@ -616,7 +616,11 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
         if (SerializeVersion == 1)
         {
 #if !UE_SERVER
-            if (!conditionMap[COND_ReplayOnly])
+            bool bIsServer = false;
+#if WITH_EDITOR
+            bIsServer = NM_DedicatedServer == actor->GetNetMode();
+#endif
+            if (bIsServer || !conditionMap[COND_ReplayOnly])
 #endif
             {
                 CompareProperties(obj, *proxy, replicationFrame);

@@ -214,11 +214,13 @@ LuaBitArray& LuaBitArray::operator &= (const LuaBitArray& Other)
     BitLength = FMath::Max(BitLength, Other.BitLength);
     if (BitSize < Other.BitSize)
     {
-        BitSize = Other.BitSize;
-        delete[] BitData;
+        auto NewBitData = new WordType[Other.BitSize];
+        FMemory::Memcpy(NewBitData, BitData, BitSize);
+        FMemory::Memset(NewBitData + BitSize, 0, sizeof(WordType) * (Other.BitSize - BitSize));
 
-        BitData = new WordType[BitSize];
-        FMemory::Memset(BitData, 0, sizeof(WordType) * BitSize);
+        delete[] BitData;
+        BitData = NewBitData;
+        BitSize = Other.BitSize;
     }
 
     int32 MinSize = Other.BitSize;
@@ -241,11 +243,13 @@ LuaBitArray& LuaBitArray::operator |= (const LuaBitArray& Other)
 
     if (BitSize < Other.BitSize)
     {
-        BitSize = Other.BitSize;
-        delete[] BitData;
+        auto NewBitData = new WordType[Other.BitSize];
+        FMemory::Memcpy(NewBitData, BitData, BitSize);
+        FMemory::Memset(NewBitData + BitSize, 0, sizeof(WordType) * (Other.BitSize - BitSize));
 
-        BitData = new WordType[BitSize];
-        FMemory::Memset(BitData, 0, sizeof(WordType) * BitSize);
+        delete[] BitData;
+        BitData = NewBitData;
+        BitSize = Other.BitSize;
     }
 
     int32 MinSize = Other.BitSize;

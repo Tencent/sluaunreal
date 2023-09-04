@@ -238,7 +238,7 @@ bool FLuaNetSerialization::NetDeltaSerialize(FNetDeltaSerializeInfo& deltaParms)
                     {
                         // Initialize the reader with the stored buffer that we need to read from
                         FNetBitReader reader(deltaParms.Map, guidReferences.buffer.GetData(), guidReferences.numBufferBits);
-                        ReadItem(deltaParms, reader, classLuaReplciated, index, data, oldData);
+                        ReadItem(deltaParms, *proxy, reader, classLuaReplciated, index, data, oldData);
 
                         auto &flatPropInfo = flatProperties[index];
                         changes.AddUnique(flatPropInfo.propIndex);
@@ -366,7 +366,7 @@ bool FLuaNetSerialization::Read(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeria
 
             if (SerializeVersion)
             {
-                ReadItem(deltaParms, reader, classLuaReplciated, index, data, oldData);
+                ReadItem(deltaParms, *proxy, reader, classLuaReplciated, index, data, oldData);
             }
             else
             {
@@ -500,7 +500,7 @@ bool FLuaNetSerialization::Read(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeria
 }
 
 
-void FLuaNetSerialization::ReadItem(FNetDeltaSerializeInfo& deltaParms, FBitReader& reader,
+void FLuaNetSerialization::ReadItem(FNetDeltaSerializeInfo& deltaParms, FLuaNetSerializationProxy& proxy, FBitReader& reader,
                                     ClassLuaReplicated* classReplicated, int32 index, uint8* data, uint8* oldData)
 {
     auto &flatProperties = classReplicated->flatProperties;
@@ -536,6 +536,7 @@ void FLuaNetSerialization::ReadItem(FNetDeltaSerializeInfo& deltaParms, FBitRead
             auto p = innerSubPropInfo.prop;
             NetSerializeItem(p, reader, deltaParms.Map, arrayHelper.GetRawPtr(arrayIndex) + innerSubPropInfo.offset);
         }
+        proxy.arrayDirtyMark[flatOffset] = changes;
     }
     else
     {
@@ -616,7 +617,11 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
         if (SerializeVersion == 1)
         {
 #if !UE_SERVER
-            if (!conditionMap[COND_ReplayOnly])
+            bool bIsServer = false;
+#if WITH_EDITOR
+            bIsServer = NM_DedicatedServer == actor->GetNetMode();
+#endif
+            if (bIsServer || !conditionMap[COND_ReplayOnly])
 #endif
             {
                 CompareProperties(obj, *proxy, replicationFrame);

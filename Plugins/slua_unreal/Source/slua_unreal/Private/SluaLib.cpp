@@ -178,7 +178,32 @@ namespace NS_SLUA {
 
     int SluaUtil::createDelegate(lua_State* L) {
         luaL_checktype(L,1,LUA_TFUNCTION);
-        auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(),ULuaDelegate::StaticClass());
+        UGameInstance* gameInstance = LuaState::get(L)->getGameInstance();
+
+        if (!gameInstance)
+        {
+#if WITH_EDITOR
+            UUnrealEdEngine* engine = Cast<UUnrealEdEngine>(GEngine);
+            if (engine && engine->PlayWorld)
+            {
+                gameInstance = engine->PlayWorld->GetGameInstance();
+            }
+#else
+            UEngine* engine = GEngine;
+            UWorld* world = engine->GetCurrentPlayWorld();
+            if (world)
+            {
+                gameInstance = world->GetGameInstance();
+            }
+#endif
+        }
+
+        if (!gameInstance)
+        {
+            luaL_error(L, "gameinstance missing");
+        }
+
+        auto obj = NewObject<ULuaDelegate>(gameInstance,ULuaDelegate::StaticClass());
         obj->bindFunction(L,1);
         return LuaObject::push(L,obj,true);
     }

@@ -210,7 +210,7 @@ protected:
     typedef TFunctionRef<void (ClassLuaReplicated::FlatPropInfo& propInfo, FScriptArrayHelper& arrayHelper, int32 arrayIndex, int32 dirtyIndex)> SerializeArrayCallback;
     
     bool Read(FNetDeltaSerializeInfo& deltaParms, FLuaNetSerializationProxy* proxy);
-    void ReadItem(FNetDeltaSerializeInfo& deltaParms, FBitReader& reader, ClassLuaReplicated* classReplicated,
+    void ReadItem(FNetDeltaSerializeInfo& deltaParms, FLuaNetSerializationProxy& proxy, FBitReader& reader, ClassLuaReplicated* classReplicated,
                   int32 index, uint8* data, uint8* oldData);
     
     bool Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSerializationProxy* proxy);

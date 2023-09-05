@@ -33,11 +33,11 @@
 #include "luasocket/tcp.h"
 
 #if PLATFORM_WINDOWS
-#include "AllowWindowsPlatformTypes.h"
-#include "AllowWindowsPlatformAtomics.h"
+#include "Windows/AllowWindowsPlatformTypes.h"
+#include "Windows/AllowWindowsPlatformAtomics.h"
 #include <winsock2.h>
-#include "HideWindowsPlatformAtomics.h"
-#include "HideWindowsPlatformTypes.h"
+#include "Windows/HideWindowsPlatformAtomics.h"
+#include "Windows/HideWindowsPlatformTypes.h"
 #else
 #include <sys/ioctl.h>
 #endif

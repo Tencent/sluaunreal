@@ -21,7 +21,7 @@
 
 namespace NS_SLUA {
     FString getUObjName(UObject* obj) {
-#if UE_BUILD_DEVELOPMENT
+#if WITH_EDITOR
         if (auto ld = Cast<ULuaDelegate>(obj)) {
             return ld->getPropName();
         }

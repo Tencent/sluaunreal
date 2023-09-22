@@ -35,6 +35,12 @@
 #include "SluaUtil.h"
 #include "Stats/Stats2.h"
 
+#if (ENGINE_MINOR_VERSION>=3) && (ENGINE_MAJOR_VERSION==5)
+#ifdef max
+#undef max
+#endif
+#endif
+
 #ifdef ENABLE_PROFILER
 namespace NS_SLUA {
 

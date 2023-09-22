@@ -704,7 +704,7 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
                     {
                         int32 propIndex = *It;
                         auto &sharedInfo = sharedPropertyInfo[propIndex];
-                        if (sharedInfo.Guid.D)
+                        if (sharedInfo.bShared)
                         {
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
                             writer.SerializeBits(sharedSerialization.SerializedProperties->GetData() + (sharedInfo.BitOffset >> 3), sharedInfo.BitLength);
@@ -792,9 +792,9 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
                     {
                         int32 index = *It;
                         auto &sharedInfo = sharedPropertyInfo[index];
-                        if (sharedInfo.Guid.D)
+                        if (sharedInfo.bShared)
                         {
-                            auto writeShareSerializeBit = [](FBitWriter& writer, uint8* data, const FRepSerializedPropertyInfo& sharedInfo)
+                            auto writeShareSerializeBit = [](FBitWriter& writer, uint8* data, const FLuaRepSerializedPropertyInfo& sharedInfo)
                             {
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
                                 writer.SerializeBits(data + (sharedInfo.BitOffset >> 3), sharedInfo.BitLength);
@@ -804,7 +804,7 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
                             };
 
                             // is array
-                            if (sharedInfo.Guid.B)
+                            if (sharedInfo.bArray)
                             {
                                 auto &flatPropInfo = flatProperties[index];
                                 int32 flatOffset = flatPropInfo.offset;
@@ -1036,10 +1036,8 @@ void FLuaNetSerialization::BuildSharedSerialization_V1(UPackageMap* map, ClassLu
     auto &sharedSerialization = proxy->sharedSerialization;
     auto &sharedArraySerialization = proxy->sharedArraySerialization;
     auto &sharedPropertyInfo = sharedSerialization.SharedPropertyInfo;
-
-#if ENGINE_MAJOR_VERSION==5
     sharedSerialization.Init();
-#endif
+
     auto &serializedProperties = sharedSerialization.SerializedProperties;
 
     auto &properties = classLuaReplicated->flatProperties;
@@ -1069,19 +1067,18 @@ void FLuaNetSerialization::BuildSharedSerialization_V1(UPackageMap* map, ClassLu
             continue;;
         }
         
-        FRepSerializedPropertyInfo &sharedPropInfo = sharedPropertyInfo[propIndex];
-        sharedPropInfo.Guid = FGuid(propIndex, 0, 0, 1);
+        FLuaRepSerializedPropertyInfo&sharedPropInfo = sharedPropertyInfo[propIndex];
+        sharedPropInfo.bShared = true;
         sharedPropInfo.BitOffset = serializedProperties->GetNumBits();
 
         if (arrayProp)
         {
             const uint32 bArray = 1;
-            sharedPropInfo.Guid.B = bArray;
+            sharedPropInfo.bArray = bArray;
             
             auto &sharedArray = sharedArraySerialization.FindOrAdd(propOffset);
-#if ENGINE_MAJOR_VERSION==5
             sharedArray.Init();
-#endif
+
             auto &ar = *sharedArray.SerializedProperties;
             auto prepearCallback = [&](int32 arrayNum, int32 innerPropNum)
             {
@@ -1094,8 +1091,8 @@ void FLuaNetSerialization::BuildSharedSerialization_V1(UPackageMap* map, ClassLu
                                     auto p = propInfo.prop;
                                     if (propInfo.bSupportSharedSerialize)
                                     {
-                                        FRepSerializedPropertyInfo &sharedArrayPropInfo = sharedArray.SharedPropertyInfo[dirtyIndex];
-                                        sharedArrayPropInfo.Guid = FGuid(0, 0, 0, 1);
+                                        FLuaRepSerializedPropertyInfo&sharedArrayPropInfo = sharedArray.SharedPropertyInfo[dirtyIndex];
+                                        sharedArrayPropInfo.bShared = true;
                                         sharedArrayPropInfo.BitOffset = ar.GetNumBits();
                                         
                                         NetSerializeItem(p, ar, map, arrayHelper.GetRawPtr(arrayIndex) + propInfo.offset);
@@ -1249,8 +1246,8 @@ void FLuaNetSerialization::BuildSharedSerialization(UPackageMap* map, ClassLuaRe
             continue;;
         }
         
-        FRepSerializedPropertyInfo &sharedPropInfo = sharedPropertyInfo[propIndex];
-        sharedPropInfo.Guid = FGuid(propIndex, 0, 0, 1);
+        FLuaRepSerializedPropertyInfo&sharedPropInfo = sharedPropertyInfo[propIndex];
+        sharedPropInfo.bShared = true;
         sharedPropInfo.BitOffset = serializedProperties->GetNumBits();
 
         NetSerializeItem(prop, *serializedProperties, map, data + prop->GetOffset_ForInternal());

@@ -13,10 +13,8 @@
 
 #include "SluaTestCase.h"
 #include "slua.h"
-#include "SluaTestActor.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/Package.h"
-#include "Blueprint/UserWidget.h"
 #include "Misc/AssertionMacros.h"
 #include "HttpModule.h"
 #include "Interfaces/IHttpRequest.h"

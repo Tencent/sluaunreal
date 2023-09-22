@@ -17,7 +17,6 @@
 #include "Serialization/ArrayWriter.h"
 #include "Serialization/ArrayReader.h"
 #include "LuaMemoryProfile.h"
-#include "GenericPlatform/GenericPlatformMath.h"
 #include "luasocket/buffer.h"
 #include "lua.h"
 #include "lstate.h"
@@ -32,22 +31,18 @@
 #include "SluaProfilerDataManager.h"
 #include "luasocket/tcp.h"
 
-#if PLATFORM_WINDOWS
-#include "Windows/AllowWindowsPlatformTypes.h"
-#include "Windows/AllowWindowsPlatformAtomics.h"
-#include <winsock2.h>
-#include "Windows/HideWindowsPlatformAtomics.h"
-#include "Windows/HideWindowsPlatformTypes.h"
-#else
-#include <sys/ioctl.h>
+#include "LuaProfiler.inl"
+#include "SluaUtil.h"
+#include "Stats/Stats2.h"
+
+#if (ENGINE_MINOR_VERSION>=3) && (ENGINE_MAJOR_VERSION==5)
+#ifdef max
+#undef max
+#endif
 #endif
 
 #ifdef ENABLE_PROFILER
 namespace NS_SLUA {
-
-    #include "LuaProfiler.inl"
-    #include "SluaUtil.h"
-    #include "Stats/Stats2.h"
 
     enum class HookState {
         UNHOOK=0,
@@ -100,7 +95,7 @@ namespace NS_SLUA {
             while (err == IO_DONE) {
                 size_t count;
                 err = buffer_get(buf, &count, messageReader);
-                count = FGenericPlatformMath::Min(count, wanted - total);
+                count = count > wanted - total ? wanted - total : count;
                 profiler_buffer_skip(buf, count);
                 total += count;
                 if(err == IO_DONE)

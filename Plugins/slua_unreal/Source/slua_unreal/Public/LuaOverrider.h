@@ -83,6 +83,7 @@ namespace NS_SLUA
         static const char* SUPER_NAME;
         static const char* CACHE_NAME;
         static const char* INSTANCE_CACHE_NAME;
+        static const FName TRIGGER_ANIM_NOTIFY_FUNCTION_NAME;
         
         LuaOverrider(LuaState* luaState);
         ~LuaOverrider();

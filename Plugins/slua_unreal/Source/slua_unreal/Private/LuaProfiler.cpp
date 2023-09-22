@@ -17,7 +17,6 @@
 #include "Serialization/ArrayWriter.h"
 #include "Serialization/ArrayReader.h"
 #include "LuaMemoryProfile.h"
-#include "GenericPlatform/GenericPlatformMath.h"
 #include "luasocket/buffer.h"
 #include "lua.h"
 #include "lstate.h"
@@ -90,7 +89,7 @@ namespace NS_SLUA {
             while (err == IO_DONE) {
                 size_t count;
                 err = buffer_get(buf, &count, messageReader);
-                count = FGenericPlatformMath::Min(count, wanted - total);
+                count = count > wanted - total ? wanted - total : count;
                 profiler_buffer_skip(buf, count);
                 total += count;
                 if(err == IO_DONE)

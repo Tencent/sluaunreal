@@ -167,43 +167,10 @@ return Class(nil, nil, LuaActor)
 
 ![](luaactor.png)
 
-## 性能
-
-slua-unreal提供3种技术绑定lua接口，包括：
-
-1）蓝图反射方法
-
-2）静态代码生成
-
-3）CppBinding（模板展开）
-
-其中方法2和3运行原理上没差别，只是方法2是基于libclang自动化生成代码，方法3是手写代码，所以下面的统计上仅针对1和3来对比，可以认为2和3的性能是等价的。
-
-100万次函数调用时间统计（秒），测试用例可以参考附带的TestPerf.lua文件。
-
-测试机器 MacOSX，Unreal 4.18 dev版（非release，release应该会稍微快一点），CPU i7 4GHz。
-
-### Performance
-
-unit in second, 1,000,000 calls to C++ interface from Lua, compared reflection and cppbinding, (both reflection and cppbinding are supported by slua-unreal).
-
-Test on MacOSX, Unreal 4.18 develop building, CPU i7 4GHz, test cases can be found in TestPerf.lua
-
-Without the time spent on gc alloc, the blueprint reflection-based approach is twice as fast as the one using static code generation, while CppBinding is an order of magnitude faster than reflection.
-
-|                                                              | 蓝图反射方法(Reflection) | CppBinding方法(CppBinding) |
-| ------------------------------------------------------------ | ------------------------ | -------------------------- |
-| 空函数调用(empty function call)                              | 0.541507                 | 0.090571                   |
-| 函数返回int(function return int)                             | 0.560052                 | 0.090419                   |
-| 传入int函数返回int(function return int and pass int)         | 0.587115                 | 0.097639                   |
-| 传入Fstring函数返回int(function return FString and pass int) | 0.930042                 | 0.223207                   |
-
-与slua unity版本相比，因为unreal的蓝图反射更高效，没有gc alloc开销，基于蓝图反射的方法的性能比slua unity的静态代码生成还要快1倍，而cppbinding则快一个数量级。
-
 ## Slua 2.0 特性介绍
 ### Slua Override机制
 - 解决1.x版本的生命周期管理问题
-- 解决1.x self.Super:Func() 调用，在蓝图有jump指令是崩溃的问题
+- 解决1.x self.Super:Func() 调用，在蓝图有jump指令时崩溃的问题
 - Lua模块支持类继承形式书写，例如：
 
 ```lua
@@ -382,6 +349,39 @@ Actor.Position.X = 1
 ### 版本支持
 - UE4.18、UE4.26完整支持，支持UE5.1，其他版本因为时间精力问题暂时无法支持到位
 - 兼容lua 5.4版本接入
+
+## 性能
+
+slua-unreal提供3种技术绑定lua接口，包括：
+
+1）蓝图反射方法
+
+2）静态代码生成
+
+3）CppBinding（模板展开）
+
+其中方法2和3运行原理上没差别，只是方法2是基于libclang自动化生成代码，方法3是手写代码，所以下面的统计上仅针对1和3来对比，可以认为2和3的性能是等价的。
+
+100万次函数调用时间统计（秒），测试用例可以参考附带的TestPerf.lua文件。
+
+测试机器 MacOSX，Unreal 4.18 dev版（非release，release应该会稍微快一点），CPU i7 4GHz。
+
+### Performance
+
+unit in second, 1,000,000 calls to C++ interface from Lua, compared reflection and cppbinding, (both reflection and cppbinding are supported by slua-unreal).
+
+Test on MacOSX, Unreal 4.18 develop building, CPU i7 4GHz, test cases can be found in TestPerf.lua
+
+Without the time spent on gc alloc, the blueprint reflection-based approach is twice as fast as the one using static code generation, while CppBinding is an order of magnitude faster than reflection.
+
+|                                                              | 蓝图反射方法(Reflection) | CppBinding方法(CppBinding) |
+| ------------------------------------------------------------ | ------------------------ | -------------------------- |
+| 空函数调用(empty function call)                              | 0.541507                 | 0.090571                   |
+| 函数返回int(function return int)                             | 0.560052                 | 0.090419                   |
+| 传入int函数返回int(function return int and pass int)         | 0.587115                 | 0.097639                   |
+| 传入Fstring函数返回int(function return FString and pass int) | 0.930042                 | 0.223207                   |
+
+与slua unity版本相比，因为unreal的蓝图反射更高效，没有gc alloc开销，基于蓝图反射的方法的性能比slua unity的静态代码生成还要快1倍，而cppbinding则快一个数量级。
 
 # 相关参考
 

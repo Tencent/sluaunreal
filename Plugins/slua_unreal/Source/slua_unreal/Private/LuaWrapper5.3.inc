@@ -1,5 +1,4 @@
 
-    static UScriptStruct* FSlateColorStruct = nullptr;
     static UScriptStruct* FIntPointStruct = nullptr;
     static UScriptStruct* FIntVectorStruct = nullptr;
     static UScriptStruct* FIntVector4Struct = nullptr;
@@ -48,26 +47,6 @@
 
     TMap<UScriptStruct*, pushStructFunction> _pushStructMap;
     TMap<UScriptStruct*, checkStructFunction> _checkStructMap;
-
-    static inline FSlateColor* __newFSlateColor() {
-        return new FSlateColor();
-    }
-
-    static void __pushFSlateColor(lua_State* L, FStructProperty* p, uint8* parms) {
-        auto ptr = __newFSlateColor();
-        p->CopyCompleteValue(ptr, parms);
-        LuaObject::push<FSlateColor>(L, "FSlateColor", ptr, UD_AUTOGC | UD_VALUETYPE);
-    }
-
-    static void* __checkFSlateColor(lua_State* L, FStructProperty* p, uint8* parms, int i) {
-        auto v = LuaObject::checkValue<FSlateColor*>(L, i);
-        if (!v) {
-            luaL_error(L, "check FSlateColor nil value");
-            return nullptr;
-        }
-        p->CopyCompleteValue(parms, v);
-        return v;
-    }
 
     static inline FIntPoint* __newFIntPoint() {
         return new FIntPoint();
@@ -908,149 +887,6 @@
         p->CopyCompleteValue(parms, v);
         return v;
     }
-
-    struct FSlateColorWrapper {
-
-        static int __ctor(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                auto self = new FSlateColor();
-                LuaObject::push<FSlateColor>(L, "FSlateColor", self, UD_AUTOGC | UD_VALUETYPE);
-                return 1;
-            }
-            if (argc == 2) {
-                auto InColor = LuaObject::checkValue<FLinearColor*>(L, 2);
-                if (!InColor) {
-                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
-                    return 0;
-                }
-                auto& InColorRef = *InColor;
-                auto self = new FSlateColor(InColorRef);
-                LuaObject::push<FSlateColor>(L, "FSlateColor", self, UD_AUTOGC | UD_VALUETYPE);
-                return 1;
-            }
-            luaL_error(L, "call FSlateColor() error, argc=%d", argc);
-            return 0;
-        }
-
-        static int clone(lua_State* L) {
-            CheckSelf(FSlateColor);
-            auto ret = __newFSlateColor();
-            *ret = *self;
-            LuaObject::push<FSlateColor>(L, "FSlateColor", ret, UD_AUTOGC | UD_VALUETYPE);
-            return 1;
-        }
-
-        static int __gc(lua_State* L) {
-            CheckSelfSafe(FSlateColor);
-            SLUA_GCSTRUCT(FSlateColor);
-            return 0;
-        }
-
-        static int __eq(lua_State* L) {
-            CheckSelf(FSlateColor);
-            if (LuaObject::matchType(L, 2, "FSlateColor")) {
-                auto Other = LuaObject::checkValue<FSlateColor*>(L, 2);
-                if (!Other) {
-                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
-                    return 0;
-                }
-                auto& OtherRef = *Other;
-                auto ret = (*self == OtherRef);
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            LuaObject::push(L, false);
-            return 1;
-        }
-
-        static int GetSpecifiedColor(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FSlateColor);
-                auto ret = __newFLinearColor();
-                *ret = self->GetSpecifiedColor();
-                LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
-                return 1;
-            }
-            luaL_error(L, "call FSlateColor::GetSpecifiedColor error, argc=%d", argc);
-            return 0;
-        }
-
-        static int IsColorSpecified(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FSlateColor);
-                auto ret = self->IsColorSpecified();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FSlateColor::IsColorSpecified error, argc=%d", argc);
-            return 0;
-        }
-
-        static int Unlink(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FSlateColor);
-                self->Unlink();
-                return 0;
-            }
-            luaL_error(L, "call FSlateColor::Unlink error, argc=%d", argc);
-            return 0;
-        }
-
-        static int UseForeground(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
-                auto ret = __newFSlateColor();
-                *ret = FSlateColor::UseForeground();
-                LuaObject::push<FSlateColor>(L, "FSlateColor", ret, UD_AUTOGC | UD_VALUETYPE);
-                return 1;
-            }
-            luaL_error(L, "call FSlateColor::UseForeground error, argc=%d", argc);
-            return 0;
-        }
-
-        static int UseSubduedForeground(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
-                auto ret = __newFSlateColor();
-                *ret = FSlateColor::UseSubduedForeground();
-                LuaObject::push<FSlateColor>(L, "FSlateColor", ret, UD_AUTOGC | UD_VALUETYPE);
-                return 1;
-            }
-            luaL_error(L, "call FSlateColor::UseSubduedForeground error, argc=%d", argc);
-            return 0;
-        }
-
-        static int UseStyle(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
-                auto ret = __newFSlateColor();
-                *ret = FSlateColor::UseStyle();
-                LuaObject::push<FSlateColor>(L, "FSlateColor", ret, UD_AUTOGC | UD_VALUETYPE);
-                return 1;
-            }
-            luaL_error(L, "call FSlateColor::UseStyle error, argc=%d", argc);
-            return 0;
-        }
-
-        static void bind(lua_State* L) {
-            AutoStack autoStack(L);
-            LuaObject::newType(L, "FSlateColor");
-            LuaObject::addOperator(L, "__eq", __eq);
-            LuaObject::addMethod(L, "GetSpecifiedColor", GetSpecifiedColor, true);
-            LuaObject::addMethod(L, "IsColorSpecified", IsColorSpecified, true);
-            LuaObject::addMethod(L, "Unlink", Unlink, true);
-            LuaObject::addMethod(L, "UseForeground", UseForeground, false);
-            LuaObject::addMethod(L, "UseSubduedForeground", UseSubduedForeground, false);
-            LuaObject::addMethod(L, "UseStyle", UseStyle, false);
-            LuaObject::addMethod(L, "clone", clone, true);
-            LuaObject::finishType(L, "FSlateColor", __ctor, __gc);
-        }
-
-    };
 
     struct FIntPointWrapper {
 
@@ -14543,12 +14379,6 @@
 
     void LuaWrapper::init(lua_State* L) {
         AutoStack autoStack(L);
-        FSlateColorStruct = FSlateColor::StaticStruct();
-        if (FSlateColorStruct) {
-            _pushStructMap.Add(FSlateColorStruct, __pushFSlateColor);
-            _checkStructMap.Add(FSlateColorStruct, __checkFSlateColor);
-            FSlateColorWrapper::bind(L);
-        }
 
         FIntPointStruct = StaticGetBaseStructureInternal(TEXT("IntPoint"));
         if (FIntPointStruct) {

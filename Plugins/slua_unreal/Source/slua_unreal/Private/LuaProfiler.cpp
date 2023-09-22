@@ -32,6 +32,10 @@
 #include "SluaProfilerDataManager.h"
 #include "luasocket/tcp.h"
 
+#include "LuaProfiler.inl"
+#include "SluaUtil.h"
+#include "Stats/Stats2.h"
+
 #if PLATFORM_WINDOWS
 #include "Windows/AllowWindowsPlatformTypes.h"
 #include "Windows/AllowWindowsPlatformAtomics.h"
@@ -44,10 +48,6 @@
 
 #ifdef ENABLE_PROFILER
 namespace NS_SLUA {
-
-    #include "LuaProfiler.inl"
-    #include "SluaUtil.h"
-    #include "Stats/Stats2.h"
 
     enum class HookState {
         UNHOOK=0,

@@ -1965,7 +1965,7 @@ namespace NS_SLUA {
     bool fillUStructWithTable(lua_State* L, FStructProperty* prop, uint8* params, int i) {
         check(lua_istable(L, i));
 
-        auto* uss = prop->Struct;
+        auto uss = prop->Struct;
 
         for (TFieldIterator<FProperty> it(uss); it; ++it) {
             AutoStack as(L);

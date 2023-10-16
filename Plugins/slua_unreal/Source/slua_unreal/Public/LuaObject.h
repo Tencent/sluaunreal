@@ -887,7 +887,7 @@ namespace NS_SLUA {
         template<typename T>
         static int push(lua_State* L, const T& v, typename std::enable_if<!std::is_base_of<UObject, T>::value && std::is_class<T>::value>::type* = nullptr) {
             T* newPtr = new T(v);
-            return push<T>(L, TypeName<T>::value().c_str(), newPtr, UD_AUTOGC);
+            return push<T>(L, TypeName<T>::value().c_str(), newPtr, UD_AUTOGC | UD_VALUETYPE);
         }
 
         // used this branch

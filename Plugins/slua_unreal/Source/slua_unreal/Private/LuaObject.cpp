@@ -57,6 +57,10 @@ FAutoConsoleVariableRef CVarSluaEnableReference(
 namespace NS_SLUA {
     static const FName NAME_LatentInfo = TEXT("LatentInfo");
 
+    static const uint64 ReferenceCastFlags = FArrayProperty::StaticClassCastFlags()
+        | FMapProperty::StaticClassCastFlags()
+        | FSetProperty::StaticClassCastFlags();
+
     TMap<FFieldClass*,LuaObject::PushPropertyFunction> pusherMap;
     TMap<FFieldClass*,LuaObject::CheckPropertyFunction> checkerMap;
     TMap<FFieldClass*,LuaObject::ReferencePusherPropertyFunction> referencePusherMap;
@@ -828,8 +832,18 @@ namespace NS_SLUA {
 #endif
 
                         auto prop = (FProperty*)pvalue(&f->upvalue[0]);
-                        auto pusher = (PushPropertyFunction)pvalue(&f->upvalue[1]);
-                        return pusher(L, prop, parent + prop->GetOffset_ForInternal(), nullptr);
+                        void* pusher = pvalue(&f->upvalue[1]);
+                        void* parentAddress = pvalue(&f->upvalue[3]);
+                        if (parentAddress)
+                        {
+                            return pushReferenceAndCache(static_cast<ReferencePusherPropertyFunction>(pusher), L,
+                                                         prop->GetOwnerClass(), prop,
+                                                         parent + prop->GetOffset_ForInternal(), parentAddress);
+                        }
+                        else
+                        {
+                            return static_cast<PushPropertyFunction>(pusher)(L, prop, parent + prop->GetOffset_ForInternal(), nullptr);
+                        }
                     }
                     lua_pop(L, 2);
                 }
@@ -861,8 +875,18 @@ namespace NS_SLUA {
 #endif
 
                         auto prop = (FProperty*)pvalue(&f->upvalue[0]);
-                        auto pusher = (PushPropertyFunction)pvalue(&f->upvalue[1]);
-                        return pusher(L, prop, parent + prop->GetOffset_ForInternal(), nullptr);
+                        void* pusher = pvalue(&f->upvalue[1]);
+                        void* parentAddress = pvalue(&f->upvalue[3]);
+                        if (parentAddress)
+                        {
+                            return pushReferenceAndCache(static_cast<ReferencePusherPropertyFunction>(pusher), L,
+                                                         prop->GetOwnerClass(), prop,
+                                                         parent + prop->GetOffset_ForInternal(), parentAddress);
+                        }
+                        else
+                        {
+                            return ((PushPropertyFunction)pusher)(L, prop, parent + prop->GetOffset_ForInternal(), nullptr);
+                        }
                     }
                     lua_pop(L, 2);
                 }
@@ -1079,7 +1103,7 @@ namespace NS_SLUA {
         return 0;
     }
 
-    bool cachePropertyOperator(lua_State* L, FProperty* prop, UStruct* cls, void* pusher, void* checker)
+    bool cachePropertyOperator(lua_State* L, FProperty* prop, UStruct* cls, void* pusher, void* checker, void* parentAddress)
     {
         int selfType = lua_type(L, 1);
         if (selfType == LUA_TUSERDATA) {
@@ -1096,7 +1120,8 @@ namespace NS_SLUA {
             lua_pushlightuserdata(L, prop);
             lua_pushlightuserdata(L, pusher);
             lua_pushlightuserdata(L, checker);
-            lua_pushcclosure(L, instanceIndex, 3);
+            lua_pushlightuserdata(L, parentAddress);
+            lua_pushcclosure(L, instanceIndex, 4);
             lua_rawset(L, -3);
             lua_pop(L, 2);
             return true;
@@ -1116,7 +1141,8 @@ namespace NS_SLUA {
             lua_pushlightuserdata(L, prop);
             lua_pushlightuserdata(L, pusher);
             lua_pushlightuserdata(L, checker);
-            lua_pushcclosure(L, instanceIndex, 3);
+            lua_pushlightuserdata(L, parentAddress);
+            lua_pushcclosure(L, instanceIndex, 4);
             lua_rawset(L, -3);
             lua_pop(L, 1);
             return true;
@@ -1130,15 +1156,13 @@ namespace NS_SLUA {
         FProperty* up = LuaObject::findCacheProperty(L, cls, name);
         if (up)
         {
-            static const uint64 ReferenceCastFlags = FArrayProperty::StaticClassCastFlags()
-                | FMapProperty::StaticClassCastFlags()
-                | FSetProperty::StaticClassCastFlags();
-
             #pragma warning(push)
             #pragma warning(disable : 4996)
 
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             if (GSluaEnableReference || up->GetClass()->HasAnyCastFlag(ReferenceCastFlags))
+#elif ENGINE_MAJOR_VERSION >= 5
+            if (GSluaEnableReference || (up->GetCastFlags() & ReferenceCastFlags))
 #else
             if (GSluaEnableReference || up->HasAnyCastFlags(ReferenceCastFlags))
 #endif
@@ -1151,7 +1175,7 @@ namespace NS_SLUA {
 
             auto pusher = getPusher(up);
             if (pusher) {
-                cachePropertyOperator(L, up, cls, (void*)pusher, (void*)getChecker(up));
+                cachePropertyOperator(L, up, cls, (void*)pusher, (void*)getChecker(up), nullptr);
                 return pusher(L, up, up->ContainerPtrToValuePtr<uint8>(obj), nullptr);
             }
             else {
@@ -1218,7 +1242,25 @@ namespace NS_SLUA {
         auto checker = LuaObject::getChecker(up);
         if (!checker) luaL_error(L, "Property %s type is not support", name);
 
-        cachePropertyOperator(L, up, cls, (void*)getPusher(up), (void*)checker);
+        void* parentAddress = nullptr;
+        void* pusher;
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
+        if (GSluaEnableReference || up->GetClass()->HasAnyCastFlag(ReferenceCastFlags))
+#elif ENGINE_MAJOR_VERSION >= 5
+        if (GSluaEnableReference || (up->GetCastFlags() & ReferenceCastFlags))
+#else
+        if (GSluaEnableReference || up->HasAnyCastFlags(ReferenceCastFlags))
+#endif
+        {
+            parentAddress = obj;
+            pusher = getReferencePusher(up);
+        }
+        else
+        {
+            pusher = getPusher(up);
+        }
+
+        cachePropertyOperator(L, up, cls, pusher, (void*)checker, parentAddress);
 
         // set property value
         checker(L, up, up->ContainerPtrToValuePtr<uint8>(obj), valueIdx, true);
@@ -1321,7 +1363,7 @@ namespace NS_SLUA {
 
         auto pusher = LuaObject::getPusher(up);
         if (pusher) {
-            cachePropertyOperator(L, up, cls, (void*)pusher, (void*)LuaObject::getChecker(up));
+            cachePropertyOperator(L, up, cls, (void*)pusher, (void*)LuaObject::getChecker(up), nullptr);
             return pusher(L, up, ls->buf + up->GetOffset_ForInternal(), nullptr);
         }
         else {
@@ -1349,7 +1391,26 @@ namespace NS_SLUA {
         auto checker = LuaObject::getChecker(up);
         if(!checker) luaL_error(L,"Property %s type is not support",name);
 
-        cachePropertyOperator(L, up, cls, (void*)LuaObject::getPusher(up), (void*)checker);
+        void* parentAddress = nullptr;
+        void* pusher;
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
+        if (GSluaEnableReference || up->GetClass()->HasAnyCastFlag(ReferenceCastFlags))
+#elif ENGINE_MAJOR_VERSION >= 5
+        if (GSluaEnableReference || (up->GetCastFlags() & ReferenceCastFlags))
+#else
+        if (GSluaEnableReference || up->HasAnyCastFlags(ReferenceCastFlags))
+#endif
+        {
+            auto ud = reinterpret_cast<GenericUserData*>(lua_touserdata(L, 1));
+            parentAddress = ud->parent ? ud->parent : ls->buf;
+            pusher = LuaObject::getReferencePusher(up);
+        }
+        else
+        {
+            pusher = LuaObject::getPusher(up);
+        }
+
+        cachePropertyOperator(L, up, cls, pusher, (void*)checker, parentAddress);
         checker(L, up, ls->buf + up->GetOffset_ForInternal(), 3, true);
         return 0;
     }
@@ -2614,14 +2675,12 @@ namespace NS_SLUA {
     }
 
     int LuaObject::push(lua_State* L, FProperty* up, UObject* obj, NewObjectRecorder* objRecorder) {
-        static const uint64 ReferenceCastFlags = FArrayProperty::StaticClassCastFlags()
-            | FMapProperty::StaticClassCastFlags()
-            | FSetProperty::StaticClassCastFlags();
-
         #pragma warning(push)
         #pragma warning(disable : 4996)
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         if (GSluaEnableReference || up->GetClass()->HasAnyCastFlag(ReferenceCastFlags))
+#elif ENGINE_MAJOR_VERSION >= 5
+        if (GSluaEnableReference || (up->GetCastFlags() & ReferenceCastFlags))
 #else
         if (GSluaEnableReference || up->HasAnyCastFlags(ReferenceCastFlags))
 #endif

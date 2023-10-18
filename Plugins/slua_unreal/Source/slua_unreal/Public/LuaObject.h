@@ -977,7 +977,7 @@ namespace NS_SLUA {
         static void addExtensionProperty(UClass* cls, const char* n, lua_CFunction getter, lua_CFunction setter, bool isStatic = false);
 
         static FProperty* findCacheProperty(lua_State* L, UStruct* cls, const char* pname);
-        static int fastIndex(lua_State* L, uint8* parent);
+        static int fastIndex(lua_State* L, uint8* parent, UStruct* cls);
         static int fastNewIndex(lua_State* L, uint8* parent);
 
         static bool getObjCache(lua_State* L, void* obj, const char* tn);

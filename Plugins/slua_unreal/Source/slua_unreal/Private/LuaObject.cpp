@@ -805,7 +805,7 @@ namespace NS_SLUA {
         return retCount;
     }
 
-    int LuaObject::fastIndex(lua_State* L, uint8* parent)
+    int LuaObject::fastIndex(lua_State* L, uint8* parent, UStruct* cls)
     {
         switch (lua_type(L, 1)) 
         {
@@ -833,16 +833,18 @@ namespace NS_SLUA {
 
                         auto prop = (FProperty*)pvalue(&f->upvalue[0]);
                         void* pusher = pvalue(&f->upvalue[1]);
-                        void* parentAddress = pvalue(&f->upvalue[3]);
-                        if (parentAddress)
+                        bool bReferencePusher = !!bvalue(&f->upvalue[3]);
+                        if (bReferencePusher)
                         {
-                            return pushReferenceAndCache(static_cast<ReferencePusherPropertyFunction>(pusher), L,
+                            auto ud = reinterpret_cast<GenericUserData*>(lua_touserdata(L, 1));
+                            void* parentAddress = ud->parent ? ud->parent : parent;
+                            return pushReferenceAndCache((ReferencePusherPropertyFunction)pusher, L,
                                                          prop->GetOwnerClass(), prop,
                                                          parent + prop->GetOffset_ForInternal(), parentAddress);
                         }
                         else
                         {
-                            return static_cast<PushPropertyFunction>(pusher)(L, prop, parent + prop->GetOffset_ForInternal(), nullptr);
+                            return ((PushPropertyFunction)pusher)(L, prop, parent + prop->GetOffset_ForInternal(), nullptr);
                         }
                     }
                     lua_pop(L, 2);
@@ -876,12 +878,12 @@ namespace NS_SLUA {
 
                         auto prop = (FProperty*)pvalue(&f->upvalue[0]);
                         void* pusher = pvalue(&f->upvalue[1]);
-                        void* parentAddress = pvalue(&f->upvalue[3]);
-                        if (parentAddress)
+                        bool bReferencePusher = !!bvalue(&f->upvalue[3]);
+                        if (bReferencePusher)
                         {
-                            return pushReferenceAndCache(static_cast<ReferencePusherPropertyFunction>(pusher), L,
-                                                         prop->GetOwnerClass(), prop,
-                                                         parent + prop->GetOffset_ForInternal(), parentAddress);
+                            return pushReferenceAndCache((ReferencePusherPropertyFunction)pusher, L,
+                                                         cls, prop,
+                                                         parent + prop->GetOffset_ForInternal(), parent);
                         }
                         else
                         {
@@ -1035,7 +1037,7 @@ namespace NS_SLUA {
 
     int instanceIndex(lua_State* L) {
         UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
-        if (int res = LuaObject::fastIndex(L, (uint8*)obj))
+        if (int res = LuaObject::fastIndex(L, (uint8*)obj, obj->GetClass()))
         {
             return res;
         }
@@ -1103,7 +1105,7 @@ namespace NS_SLUA {
         return 0;
     }
 
-    bool cachePropertyOperator(lua_State* L, FProperty* prop, UStruct* cls, void* pusher, void* checker, void* parentAddress)
+    bool cachePropertyOperator(lua_State* L, FProperty* prop, UStruct* cls, void* pusher, void* checker, bool bReferencePusher)
     {
         int selfType = lua_type(L, 1);
         if (selfType == LUA_TUSERDATA) {
@@ -1120,7 +1122,7 @@ namespace NS_SLUA {
             lua_pushlightuserdata(L, prop);
             lua_pushlightuserdata(L, pusher);
             lua_pushlightuserdata(L, checker);
-            lua_pushlightuserdata(L, parentAddress);
+            lua_pushboolean(L, !!bReferencePusher);
             lua_pushcclosure(L, instanceIndex, 4);
             lua_rawset(L, -3);
             lua_pop(L, 2);
@@ -1141,7 +1143,7 @@ namespace NS_SLUA {
             lua_pushlightuserdata(L, prop);
             lua_pushlightuserdata(L, pusher);
             lua_pushlightuserdata(L, checker);
-            lua_pushlightuserdata(L, parentAddress);
+            lua_pushboolean(L, !!bReferencePusher);
             lua_pushcclosure(L, instanceIndex, 4);
             lua_rawset(L, -3);
             lua_pop(L, 1);
@@ -1175,7 +1177,7 @@ namespace NS_SLUA {
 
             auto pusher = getPusher(up);
             if (pusher) {
-                cachePropertyOperator(L, up, cls, (void*)pusher, (void*)getChecker(up), nullptr);
+                cachePropertyOperator(L, up, cls, (void*)pusher, (void*)getChecker(up), false);
                 return pusher(L, up, up->ContainerPtrToValuePtr<uint8>(obj), nullptr);
             }
             else {
@@ -1242,8 +1244,8 @@ namespace NS_SLUA {
         auto checker = LuaObject::getChecker(up);
         if (!checker) luaL_error(L, "Property %s type is not support", name);
 
-        void* parentAddress = nullptr;
-        void* pusher;
+        bool bReferencePusher = false;
+        void* pusher = nullptr;
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         if (GSluaEnableReference || up->GetClass()->HasAnyCastFlag(ReferenceCastFlags))
 #elif ENGINE_MAJOR_VERSION >= 5
@@ -1252,15 +1254,16 @@ namespace NS_SLUA {
         if (GSluaEnableReference || up->HasAnyCastFlags(ReferenceCastFlags))
 #endif
         {
-            parentAddress = obj;
-            pusher = getReferencePusher(up);
-        }
-        else
-        {
-            pusher = getPusher(up);
+            pusher = (void*)getReferencePusher(up);
+            bReferencePusher = pusher != nullptr;
         }
 
-        cachePropertyOperator(L, up, cls, pusher, (void*)checker, parentAddress);
+        if (!pusher)
+        {
+            pusher = (void*)getPusher(up);
+        }
+
+        cachePropertyOperator(L, up, cls, pusher, (void*)checker, bReferencePusher);
 
         // set property value
         checker(L, up, up->ContainerPtrToValuePtr<uint8>(obj), valueIdx, true);
@@ -1331,7 +1334,7 @@ namespace NS_SLUA {
 
     int instanceStructIndex(lua_State* L) {
         LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L, 1);
-        if (int res = LuaObject::fastIndex(L, ls->buf))
+        if (int res = LuaObject::fastIndex(L, ls->buf, ls->uss))
         {
             return res;
         }
@@ -1363,7 +1366,7 @@ namespace NS_SLUA {
 
         auto pusher = LuaObject::getPusher(up);
         if (pusher) {
-            cachePropertyOperator(L, up, cls, (void*)pusher, (void*)LuaObject::getChecker(up), nullptr);
+            cachePropertyOperator(L, up, cls, (void*)pusher, (void*)LuaObject::getChecker(up), false);
             return pusher(L, up, ls->buf + up->GetOffset_ForInternal(), nullptr);
         }
         else {
@@ -1391,26 +1394,21 @@ namespace NS_SLUA {
         auto checker = LuaObject::getChecker(up);
         if(!checker) luaL_error(L,"Property %s type is not support",name);
 
-        void* parentAddress = nullptr;
-        void* pusher;
-#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
-        if (GSluaEnableReference || up->GetClass()->HasAnyCastFlag(ReferenceCastFlags))
-#elif ENGINE_MAJOR_VERSION >= 5
-        if (GSluaEnableReference || (up->GetCastFlags() & ReferenceCastFlags))
-#else
-        if (GSluaEnableReference || up->HasAnyCastFlags(ReferenceCastFlags))
-#endif
+        bool bReferencePusher = false;
+        void* pusher = nullptr;
+
+        if (GSluaEnableReference)
         {
-            auto ud = reinterpret_cast<GenericUserData*>(lua_touserdata(L, 1));
-            parentAddress = ud->parent ? ud->parent : ls->buf;
-            pusher = LuaObject::getReferencePusher(up);
-        }
-        else
-        {
-            pusher = LuaObject::getPusher(up);
+            pusher = (void*)LuaObject::getReferencePusher(up);
+            bReferencePusher = pusher != nullptr;
         }
 
-        cachePropertyOperator(L, up, cls, pusher, (void*)checker, parentAddress);
+        if (!pusher)
+        {
+            pusher = (void*)LuaObject::getPusher(up);
+        }
+
+        cachePropertyOperator(L, up, cls, pusher, (void*)checker, bReferencePusher);
         checker(L, up, ls->buf + up->GetOffset_ForInternal(), 3, true);
         return 0;
     }

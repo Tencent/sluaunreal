@@ -49,15 +49,22 @@
     udptr->ud = const_cast<T*>(v); \
     udptr->flag = f;
 
+#define NewNetStructUD(T, v, f) auto ud = lua_newuserdata(L, proxy ? sizeof(NetStructUserData<T*>) : sizeof(UserData<T*>)); \
+    if (!ud) luaL_error(L, "out of memory to new ud"); \
+    auto udptr = reinterpret_cast< NetStructUserData<T*>* >(ud); \
+    udptr->parent = nullptr; \
+    udptr->ud = const_cast<T*>(v); \
+    udptr->flag = f; \
+
 #define CheckSelf(T) \
-    auto udptr = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, 1)); \
+    auto udptr = reinterpret_cast<NetStructUserData<T*>*>(lua_touserdata(L, 1)); \
     if(!udptr) luaL_error(L, "self ptr missing"); \
     if (udptr->flag & UD_HADFREE) \
         luaL_error(L, #T" checkValue error, obj parent has been freed"); \
     auto self = udptr->ud
 
 #define CheckSelfSafe(T) \
-    auto udptr = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, 1)); \
+    auto udptr = reinterpret_cast<NetStructUserData<T*>*>(lua_touserdata(L, 1)); \
     if(!udptr) return 0; \
     if (udptr->flag & UD_HADFREE) return 0; \
     auto self = udptr->ud
@@ -90,6 +97,10 @@ namespace NS_SLUA {
         uint8* buf;
         uint32 size;
         UScriptStruct* uss;
+
+        struct FLuaNetSerializationProxy* proxy;
+        uint16 luaReplicatedIndex;
+            
         bool isRef;
 
         LuaStruct();
@@ -119,6 +130,7 @@ namespace NS_SLUA {
     #define UD_WEAKUPTR 1<<8 // flag it's a weak UObject ptr
     #define UD_REFERENCE 1<<9
     #define UD_VALUETYPE 1<<10 // flag it's a valuetype, don't cache value by ptr
+    #define UD_NETTYPE 1<<11 // flag it's a net replicate property
 
     struct UDBase {
         uint32 flag;
@@ -134,6 +146,17 @@ namespace NS_SLUA {
     struct UserData : public UDBase {
         static_assert(sizeof(T) == sizeof(void*), "Userdata type should size equal to sizeof(void*)");
         T ud; 
+    };
+
+    struct GenericNetStructUserData : public GenericUserData {
+        struct FLuaNetSerializationProxy* proxy;
+        uint16 luaReplicatedIndex;
+    };
+
+    template<class T>
+    struct NetStructUserData : public UserData<T> {
+        struct FLuaNetSerializationProxy* proxy;
+        uint16 luaReplicatedIndex;
     };
 
     DefTypeName(LuaArray);
@@ -334,7 +357,7 @@ namespace NS_SLUA {
         typedef int (*PushPropertyFunction)(lua_State* L,FProperty* prop,uint8* parms,NewObjectRecorder* objRecorder);
         typedef void* (*CheckPropertyFunction)(lua_State* L,FProperty* prop,uint8* parms,int i,bool bForceCopy);
         typedef void (*ReferencePropertyFunction)(lua_State* L, FProperty* prop, uint8* src, void* dst);
-        typedef int (*ReferencePusherPropertyFunction)(lua_State* L,FProperty* prop,uint8* parms,void* parentAdrres);
+        typedef int (*ReferencePusherPropertyFunction)(lua_State* L,FProperty* prop,uint8* parms,void* parentAdrres,uint16 replicateIndex);
 
         static PushPropertyFunction getPusher(FProperty* prop);
         static CheckPropertyFunction getChecker(FProperty* prop);
@@ -347,7 +370,7 @@ namespace NS_SLUA {
 
         static int setUservalueMeta(lua_State* L, UStruct* cls);
         static int pushReferenceAndCache(const ReferencePusherPropertyFunction& pusher, lua_State* L, UStruct* cls,
-                                        FProperty* prop, uint8* parms, void* parentAdrres);
+                                        FProperty* prop, uint8* parms, void* parentAdrres, uint16 replicateIndex);
 
         static bool matchType(lua_State* L, int p, const char* tn, bool noprefix=false);
 
@@ -703,11 +726,16 @@ namespace NS_SLUA {
         static void unlinkProp(lua_State* L, void* prop);
 
         template<class T>
-        static int pushAndLink(lua_State* L, const void* parent, const char* tn, const T* v) {
-            NewUD(T, v, UD_NOFLAG);
+        static int pushAndLink(lua_State* L, const void* parent, const char* tn, const T* v, void* proxy, uint16 replicatedIndex) {
+            NewNetStructUD(T, v, UD_NOFLAG)
             luaL_getmetatable(L, tn);
             lua_setmetatable(L, -2);
             linkProp(L, void_cast(parent), void_cast(udptr));
+            if (proxy) {
+                udptr->proxy = (FLuaNetSerializationProxy*)proxy;
+                udptr->luaReplicatedIndex = replicatedIndex;
+                udptr->flag |= UD_NETTYPE;
+            }
             return 1;
         }
 

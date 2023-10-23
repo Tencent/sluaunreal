@@ -59,13 +59,15 @@ namespace NS_SLUA {
 
         static void clone(FScriptMap* dest,FProperty* keyProp, FProperty* valueProp,const FScriptMap* src);
 
-        LuaMap(FMapProperty* prop, FScriptMap* buf, bool bIsRef);
+        LuaMap(FMapProperty* prop, FScriptMap* buf, bool bIsRef, struct FLuaNetSerializationProxy* netProxy, uint16 replicatedIndex);
         LuaMap(FProperty* keyProp, FProperty* valueProp, FScriptMap* buf, bool bIsRef, bool bIsNewInner);
         ~LuaMap();
-
+        
         FScriptMap* get() {
             return map;
         }
+
+        static bool markDirty(LuaMap* luaMap);
 
         virtual void AddReferencedObjects( FReferenceCollector& Collector ) override;
 
@@ -119,6 +121,9 @@ namespace NS_SLUA {
         FScriptMapHelper helper;
         bool isRef;
         bool isNewInner;
+
+        struct FLuaNetSerializationProxy* proxy;
+        uint16 luaReplicatedIndex;
 
         static int setupMT(lua_State* L);
         static int gc(lua_State* L);

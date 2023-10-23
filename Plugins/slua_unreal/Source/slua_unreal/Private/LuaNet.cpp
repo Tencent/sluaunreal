@@ -14,6 +14,7 @@
 #include "LuaNet.h"
 #include "LuaOverrider.h"
 #include "LuaOverriderInterface.h"
+#include "LuaNetSerialization.h"
 #include "Engine/NetDriver.h"
 
 namespace NS_SLUA
@@ -149,7 +150,7 @@ namespace NS_SLUA
 #endif
                             
                                 luaReplicatedTable.push(L);
-                                ClassLuaReplicated::ReplicateIndexType index = 0;
+                                ReplicateIndexType index = 0;
                                 lua_pushnil(L);
                                 while (lua_next(L, -2))
                                 {
@@ -231,7 +232,7 @@ namespace NS_SLUA
 
                             auto &repNotifies = classReplicated.repNotifies;
                             luaModule.push(L);
-                            for (ClassLuaReplicated::ReplicateIndexType i =0, n = replicatedIndexToNameMap.Num(); i < n; ++i)
+                            for (ReplicateIndexType i =0, n = replicatedIndexToNameMap.Num(); i < n; ++i)
                             {
                                 auto &propName = replicatedIndexToNameMap[i];
                                 if (lua_getfield(L, -1, TCHAR_TO_UTF8(*(TEXT("OnRep_") + propName))) != LUA_TNIL)
@@ -254,8 +255,8 @@ namespace NS_SLUA
     }
 
     void LuaNet::initFlatReplicatedProps(ClassLuaReplicated& classReplicated,
-                                         ClassLuaReplicated::OffsetToMarkType& markIndex, UStruct* ustruct,
-                                         int32& index, int32 offset, int32 ownerPropIndex, ClassLuaReplicated::FlatArrayPropInfo* arrayInfo)
+                                         ReplicateOffsetToMarkType& markIndex, UStruct* ustruct,
+                                         int32& index, int32 offset, int32 ownerPropIndex, NS_SLUA::FlatArrayPropInfo* arrayInfo)
     {
         bool outMost = ustruct == classReplicated.ustruct;
 
@@ -800,7 +801,7 @@ namespace NS_SLUA
                                 auto p = classLuaReplciated->properties[index];
                                 auto referencePusher = LuaObject::getReferencePusher(p);
                                 if (referencePusher) {
-                                    return LuaObject::pushReferenceAndCache(referencePusher, L, obj->GetClass(), p, proxy->values.GetData() + p->GetOffset_ForInternal(), obj);
+                                    return LuaObject::pushReferenceAndCache(referencePusher, L, obj->GetClass(), p, proxy->values.GetData() + p->GetOffset_ForInternal(), obj, index);
                                 }
 
                                 auto pusher = LuaObject::getPusher(p);
@@ -977,7 +978,7 @@ namespace NS_SLUA
         return 0;
     }
 
-    void LuaNet::onPropModify(lua_State* L, FLuaNetSerializationProxy* proxy, ClassLuaReplicated::ReplicateIndexType index, PrepareParamCallback callback)
+    void LuaNet::onPropModify(lua_State* L, FLuaNetSerializationProxy* proxy, ReplicateIndexType index, PrepareParamCallback callback)
     {
         auto *listeners = proxy->propListeners.Find(index);
         if (listeners)

@@ -1,9 +1,12 @@
     DefTypeName(FIntPoint);
+    DefTypeName(FIntVector);
     DefTypeName(FIntVector4);
     DefTypeName(FLinearColor);
     DefTypeName(FColor);
     DefTypeName(FRandomStream);
     DefTypeName(FGuid);
+    DefTypeName(FFallbackStruct);
+    DefTypeName(FInterpCurvePointFloat);
     DefTypeName(FInterpCurvePointVector2D);
     DefTypeName(FInterpCurvePointVector);
     DefTypeName(FInterpCurvePointQuat);
@@ -19,11 +22,14 @@
     DefTypeName(FDoubleInterval);
     DefTypeName(FInt32Interval);
     DefTypeName(FFrameNumber);
+    DefTypeName(FFrameTime);
+    DefTypeName(FSoftObjectPath);
+    DefTypeName(FSoftClassPath);
     DefTypeName(FPrimaryAssetType);
     DefTypeName(FPrimaryAssetId);
     DefTypeName(FDateTime);
-    DefTypeName(FTestUninitializedScriptStructMembersTest);
     DefTypeName(FTopLevelAssetPath);
+    DefTypeName(FVector2D);
     DefTypeName(FVector);
     DefTypeName(FVector4);
     DefTypeName(FPlane);
@@ -31,7 +37,6 @@
     DefTypeName(FRotator);
     DefTypeName(FTransform);
     DefTypeName(FMatrix);
+    DefTypeName(FBox2D);
     DefTypeName(FRay);
     DefTypeName(FSphere);
-    DefTypeName(FSoftObjectPath);
-    DefTypeName(FSoftClassPath);

@@ -14,9 +14,9 @@
 #include "LuaMap.h"
 #include "SluaLib.h"
 #include "LuaObject.h"
-#include "Log.h"
 #include "LuaState.h"
 #include "LuaReference.h"
+#include "LuaNetSerialization.h"
 
 #define GET_CHECKER(tag) \
     auto tag##Checker = LuaObject::getChecker(UD->tag##Prop);\
@@ -73,19 +73,23 @@ namespace NS_SLUA {
         , helper(FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, map))
         , isRef(bIsRef)
         , isNewInner(bIsNewInner)
+        , proxy(nullptr)
+        , luaReplicatedIndex(InvalidReplicatedIndex)
     {
         if (!bIsRef) {
             clone(map,kp,vp,buf);
         }
     }
 
-    LuaMap::LuaMap(FMapProperty* p, FScriptMap* buf, bool bIsRef)
+    LuaMap::LuaMap(FMapProperty* p, FScriptMap* buf, bool bIsRef, FLuaNetSerializationProxy* netProxy, uint16 replicatedIndex)
         : map(bIsRef ? buf : new FScriptMap())
         , keyProp(p->KeyProp)
         , valueProp(p->ValueProp)
         , helper(FScriptMapHelper::CreateHelperFormInnerProperties(keyProp, valueProp, map))
         , isRef(bIsRef)
         , isNewInner(false)
+        , proxy(netProxy)
+        , luaReplicatedIndex(replicatedIndex)
     {
         if (!bIsRef) {
             clone(map,keyProp,valueProp,buf);
@@ -106,6 +110,19 @@ namespace NS_SLUA {
 #endif
         }
         keyProp = valueProp = nullptr;
+    }
+
+    bool LuaMap::markDirty(LuaMap* luaMap)
+    {
+        auto proxy = luaMap->proxy;
+        if (proxy)
+        {
+            proxy->dirtyMark.Add(luaMap->luaReplicatedIndex);
+            proxy->assignTimes++;
+            return true;
+        }
+
+        return false;
     }
 
     void LuaMap::AddReferencedObjects( FReferenceCollector& Collector )
@@ -318,6 +335,9 @@ namespace NS_SLUA {
         keyChecker(L, UD->keyProp, (uint8*)keyPtr, 2, true);
         valueChecker(L, UD->valueProp, (uint8*)valuePtr, 3, true);
         UD->helper.AddPair(keyPtr, valuePtr);
+
+        markDirty(UD);
+
         return 0;
     }
 
@@ -330,6 +350,9 @@ namespace NS_SLUA {
         FDefaultConstructedPropertyElement tempKey(UD->keyProp);
         auto keyPtr = tempKey.GetObjAddress();
         keyChecker(L, UD->keyProp, (uint8*)keyPtr, 2, true);
+
+        markDirty(UD);
+
         return LuaObject::push(L, UD->removePair(keyPtr));
     }
 
@@ -339,6 +362,9 @@ namespace NS_SLUA {
             luaL_error(L, "arg 1 expect LuaMap, but got nil!");
         }
         UD->clear();
+
+        markDirty(UD);
+
         return 0;
     }
 

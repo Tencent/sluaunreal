@@ -13,6 +13,7 @@
 
 #include "LuaWrapper.h"
 #include "LuaObject.h"
+#include "LuaNetSerialization.h"
 
 #define SLUA_GCSTRUCT(typeName) auto flag = udptr->flag; \
                     if (udptr->parent) { \
@@ -22,6 +23,26 @@
                         LuaObject::releaseLink(L, self); \
                     } \
                     if ((flag & UD_AUTOGC) && !(flag & UD_HADFREE)) delete self
+
+#define SLUA_MARK_NETPROP if (udptr->flag & UD_NETTYPE) \
+{ \
+    auto proxy = udptr->proxy; \
+    if (proxy) \
+    { \
+        auto luaReplicatedIndex = udptr->luaReplicatedIndex; \
+        proxy->dirtyMark.Add(luaReplicatedIndex); \
+        proxy->assignTimes++; \
+    } \
+}
+
+#define SLUA_GET_NETINFO FLuaNetSerializationProxy* proxy = nullptr; \
+uint16 luaReplicatedIndex = InvalidReplicatedIndex; \
+if (udptr->flag & UD_NETTYPE) \
+{ \
+    proxy = udptr->proxy; \
+    if (proxy) \
+        luaReplicatedIndex = udptr->luaReplicatedIndex; \
+}
 
 
 namespace NS_SLUA {

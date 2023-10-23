@@ -1,8 +1,10 @@
 #include "LuaSet.h"
+
 #include "LuaObject.h"
 #include "SluaLib.h"
 #include "LuaState.h"
 #include "LuaReference.h"
+#include "LuaNetSerialization.h"
 
 #define GET_SET_CHECKER() \
     const auto ElementChecker = LuaObject::getChecker(UD->InElementProperty);\
@@ -23,6 +25,8 @@ namespace NS_SLUA
         , Helper(FScriptSetHelper::CreateHelperFormElementProperty(InElementProperty, Set))
         , IsRef(bIsRef)
         , isNewInner(bIsNewInner)
+        , proxy(nullptr)
+        , luaReplicatedIndex(InvalidReplicatedIndex)
     {
         if (!IsRef)
         {
@@ -30,12 +34,14 @@ namespace NS_SLUA
         }
     }
 
-    LuaSet::LuaSet(FSetProperty* Property, FScriptSet* Buffer, bool bIsRef)
+    LuaSet::LuaSet(FSetProperty* Property, FScriptSet* Buffer, bool bIsRef, FLuaNetSerializationProxy* netProxy, uint16 replicatedIndex)
         : Set(bIsRef ? Buffer : new FScriptSet())
         , InElementProperty(Property->ElementProp)
         , Helper(FScriptSetHelper::CreateHelperFormElementProperty(InElementProperty, Set))
         , IsRef(bIsRef)
         , isNewInner(false)
+        , proxy(netProxy)
+        , luaReplicatedIndex(replicatedIndex)
     {
         if (!IsRef)
         {
@@ -162,6 +168,9 @@ namespace NS_SLUA
         const auto ElementPtr = tempElement.GetObjAddress();
         ElementChecker(L, UD->InElementProperty, static_cast<uint8*>(ElementPtr), 2, true);
         UD->Helper.AddElement(ElementPtr);
+
+        markDirty(UD);
+
         return 0;
     }
 
@@ -175,6 +184,9 @@ namespace NS_SLUA
         const FDefaultConstructedPropertyElement tempElement(UD->InElementProperty);
         const auto ElementPtr = tempElement.GetObjAddress();
         ElementChecker(L, UD->InElementProperty, static_cast<uint8*>(ElementPtr), 2, true);
+
+        markDirty(UD);
+
         return LuaObject::push(L, UD->removeElement(ElementPtr));
     }
 
@@ -185,6 +197,9 @@ namespace NS_SLUA
             luaL_error(L, "arg 1 expect LuaSet, but got nil!");
         }
         UD->clear();
+
+        markDirty(UD);
+
         return 0;
     }
 
@@ -243,6 +258,19 @@ namespace NS_SLUA
                 return LuaObject::push(L, UD->InElementProperty, static_cast<uint8*>(ElementPtr));
         }
         return 0;
+    }
+
+    bool LuaSet::markDirty(LuaSet* luaSet)
+    {
+        auto proxy = luaSet->proxy;
+        if (proxy)
+        {
+            proxy->dirtyMark.Add(luaSet->luaReplicatedIndex);
+            proxy->assignTimes++;
+            return true;
+        }
+
+        return false;
     }
 
     void LuaSet::AddReferencedObjects(FReferenceCollector& Collector)

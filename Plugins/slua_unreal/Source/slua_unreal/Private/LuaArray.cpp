@@ -14,9 +14,11 @@
 #include "LuaArray.h"
 #include "LuaObject.h"
 #include <string>
+
 #include "SluaLib.h"
 #include "LuaState.h"
 #include "LuaReference.h"
+#include "LuaNetSerialization.h"
 
 namespace NS_SLUA {
 
@@ -62,6 +64,8 @@ namespace NS_SLUA {
         : inner(p)
         , isRef(bIsRef)
         , isNewInner(bIsNewInner)
+        , proxy(nullptr)
+        , luaReplicatedIndex(InvalidReplicatedIndex)
     {
         if (isRef)
         {
@@ -74,11 +78,13 @@ namespace NS_SLUA {
         }
     }
 
-    LuaArray::LuaArray(FArrayProperty* arrayProp, FScriptArray* buf, bool bIsRef)
+    LuaArray::LuaArray(FArrayProperty* arrayProp, FScriptArray* buf, bool bIsRef, FLuaNetSerializationProxy* netProxy, uint16 replicatedIndex)
         : inner(arrayProp->Inner)
         , array(buf)
         , isRef(bIsRef)
         , isNewInner(false)
+        , proxy(netProxy)
+        , luaReplicatedIndex(replicatedIndex)
     {
         if (isRef)
         {
@@ -108,6 +114,19 @@ namespace NS_SLUA {
         }
 
         inner = nullptr;
+    }
+
+    bool LuaArray::markDirty(LuaArray* luaArray)
+    {
+        auto proxy = luaArray->proxy;
+        if (proxy)
+        {
+            proxy->dirtyMark.Add(luaArray->luaReplicatedIndex);
+            proxy->assignTimes++;
+            return true;
+        }
+
+        return false;
     }
 
     void LuaArray::clear() {
@@ -248,7 +267,7 @@ namespace NS_SLUA {
             return 1;
         }
 
-        LuaArray* luaArrray = new LuaArray(prop, data, false);
+        LuaArray* luaArrray = new LuaArray(prop, data, false, nullptr, 0);
         LuaObject::addLink(L, luaArrray->get());
         return LuaObject::pushType(L,luaArrray,"LuaArray",setupMT,gc);
     }
@@ -319,6 +338,8 @@ namespace NS_SLUA {
             luaL_error(L, "unsupport param type %s to set", TCHAR_TO_UTF8(*tn));
             return 0;
         }
+
+        markDirty(UD);
         return 0;
     }
 
@@ -332,6 +353,9 @@ namespace NS_SLUA {
         auto checker = LuaObject::getChecker(element);
         if(checker) {
             checker(L,element,UD->add(),2,true);
+
+            markDirty(UD);
+
             // return num of array
             return LuaObject::push(L,UD->array->Num());
         }
@@ -353,6 +377,9 @@ namespace NS_SLUA {
         auto checker = LuaObject::getChecker(element);
         if(checker) {
 	        checker(L,element,newElement,2,true);
+
+            markDirty(UD);
+
             int32 num = UD->array->Num();
             for (int i = 0; i < num - 1; ++i) {
                 if (element->Identical(newElement, UD->getRawPtr(i))) {
@@ -385,6 +412,9 @@ namespace NS_SLUA {
                 luaL_error(L,"Array insert index %d out of range",index);
 
             checker(L,element,UD->insert(index),3,true);
+
+            markDirty(UD);
+
             // return num of array
             return LuaObject::push(L,UD->array->Num());
         }
@@ -402,7 +432,10 @@ namespace NS_SLUA {
         }
         int index = LuaObject::checkValue<int>(L,2);
         if(UD->isValidIndex(index))
+        {
             UD->remove(index);
+            markDirty(UD);
+        }
         else
             luaL_error(L,"Array remove index %d out of range",index);
         return 0;
@@ -414,6 +447,8 @@ namespace NS_SLUA {
             luaL_error(L, "arg 1 expect LuaArray, but got nil!");
         }
         UD->clear();
+
+        markDirty(UD);
         return 0;
     }
 

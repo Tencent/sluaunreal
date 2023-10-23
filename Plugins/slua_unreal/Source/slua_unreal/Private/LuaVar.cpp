@@ -20,7 +20,6 @@
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/Stack.h"
-#include "Blueprint/WidgetTree.h"
 #include "LuaState.h"
 #include "lstate.h"
 // #include "CrashContextCollector.h" // For PUBG Mobile

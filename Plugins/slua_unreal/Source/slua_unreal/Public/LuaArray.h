@@ -39,12 +39,14 @@ namespace NS_SLUA {
         }
 
         LuaArray(FProperty* prop, FScriptArray* buf, bool bIsRef, bool bIsNewInner);
-        LuaArray(FArrayProperty* arrayProp, FScriptArray* buf, bool bIsRef);
+        LuaArray(FArrayProperty* arrayProp, FScriptArray* buf, bool bIsRef, struct FLuaNetSerializationProxy* netProxy, uint16 replicatedIndex);
         ~LuaArray();
 
         FScriptArray* get() {
             return array;
         }
+
+        static bool markDirty(LuaArray* luaArray);
 
         // Cast FScriptArray to TArray<T> if ElementSize matched
         template<typename T>
@@ -82,6 +84,9 @@ namespace NS_SLUA {
         FScriptArray* array;
         bool isRef;
         bool isNewInner;
+
+        struct FLuaNetSerializationProxy* proxy;
+        uint16 luaReplicatedIndex;
 
         void clear();
         uint8* getRawPtr(int index) const;

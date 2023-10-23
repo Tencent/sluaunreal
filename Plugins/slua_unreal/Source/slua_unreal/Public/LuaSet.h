@@ -27,7 +27,7 @@ namespace NS_SLUA {
 
     public:
         LuaSet(FProperty* Property, FScriptSet* Buffer, bool bIsRef, bool bIsNewInner);
-        LuaSet(FSetProperty* Property, FScriptSet* Buffer, bool bIsRef);
+        LuaSet(FSetProperty* Property, FScriptSet* Buffer, bool bIsRef, struct FLuaNetSerializationProxy* netProxy, uint16 replicatedIndex);
         ~LuaSet();
         
         static void reg(lua_State* L);
@@ -42,6 +42,8 @@ namespace NS_SLUA {
             const FScriptSet* Set = reinterpret_cast<const FScriptSet*>(&V);
             return push(L, Property, const_cast<FScriptSet*>(Set), false);
         }
+
+        static bool markDirty(LuaSet* luaSet);
 
         // Otherwise the LuaSet is an abstract class and can't be created.
         virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
@@ -81,6 +83,9 @@ namespace NS_SLUA {
 
         bool IsRef;
         bool isNewInner;
+
+        struct FLuaNetSerializationProxy* proxy;
+        uint16 luaReplicatedIndex;
 
         struct Enumerator
         {

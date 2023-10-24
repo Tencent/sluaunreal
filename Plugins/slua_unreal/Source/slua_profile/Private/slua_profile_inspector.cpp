@@ -22,7 +22,6 @@
 #include "Fonts/SlateFontInfo.h"
 #include "Math/Vector2D.h"
 #include "Math/Color.h"
-#include "EditorStyleSet.h"
 #include "LuaProfiler.h"
 #include "Sockets.h"
 #include "Log.h"
@@ -30,6 +29,10 @@
 #include "slua_profile_inspector.h"
 
 #include <algorithm>
+
+#if WITH_EDITOR
+#include "EditorStyleSet.h"
+#endif
 #include "Serialization/ArrayWriter.h"
 #include "Misc/FileHelper.h"
 #include "HAL/FileManager.h"
@@ -39,6 +42,7 @@
 #include "Stats/Stats2.h"
 #include "Developer/DesktopPlatform/Public/DesktopPlatformModule.h"
 #include "SluaProfilerDataManager.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 ///////////////////////////////////////////////////////////////////////////
 SProfilerInspector::SProfilerInspector()

@@ -103,6 +103,9 @@ end
 userInfo = t.userInfo
 print("userInfo",userInfo)
 
+t.userArray = {}
+print("t.userArray", t.userArray, t.userArray)
+assert(t.userArray == t.userArray)
 userArray = t.userArray
 print("userArray",userArray)
 

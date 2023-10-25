@@ -38,6 +38,7 @@
 #include "lstate.h"
 #include "LuaBlueprintLibrary.h" // Comment For PUBG Mobile
 #include "LuaFunctionAccelerator.h"
+#include "LuaNet.h"
 #include "LuaOverrider.h"
 #include "Engine/UserDefinedEnum.h"
 
@@ -56,6 +57,10 @@ FAutoConsoleVariableRef CVarSluaEnableReference(
 
 namespace NS_SLUA {
     static const FName NAME_LatentInfo = TEXT("LatentInfo");
+
+    static const uint64 ReferenceCastFlags = FArrayProperty::StaticClassCastFlags()
+        | FMapProperty::StaticClassCastFlags()
+        | FSetProperty::StaticClassCastFlags();
 
     TMap<FFieldClass*,LuaObject::PushPropertyFunction> pusherMap;
     TMap<FFieldClass*,LuaObject::CheckPropertyFunction> checkerMap;
@@ -88,8 +93,14 @@ namespace NS_SLUA {
         void init();
     }
 
-    LuaStruct::LuaStruct() {
-        Init(nullptr, 0, nullptr, false);
+    LuaStruct::LuaStruct()
+        : buf(nullptr)
+        , size(0)
+        , uss(nullptr)
+        , proxy(nullptr)
+        , luaReplicatedIndex(0)
+        , isRef(false)
+    {
     }
 
     void LuaStruct::Init(uint8* b, uint32 s, UScriptStruct* u, bool ref) {
@@ -457,9 +468,9 @@ namespace NS_SLUA {
     }
 
     int LuaObject::pushReferenceAndCache(const ReferencePusherPropertyFunction& pusher, lua_State* L, UStruct* cls,
-                                        FProperty* prop, uint8* parms, void* parentAdrres)
+                                        FProperty* prop, uint8* parms, void* parentAdrres, uint16 replicateIndex)
     {
-        int ret = pusher(L, prop, parms, parentAdrres);
+        int ret = pusher(L, prop, parms, parentAdrres, replicateIndex);
         if (ret) {
             int selfType = lua_type(L, 1);
             if (selfType == LUA_TUSERDATA) {
@@ -801,7 +812,7 @@ namespace NS_SLUA {
         return retCount;
     }
 
-    int LuaObject::fastIndex(lua_State* L, uint8* parent)
+    int LuaObject::fastIndex(lua_State* L, uint8* parent, UStruct* cls)
     {
         switch (lua_type(L, 1)) 
         {
@@ -828,8 +839,20 @@ namespace NS_SLUA {
 #endif
 
                         auto prop = (FProperty*)pvalue(&f->upvalue[0]);
-                        auto pusher = (PushPropertyFunction)pvalue(&f->upvalue[1]);
-                        return pusher(L, prop, parent + prop->GetOffset_ForInternal(), nullptr);
+                        void* pusher = pvalue(&f->upvalue[1]);
+                        bool bReferencePusher = !!bvalue(&f->upvalue[3]);
+                        if (bReferencePusher)
+                        {
+                            auto ud = reinterpret_cast<GenericUserData*>(lua_touserdata(L, 1));
+                            void* parentAddress = ud->parent ? ud->parent : parent;
+                            return pushReferenceAndCache((ReferencePusherPropertyFunction)pusher, L,
+                                                         prop->GetOwnerClass(), prop,
+                                                         parent + prop->GetOffset_ForInternal(), parentAddress, InvalidReplicatedIndex);
+                        }
+                        else
+                        {
+                            return ((PushPropertyFunction)pusher)(L, prop, parent + prop->GetOffset_ForInternal(), nullptr);
+                        }
                     }
                     lua_pop(L, 2);
                 }
@@ -861,8 +884,18 @@ namespace NS_SLUA {
 #endif
 
                         auto prop = (FProperty*)pvalue(&f->upvalue[0]);
-                        auto pusher = (PushPropertyFunction)pvalue(&f->upvalue[1]);
-                        return pusher(L, prop, parent + prop->GetOffset_ForInternal(), nullptr);
+                        void* pusher = pvalue(&f->upvalue[1]);
+                        bool bReferencePusher = !!bvalue(&f->upvalue[3]);
+                        if (bReferencePusher)
+                        {
+                            return pushReferenceAndCache((ReferencePusherPropertyFunction)pusher, L,
+                                                         cls, prop,
+                                                         parent + prop->GetOffset_ForInternal(), parent, InvalidReplicatedIndex);
+                        }
+                        else
+                        {
+                            return ((PushPropertyFunction)pusher)(L, prop, parent + prop->GetOffset_ForInternal(), nullptr);
+                        }
                     }
                     lua_pop(L, 2);
                 }
@@ -1011,7 +1044,7 @@ namespace NS_SLUA {
 
     int instanceIndex(lua_State* L) {
         UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
-        if (int res = LuaObject::fastIndex(L, (uint8*)obj))
+        if (int res = LuaObject::fastIndex(L, (uint8*)obj, obj->GetClass()))
         {
             return res;
         }
@@ -1079,7 +1112,7 @@ namespace NS_SLUA {
         return 0;
     }
 
-    bool cachePropertyOperator(lua_State* L, FProperty* prop, UStruct* cls, void* pusher, void* checker)
+    bool cachePropertyOperator(lua_State* L, FProperty* prop, UStruct* cls, void* pusher, void* checker, bool bReferencePusher)
     {
         int selfType = lua_type(L, 1);
         if (selfType == LUA_TUSERDATA) {
@@ -1096,7 +1129,8 @@ namespace NS_SLUA {
             lua_pushlightuserdata(L, prop);
             lua_pushlightuserdata(L, pusher);
             lua_pushlightuserdata(L, checker);
-            lua_pushcclosure(L, instanceIndex, 3);
+            lua_pushboolean(L, !!bReferencePusher);
+            lua_pushcclosure(L, instanceIndex, 4);
             lua_rawset(L, -3);
             lua_pop(L, 2);
             return true;
@@ -1116,7 +1150,8 @@ namespace NS_SLUA {
             lua_pushlightuserdata(L, prop);
             lua_pushlightuserdata(L, pusher);
             lua_pushlightuserdata(L, checker);
-            lua_pushcclosure(L, instanceIndex, 3);
+            lua_pushboolean(L, !!bReferencePusher);
+            lua_pushcclosure(L, instanceIndex, 4);
             lua_rawset(L, -3);
             lua_pop(L, 1);
             return true;
@@ -1130,28 +1165,26 @@ namespace NS_SLUA {
         FProperty* up = LuaObject::findCacheProperty(L, cls, name);
         if (up)
         {
-            static const uint64 ReferenceCastFlags = FArrayProperty::StaticClassCastFlags()
-                | FMapProperty::StaticClassCastFlags()
-                | FSetProperty::StaticClassCastFlags();
-
             #pragma warning(push)
             #pragma warning(disable : 4996)
 
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             if (GSluaEnableReference || up->GetClass()->HasAnyCastFlag(ReferenceCastFlags))
+#elif ENGINE_MAJOR_VERSION >= 5
+            if (GSluaEnableReference || (up->GetCastFlags() & ReferenceCastFlags))
 #else
             if (GSluaEnableReference || up->HasAnyCastFlags(ReferenceCastFlags))
 #endif
             {
                 auto referencePusher = getReferencePusher(up);
                 if (referencePusher) {
-                    return pushReferenceAndCache(referencePusher, L, cls, up, up->ContainerPtrToValuePtr<uint8>(obj), obj);
+                    return pushReferenceAndCache(referencePusher, L, cls, up, up->ContainerPtrToValuePtr<uint8>(obj), obj, InvalidReplicatedIndex);
                 }
             }
 
             auto pusher = getPusher(up);
             if (pusher) {
-                cachePropertyOperator(L, up, cls, (void*)pusher, (void*)getChecker(up));
+                cachePropertyOperator(L, up, cls, (void*)pusher, (void*)getChecker(up), false);
                 return pusher(L, up, up->ContainerPtrToValuePtr<uint8>(obj), nullptr);
             }
             else {
@@ -1218,7 +1251,26 @@ namespace NS_SLUA {
         auto checker = LuaObject::getChecker(up);
         if (!checker) luaL_error(L, "Property %s type is not support", name);
 
-        cachePropertyOperator(L, up, cls, (void*)getPusher(up), (void*)checker);
+        bool bReferencePusher = false;
+        void* pusher = nullptr;
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
+        if (GSluaEnableReference || up->GetClass()->HasAnyCastFlag(ReferenceCastFlags))
+#elif ENGINE_MAJOR_VERSION >= 5
+        if (GSluaEnableReference || (up->GetCastFlags() & ReferenceCastFlags))
+#else
+        if (GSluaEnableReference || up->HasAnyCastFlags(ReferenceCastFlags))
+#endif
+        {
+            pusher = (void*)getReferencePusher(up);
+            bReferencePusher = pusher != nullptr;
+        }
+
+        if (!pusher)
+        {
+            pusher = (void*)getPusher(up);
+        }
+
+        cachePropertyOperator(L, up, cls, pusher, (void*)checker, bReferencePusher);
 
         // set property value
         checker(L, up, up->ContainerPtrToValuePtr<uint8>(obj), valueIdx, true);
@@ -1289,7 +1341,7 @@ namespace NS_SLUA {
 
     int instanceStructIndex(lua_State* L) {
         LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L, 1);
-        if (int res = LuaObject::fastIndex(L, ls->buf))
+        if (int res = LuaObject::fastIndex(L, ls->buf, ls->uss))
         {
             return res;
         }
@@ -1315,13 +1367,13 @@ namespace NS_SLUA {
                 auto ud = reinterpret_cast<GenericUserData*>(lua_touserdata(L, 1));
                 void* parent = ud->parent ? ud->parent : ls->buf;
 
-                return LuaObject::pushReferenceAndCache(referencePusher, L, ls->uss, up, ls->buf + up->GetOffset_ForInternal(), parent);
+                return LuaObject::pushReferenceAndCache(referencePusher, L, ls->uss, up, ls->buf + up->GetOffset_ForInternal(), parent, ls->luaReplicatedIndex);
             }
         }
 
         auto pusher = LuaObject::getPusher(up);
         if (pusher) {
-            cachePropertyOperator(L, up, cls, (void*)pusher, (void*)LuaObject::getChecker(up));
+            cachePropertyOperator(L, up, cls, (void*)pusher, (void*)LuaObject::getChecker(up), false);
             return pusher(L, up, ls->buf + up->GetOffset_ForInternal(), nullptr);
         }
         else {
@@ -1336,6 +1388,12 @@ namespace NS_SLUA {
         LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L, 1);
         if (LuaObject::fastNewIndex(L, ls->buf))
         {
+            auto proxy = ls->proxy;
+            if (proxy)
+            {
+                proxy->dirtyMark.Add(ls->luaReplicatedIndex);
+                proxy->assignTimes++;
+            }
             return 0;
         }
         const char* name = lua_tostring(L, 2);
@@ -1349,8 +1407,29 @@ namespace NS_SLUA {
         auto checker = LuaObject::getChecker(up);
         if(!checker) luaL_error(L,"Property %s type is not support",name);
 
-        cachePropertyOperator(L, up, cls, (void*)LuaObject::getPusher(up), (void*)checker);
+        bool bReferencePusher = false;
+        void* pusher = nullptr;
+
+        if (GSluaEnableReference)
+        {
+            pusher = (void*)LuaObject::getReferencePusher(up);
+            bReferencePusher = pusher != nullptr;
+        }
+
+        if (!pusher)
+        {
+            pusher = (void*)LuaObject::getPusher(up);
+        }
+
+        cachePropertyOperator(L, up, cls, pusher, (void*)checker, bReferencePusher);
         checker(L, up, ls->buf + up->GetOffset_ForInternal(), 3, true);
+
+        auto proxy = ls->proxy;
+        if (proxy)
+        {
+            proxy->dirtyMark.Add(ls->luaReplicatedIndex);
+            proxy->assignTimes++;
+        }
         return 0;
     }
 
@@ -1749,36 +1828,103 @@ namespace NS_SLUA {
         FMemory::Memcpy(dst, src, p->GetSize());
     }
 
-    int referencePusherUArrayProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress) {
+    int referencePusherUArrayProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress,uint16 replicateIndex) {
         auto p = CastField<FArrayProperty>(prop);
         ensure(p);
+        
+        bool isNetReplicateType = replicateIndex != InvalidReplicatedIndex;
+        FLuaNetSerializationProxy* proxy = nullptr;
+        if (isNetReplicateType)
+        {
+            auto classLuaReplciated = LuaNet::getClassReplicatedProps((UObject*)parentAddress);
+            if (classLuaReplciated)
+            {
+                auto replicateProp = classLuaReplciated->ownerProperty.Get();
+                if (replicateProp)
+                {
+                    FLuaNetSerialization* luaNetSerialization = replicateProp->ContainerPtrToValuePtr<FLuaNetSerialization>(parentAddress);
+                    proxy = LuaNet::getLuaNetSerializationProxy(luaNetSerialization);
+                }
+            }
+        }
+
         FScriptArray* scriptArray = reinterpret_cast<FScriptArray*>(parms);
 
-        LuaArray* luaArrray = new LuaArray(p, scriptArray, true);
+        LuaArray* luaArrray = new LuaArray(p, scriptArray, true, proxy, replicateIndex);
         return LuaObject::pushReference<LuaArray*>(L, luaArrray, parentAddress);
     }
 
-    int referencePusherUMapProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress) {
+    int referencePusherUMapProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress,uint16 replicatedIndex) {
         auto p = CastField<FMapProperty>(prop);
         ensure(p);
+
+        bool isNetReplicateType = replicatedIndex != InvalidReplicatedIndex;
+        FLuaNetSerializationProxy* proxy = nullptr;
+        if (isNetReplicateType)
+        {
+            auto classLuaReplciated = LuaNet::getClassReplicatedProps((UObject*)parentAddress);
+            if (classLuaReplciated)
+            {
+                auto replicateProp = classLuaReplciated->ownerProperty.Get();
+                if (replicateProp)
+                {
+                    FLuaNetSerialization* luaNetSerialization = replicateProp->ContainerPtrToValuePtr<FLuaNetSerialization>(parentAddress);
+                    proxy = LuaNet::getLuaNetSerializationProxy(luaNetSerialization);
+                }
+            }
+        }
+
         FScriptMap* scriptMap = reinterpret_cast<FScriptMap*>(parms);
 
-        LuaMap* luaMap = new LuaMap(p, scriptMap, true);
+        LuaMap* luaMap = new LuaMap(p, scriptMap, true, proxy, replicatedIndex);
         return LuaObject::pushReference<LuaMap*>(L, luaMap, parentAddress);
     }
 
-    int referencePusherUSetProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress) {
+    int referencePusherUSetProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress,uint16 replicatedIndex) {
         auto p = CastField<FSetProperty>(prop);
         ensure(p);
+
+        bool isNetReplicateType = replicatedIndex != InvalidReplicatedIndex;
+        FLuaNetSerializationProxy* proxy = nullptr;
+        if (isNetReplicateType)
+        {
+            auto classLuaReplciated = LuaNet::getClassReplicatedProps((UObject*)parentAddress);
+            if (classLuaReplciated)
+            {
+                auto replicateProp = classLuaReplciated->ownerProperty.Get();
+                if (replicateProp)
+                {
+                    FLuaNetSerialization* luaNetSerialization = replicateProp->ContainerPtrToValuePtr<FLuaNetSerialization>(parentAddress);
+                    proxy = LuaNet::getLuaNetSerializationProxy(luaNetSerialization);
+                }
+            }
+        }
+
         FScriptSet* scriptSet = reinterpret_cast<FScriptSet*>(parms);
 
-        LuaSet* luaSet = new LuaSet(p, scriptSet, true);
+        LuaSet* luaSet = new LuaSet(p, scriptSet, true, proxy, replicatedIndex);
         return LuaObject::pushReference<LuaSet*>(L, luaSet, parentAddress);
     }
 
-    int referencePusherUStructProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress) {
+    int referencePusherUStructProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress,uint16 replicatedIndex) {
         auto p = CastField<FStructProperty>(prop);
         ensure(p);
+
+        bool isNetReplicateType = replicatedIndex != InvalidReplicatedIndex;
+        FLuaNetSerializationProxy* proxy = nullptr;
+        if (isNetReplicateType)
+        {
+            auto classLuaReplciated = LuaNet::getClassReplicatedProps((UObject*)parentAddress);
+            if (classLuaReplciated)
+            {
+                auto replicateProp = classLuaReplciated->ownerProperty.Get();
+                if (replicateProp)
+                {
+                    FLuaNetSerialization* luaNetSerialization = replicateProp->ContainerPtrToValuePtr<FLuaNetSerialization>(parentAddress);
+                    proxy = LuaNet::getLuaNetSerializationProxy(luaNetSerialization);
+                }
+            }
+        }
 
         auto uss = p->Struct;
         SimpleString str(TCHAR_TO_ANSI(*uss->GetStructCPPName()));
@@ -1786,12 +1932,23 @@ namespace NS_SLUA {
 
         luaL_getmetatable(L,tname);
         if (!lua_isnil(L, -1)) {
-            auto ud = lua_newuserdata(L, sizeof(GenericUserData));
+            size_t userSize = sizeof(GenericUserData);
+            if (isNetReplicateType)
+            {
+                userSize = sizeof(GenericNetStructUserData);
+            }
+            auto ud = lua_newuserdata(L, userSize);
             if (!ud) luaL_error(L, "out of memory to new ud");
-            auto udptr = reinterpret_cast< GenericUserData* >(ud);
+            auto udptr = reinterpret_cast<GenericNetStructUserData* >(ud);
             udptr->parent = parentAddress;
             udptr->ud = parms;
             udptr->flag = UD_NOFLAG;
+            if (isNetReplicateType)
+            {
+                udptr->proxy = proxy;
+                udptr->luaReplicatedIndex = replicatedIndex;
+                udptr->flag |= UD_NETTYPE;
+            }
 
             lua_pushvalue(L, -2);
             lua_setmetatable(L, -2);
@@ -1806,10 +1963,15 @@ namespace NS_SLUA {
 
         LuaStruct* ls = new LuaStruct();
         ls->Init(parms, p->GetSize(), uss, true);
+        if (isNetReplicateType)
+        {
+            ls->proxy = proxy;
+            ls->luaReplicatedIndex = replicatedIndex;
+        }
         return LuaObject::pushReference<LuaStruct*>(L, ls, parentAddress);
     }
 
-    int referencePusherUSoftObjectProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress) {
+    int referencePusherUSoftObjectProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress,uint16 replicateIndex) {
         auto p = CastField<FSoftObjectProperty>(prop);
         ensure(p);
         
@@ -1821,7 +1983,7 @@ namespace NS_SLUA {
         return 1;
     }
 
-    int referencePusherUSoftClassProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress) {
+    int referencePusherUSoftClassProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress,uint16 replicateIndex) {
         auto p = CastField<FSoftClassProperty>(prop);
         ensure(p);
 
@@ -2614,14 +2776,12 @@ namespace NS_SLUA {
     }
 
     int LuaObject::push(lua_State* L, FProperty* up, UObject* obj, NewObjectRecorder* objRecorder) {
-        static const uint64 ReferenceCastFlags = FArrayProperty::StaticClassCastFlags()
-            | FMapProperty::StaticClassCastFlags()
-            | FSetProperty::StaticClassCastFlags();
-
         #pragma warning(push)
         #pragma warning(disable : 4996)
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         if (GSluaEnableReference || up->GetClass()->HasAnyCastFlag(ReferenceCastFlags))
+#elif ENGINE_MAJOR_VERSION >= 5
+        if (GSluaEnableReference || (up->GetCastFlags() & ReferenceCastFlags))
 #else
         if (GSluaEnableReference || up->HasAnyCastFlags(ReferenceCastFlags))
 #endif
@@ -2629,7 +2789,7 @@ namespace NS_SLUA {
         {
             auto referencePusher = getReferencePusher(up);
             if (referencePusher) {
-                return pushReferenceAndCache(referencePusher, L, obj->GetClass(), up, up->ContainerPtrToValuePtr<uint8>(obj), obj);
+                return pushReferenceAndCache(referencePusher, L, obj->GetClass(), up, up->ContainerPtrToValuePtr<uint8>(obj), obj, InvalidReplicatedIndex);
             }
         }
 

@@ -1430,7 +1430,7 @@ namespace NS_SLUA
             return 0;
         }
 
-        if (int res = LuaObject::fastIndex(L, (uint8*)obj))
+        if (int res = LuaObject::fastIndex(L, (uint8*)obj, obj->GetClass()))
         {
             return res;
         }

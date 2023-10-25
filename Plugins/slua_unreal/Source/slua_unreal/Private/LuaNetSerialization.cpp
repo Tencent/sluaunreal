@@ -24,33 +24,36 @@ FAutoConsoleVariableRef CVarLuaNetSerializationVersion(
     TEXT("Lua net serialization version. 0: old type, 1: new type\n"),
     ECVF_Default);
 
-bool FLuaNetBaseState::IsStateEqual(INetDeltaBaseState* otherState)
+namespace NS_SLUA
 {
-    FLuaNetBaseState* other = static_cast<FLuaNetBaseState*>(otherState);
-    return assignTimes == other->assignTimes;
-}
-
-void FLuaNetSerializationProxy::AddReferencedObjects(FReferenceCollector& Collector)
-{
-    if (!contentStruct.IsValid())
+    bool FLuaNetBaseState::IsStateEqual(INetDeltaBaseState* otherState)
     {
-        return;
+        FLuaNetBaseState* other = static_cast<FLuaNetBaseState*>(otherState);
+        return assignTimes == other->assignTimes;
     }
 
-    NS_SLUA::LuaReference::addRefByStruct(Collector, contentStruct.Get(), values.GetData());
-}
-
-FLuaNetSerializationProxy::~FLuaNetSerializationProxy()
-{
-    for (auto Iter : propListeners)
+    void FLuaNetSerializationProxy::AddReferencedObjects(FReferenceCollector& Collector)
     {
-        for (auto funcIter : Iter.Value)
+        if (!contentStruct.IsValid())
         {
-            delete funcIter;
+            return;
         }
+
+        NS_SLUA::LuaReference::addRefByStruct(Collector, contentStruct.Get(), values.GetData());
     }
 
-    propListeners.Empty();
+    FLuaNetSerializationProxy::~FLuaNetSerializationProxy()
+    {
+        for (auto Iter : propListeners)
+        {
+            for (auto funcIter : Iter.Value)
+            {
+                delete funcIter;
+            }
+        }
+
+        propListeners.Empty();
+    }
 }
 
 bool NetSerializeItem(NS_SLUA::FProperty* Prop, FArchive& Ar, UPackageMap* Map, void* Data)
@@ -82,7 +85,7 @@ bool NetSerializeItem(NS_SLUA::FProperty* Prop, FArchive& Ar, UPackageMap* Map, 
     }
     else if (FLuaNetSerialization::SerializeVersion == 0)
     {
-        if (auto ArrayProp = CastField<NS_SLUA::FArrayProperty>(Prop))
+        if (CastField<NS_SLUA::FArrayProperty>(Prop))
         {
             return false;
         }
@@ -156,7 +159,7 @@ bool FLuaNetSerialization::NetDeltaSerialize(FNetDeltaSerializeInfo& deltaParms)
         auto &flatProperties = classLuaReplciated->flatProperties;
         uint8 *data = proxy->values.GetData();
         uint8 *oldData = proxy->oldValues.GetData();
-        TArray<ClassLuaReplicated::ReplicateIndexType> changes;
+        TArray<NS_SLUA::ReplicateIndexType> changes;
         
         // Loop over each item that has unmapped objects
         for (auto It = proxy->guidReferencesMap.CreateIterator(); It; ++It)
@@ -312,7 +315,7 @@ bool FLuaNetSerialization::NetDeltaSerialize(FNetDeltaSerializeInfo& deltaParms)
     return false;
 }
 
-bool FLuaNetSerialization::Read(FNetDeltaSerializeInfo& deltaParms, FLuaNetSerializationProxy* proxy)
+bool FLuaNetSerialization::Read(FNetDeltaSerializeInfo& deltaParms, NS_SLUA::FLuaNetSerializationProxy* proxy)
 {
     QUICK_SCOPE_CYCLE_COUNTER(LuaNetDeltaSerialization_Read);
     auto& reader = *deltaParms.Reader;
@@ -343,7 +346,7 @@ bool FLuaNetSerialization::Read(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeria
     
         for (LuaBitArray::FIterator It(changes); It; ++It)
         {
-            ClassLuaReplicated::ReplicateIndexType index = *It;
+            NS_SLUA::ReplicateIndexType index = *It;
             if (SerializeVersion == 0)
             {
                 if (index >= properties.Num())
@@ -453,7 +456,7 @@ bool FLuaNetSerialization::Read(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeria
             int32 preIndex = -1;
             for (LuaBitArray::FIterator It(changes); It; ++It)
             {
-                ClassLuaReplicated::ReplicateIndexType index = *It;
+                NS_SLUA::ReplicateIndexType index = *It;
                 if (SerializeVersion)
                 {
                     if (!flatProperties.IsValidIndex(index))
@@ -500,8 +503,8 @@ bool FLuaNetSerialization::Read(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeria
 }
 
 
-void FLuaNetSerialization::ReadItem(FNetDeltaSerializeInfo& deltaParms, FLuaNetSerializationProxy& proxy, FBitReader& reader,
-                                    ClassLuaReplicated* classReplicated, int32 index, uint8* data, uint8* oldData)
+void FLuaNetSerialization::ReadItem(FNetDeltaSerializeInfo& deltaParms, NS_SLUA::FLuaNetSerializationProxy& proxy, FBitReader& reader,
+                                    NS_SLUA::ClassLuaReplicated* classReplicated, int32 index, uint8* data, uint8* oldData)
 {
     auto &flatProperties = classReplicated->flatProperties;
     auto &flatPropInfo = flatProperties[index];
@@ -520,7 +523,7 @@ void FLuaNetSerialization::ReadItem(FNetDeltaSerializeInfo& deltaParms, FLuaNetS
         reader << arrayNum;
         arrayHelper.Resize(arrayNum);
 
-        LuaBitArray changes(arrayPropInfo.innerPropertyNum * ClassLuaReplicated::MaxArrayLimit);
+        LuaBitArray changes(arrayPropInfo.innerPropertyNum * NS_SLUA::ClassLuaReplicated::MaxArrayLimit);
         reader << changes;
         for (LuaBitArray::FIterator arrIt(changes); arrIt; ++arrIt)
         {
@@ -545,7 +548,7 @@ void FLuaNetSerialization::ReadItem(FNetDeltaSerializeInfo& deltaParms, FLuaNetS
     }
 }
 
-bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSerializationProxy* proxy)
+bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, NS_SLUA::FLuaNetSerializationProxy* proxy)
 {
     QUICK_SCOPE_CYCLE_COUNTER(LuaNetDeltaSerialization_Write);
     auto obj = proxy->owner.Get();
@@ -635,7 +638,7 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
 
         auto& writer = *deltaParms.Writer;
     
-        FLuaNetBaseState* oldState = deltaParms.OldState ? static_cast<FLuaNetBaseState*>(deltaParms.OldState) : nullptr;
+        NS_SLUA::FLuaNetBaseState* oldState = deltaParms.OldState ? static_cast<NS_SLUA::FLuaNetBaseState*>(deltaParms.OldState) : nullptr;
 
         if (!oldState || proxy->bDirtyThisFrame
             || (proxy->assignTimes != oldState->assignTimes))
@@ -664,7 +667,7 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
 
                 for (int32 Index = historyStart; Index < proxy->historyEnd; ++Index)
                 {
-                    changes |= changeHistorys[Index % FLuaNetSerializationProxy::MAX_CHANGE_HISTORY];
+                    changes |= changeHistorys[Index % NS_SLUA::FLuaNetSerializationProxy::MAX_CHANGE_HISTORY];
                 }
         
                 if (!changes.IsEmpty() && !proxy->sharedSerialization.IsValid())
@@ -719,7 +722,7 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
                         }
                     }
             
-                    FLuaNetBaseState* newState = new FLuaNetBaseState();
+                    NS_SLUA::FLuaNetBaseState* newState = new NS_SLUA::FLuaNetBaseState();
                     check(deltaParms.NewState);
                     *deltaParms.NewState = MakeShareable(newState);
 
@@ -743,8 +746,8 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
 
                 for (int32 index = historyStart; index < proxy->historyEnd; ++index)
                 {
-                    changes |= changeHistorys[index % FLuaNetSerializationProxy::MAX_CHANGE_HISTORY];
-                    for (auto iter = arrayChangeHistorys[index % FLuaNetSerializationProxy::MAX_CHANGE_HISTORY].CreateIterator(); iter; ++iter)
+                    changes |= changeHistorys[index % NS_SLUA::FLuaNetSerializationProxy::MAX_CHANGE_HISTORY];
+                    for (auto iter = arrayChangeHistorys[index % NS_SLUA::FLuaNetSerializationProxy::MAX_CHANGE_HISTORY].CreateIterator(); iter; ++iter)
                     {
                         auto &arrayChange = arrayChanges.FindOrAdd(iter.Key());
                         arrayChange |= iter.Value();
@@ -794,7 +797,7 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
                         auto &sharedInfo = sharedPropertyInfo[index];
                         if (sharedInfo.bShared)
                         {
-                            auto writeShareSerializeBit = [](FBitWriter& writer, uint8* data, const FLuaRepSerializedPropertyInfo& sharedInfo)
+                            auto writeShareSerializeBit = [](FBitWriter& writer, uint8* data, const NS_SLUA::FLuaRepSerializedPropertyInfo& sharedInfo)
                             {
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
                                 writer.SerializeBits(data + (sharedInfo.BitOffset >> 3), sharedInfo.BitLength);
@@ -812,7 +815,7 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
                                 auto sharedArrayData = arraySharedSerializetion.SerializedProperties->GetData();
                                 
                                 SerializeArrayProperty(writer, classLuaReplicated, arrayChanges, data, index, TFunction<void (int32, int32)>(),
-                                    [&](ClassLuaReplicated::FlatPropInfo& propInfo, FScriptArrayHelper& arrayHelper, int32 arrayIndex, int32 dirtyIndex)
+                                    [&](NS_SLUA::FlatPropInfo& propInfo, FScriptArrayHelper& arrayHelper, int32 arrayIndex, int32 dirtyIndex)
                                             {
                                                 auto prop = propInfo.prop;
                                                 if (propInfo.bSupportSharedSerialize)
@@ -837,7 +840,7 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
                             if (arrayProp)
                             {
                                 SerializeArrayProperty(writer, classLuaReplicated, arrayChanges, data, index, TFunction<void (int32, int32)>(),
-                                    [&](ClassLuaReplicated::FlatPropInfo& propInfo, FScriptArrayHelper& arrayHelper, int32 arrayIndex, int32 dirtyIndex)
+                                    [&](NS_SLUA::FlatPropInfo& propInfo, FScriptArrayHelper& arrayHelper, int32 arrayIndex, int32 dirtyIndex)
                                             {
                                                 auto p = propInfo.prop;
                                                 NetSerializeItem(p, writer, deltaParms.Map, arrayHelper.GetRawPtr(arrayIndex) + propInfo.offset);
@@ -850,7 +853,7 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
                         }
                     }
             
-                    FLuaNetBaseState* newState = new FLuaNetBaseState();
+                    NS_SLUA::FLuaNetBaseState* newState = new NS_SLUA::FLuaNetBaseState();
                     check(deltaParms.NewState);
                     *deltaParms.NewState = MakeShareable(newState);
 
@@ -870,7 +873,7 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, FLuaNetSeri
 #endif
 }
 
-bool FLuaNetSerialization::CompareProperties(UObject* obj, FLuaNetSerializationProxy& proxy, uint32 ReplicationFrame)
+bool FLuaNetSerialization::CompareProperties(UObject* obj, NS_SLUA::FLuaNetSerializationProxy& proxy, uint32 ReplicationFrame)
 {
     if (proxy.lastReplicationFrame == ReplicationFrame)
     {
@@ -906,12 +909,12 @@ bool FLuaNetSerialization::CompareProperties(UObject* obj, FLuaNetSerializationP
                 auto newArrayHelper = FScriptArrayHelper::CreateHelperFormInnerProperty(innerProp, data + flatOffset);
                 auto oldArrayHelper = FScriptArrayHelper::CreateHelperFormInnerProperty(innerProp, oldData + flatOffset);
                 int32 newArrayNum = newArrayHelper.Num();
-                if (newArrayNum > ClassLuaReplicated::MaxArrayLimit)
+                if (newArrayNum > NS_SLUA::ClassLuaReplicated::MaxArrayLimit)
                 {
                     UE_LOG(Slua, Error, TEXT("FLuaNetSerialization::CompareProperties Error: Object[%s]'s replicated property[%s] array num[%d] is greater than MaxArrayLimit!"),
                         *obj->GetFullName(), *flatProp->GetName(), newArrayNum);
                 }
-                int32 newLen = FMath::Min(newArrayNum, ClassLuaReplicated::MaxArrayLimit);
+                int32 newLen = FMath::Min(newArrayNum, NS_SLUA::ClassLuaReplicated::MaxArrayLimit);
                 int32 oldLen = oldArrayHelper.Num();
                 int32 min = FMath::Min(newLen, oldLen);
                 int32 max = FMath::Max(newLen, oldLen);
@@ -965,7 +968,7 @@ bool FLuaNetSerialization::CompareProperties(UObject* obj, FLuaNetSerializationP
     return true;
 }
 
-bool FLuaNetSerialization::UpdateChangeListMgr_V1(FLuaNetSerializationProxy& proxy, uint32 ReplicationFrame)
+bool FLuaNetSerialization::UpdateChangeListMgr_V1(NS_SLUA::FLuaNetSerializationProxy& proxy, uint32 ReplicationFrame)
 {
     if (proxy.lastReplicationFrame == ReplicationFrame)
     {
@@ -979,7 +982,7 @@ bool FLuaNetSerialization::UpdateChangeListMgr_V1(FLuaNetSerializationProxy& pro
         return false;
     }
 
-    const int32 HistoryIndex = proxy.historyEnd % FLuaNetSerializationProxy::MAX_CHANGE_HISTORY;
+    const int32 HistoryIndex = proxy.historyEnd % NS_SLUA::FLuaNetSerializationProxy::MAX_CHANGE_HISTORY;
     LuaBitArray& newHistoryItem = proxy.changeHistorys[HistoryIndex];
     auto &arrayHistoryItem = proxy.arrayChangeHistorys[HistoryIndex];
 
@@ -1004,13 +1007,13 @@ bool FLuaNetSerialization::UpdateChangeListMgr_V1(FLuaNetSerializationProxy& pro
     }
 
     // If we're full, merge the oldest up, so we always have room for a new entry
-    if ((proxy.historyEnd - proxy.historyStart) == FLuaNetSerializationProxy::MAX_CHANGE_HISTORY)
+    if ((proxy.historyEnd - proxy.historyStart) == NS_SLUA::FLuaNetSerializationProxy::MAX_CHANGE_HISTORY)
     {
-        const int32 firstHistoryIndex = proxy.historyStart % FLuaNetSerializationProxy::MAX_CHANGE_HISTORY;
+        const int32 firstHistoryIndex = proxy.historyStart % NS_SLUA::FLuaNetSerializationProxy::MAX_CHANGE_HISTORY;
 
         proxy.historyStart++;
 
-        const int32 secondHistoryIndex = proxy.historyStart % FLuaNetSerializationProxy::MAX_CHANGE_HISTORY;
+        const int32 secondHistoryIndex = proxy.historyStart % NS_SLUA::FLuaNetSerializationProxy::MAX_CHANGE_HISTORY;
 
         // merge change list
         proxy.changeHistorys[secondHistoryIndex] |= proxy.changeHistorys[firstHistoryIndex];
@@ -1030,8 +1033,8 @@ bool FLuaNetSerialization::UpdateChangeListMgr_V1(FLuaNetSerializationProxy& pro
     return true;
 }
 
-void FLuaNetSerialization::BuildSharedSerialization_V1(UPackageMap* map, ClassLuaReplicated* classLuaReplicated,
-    FLuaNetSerializationProxy* proxy, const LuaBitArray& changes, const TMap<int32, LuaBitArray>& arrayChanges)
+void FLuaNetSerialization::BuildSharedSerialization_V1(UPackageMap* map, NS_SLUA::ClassLuaReplicated* classLuaReplicated,
+    NS_SLUA::FLuaNetSerializationProxy* proxy, const LuaBitArray& changes, const TMap<int32, LuaBitArray>& arrayChanges)
 {
     auto &sharedSerialization = proxy->sharedSerialization;
     auto &sharedArraySerialization = proxy->sharedArraySerialization;
@@ -1067,7 +1070,7 @@ void FLuaNetSerialization::BuildSharedSerialization_V1(UPackageMap* map, ClassLu
             continue;;
         }
         
-        FLuaRepSerializedPropertyInfo&sharedPropInfo = sharedPropertyInfo[propIndex];
+        NS_SLUA::FLuaRepSerializedPropertyInfo &sharedPropInfo = sharedPropertyInfo[propIndex];
         sharedPropInfo.bShared = true;
         sharedPropInfo.BitOffset = serializedProperties->GetNumBits();
 
@@ -1086,12 +1089,12 @@ void FLuaNetSerialization::BuildSharedSerialization_V1(UPackageMap* map, ClassLu
             };
             
             SerializeArrayProperty(ar, classLuaReplicated, arrayChanges, data, propIndex, prepearCallback,
-                [&](ClassLuaReplicated::FlatPropInfo& propInfo, FScriptArrayHelper& arrayHelper, int32 arrayIndex, int32 dirtyIndex)
+                [&](NS_SLUA::FlatPropInfo& propInfo, FScriptArrayHelper& arrayHelper, int32 arrayIndex, int32 dirtyIndex)
                                 {
                                     auto p = propInfo.prop;
                                     if (propInfo.bSupportSharedSerialize)
                                     {
-                                        FLuaRepSerializedPropertyInfo&sharedArrayPropInfo = sharedArray.SharedPropertyInfo[dirtyIndex];
+                                        NS_SLUA::FLuaRepSerializedPropertyInfo &sharedArrayPropInfo = sharedArray.SharedPropertyInfo[dirtyIndex];
                                         sharedArrayPropInfo.bShared = true;
                                         sharedArrayPropInfo.BitOffset = ar.GetNumBits();
                                         
@@ -1130,7 +1133,7 @@ void FLuaNetSerialization::BuildSharedSerialization_V1(UPackageMap* map, ClassLu
     sharedSerialization.SetValid();
 }
 
-void FLuaNetSerialization::SerializeArrayProperty(FBitWriter& writer, ClassLuaReplicated* classLuaReplicated,
+void FLuaNetSerialization::SerializeArrayProperty(FBitWriter& writer, NS_SLUA::ClassLuaReplicated* classLuaReplicated,
                                                   const TMap<int32, LuaBitArray>& arrayChanges, uint8* data, int32 index,
                                                   PrepareSerializeArrayCallback preapareCallback,
                                                   const SerializeArrayCallback& serializeCallback)
@@ -1146,7 +1149,7 @@ void FLuaNetSerialization::SerializeArrayProperty(FBitWriter& writer, ClassLuaRe
     auto arrayProp = CastField<NS_SLUA::FArrayProperty>(flatPropInfo.prop);
     auto innerProp = arrayProp->Inner;
     auto arrayHelper = FScriptArrayHelper::CreateHelperFormInnerProperty(innerProp, data + flatOffset);
-    int32 arrayNum = FMath::Min(arrayHelper.Num(), ClassLuaReplicated::MaxArrayLimit);
+    int32 arrayNum = FMath::Min(arrayHelper.Num(), NS_SLUA::ClassLuaReplicated::MaxArrayLimit);
 
     if (preapareCallback)
     {
@@ -1174,7 +1177,7 @@ void FLuaNetSerialization::SerializeArrayProperty(FBitWriter& writer, ClassLuaRe
     }
 }
 
-bool FLuaNetSerialization::UpdateChangeListMgr(FLuaNetSerializationProxy& proxy, uint32 ReplicationFrame)
+bool FLuaNetSerialization::UpdateChangeListMgr(NS_SLUA::FLuaNetSerializationProxy& proxy, uint32 ReplicationFrame)
 {
     if (proxy.lastReplicationFrame == ReplicationFrame)
     {
@@ -1188,7 +1191,7 @@ bool FLuaNetSerialization::UpdateChangeListMgr(FLuaNetSerializationProxy& proxy,
         return false;
     }
 
-    const int32 HistoryIndex = proxy.historyEnd % FLuaNetSerializationProxy::MAX_CHANGE_HISTORY;
+    const int32 HistoryIndex = proxy.historyEnd % NS_SLUA::FLuaNetSerializationProxy::MAX_CHANGE_HISTORY;
     LuaBitArray& newHistoryItem = proxy.changeHistorys[HistoryIndex];
 
     newHistoryItem = proxy.dirtyMark;
@@ -1200,13 +1203,13 @@ bool FLuaNetSerialization::UpdateChangeListMgr(FLuaNetSerializationProxy& proxy,
     proxy.sharedSerialization.Reset();
 
     // If we're full, merge the oldest up, so we always have room for a new entry
-    if ((proxy.historyEnd - proxy.historyStart) == FLuaNetSerializationProxy::MAX_CHANGE_HISTORY)
+    if ((proxy.historyEnd - proxy.historyStart) == NS_SLUA::FLuaNetSerializationProxy::MAX_CHANGE_HISTORY)
     {
-        const int32 firstHistoryIndex = proxy.historyStart % FLuaNetSerializationProxy::MAX_CHANGE_HISTORY;
+        const int32 firstHistoryIndex = proxy.historyStart % NS_SLUA::FLuaNetSerializationProxy::MAX_CHANGE_HISTORY;
 
         proxy.historyStart++;
 
-        const int32 secondHistoryIndex = proxy.historyStart % FLuaNetSerializationProxy::MAX_CHANGE_HISTORY;
+        const int32 secondHistoryIndex = proxy.historyStart % NS_SLUA::FLuaNetSerializationProxy::MAX_CHANGE_HISTORY;
 
         // merge change list
         proxy.changeHistorys[secondHistoryIndex] |= proxy.changeHistorys[firstHistoryIndex];
@@ -1216,8 +1219,8 @@ bool FLuaNetSerialization::UpdateChangeListMgr(FLuaNetSerializationProxy& proxy,
     return true;
 }
 
-void FLuaNetSerialization::BuildSharedSerialization(UPackageMap* map, ClassLuaReplicated* classLuaReplicated,
-    FLuaNetSerializationProxy* proxy, const LuaBitArray& changes)
+void FLuaNetSerialization::BuildSharedSerialization(UPackageMap* map, NS_SLUA::ClassLuaReplicated* classLuaReplicated,
+    NS_SLUA::FLuaNetSerializationProxy* proxy, const LuaBitArray& changes)
 {
     auto &sharedSerialization = proxy->sharedSerialization;
     auto &sharedPropertyInfo = sharedSerialization.SharedPropertyInfo;
@@ -1246,7 +1249,7 @@ void FLuaNetSerialization::BuildSharedSerialization(UPackageMap* map, ClassLuaRe
             continue;;
         }
         
-        FLuaRepSerializedPropertyInfo&sharedPropInfo = sharedPropertyInfo[propIndex];
+        NS_SLUA::FLuaRepSerializedPropertyInfo &sharedPropInfo = sharedPropertyInfo[propIndex];
         sharedPropInfo.bShared = true;
         sharedPropInfo.BitOffset = serializedProperties->GetNumBits();
 

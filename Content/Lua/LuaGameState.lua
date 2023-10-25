@@ -94,8 +94,14 @@ function LuaGameState:ReceiveBeginPlay()
 
     self.Name = "Poli"
     self.Hp = 100
-    self.Position = FVector(100, 200, 300)
-    self.TeamateNameList = {"Teamate1", "Teamate2", "Teamate3", "Teamate4", "Teamate5"}
+    --self.Position = FVector(100, 200, 300)
+    self.Position.X = 100
+    self.Position.Y = 200
+    self.Position.Z = 300
+    --self.TeamateNameList = {"Teamate1", "Teamate2", "Teamate3", "Teamate4", "Teamate5"}
+    for i = 1, 5 do
+        self.TeamateNameList:Add("Teamate"..i)
+    end
 
     local TeamatePos = FVector(100, 200, 300)
     local TeamatePositions = self.TeamatePositions
@@ -107,7 +113,7 @@ function LuaGameState:ReceiveBeginPlay()
     TeamatePos.X = 103
     TeamatePositions:Add(TeamatePos)
     --- Mark TeamatePositions dirty to sync
-    self.TeamatePositions = TeamatePositions
+    --- self.TeamatePositions = TeamatePositions
 end
 
 function LuaGameState:OnRep_Name(OldName)

@@ -27,19 +27,19 @@ public:
     
     ~LuaBitArray();
 
-    FORCEINLINE bool Add(int32 Index);
+    bool Add(int32 Index);
     // Range[BeginIndex, EndIndex] include EndIndex, not Range[BeginIndex, EndIndex)
     bool AddRange(int32 BeginIndex, int32 EndIndex);
-    FORCEINLINE bool Remove(int32 Index);
+    bool Remove(int32 Index);
     bool RemoveRange(int32 BeginIndex, int32 EndIndex);
-    FORCEINLINE bool Clear();
-    FORCEINLINE bool MarkAll();
-    FORCEINLINE bool IsEmpty() const;
+    bool Clear();
+    bool MarkAll();
+    bool IsEmpty() const;
 
-    FORCEINLINE LuaBitArray& operator = (const LuaBitArray& Other);
-    FORCEINLINE LuaBitArray& operator = (LuaBitArray&& Other);
-    FORCEINLINE LuaBitArray& operator &= (const LuaBitArray& Other);
-    FORCEINLINE LuaBitArray& operator |= (const LuaBitArray& Other);
+    LuaBitArray& operator = (const LuaBitArray& Other);
+    LuaBitArray& operator = (LuaBitArray&& Other);
+    LuaBitArray& operator &= (const LuaBitArray& Other);
+    LuaBitArray& operator |= (const LuaBitArray& Other);
     
     friend FArchive& operator<<(FArchive& Ar, const LuaBitArray& A)
     {

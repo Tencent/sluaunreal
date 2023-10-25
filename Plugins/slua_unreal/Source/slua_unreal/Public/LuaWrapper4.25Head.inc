@@ -10,6 +10,7 @@
     DefTypeName(FRandomStream);
     DefTypeName(FGuid);
     DefTypeName(FBox2D);
+    DefTypeName(FFallbackStruct);
     DefTypeName(FFloatRangeBound);
     DefTypeName(FFloatRange);
     DefTypeName(FInt32RangeBound);
@@ -17,8 +18,8 @@
     DefTypeName(FFloatInterval);
     DefTypeName(FInt32Interval);
     DefTypeName(FFrameNumber);
+    DefTypeName(FSoftObjectPath);
+    DefTypeName(FSoftClassPath);
     DefTypeName(FPrimaryAssetType);
     DefTypeName(FPrimaryAssetId);
     DefTypeName(FDateTime);
-    DefTypeName(FSoftObjectPath);
-    DefTypeName(FSoftClassPath);

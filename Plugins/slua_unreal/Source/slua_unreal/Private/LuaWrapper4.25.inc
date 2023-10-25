@@ -11,6 +11,7 @@
     static UScriptStruct* FRandomStreamStruct = nullptr;
     static UScriptStruct* FGuidStruct = nullptr;
     static UScriptStruct* FBox2DStruct = nullptr;
+    static UScriptStruct* FFallbackStructStruct = nullptr;
     static UScriptStruct* FFloatRangeBoundStruct = nullptr;
     static UScriptStruct* FFloatRangeStruct = nullptr;
     static UScriptStruct* FInt32RangeBoundStruct = nullptr;
@@ -18,11 +19,11 @@
     static UScriptStruct* FFloatIntervalStruct = nullptr;
     static UScriptStruct* FInt32IntervalStruct = nullptr;
     static UScriptStruct* FFrameNumberStruct = nullptr;
+    static UScriptStruct* FSoftObjectPathStruct = nullptr;
+    static UScriptStruct* FSoftClassPathStruct = nullptr;
     static UScriptStruct* FPrimaryAssetTypeStruct = nullptr;
     static UScriptStruct* FPrimaryAssetIdStruct = nullptr;
     static UScriptStruct* FDateTimeStruct = nullptr;
-    static UScriptStruct* FSoftObjectPathStruct = nullptr;
-    static UScriptStruct* FSoftClassPathStruct = nullptr;
 
     typedef void(*pushStructFunction)(lua_State* L, FStructProperty* p, uint8* parms);
     typedef void* (*checkStructFunction)(lua_State* L, FStructProperty* p, uint8* parms, int i);
@@ -270,6 +271,26 @@
         return v;
     }
 
+    static inline FFallbackStruct* __newFFallbackStruct() {
+        return new FFallbackStruct();
+    }
+
+    static void __pushFFallbackStruct(lua_State* L, FStructProperty* p, uint8* parms) {
+        auto ptr = __newFFallbackStruct();
+        p->CopyCompleteValue(ptr, parms);
+        LuaObject::push<FFallbackStruct>(L, "FFallbackStruct", ptr, UD_AUTOGC | UD_VALUETYPE);
+    }
+
+    static void* __checkFFallbackStruct(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        auto v = LuaObject::checkValue<FFallbackStruct*>(L, i);
+        if (!v) {
+            luaL_error(L, "check FFallbackStruct nil value");
+            return nullptr;
+        }
+        p->CopyCompleteValue(parms, v);
+        return v;
+    }
+
     static inline FFloatRangeBound* __newFFloatRangeBound() {
         return new FFloatRangeBound();
     }
@@ -410,6 +431,46 @@
         return v;
     }
 
+    static inline FSoftObjectPath* __newFSoftObjectPath() {
+        return new FSoftObjectPath();
+    }
+
+    static void __pushFSoftObjectPath(lua_State* L, FStructProperty* p, uint8* parms) {
+        auto ptr = __newFSoftObjectPath();
+        p->CopyCompleteValue(ptr, parms);
+        LuaObject::push<FSoftObjectPath>(L, "FSoftObjectPath", ptr, UD_AUTOGC | UD_VALUETYPE);
+    }
+
+    static void* __checkFSoftObjectPath(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        auto v = LuaObject::checkValue<FSoftObjectPath*>(L, i);
+        if (!v) {
+            luaL_error(L, "check FSoftObjectPath nil value");
+            return nullptr;
+        }
+        p->CopyCompleteValue(parms, v);
+        return v;
+    }
+
+    static inline FSoftClassPath* __newFSoftClassPath() {
+        return new FSoftClassPath();
+    }
+
+    static void __pushFSoftClassPath(lua_State* L, FStructProperty* p, uint8* parms) {
+        auto ptr = __newFSoftClassPath();
+        p->CopyCompleteValue(ptr, parms);
+        LuaObject::push<FSoftClassPath>(L, "FSoftClassPath", ptr, UD_AUTOGC | UD_VALUETYPE);
+    }
+
+    static void* __checkFSoftClassPath(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        auto v = LuaObject::checkValue<FSoftClassPath*>(L, i);
+        if (!v) {
+            luaL_error(L, "check FSoftClassPath nil value");
+            return nullptr;
+        }
+        p->CopyCompleteValue(parms, v);
+        return v;
+    }
+
     static inline FPrimaryAssetType* __newFPrimaryAssetType() {
         return new FPrimaryAssetType();
     }
@@ -464,46 +525,6 @@
         auto v = LuaObject::checkValue<FDateTime*>(L, i);
         if (!v) {
             luaL_error(L, "check FDateTime nil value");
-            return nullptr;
-        }
-        p->CopyCompleteValue(parms, v);
-        return v;
-    }
-
-    static inline FSoftObjectPath* __newFSoftObjectPath() {
-        return new FSoftObjectPath();
-    }
-
-    static void __pushFSoftObjectPath(lua_State* L, FStructProperty* p, uint8* parms) {
-        auto ptr = __newFSoftObjectPath();
-        p->CopyCompleteValue(ptr, parms);
-        LuaObject::push<FSoftObjectPath>(L, "FSoftObjectPath", ptr, UD_AUTOGC | UD_VALUETYPE);
-    }
-
-    static void* __checkFSoftObjectPath(lua_State* L, FStructProperty* p, uint8* parms, int i) {
-        auto v = LuaObject::checkValue<FSoftObjectPath*>(L, i);
-        if (!v) {
-            luaL_error(L, "check FSoftObjectPath nil value");
-            return nullptr;
-        }
-        p->CopyCompleteValue(parms, v);
-        return v;
-    }
-
-    static inline FSoftClassPath* __newFSoftClassPath() {
-        return new FSoftClassPath();
-    }
-
-    static void __pushFSoftClassPath(lua_State* L, FStructProperty* p, uint8* parms) {
-        auto ptr = __newFSoftClassPath();
-        p->CopyCompleteValue(ptr, parms);
-        LuaObject::push<FSoftClassPath>(L, "FSoftClassPath", ptr, UD_AUTOGC | UD_VALUETYPE);
-    }
-
-    static void* __checkFSoftClassPath(lua_State* L, FStructProperty* p, uint8* parms, int i) {
-        auto v = LuaObject::checkValue<FSoftClassPath*>(L, i);
-        if (!v) {
-            luaL_error(L, "check FSoftClassPath nil value");
             return nullptr;
         }
         p->CopyCompleteValue(parms, v);
@@ -630,6 +651,7 @@
             auto PitchIn = LuaObject::checkValue<float>(L, 2);
             Pitch = PitchIn;
             LuaObject::push(L, PitchIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -646,6 +668,7 @@
             auto YawIn = LuaObject::checkValue<float>(L, 2);
             Yaw = YawIn;
             LuaObject::push(L, YawIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -662,6 +685,7 @@
             auto RollIn = LuaObject::checkValue<float>(L, 2);
             Roll = RollIn;
             LuaObject::push(L, RollIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -676,6 +700,13 @@
             if (argc == 1) {
                 CheckSelf(FRotator);
                 self->DiagnosticCheckNaN();
+                return 0;
+            }
+            if (argc == 2) {
+                CheckSelf(FRotator);
+                auto Message = LuaObject::checkValue<const char*>(L, 2);
+                auto MessageVal = FString(UTF8_TO_TCHAR(Message));
+                self->DiagnosticCheckNaN(*MessageVal);
                 return 0;
             }
             luaL_error(L, "call FRotator::DiagnosticCheckNaN error, argc=%d", argc);
@@ -1092,7 +1123,8 @@
             auto argc = lua_gettop(L);
             if (argc == 1) {
                 auto Angle = LuaObject::checkValue<int>(L, 1);
-                auto ret = FRotator::DecompressAxisFromByte(Angle);
+                auto AngleVal = (unsigned char)Angle;
+                auto ret = FRotator::DecompressAxisFromByte(AngleVal);
                 LuaObject::push(L, ret);
                 return 1;
             }
@@ -1116,7 +1148,8 @@
             auto argc = lua_gettop(L);
             if (argc == 1) {
                 auto Angle = LuaObject::checkValue<int>(L, 1);
-                auto ret = FRotator::DecompressAxisFromShort(Angle);
+                auto AngleVal = (unsigned short)Angle;
+                auto ret = FRotator::DecompressAxisFromShort(AngleVal);
                 LuaObject::push(L, ret);
                 return 1;
             }
@@ -1359,6 +1392,7 @@
             auto XIn = LuaObject::checkValue<float>(L, 2);
             X = XIn;
             LuaObject::push(L, XIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -1375,6 +1409,7 @@
             auto YIn = LuaObject::checkValue<float>(L, 2);
             Y = YIn;
             LuaObject::push(L, YIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -1391,6 +1426,7 @@
             auto ZIn = LuaObject::checkValue<float>(L, 2);
             Z = ZIn;
             LuaObject::push(L, ZIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -1407,6 +1443,7 @@
             auto WIn = LuaObject::checkValue<float>(L, 2);
             W = WIn;
             LuaObject::push(L, WIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -1867,6 +1904,13 @@
             if (argc == 1) {
                 CheckSelf(FQuat);
                 self->DiagnosticCheckNaN();
+                return 0;
+            }
+            if (argc == 2) {
+                CheckSelf(FQuat);
+                auto Message = LuaObject::checkValue<const char*>(L, 2);
+                auto MessageVal = FString(UTF8_TO_TCHAR(Message));
+                self->DiagnosticCheckNaN(*MessageVal);
                 return 0;
             }
             luaL_error(L, "call FQuat::DiagnosticCheckNaN error, argc=%d", argc);
@@ -2365,29 +2409,6 @@
                 }
                 auto& InTranslationRef = *InTranslation;
                 auto self = new FTransform(InTranslationRef);
-                LuaObject::push<FTransform>(L, "FTransform", self, UD_AUTOGC | UD_VALUETYPE);
-                return 1;
-            }
-            if (argc == 4) {
-                auto InRotation = LuaObject::checkValue<FQuat*>(L, 2);
-                if (!InRotation) {
-                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
-                    return 0;
-                }
-                auto& InRotationRef = *InRotation;
-                auto InTranslation = LuaObject::checkValue<FVector*>(L, 3);
-                if (!InTranslation) {
-                    luaL_error(L, "%s argument 3 is nullptr", __FUNCTION__);
-                    return 0;
-                }
-                auto& InTranslationRef = *InTranslation;
-                auto InScale3D = LuaObject::checkValue<FVector*>(L, 4);
-                if (!InScale3D) {
-                    luaL_error(L, "%s argument 4 is nullptr", __FUNCTION__);
-                    return 0;
-                }
-                auto& InScale3DRef = *InScale3D;
-                auto self = new FTransform(InRotationRef, InTranslationRef, InScale3DRef);
                 LuaObject::push<FTransform>(L, "FTransform", self, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
@@ -3936,6 +3957,7 @@
             auto RIn = LuaObject::checkValue<float>(L, 2);
             R = RIn;
             LuaObject::push(L, RIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -3952,6 +3974,7 @@
             auto GIn = LuaObject::checkValue<float>(L, 2);
             G = GIn;
             LuaObject::push(L, GIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -3968,6 +3991,7 @@
             auto BIn = LuaObject::checkValue<float>(L, 2);
             B = BIn;
             LuaObject::push(L, BIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -3984,6 +4008,7 @@
             auto AIn = LuaObject::checkValue<float>(L, 2);
             A = AIn;
             LuaObject::push(L, AIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -4302,10 +4327,13 @@
             auto argc = lua_gettop(L);
             if (argc == 3) {
                 auto H = LuaObject::checkValue<int>(L, 1);
+                auto HVal = (unsigned char)H;
                 auto S = LuaObject::checkValue<int>(L, 2);
+                auto SVal = (unsigned char)S;
                 auto V = LuaObject::checkValue<int>(L, 3);
+                auto VVal = (unsigned char)V;
                 auto ret = __newFLinearColor();
-                *ret = FLinearColor::MakeFromHSV8(H, S, V);
+                *ret = FLinearColor::MakeFromHSV8(HVal, SVal, VVal);
                 LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
@@ -4454,10 +4482,14 @@
             }
             if (argc == 5) {
                 auto InR = LuaObject::checkValue<int>(L, 2);
+                auto InRVal = (unsigned char)InR;
                 auto InG = LuaObject::checkValue<int>(L, 3);
+                auto InGVal = (unsigned char)InG;
                 auto InB = LuaObject::checkValue<int>(L, 4);
+                auto InBVal = (unsigned char)InB;
                 auto InA = LuaObject::checkValue<int>(L, 5);
-                auto self = new FColor(InR, InG, InB, InA);
+                auto InAVal = (unsigned char)InA;
+                auto self = new FColor(InRVal, InGVal, InBVal, InAVal);
                 LuaObject::push<FColor>(L, "FColor", self, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
@@ -4493,6 +4525,74 @@
                 return 1;
             }
             LuaObject::push(L, false);
+            return 1;
+        }
+
+        static int get_B(lua_State* L) {
+            CheckSelf(FColor);
+            auto& B = self->B;
+            LuaObject::push(L, B);
+            return 1;
+        }
+
+        static int set_B(lua_State* L) {
+            CheckSelf(FColor);
+            auto& B = self->B;
+            auto BIn = LuaObject::checkValue<uint8>(L, 2);
+            B = BIn;
+            LuaObject::push(L, BIn);
+            SLUA_MARK_NETPROP
+            return 1;
+        }
+
+        static int get_G(lua_State* L) {
+            CheckSelf(FColor);
+            auto& G = self->G;
+            LuaObject::push(L, G);
+            return 1;
+        }
+
+        static int set_G(lua_State* L) {
+            CheckSelf(FColor);
+            auto& G = self->G;
+            auto GIn = LuaObject::checkValue<uint8>(L, 2);
+            G = GIn;
+            LuaObject::push(L, GIn);
+            SLUA_MARK_NETPROP
+            return 1;
+        }
+
+        static int get_R(lua_State* L) {
+            CheckSelf(FColor);
+            auto& R = self->R;
+            LuaObject::push(L, R);
+            return 1;
+        }
+
+        static int set_R(lua_State* L) {
+            CheckSelf(FColor);
+            auto& R = self->R;
+            auto RIn = LuaObject::checkValue<uint8>(L, 2);
+            R = RIn;
+            LuaObject::push(L, RIn);
+            SLUA_MARK_NETPROP
+            return 1;
+        }
+
+        static int get_A(lua_State* L) {
+            CheckSelf(FColor);
+            auto& A = self->A;
+            LuaObject::push(L, A);
+            return 1;
+        }
+
+        static int set_A(lua_State* L) {
+            CheckSelf(FColor);
+            auto& A = self->A;
+            auto AIn = LuaObject::checkValue<uint8>(L, 2);
+            A = AIn;
+            LuaObject::push(L, AIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -4610,8 +4710,9 @@
             if (argc == 2) {
                 CheckSelf(FColor);
                 auto Alpha = LuaObject::checkValue<int>(L, 2);
+                auto AlphaVal = (unsigned char)Alpha;
                 auto ret = __newFColor();
-                *ret = self->WithAlpha(Alpha);
+                *ret = self->WithAlpha(AlphaVal);
                 LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
@@ -4772,6 +4873,10 @@
             AutoStack autoStack(L);
             LuaObject::newType(L, "FColor");
             LuaObject::addOperator(L, "__eq", __eq);
+            LuaObject::addField(L, "B", get_B, set_B, true);
+            LuaObject::addField(L, "G", get_G, set_G, true);
+            LuaObject::addField(L, "R", get_R, set_R, true);
+            LuaObject::addField(L, "A", get_A, set_A, true);
             LuaObject::addField(L, "White", get_White, nullptr, false);
             LuaObject::addField(L, "Black", get_Black, nullptr, false);
             LuaObject::addField(L, "Transparent", get_Transparent, nullptr, false);
@@ -4977,6 +5082,7 @@
             auto WIn = LuaObject::checkValue<float>(L, 2);
             W = WIn;
             LuaObject::push(L, WIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -5282,6 +5388,7 @@
             auto XIn = LuaObject::checkValue<float>(L, 2);
             X = XIn;
             LuaObject::push(L, XIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -5298,6 +5405,7 @@
             auto YIn = LuaObject::checkValue<float>(L, 2);
             Y = YIn;
             LuaObject::push(L, YIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -5314,6 +5422,7 @@
             auto ZIn = LuaObject::checkValue<float>(L, 2);
             Z = ZIn;
             LuaObject::push(L, ZIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -5388,6 +5497,13 @@
             if (argc == 1) {
                 CheckSelf(FVector);
                 self->DiagnosticCheckNaN();
+                return 0;
+            }
+            if (argc == 2) {
+                CheckSelf(FVector);
+                auto Message = LuaObject::checkValue<const char*>(L, 2);
+                auto MessageVal = FString(UTF8_TO_TCHAR(Message));
+                self->DiagnosticCheckNaN(*MessageVal);
                 return 0;
             }
             luaL_error(L, "call FVector::DiagnosticCheckNaN error, argc=%d", argc);
@@ -7092,6 +7208,7 @@
             auto XIn = LuaObject::checkValue<float>(L, 2);
             X = XIn;
             LuaObject::push(L, XIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -7108,6 +7225,7 @@
             auto YIn = LuaObject::checkValue<float>(L, 2);
             Y = YIn;
             LuaObject::push(L, YIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -7792,6 +7910,7 @@
             auto XIn = LuaObject::checkValue<float>(L, 2);
             X = XIn;
             LuaObject::push(L, XIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -7808,6 +7927,7 @@
             auto YIn = LuaObject::checkValue<float>(L, 2);
             Y = YIn;
             LuaObject::push(L, YIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -7824,6 +7944,7 @@
             auto ZIn = LuaObject::checkValue<float>(L, 2);
             Z = ZIn;
             LuaObject::push(L, ZIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -7840,6 +7961,7 @@
             auto WIn = LuaObject::checkValue<float>(L, 2);
             W = WIn;
             LuaObject::push(L, WIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -8427,10 +8549,14 @@
             }
             if (argc == 5) {
                 auto InA = LuaObject::checkValue<int>(L, 2);
+                auto InAVal = (unsigned int)InA;
                 auto InB = LuaObject::checkValue<int>(L, 3);
+                auto InBVal = (unsigned int)InB;
                 auto InC = LuaObject::checkValue<int>(L, 4);
+                auto InCVal = (unsigned int)InC;
                 auto InD = LuaObject::checkValue<int>(L, 5);
-                auto self = new FGuid(InA, InB, InC, InD);
+                auto InDVal = (unsigned int)InD;
+                auto self = new FGuid(InAVal, InBVal, InCVal, InDVal);
                 LuaObject::push<FGuid>(L, "FGuid", self, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
@@ -8465,6 +8591,7 @@
             auto AIn = LuaObject::checkValue<uint32>(L, 2);
             A = AIn;
             LuaObject::push(L, AIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -8481,6 +8608,7 @@
             auto BIn = LuaObject::checkValue<uint32>(L, 2);
             B = BIn;
             LuaObject::push(L, BIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -8497,6 +8625,7 @@
             auto CIn = LuaObject::checkValue<uint32>(L, 2);
             C = CIn;
             LuaObject::push(L, CIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -8513,6 +8642,7 @@
             auto DIn = LuaObject::checkValue<uint32>(L, 2);
             D = DIn;
             LuaObject::push(L, DIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -8731,7 +8861,8 @@
         static int get_Min(lua_State* L) {
             CheckSelf(FBox2D);
             auto& Min = self->Min;
-            LuaObject::pushAndLink<FVector2D>(L, udptr->parent ? udptr->parent : self, "FVector2D", &Min);
+            SLUA_GET_NETINFO
+            LuaObject::pushAndLink<FVector2D>(L, udptr->parent ? udptr->parent : self, "FVector2D", &Min, (void*)proxy, luaReplicatedIndex);
             return 1;
         }
 
@@ -8741,13 +8872,15 @@
             auto MinIn = LuaObject::checkValue<FVector2D*>(L, 2);
             Min = *MinIn;
             LuaObject::push<FVector2D>(L, "FVector2D", MinIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
         static int get_Max(lua_State* L) {
             CheckSelf(FBox2D);
             auto& Max = self->Max;
-            LuaObject::pushAndLink<FVector2D>(L, udptr->parent ? udptr->parent : self, "FVector2D", &Max);
+            SLUA_GET_NETINFO
+            LuaObject::pushAndLink<FVector2D>(L, udptr->parent ? udptr->parent : self, "FVector2D", &Max, (void*)proxy, luaReplicatedIndex);
             return 1;
         }
 
@@ -8757,6 +8890,7 @@
             auto MaxIn = LuaObject::checkValue<FVector2D*>(L, 2);
             Max = *MaxIn;
             LuaObject::push<FVector2D>(L, "FVector2D", MaxIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -8773,6 +8907,7 @@
             auto bIsValidIn = LuaObject::checkValue<bool>(L, 2);
             bIsValid = bIsValidIn;
             LuaObject::push(L, bIsValidIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -9008,6 +9143,37 @@
 
     };
 
+    struct FFallbackStructWrapper {
+
+        static int __ctor(lua_State* L) {
+            auto argc = lua_gettop(L);
+            luaL_error(L, "call FFallbackStruct() error, argc=%d", argc);
+            return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FFallbackStruct);
+            auto ret = __newFFallbackStruct();
+            *ret = *self;
+            LuaObject::push<FFallbackStruct>(L, "FFallbackStruct", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
+        }
+
+        static int __gc(lua_State* L) {
+            CheckSelfSafe(FFallbackStruct);
+            SLUA_GCSTRUCT(FFallbackStruct);
+            return 0;
+        }
+
+        static void bind(lua_State* L) {
+            AutoStack autoStack(L);
+            LuaObject::newType(L, "FFallbackStruct");
+            LuaObject::addMethod(L, "clone", clone, true);
+            LuaObject::finishType(L, "FFallbackStruct", __ctor, __gc);
+        }
+
+    };
+
     struct FFloatRangeBoundWrapper {
 
         static int __ctor(lua_State* L) {
@@ -9044,7 +9210,7 @@
         static int Exclusive(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
-                auto Value = LuaObject::checkValue<int>(L, 1);
+                auto Value = LuaObject::checkValue<float>(L, 1);
                 auto ret = __newFFloatRangeBound();
                 *ret = FFloatRangeBound::Exclusive(Value);
                 LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
@@ -9057,7 +9223,7 @@
         static int Inclusive(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
-                auto Value = LuaObject::checkValue<int>(L, 1);
+                auto Value = LuaObject::checkValue<float>(L, 1);
                 auto ret = __newFFloatRangeBound();
                 *ret = FFloatRangeBound::Inclusive(Value);
                 LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
@@ -9220,14 +9386,14 @@
                 return 1;
             }
             if (argc == 2) {
-                auto A = LuaObject::checkValue<int>(L, 2);
+                auto A = LuaObject::checkValue<float>(L, 2);
                 auto self = new FFloatRange(A);
                 LuaObject::push<FFloatRange>(L, "FFloatRange", self, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
             if (argc == 3) {
-                auto A = LuaObject::checkValue<int>(L, 2);
-                auto B = LuaObject::checkValue<int>(L, 3);
+                auto A = LuaObject::checkValue<float>(L, 2);
+                auto B = LuaObject::checkValue<float>(L, 3);
                 auto self = new FFloatRange(A, B);
                 LuaObject::push<FFloatRange>(L, "FFloatRange", self, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
@@ -9277,7 +9443,7 @@
         static int AtLeast(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
-                auto Value = LuaObject::checkValue<int>(L, 1);
+                auto Value = LuaObject::checkValue<float>(L, 1);
                 auto ret = __newFFloatRange();
                 *ret = FFloatRange::AtLeast(Value);
                 LuaObject::push<FFloatRange>(L, "FFloatRange", ret, UD_AUTOGC | UD_VALUETYPE);
@@ -9290,7 +9456,7 @@
         static int AtMost(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 1) {
-                auto Value = LuaObject::checkValue<int>(L, 1);
+                auto Value = LuaObject::checkValue<float>(L, 1);
                 auto ret = __newFFloatRange();
                 *ret = FFloatRange::AtMost(Value);
                 LuaObject::push<FFloatRange>(L, "FFloatRange", ret, UD_AUTOGC | UD_VALUETYPE);
@@ -9744,6 +9910,7 @@
             auto ValueIn = LuaObject::checkValue<int32>(L, 2);
             Value = ValueIn;
             LuaObject::push(L, ValueIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -9753,6 +9920,329 @@
             LuaObject::addField(L, "Value", get_Value, set_Value, true);
             LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FFrameNumber", __ctor, __gc);
+        }
+
+    };
+
+    struct FSoftObjectPathWrapper {
+
+        static int __ctor(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                auto self = new FSoftObjectPath();
+                LuaObject::push<FSoftObjectPath>(L, "FSoftObjectPath", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            if (argc == 2) {
+                auto Other = LuaObject::checkValue<FSoftObjectPath*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                auto self = new FSoftObjectPath(OtherRef);
+                LuaObject::push<FSoftObjectPath>(L, "FSoftObjectPath", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPath() error, argc=%d", argc);
+            return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FSoftObjectPath);
+            auto ret = __newFSoftObjectPath();
+            *ret = *self;
+            LuaObject::push<FSoftObjectPath>(L, "FSoftObjectPath", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
+        }
+
+        static int __gc(lua_State* L) {
+            CheckSelfSafe(FSoftObjectPath);
+            SLUA_GCSTRUCT(FSoftObjectPath);
+            return 0;
+        }
+
+        static int __eq(lua_State* L) {
+            CheckSelf(FSoftObjectPath);
+            if (LuaObject::matchType(L, 2, "FSoftObjectPath")) {
+                auto Other = LuaObject::checkValue<FSoftObjectPath*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                auto ret = (*self == OtherRef);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            LuaObject::push(L, false);
+            return 1;
+        }
+
+        static int ToString(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FSoftObjectPath);
+                auto ret = self->ToString();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPath::ToString error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetAssetPathString(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FSoftObjectPath);
+                auto ret = self->GetAssetPathString();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPath::GetAssetPathString error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetSubPathString(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FSoftObjectPath);
+                auto ret = self->GetSubPathString();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPath::GetSubPathString error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetLongPackageName(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FSoftObjectPath);
+                auto ret = self->GetLongPackageName();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPath::GetLongPackageName error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetAssetName(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FSoftObjectPath);
+                auto ret = self->GetAssetName();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPath::GetAssetName error, argc=%d", argc);
+            return 0;
+        }
+
+        static int SetPath(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                CheckSelf(FSoftObjectPath);
+                auto Path = LuaObject::checkValue<const char*>(L, 2);
+                auto PathVal = FString(UTF8_TO_TCHAR(Path));
+                self->SetPath(*PathVal);
+                return 0;
+            }
+            luaL_error(L, "call FSoftObjectPath::SetPath error, argc=%d", argc);
+            return 0;
+        }
+
+        static int Reset(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FSoftObjectPath);
+                self->Reset();
+                return 0;
+            }
+            luaL_error(L, "call FSoftObjectPath::Reset error, argc=%d", argc);
+            return 0;
+        }
+
+        static int IsValid(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FSoftObjectPath);
+                auto ret = self->IsValid();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPath::IsValid error, argc=%d", argc);
+            return 0;
+        }
+
+        static int IsNull(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FSoftObjectPath);
+                auto ret = self->IsNull();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPath::IsNull error, argc=%d", argc);
+            return 0;
+        }
+
+        static int IsAsset(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FSoftObjectPath);
+                auto ret = self->IsAsset();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPath::IsAsset error, argc=%d", argc);
+            return 0;
+        }
+
+        static int IsSubobject(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FSoftObjectPath);
+                auto ret = self->IsSubobject();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPath::IsSubobject error, argc=%d", argc);
+            return 0;
+        }
+
+        static int FixupForPIE(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FSoftObjectPath);
+                auto ret = self->FixupForPIE();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            if (argc == 2) {
+                CheckSelf(FSoftObjectPath);
+                auto PIEInstance = LuaObject::checkValue<int>(L, 2);
+                auto ret = self->FixupForPIE(PIEInstance);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPath::FixupForPIE error, argc=%d", argc);
+            return 0;
+        }
+
+        static int FixupCoreRedirects(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FSoftObjectPath);
+                auto ret = self->FixupCoreRedirects();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPath::FixupCoreRedirects error, argc=%d", argc);
+            return 0;
+        }
+
+        static int GetCurrentTag(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 0) {
+                auto ret = FSoftObjectPath::GetCurrentTag();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPath::GetCurrentTag error, argc=%d", argc);
+            return 0;
+        }
+
+        static int InvalidateTag(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 0) {
+                auto ret = FSoftObjectPath::InvalidateTag();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FSoftObjectPath::InvalidateTag error, argc=%d", argc);
+            return 0;
+        }
+
+        static int ClearPIEPackageNames(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 0) {
+                FSoftObjectPath::ClearPIEPackageNames();
+                return 0;
+            }
+            luaL_error(L, "call FSoftObjectPath::ClearPIEPackageNames error, argc=%d", argc);
+            return 0;
+        }
+
+        static void bind(lua_State* L) {
+            AutoStack autoStack(L);
+            LuaObject::newType(L, "FSoftObjectPath");
+            LuaObject::addOperator(L, "__eq", __eq);
+            LuaObject::addMethod(L, "ToString", ToString, true);
+            LuaObject::addMethod(L, "GetAssetPathString", GetAssetPathString, true);
+            LuaObject::addMethod(L, "GetSubPathString", GetSubPathString, true);
+            LuaObject::addMethod(L, "GetLongPackageName", GetLongPackageName, true);
+            LuaObject::addMethod(L, "GetAssetName", GetAssetName, true);
+            LuaObject::addMethod(L, "SetPath", SetPath, true);
+            LuaObject::addMethod(L, "Reset", Reset, true);
+            LuaObject::addMethod(L, "IsValid", IsValid, true);
+            LuaObject::addMethod(L, "IsNull", IsNull, true);
+            LuaObject::addMethod(L, "IsAsset", IsAsset, true);
+            LuaObject::addMethod(L, "IsSubobject", IsSubobject, true);
+            LuaObject::addMethod(L, "FixupForPIE", FixupForPIE, true);
+            LuaObject::addMethod(L, "FixupCoreRedirects", FixupCoreRedirects, true);
+            LuaObject::addMethod(L, "GetCurrentTag", GetCurrentTag, false);
+            LuaObject::addMethod(L, "InvalidateTag", InvalidateTag, false);
+            LuaObject::addMethod(L, "ClearPIEPackageNames", ClearPIEPackageNames, false);
+            LuaObject::addMethod(L, "clone", clone, true);
+            LuaObject::finishType(L, "FSoftObjectPath", __ctor, __gc);
+        }
+
+    };
+
+    struct FSoftClassPathWrapper {
+
+        static int __ctor(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                auto self = new FSoftClassPath();
+                LuaObject::push<FSoftClassPath>(L, "FSoftClassPath", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            if (argc == 2) {
+                auto Other = LuaObject::checkValue<FSoftClassPath*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                auto self = new FSoftClassPath(OtherRef);
+                LuaObject::push<FSoftClassPath>(L, "FSoftClassPath", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FSoftClassPath() error, argc=%d", argc);
+            return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FSoftClassPath);
+            auto ret = __newFSoftClassPath();
+            *ret = *self;
+            LuaObject::push<FSoftClassPath>(L, "FSoftClassPath", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
+        }
+
+        static int __gc(lua_State* L) {
+            CheckSelfSafe(FSoftClassPath);
+            SLUA_GCSTRUCT(FSoftClassPath);
+            return 0;
+        }
+
+        static void bind(lua_State* L) {
+            AutoStack autoStack(L);
+            LuaObject::newTypeWithBase(L, "FSoftClassPath", std::initializer_list<const char*>{ "FSoftObjectPath" });
+            LuaObject::addMethod(L, "clone", clone, true);
+            LuaObject::finishType(L, "FSoftClassPath", __ctor, __gc);
         }
 
     };
@@ -9897,7 +10387,8 @@
         static int get_PrimaryAssetType(lua_State* L) {
             CheckSelf(FPrimaryAssetId);
             auto& PrimaryAssetType = self->PrimaryAssetType;
-            LuaObject::pushAndLink<FPrimaryAssetType>(L, udptr->parent ? udptr->parent : self, "FPrimaryAssetType", &PrimaryAssetType);
+            SLUA_GET_NETINFO
+            LuaObject::pushAndLink<FPrimaryAssetType>(L, udptr->parent ? udptr->parent : self, "FPrimaryAssetType", &PrimaryAssetType, (void*)proxy, luaReplicatedIndex);
             return 1;
         }
 
@@ -9907,6 +10398,7 @@
             auto PrimaryAssetTypeIn = LuaObject::checkValue<FPrimaryAssetType*>(L, 2);
             PrimaryAssetType = *PrimaryAssetTypeIn;
             LuaObject::push<FPrimaryAssetType>(L, "FPrimaryAssetType", PrimaryAssetTypeIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -9940,6 +10432,16 @@
                 auto TypeAndName = LuaObject::checkValue<FString>(L, 1);
                 auto ret = __newFPrimaryAssetId();
                 *ret = FPrimaryAssetId::ParseTypeAndName(TypeAndName);
+                LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            if (argc == 2) {
+                auto TypeAndName = LuaObject::checkValue<const char*>(L, 1);
+                auto TypeAndNameVal = FString(UTF8_TO_TCHAR(TypeAndName));
+                auto Len = LuaObject::checkValue<int>(L, 2);
+                auto LenVal = (unsigned int)Len;
+                auto ret = __newFPrimaryAssetId();
+                *ret = FPrimaryAssetId::ParseTypeAndName(*TypeAndNameVal, LenVal);
                 LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", ret, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
@@ -9986,7 +10488,8 @@
             }
             if (argc == 2) {
                 auto InTicks = LuaObject::checkValue<int>(L, 2);
-                auto self = new FDateTime(InTicks);
+                auto InTicksVal = (long long)InTicks;
+                auto self = new FDateTime(InTicksVal);
                 LuaObject::push<FDateTime>(L, "FDateTime", self, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
@@ -10303,6 +10806,14 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
+            if (argc == 2) {
+                CheckSelf(FDateTime);
+                auto Format = LuaObject::checkValue<const char*>(L, 2);
+                auto FormatVal = FString(UTF8_TO_TCHAR(Format));
+                auto ret = self->ToString(*FormatVal);
+                LuaObject::push(L, ret);
+                return 1;
+            }
             luaL_error(L, "call FDateTime::ToString error, argc=%d", argc);
             return 0;
         }
@@ -10361,8 +10872,9 @@
             auto argc = lua_gettop(L);
             if (argc == 1) {
                 auto UnixTime = LuaObject::checkValue<int>(L, 1);
+                auto UnixTimeVal = (long long)UnixTime;
                 auto ret = __newFDateTime();
-                *ret = FDateTime::FromUnixTimestamp(UnixTime);
+                *ret = FDateTime::FromUnixTimestamp(UnixTimeVal);
                 LuaObject::push<FDateTime>(L, "FDateTime", ret, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
@@ -10456,6 +10968,26 @@
             return 0;
         }
 
+        static int ParseIso8601(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 2) {
+                auto DateTimeString = LuaObject::checkValue<const char*>(L, 1);
+                auto DateTimeStringVal = FString(UTF8_TO_TCHAR(DateTimeString));
+                auto OutDateTime = LuaObject::checkValue<FDateTime*>(L, 2);
+                if (!OutDateTime) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OutDateTimeRef = *OutDateTime;
+                auto ret = FDateTime::ParseIso8601(*DateTimeStringVal, OutDateTimeRef);
+                LuaObject::push(L, ret);
+                LuaObject::push<FDateTime>(L, "FDateTime", OutDateTime);
+                return 2;
+            }
+            luaL_error(L, "call FDateTime::ParseIso8601 error, argc=%d", argc);
+            return 0;
+        }
+
         static int Today(lua_State* L) {
             auto argc = lua_gettop(L);
             if (argc == 0) {
@@ -10534,333 +11066,12 @@
             LuaObject::addMethod(L, "Now", Now, false);
             LuaObject::addMethod(L, "Parse", Parse, false);
             LuaObject::addMethod(L, "ParseHttpDate", ParseHttpDate, false);
+            LuaObject::addMethod(L, "ParseIso8601", ParseIso8601, false);
             LuaObject::addMethod(L, "Today", Today, false);
             LuaObject::addMethod(L, "UtcNow", UtcNow, false);
             LuaObject::addMethod(L, "Validate", Validate, false);
             LuaObject::addMethod(L, "clone", clone, true);
             LuaObject::finishType(L, "FDateTime", __ctor, __gc);
-        }
-
-    };
-
-    struct FSoftObjectPathWrapper {
-
-        static int __ctor(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                auto self = new FSoftObjectPath();
-                LuaObject::push<FSoftObjectPath>(L, "FSoftObjectPath", self, UD_AUTOGC | UD_VALUETYPE);
-                return 1;
-            }
-            if (argc == 2) {
-                auto Other = LuaObject::checkValue<FSoftObjectPath*>(L, 2);
-                if (!Other) {
-                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
-                    return 0;
-                }
-                auto& OtherRef = *Other;
-                auto self = new FSoftObjectPath(OtherRef);
-                LuaObject::push<FSoftObjectPath>(L, "FSoftObjectPath", self, UD_AUTOGC | UD_VALUETYPE);
-                return 1;
-            }
-            luaL_error(L, "call FSoftObjectPath() error, argc=%d", argc);
-            return 0;
-        }
-
-        static int clone(lua_State* L) {
-            CheckSelf(FSoftObjectPath);
-            auto ret = __newFSoftObjectPath();
-            *ret = *self;
-            LuaObject::push<FSoftObjectPath>(L, "FSoftObjectPath", ret, UD_AUTOGC | UD_VALUETYPE);
-            return 1;
-        }
-
-        static int __gc(lua_State* L) {
-            CheckSelfSafe(FSoftObjectPath);
-            SLUA_GCSTRUCT(FSoftObjectPath);
-            return 0;
-        }
-
-        static int __eq(lua_State* L) {
-            CheckSelf(FSoftObjectPath);
-            if (LuaObject::matchType(L, 2, "FSoftObjectPath")) {
-                auto Other = LuaObject::checkValue<FSoftObjectPath*>(L, 2);
-                if (!Other) {
-                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
-                    return 0;
-                }
-                auto& OtherRef = *Other;
-                auto ret = (*self == OtherRef);
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            LuaObject::push(L, false);
-            return 1;
-        }
-
-        static int ToString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FSoftObjectPath);
-                auto ret = self->ToString();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FSoftObjectPath::ToString error, argc=%d", argc);
-            return 0;
-        }
-
-        static int GetAssetPathString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FSoftObjectPath);
-                auto ret = self->GetAssetPathString();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FSoftObjectPath::GetAssetPathString error, argc=%d", argc);
-            return 0;
-        }
-
-        static int GetSubPathString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FSoftObjectPath);
-                auto ret = self->GetSubPathString();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FSoftObjectPath::GetSubPathString error, argc=%d", argc);
-            return 0;
-        }
-
-        static int GetLongPackageName(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FSoftObjectPath);
-                auto ret = self->GetLongPackageName();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FSoftObjectPath::GetLongPackageName error, argc=%d", argc);
-            return 0;
-        }
-
-        static int GetAssetName(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FSoftObjectPath);
-                auto ret = self->GetAssetName();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FSoftObjectPath::GetAssetName error, argc=%d", argc);
-            return 0;
-        }
-
-        static int SetPath(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
-                CheckSelf(FSoftObjectPath);
-                auto Path = LuaObject::checkValue<FString>(L, 2);
-                self->SetPath(Path);
-                return 0;
-            }
-            luaL_error(L, "call FSoftObjectPath::SetPath error, argc=%d", argc);
-            return 0;
-        }
-
-        static int Reset(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FSoftObjectPath);
-                self->Reset();
-                return 0;
-            }
-            luaL_error(L, "call FSoftObjectPath::Reset error, argc=%d", argc);
-            return 0;
-        }
-
-        static int IsValid(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FSoftObjectPath);
-                auto ret = self->IsValid();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FSoftObjectPath::IsValid error, argc=%d", argc);
-            return 0;
-        }
-
-        static int IsNull(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FSoftObjectPath);
-                auto ret = self->IsNull();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FSoftObjectPath::IsNull error, argc=%d", argc);
-            return 0;
-        }
-
-        static int IsAsset(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FSoftObjectPath);
-                auto ret = self->IsAsset();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FSoftObjectPath::IsAsset error, argc=%d", argc);
-            return 0;
-        }
-
-        static int IsSubobject(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FSoftObjectPath);
-                auto ret = self->IsSubobject();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FSoftObjectPath::IsSubobject error, argc=%d", argc);
-            return 0;
-        }
-
-        static int FixupForPIE(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FSoftObjectPath);
-                auto ret = self->FixupForPIE();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            if (argc == 2) {
-                CheckSelf(FSoftObjectPath);
-                auto PIEInstance = LuaObject::checkValue<int>(L, 2);
-                auto ret = self->FixupForPIE(PIEInstance);
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FSoftObjectPath::FixupForPIE error, argc=%d", argc);
-            return 0;
-        }
-
-        static int FixupCoreRedirects(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FSoftObjectPath);
-                auto ret = self->FixupCoreRedirects();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FSoftObjectPath::FixupCoreRedirects error, argc=%d", argc);
-            return 0;
-        }
-
-        static int GetCurrentTag(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
-                auto ret = FSoftObjectPath::GetCurrentTag();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FSoftObjectPath::GetCurrentTag error, argc=%d", argc);
-            return 0;
-        }
-
-        static int InvalidateTag(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
-                auto ret = FSoftObjectPath::InvalidateTag();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FSoftObjectPath::InvalidateTag error, argc=%d", argc);
-            return 0;
-        }
-
-        static int ClearPIEPackageNames(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
-                FSoftObjectPath::ClearPIEPackageNames();
-                return 0;
-            }
-            luaL_error(L, "call FSoftObjectPath::ClearPIEPackageNames error, argc=%d", argc);
-            return 0;
-        }
-
-        static void bind(lua_State* L) {
-            AutoStack autoStack(L);
-            LuaObject::newType(L, "FSoftObjectPath");
-            LuaObject::addOperator(L, "__eq", __eq);
-            LuaObject::addMethod(L, "ToString", ToString, true);
-            LuaObject::addMethod(L, "GetAssetPathString", GetAssetPathString, true);
-            LuaObject::addMethod(L, "GetSubPathString", GetSubPathString, true);
-            LuaObject::addMethod(L, "GetLongPackageName", GetLongPackageName, true);
-            LuaObject::addMethod(L, "GetAssetName", GetAssetName, true);
-            LuaObject::addMethod(L, "SetPath", SetPath, true);
-            LuaObject::addMethod(L, "Reset", Reset, true);
-            LuaObject::addMethod(L, "IsValid", IsValid, true);
-            LuaObject::addMethod(L, "IsNull", IsNull, true);
-            LuaObject::addMethod(L, "IsAsset", IsAsset, true);
-            LuaObject::addMethod(L, "IsSubobject", IsSubobject, true);
-            LuaObject::addMethod(L, "FixupForPIE", FixupForPIE, true);
-            LuaObject::addMethod(L, "FixupCoreRedirects", FixupCoreRedirects, true);
-            LuaObject::addMethod(L, "GetCurrentTag", GetCurrentTag, false);
-            LuaObject::addMethod(L, "InvalidateTag", InvalidateTag, false);
-            LuaObject::addMethod(L, "ClearPIEPackageNames", ClearPIEPackageNames, false);
-            LuaObject::addMethod(L, "clone", clone, true);
-            LuaObject::finishType(L, "FSoftObjectPath", __ctor, __gc);
-        }
-
-    };
-
-    struct FSoftClassPathWrapper {
-
-        static int __ctor(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                auto self = new FSoftClassPath();
-                LuaObject::push<FSoftClassPath>(L, "FSoftClassPath", self, UD_AUTOGC | UD_VALUETYPE);
-                return 1;
-            }
-            if (argc == 2) {
-                auto Other = LuaObject::checkValue<FSoftClassPath*>(L, 2);
-                if (!Other) {
-                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
-                    return 0;
-                }
-                auto& OtherRef = *Other;
-                auto self = new FSoftClassPath(OtherRef);
-                LuaObject::push<FSoftClassPath>(L, "FSoftClassPath", self, UD_AUTOGC | UD_VALUETYPE);
-                return 1;
-            }
-            luaL_error(L, "call FSoftClassPath() error, argc=%d", argc);
-            return 0;
-        }
-
-        static int clone(lua_State* L) {
-            CheckSelf(FSoftClassPath);
-            auto ret = __newFSoftClassPath();
-            *ret = *self;
-            LuaObject::push<FSoftClassPath>(L, "FSoftClassPath", ret, UD_AUTOGC | UD_VALUETYPE);
-            return 1;
-        }
-
-        static int __gc(lua_State* L) {
-            CheckSelfSafe(FSoftClassPath);
-            SLUA_GCSTRUCT(FSoftClassPath);
-            return 0;
-        }
-
-        static void bind(lua_State* L) {
-            AutoStack autoStack(L);
-            LuaObject::newTypeWithBase(L, "FSoftClassPath", std::initializer_list<const char*>{ "FSoftObjectPath" });
-            LuaObject::addMethod(L, "clone", clone, true);
-            LuaObject::finishType(L, "FSoftClassPath", __ctor, __gc);
         }
 
     };
@@ -10970,6 +11181,13 @@
             FBox2DWrapper::bind(L);
         }
 
+        FFallbackStructStruct = StaticGetBaseStructureInternal(TEXT("FallbackStruct"));
+        if (FFallbackStructStruct) {
+            _pushStructMap.Add(FFallbackStructStruct, __pushFFallbackStruct);
+            _checkStructMap.Add(FFallbackStructStruct, __checkFFallbackStruct);
+            FFallbackStructWrapper::bind(L);
+        }
+
         FFloatRangeBoundStruct = StaticGetBaseStructureInternal(TEXT("FloatRangeBound"));
         if (FFloatRangeBoundStruct) {
             _pushStructMap.Add(FFloatRangeBoundStruct, __pushFFloatRangeBound);
@@ -11019,6 +11237,20 @@
             FFrameNumberWrapper::bind(L);
         }
 
+        FSoftObjectPathStruct = StaticGetBaseStructureInternal(TEXT("SoftObjectPath"));
+        if (FSoftObjectPathStruct) {
+            _pushStructMap.Add(FSoftObjectPathStruct, __pushFSoftObjectPath);
+            _checkStructMap.Add(FSoftObjectPathStruct, __checkFSoftObjectPath);
+            FSoftObjectPathWrapper::bind(L);
+        }
+
+        FSoftClassPathStruct = StaticGetBaseStructureInternal(TEXT("SoftClassPath"));
+        if (FSoftClassPathStruct) {
+            _pushStructMap.Add(FSoftClassPathStruct, __pushFSoftClassPath);
+            _checkStructMap.Add(FSoftClassPathStruct, __checkFSoftClassPath);
+            FSoftClassPathWrapper::bind(L);
+        }
+
         FPrimaryAssetTypeStruct = StaticGetBaseStructureInternal(TEXT("PrimaryAssetType"));
         if (FPrimaryAssetTypeStruct) {
             _pushStructMap.Add(FPrimaryAssetTypeStruct, __pushFPrimaryAssetType);
@@ -11038,19 +11270,5 @@
             _pushStructMap.Add(FDateTimeStruct, __pushFDateTime);
             _checkStructMap.Add(FDateTimeStruct, __checkFDateTime);
             FDateTimeWrapper::bind(L);
-        }
-
-        FSoftObjectPathStruct = StaticGetBaseStructureInternal(TEXT("SoftObjectPath"));
-        if (FSoftObjectPathStruct) {
-            _pushStructMap.Add(FSoftObjectPathStruct, __pushFSoftObjectPath);
-            _checkStructMap.Add(FSoftObjectPathStruct, __checkFSoftObjectPath);
-            FSoftObjectPathWrapper::bind(L);
-        }
-
-        FSoftClassPathStruct = StaticGetBaseStructureInternal(TEXT("SoftClassPath"));
-        if (FSoftClassPathStruct) {
-            _pushStructMap.Add(FSoftClassPathStruct, __pushFSoftClassPath);
-            _checkStructMap.Add(FSoftClassPathStruct, __checkFSoftClassPath);
-            FSoftClassPathWrapper::bind(L);
         }
     }

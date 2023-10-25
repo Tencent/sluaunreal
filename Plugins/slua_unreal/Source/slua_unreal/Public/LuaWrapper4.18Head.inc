@@ -13,7 +13,7 @@
     DefTypeName(FInt32Range);
     DefTypeName(FFloatInterval);
     DefTypeName(FInt32Interval);
-    DefTypeName(FPrimaryAssetType);
-    DefTypeName(FPrimaryAssetId);
     DefTypeName(FSoftObjectPath);
     DefTypeName(FSoftClassPath);
+    DefTypeName(FPrimaryAssetType);
+    DefTypeName(FPrimaryAssetId);

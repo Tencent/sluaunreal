@@ -14,6 +14,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UObject/Interface.h"
 #include "InterfaceTestCase.generated.h"
 
 UINTERFACE()

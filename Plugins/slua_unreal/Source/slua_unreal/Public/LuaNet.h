@@ -13,11 +13,12 @@
 
 #pragma once
 #include "LuaVar.h"
-#include "SluaMicro.h"
 #include "LuaNetSerialization.h"
 
 namespace NS_SLUA
 {
+    struct FLuaNetSerializationProxy;
+
     class SLUA_UNREAL_API LuaNet
     {
     public:
@@ -39,7 +40,7 @@ namespace NS_SLUA
         static void removeObjectTable(UObject* obj);
         static void onObjectDeleted(UClass* cls);
 
-        static void onPropModify(lua_State* L, FLuaNetSerializationProxy* proxy, ClassLuaReplicated::ReplicateIndexType index, PrepareParamCallback callback);
+        static void onPropModify(lua_State* L, FLuaNetSerializationProxy* proxy, ReplicateIndexType index, PrepareParamCallback callback);
 
     protected:
         friend class LuaOverrider;
@@ -53,8 +54,8 @@ namespace NS_SLUA
         bool addClassRPCByType(lua_State* L, UClass* cls, const LuaVar& luaModule, const FString& repType, EFunctionFlags netFlag);
 
         static void initFlatReplicatedProps(ClassLuaReplicated& classReplicated,
-                                            ClassLuaReplicated::OffsetToMarkType& markIndex, UStruct* ustruct, int32& index, 
-                                            int32 offset, int32 ownerPropIndex, ClassLuaReplicated::FlatArrayPropInfo* arrayInfo);
+                                            ReplicateOffsetToMarkType& markIndex, UStruct* ustruct, int32& index, 
+                                            int32 offset, int32 ownerPropIndex, NS_SLUA::FlatArrayPropInfo* arrayInfo);
 
         static int __index(lua_State* L, UObject* obj, const char* keyName);
         static int __newindex(lua_State* L, UObject* obj, const char* keyName);

@@ -14,10 +14,10 @@
     static UScriptStruct* FInt32RangeStruct = nullptr;
     static UScriptStruct* FFloatIntervalStruct = nullptr;
     static UScriptStruct* FInt32IntervalStruct = nullptr;
-    static UScriptStruct* FPrimaryAssetTypeStruct = nullptr;
-    static UScriptStruct* FPrimaryAssetIdStruct = nullptr;
     static UScriptStruct* FSoftObjectPathStruct = nullptr;
     static UScriptStruct* FSoftClassPathStruct = nullptr;
+    static UScriptStruct* FPrimaryAssetTypeStruct = nullptr;
+    static UScriptStruct* FPrimaryAssetIdStruct = nullptr;
 
     typedef void(*pushStructFunction)(lua_State* L, FStructProperty* p, uint8* parms);
     typedef void* (*checkStructFunction)(lua_State* L, FStructProperty* p, uint8* parms, int i);
@@ -325,46 +325,6 @@
         return v;
     }
 
-    static inline FPrimaryAssetType* __newFPrimaryAssetType() {
-        return new FPrimaryAssetType();
-    }
-
-    static void __pushFPrimaryAssetType(lua_State* L, FStructProperty* p, uint8* parms) {
-        auto ptr = __newFPrimaryAssetType();
-        p->CopyCompleteValue(ptr, parms);
-        LuaObject::push<FPrimaryAssetType>(L, "FPrimaryAssetType", ptr, UD_AUTOGC | UD_VALUETYPE);
-    }
-
-    static void* __checkFPrimaryAssetType(lua_State* L, FStructProperty* p, uint8* parms, int i) {
-        auto v = LuaObject::checkValue<FPrimaryAssetType*>(L, i);
-        if (!v) {
-            luaL_error(L, "check FPrimaryAssetType nil value");
-            return nullptr;
-        }
-        p->CopyCompleteValue(parms, v);
-        return v;
-    }
-
-    static inline FPrimaryAssetId* __newFPrimaryAssetId() {
-        return new FPrimaryAssetId();
-    }
-
-    static void __pushFPrimaryAssetId(lua_State* L, FStructProperty* p, uint8* parms) {
-        auto ptr = __newFPrimaryAssetId();
-        p->CopyCompleteValue(ptr, parms);
-        LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", ptr, UD_AUTOGC | UD_VALUETYPE);
-    }
-
-    static void* __checkFPrimaryAssetId(lua_State* L, FStructProperty* p, uint8* parms, int i) {
-        auto v = LuaObject::checkValue<FPrimaryAssetId*>(L, i);
-        if (!v) {
-            luaL_error(L, "check FPrimaryAssetId nil value");
-            return nullptr;
-        }
-        p->CopyCompleteValue(parms, v);
-        return v;
-    }
-
     static inline FSoftObjectPath* __newFSoftObjectPath() {
         return new FSoftObjectPath();
     }
@@ -399,6 +359,46 @@
         auto v = LuaObject::checkValue<FSoftClassPath*>(L, i);
         if (!v) {
             luaL_error(L, "check FSoftClassPath nil value");
+            return nullptr;
+        }
+        p->CopyCompleteValue(parms, v);
+        return v;
+    }
+
+    static inline FPrimaryAssetType* __newFPrimaryAssetType() {
+        return new FPrimaryAssetType();
+    }
+
+    static void __pushFPrimaryAssetType(lua_State* L, FStructProperty* p, uint8* parms) {
+        auto ptr = __newFPrimaryAssetType();
+        p->CopyCompleteValue(ptr, parms);
+        LuaObject::push<FPrimaryAssetType>(L, "FPrimaryAssetType", ptr, UD_AUTOGC | UD_VALUETYPE);
+    }
+
+    static void* __checkFPrimaryAssetType(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        auto v = LuaObject::checkValue<FPrimaryAssetType*>(L, i);
+        if (!v) {
+            luaL_error(L, "check FPrimaryAssetType nil value");
+            return nullptr;
+        }
+        p->CopyCompleteValue(parms, v);
+        return v;
+    }
+
+    static inline FPrimaryAssetId* __newFPrimaryAssetId() {
+        return new FPrimaryAssetId();
+    }
+
+    static void __pushFPrimaryAssetId(lua_State* L, FStructProperty* p, uint8* parms) {
+        auto ptr = __newFPrimaryAssetId();
+        p->CopyCompleteValue(ptr, parms);
+        LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", ptr, UD_AUTOGC | UD_VALUETYPE);
+    }
+
+    static void* __checkFPrimaryAssetId(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        auto v = LuaObject::checkValue<FPrimaryAssetId*>(L, i);
+        if (!v) {
+            luaL_error(L, "check FPrimaryAssetId nil value");
             return nullptr;
         }
         p->CopyCompleteValue(parms, v);
@@ -525,6 +525,7 @@
             auto PitchIn = LuaObject::checkValue<float>(L, 2);
             Pitch = PitchIn;
             LuaObject::push(L, PitchIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -541,6 +542,7 @@
             auto YawIn = LuaObject::checkValue<float>(L, 2);
             Yaw = YawIn;
             LuaObject::push(L, YawIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -557,6 +559,7 @@
             auto RollIn = LuaObject::checkValue<float>(L, 2);
             Roll = RollIn;
             LuaObject::push(L, RollIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -2459,6 +2462,7 @@
             auto RIn = LuaObject::checkValue<float>(L, 2);
             R = RIn;
             LuaObject::push(L, RIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -2475,6 +2479,7 @@
             auto GIn = LuaObject::checkValue<float>(L, 2);
             G = GIn;
             LuaObject::push(L, GIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -2491,6 +2496,7 @@
             auto BIn = LuaObject::checkValue<float>(L, 2);
             B = BIn;
             LuaObject::push(L, BIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -2507,6 +2513,7 @@
             auto AIn = LuaObject::checkValue<float>(L, 2);
             A = AIn;
             LuaObject::push(L, AIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -3069,6 +3076,74 @@
             return 1;
         }
 
+        static int get_B(lua_State* L) {
+            CheckSelf(FColor);
+            auto& B = self->B;
+            LuaObject::push(L, B);
+            return 1;
+        }
+
+        static int set_B(lua_State* L) {
+            CheckSelf(FColor);
+            auto& B = self->B;
+            auto BIn = LuaObject::checkValue<uint8>(L, 2);
+            B = BIn;
+            LuaObject::push(L, BIn);
+            SLUA_MARK_NETPROP
+            return 1;
+        }
+
+        static int get_G(lua_State* L) {
+            CheckSelf(FColor);
+            auto& G = self->G;
+            LuaObject::push(L, G);
+            return 1;
+        }
+
+        static int set_G(lua_State* L) {
+            CheckSelf(FColor);
+            auto& G = self->G;
+            auto GIn = LuaObject::checkValue<uint8>(L, 2);
+            G = GIn;
+            LuaObject::push(L, GIn);
+            SLUA_MARK_NETPROP
+            return 1;
+        }
+
+        static int get_R(lua_State* L) {
+            CheckSelf(FColor);
+            auto& R = self->R;
+            LuaObject::push(L, R);
+            return 1;
+        }
+
+        static int set_R(lua_State* L) {
+            CheckSelf(FColor);
+            auto& R = self->R;
+            auto RIn = LuaObject::checkValue<uint8>(L, 2);
+            R = RIn;
+            LuaObject::push(L, RIn);
+            SLUA_MARK_NETPROP
+            return 1;
+        }
+
+        static int get_A(lua_State* L) {
+            CheckSelf(FColor);
+            auto& A = self->A;
+            LuaObject::push(L, A);
+            return 1;
+        }
+
+        static int set_A(lua_State* L) {
+            CheckSelf(FColor);
+            auto& A = self->A;
+            auto AIn = LuaObject::checkValue<uint8>(L, 2);
+            A = AIn;
+            LuaObject::push(L, AIn);
+            SLUA_MARK_NETPROP
+            return 1;
+        }
+
         static int get_White(lua_State* L) {
             auto& White = FColor::White;
             LuaObject::push<FColor>(L, "FColor", &White);
@@ -3346,6 +3421,10 @@
             AutoStack autoStack(L);
             LuaObject::newType(L, "FColor");
             LuaObject::addOperator(L, "__eq", __eq);
+            LuaObject::addField(L, "B", get_B, set_B, true);
+            LuaObject::addField(L, "G", get_G, set_G, true);
+            LuaObject::addField(L, "R", get_R, set_R, true);
+            LuaObject::addField(L, "A", get_A, set_A, true);
             LuaObject::addField(L, "White", get_White, nullptr, false);
             LuaObject::addField(L, "Black", get_Black, nullptr, false);
             LuaObject::addField(L, "Transparent", get_Transparent, nullptr, false);
@@ -3560,6 +3639,7 @@
             auto XIn = LuaObject::checkValue<float>(L, 2);
             X = XIn;
             LuaObject::push(L, XIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -3576,6 +3656,7 @@
             auto YIn = LuaObject::checkValue<float>(L, 2);
             Y = YIn;
             LuaObject::push(L, YIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -3592,6 +3673,7 @@
             auto ZIn = LuaObject::checkValue<float>(L, 2);
             Z = ZIn;
             LuaObject::push(L, ZIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -5261,6 +5343,7 @@
             auto XIn = LuaObject::checkValue<float>(L, 2);
             X = XIn;
             LuaObject::push(L, XIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -5277,6 +5360,7 @@
             auto YIn = LuaObject::checkValue<float>(L, 2);
             Y = YIn;
             LuaObject::push(L, YIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -6024,6 +6108,7 @@
             auto AIn = LuaObject::checkValue<uint32>(L, 2);
             A = AIn;
             LuaObject::push(L, AIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -6040,6 +6125,7 @@
             auto BIn = LuaObject::checkValue<uint32>(L, 2);
             B = BIn;
             LuaObject::push(L, BIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -6056,6 +6142,7 @@
             auto CIn = LuaObject::checkValue<uint32>(L, 2);
             C = CIn;
             LuaObject::push(L, CIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -6072,6 +6159,7 @@
             auto DIn = LuaObject::checkValue<uint32>(L, 2);
             D = DIn;
             LuaObject::push(L, DIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -6290,7 +6378,8 @@
         static int get_Min(lua_State* L) {
             CheckSelf(FBox2D);
             auto& Min = self->Min;
-            LuaObject::pushAndLink<FVector2D>(L, udptr->parent ? udptr->parent : self, "FVector2D", &Min);
+            SLUA_GET_NETINFO
+            LuaObject::pushAndLink<FVector2D>(L, udptr->parent ? udptr->parent : self, "FVector2D", &Min, (void*)proxy, luaReplicatedIndex);
             return 1;
         }
 
@@ -6300,13 +6389,15 @@
             auto MinIn = LuaObject::checkValue<FVector2D*>(L, 2);
             Min = *MinIn;
             LuaObject::push<FVector2D>(L, "FVector2D", MinIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
         static int get_Max(lua_State* L) {
             CheckSelf(FBox2D);
             auto& Max = self->Max;
-            LuaObject::pushAndLink<FVector2D>(L, udptr->parent ? udptr->parent : self, "FVector2D", &Max);
+            SLUA_GET_NETINFO
+            LuaObject::pushAndLink<FVector2D>(L, udptr->parent ? udptr->parent : self, "FVector2D", &Max, (void*)proxy, luaReplicatedIndex);
             return 1;
         }
 
@@ -6316,6 +6407,7 @@
             auto MaxIn = LuaObject::checkValue<FVector2D*>(L, 2);
             Max = *MaxIn;
             LuaObject::push<FVector2D>(L, "FVector2D", MaxIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -6332,6 +6424,7 @@
             auto bIsValidIn = LuaObject::checkValue<bool>(L, 2);
             bIsValid = bIsValidIn;
             LuaObject::push(L, bIsValidIn);
+            SLUA_MARK_NETPROP
             return 1;
         }
 
@@ -7265,210 +7358,6 @@
 
     };
 
-    struct FPrimaryAssetTypeWrapper {
-
-        static int __ctor(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                auto self = new FPrimaryAssetType();
-                LuaObject::push<FPrimaryAssetType>(L, "FPrimaryAssetType", self, UD_AUTOGC | UD_VALUETYPE);
-                return 1;
-            }
-            if (argc == 2) {
-                auto InName = LuaObject::checkValue<int>(L, 2);
-                auto InNameVal = (EName)InName;
-                auto self = new FPrimaryAssetType(InNameVal);
-                LuaObject::push<FPrimaryAssetType>(L, "FPrimaryAssetType", self, UD_AUTOGC | UD_VALUETYPE);
-                return 1;
-            }
-            luaL_error(L, "call FPrimaryAssetType() error, argc=%d", argc);
-            return 0;
-        }
-
-        static int clone(lua_State* L) {
-            CheckSelf(FPrimaryAssetType);
-            auto ret = __newFPrimaryAssetType();
-            *ret = *self;
-            LuaObject::push<FPrimaryAssetType>(L, "FPrimaryAssetType", ret, UD_AUTOGC | UD_VALUETYPE);
-            return 1;
-        }
-
-        static int __gc(lua_State* L) {
-            CheckSelfSafe(FPrimaryAssetType);
-            SLUA_GCSTRUCT(FPrimaryAssetType);
-            return 0;
-        }
-
-        static int __eq(lua_State* L) {
-            CheckSelf(FPrimaryAssetType);
-            if (LuaObject::matchType(L, 2, "FPrimaryAssetType")) {
-                auto Other = LuaObject::checkValue<FPrimaryAssetType*>(L, 2);
-                if (!Other) {
-                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
-                    return 0;
-                }
-                auto& OtherRef = *Other;
-                auto ret = (*self == OtherRef);
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            LuaObject::push(L, false);
-            return 1;
-        }
-
-        static int IsValid(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FPrimaryAssetType);
-                auto ret = self->IsValid();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FPrimaryAssetType::IsValid error, argc=%d", argc);
-            return 0;
-        }
-
-        static int ToString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FPrimaryAssetType);
-                auto ret = self->ToString();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FPrimaryAssetType::ToString error, argc=%d", argc);
-            return 0;
-        }
-
-        static void bind(lua_State* L) {
-            AutoStack autoStack(L);
-            LuaObject::newType(L, "FPrimaryAssetType");
-            LuaObject::addOperator(L, "__eq", __eq);
-            LuaObject::addMethod(L, "IsValid", IsValid, true);
-            LuaObject::addMethod(L, "ToString", ToString, true);
-            LuaObject::addMethod(L, "clone", clone, true);
-            LuaObject::finishType(L, "FPrimaryAssetType", __ctor, __gc);
-        }
-
-    };
-
-    struct FPrimaryAssetIdWrapper {
-
-        static int __ctor(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                auto self = new FPrimaryAssetId();
-                LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", self, UD_AUTOGC | UD_VALUETYPE);
-                return 1;
-            }
-            if (argc == 2) {
-                auto InString = LuaObject::checkValue<FString>(L, 2);
-                auto self = new FPrimaryAssetId(InString);
-                LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", self, UD_AUTOGC | UD_VALUETYPE);
-                return 1;
-            }
-            luaL_error(L, "call FPrimaryAssetId() error, argc=%d", argc);
-            return 0;
-        }
-
-        static int clone(lua_State* L) {
-            CheckSelf(FPrimaryAssetId);
-            auto ret = __newFPrimaryAssetId();
-            *ret = *self;
-            LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", ret, UD_AUTOGC | UD_VALUETYPE);
-            return 1;
-        }
-
-        static int __gc(lua_State* L) {
-            CheckSelfSafe(FPrimaryAssetId);
-            SLUA_GCSTRUCT(FPrimaryAssetId);
-            return 0;
-        }
-
-        static int __eq(lua_State* L) {
-            CheckSelf(FPrimaryAssetId);
-            if (LuaObject::matchType(L, 2, "FPrimaryAssetId")) {
-                auto Other = LuaObject::checkValue<FPrimaryAssetId*>(L, 2);
-                if (!Other) {
-                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
-                    return 0;
-                }
-                auto& OtherRef = *Other;
-                auto ret = (*self == OtherRef);
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            LuaObject::push(L, false);
-            return 1;
-        }
-
-        static int get_PrimaryAssetType(lua_State* L) {
-            CheckSelf(FPrimaryAssetId);
-            auto& PrimaryAssetType = self->PrimaryAssetType;
-            LuaObject::pushAndLink<FPrimaryAssetType>(L, udptr->parent ? udptr->parent : self, "FPrimaryAssetType", &PrimaryAssetType);
-            return 1;
-        }
-
-        static int set_PrimaryAssetType(lua_State* L) {
-            CheckSelf(FPrimaryAssetId);
-            auto& PrimaryAssetType = self->PrimaryAssetType;
-            auto PrimaryAssetTypeIn = LuaObject::checkValue<FPrimaryAssetType*>(L, 2);
-            PrimaryAssetType = *PrimaryAssetTypeIn;
-            LuaObject::push<FPrimaryAssetType>(L, "FPrimaryAssetType", PrimaryAssetTypeIn);
-            return 1;
-        }
-
-        static int IsValid(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FPrimaryAssetId);
-                auto ret = self->IsValid();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FPrimaryAssetId::IsValid error, argc=%d", argc);
-            return 0;
-        }
-
-        static int ToString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                CheckSelf(FPrimaryAssetId);
-                auto ret = self->ToString();
-                LuaObject::push(L, ret);
-                return 1;
-            }
-            luaL_error(L, "call FPrimaryAssetId::ToString error, argc=%d", argc);
-            return 0;
-        }
-
-        static int FromString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
-                auto String = LuaObject::checkValue<FString>(L, 1);
-                auto ret = __newFPrimaryAssetId();
-                *ret = FPrimaryAssetId::FromString(String);
-                LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", ret, UD_AUTOGC | UD_VALUETYPE);
-                return 1;
-            }
-            luaL_error(L, "call FPrimaryAssetId::FromString error, argc=%d", argc);
-            return 0;
-        }
-
-        static void bind(lua_State* L) {
-            AutoStack autoStack(L);
-            LuaObject::newType(L, "FPrimaryAssetId");
-            LuaObject::addOperator(L, "__eq", __eq);
-            LuaObject::addField(L, "PrimaryAssetType", get_PrimaryAssetType, set_PrimaryAssetType, true);
-            LuaObject::addMethod(L, "IsValid", IsValid, true);
-            LuaObject::addMethod(L, "ToString", ToString, true);
-            LuaObject::addMethod(L, "FromString", FromString, false);
-            LuaObject::addMethod(L, "clone", clone, true);
-            LuaObject::finishType(L, "FPrimaryAssetId", __ctor, __gc);
-        }
-
-    };
-
     struct FSoftObjectPathWrapper {
 
         static int __ctor(lua_State* L) {
@@ -7795,6 +7684,212 @@
 
     };
 
+    struct FPrimaryAssetTypeWrapper {
+
+        static int __ctor(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                auto self = new FPrimaryAssetType();
+                LuaObject::push<FPrimaryAssetType>(L, "FPrimaryAssetType", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            if (argc == 2) {
+                auto InName = LuaObject::checkValue<int>(L, 2);
+                auto InNameVal = (EName)InName;
+                auto self = new FPrimaryAssetType(InNameVal);
+                LuaObject::push<FPrimaryAssetType>(L, "FPrimaryAssetType", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FPrimaryAssetType() error, argc=%d", argc);
+            return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FPrimaryAssetType);
+            auto ret = __newFPrimaryAssetType();
+            *ret = *self;
+            LuaObject::push<FPrimaryAssetType>(L, "FPrimaryAssetType", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
+        }
+
+        static int __gc(lua_State* L) {
+            CheckSelfSafe(FPrimaryAssetType);
+            SLUA_GCSTRUCT(FPrimaryAssetType);
+            return 0;
+        }
+
+        static int __eq(lua_State* L) {
+            CheckSelf(FPrimaryAssetType);
+            if (LuaObject::matchType(L, 2, "FPrimaryAssetType")) {
+                auto Other = LuaObject::checkValue<FPrimaryAssetType*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                auto ret = (*self == OtherRef);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            LuaObject::push(L, false);
+            return 1;
+        }
+
+        static int IsValid(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FPrimaryAssetType);
+                auto ret = self->IsValid();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FPrimaryAssetType::IsValid error, argc=%d", argc);
+            return 0;
+        }
+
+        static int ToString(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FPrimaryAssetType);
+                auto ret = self->ToString();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FPrimaryAssetType::ToString error, argc=%d", argc);
+            return 0;
+        }
+
+        static void bind(lua_State* L) {
+            AutoStack autoStack(L);
+            LuaObject::newType(L, "FPrimaryAssetType");
+            LuaObject::addOperator(L, "__eq", __eq);
+            LuaObject::addMethod(L, "IsValid", IsValid, true);
+            LuaObject::addMethod(L, "ToString", ToString, true);
+            LuaObject::addMethod(L, "clone", clone, true);
+            LuaObject::finishType(L, "FPrimaryAssetType", __ctor, __gc);
+        }
+
+    };
+
+    struct FPrimaryAssetIdWrapper {
+
+        static int __ctor(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                auto self = new FPrimaryAssetId();
+                LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            if (argc == 2) {
+                auto InString = LuaObject::checkValue<FString>(L, 2);
+                auto self = new FPrimaryAssetId(InString);
+                LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", self, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FPrimaryAssetId() error, argc=%d", argc);
+            return 0;
+        }
+
+        static int clone(lua_State* L) {
+            CheckSelf(FPrimaryAssetId);
+            auto ret = __newFPrimaryAssetId();
+            *ret = *self;
+            LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", ret, UD_AUTOGC | UD_VALUETYPE);
+            return 1;
+        }
+
+        static int __gc(lua_State* L) {
+            CheckSelfSafe(FPrimaryAssetId);
+            SLUA_GCSTRUCT(FPrimaryAssetId);
+            return 0;
+        }
+
+        static int __eq(lua_State* L) {
+            CheckSelf(FPrimaryAssetId);
+            if (LuaObject::matchType(L, 2, "FPrimaryAssetId")) {
+                auto Other = LuaObject::checkValue<FPrimaryAssetId*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                auto ret = (*self == OtherRef);
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            LuaObject::push(L, false);
+            return 1;
+        }
+
+        static int get_PrimaryAssetType(lua_State* L) {
+            CheckSelf(FPrimaryAssetId);
+            auto& PrimaryAssetType = self->PrimaryAssetType;
+            SLUA_GET_NETINFO
+            LuaObject::pushAndLink<FPrimaryAssetType>(L, udptr->parent ? udptr->parent : self, "FPrimaryAssetType", &PrimaryAssetType, (void*)proxy, luaReplicatedIndex);
+            return 1;
+        }
+
+        static int set_PrimaryAssetType(lua_State* L) {
+            CheckSelf(FPrimaryAssetId);
+            auto& PrimaryAssetType = self->PrimaryAssetType;
+            auto PrimaryAssetTypeIn = LuaObject::checkValue<FPrimaryAssetType*>(L, 2);
+            PrimaryAssetType = *PrimaryAssetTypeIn;
+            LuaObject::push<FPrimaryAssetType>(L, "FPrimaryAssetType", PrimaryAssetTypeIn);
+            SLUA_MARK_NETPROP
+            return 1;
+        }
+
+        static int IsValid(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FPrimaryAssetId);
+                auto ret = self->IsValid();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FPrimaryAssetId::IsValid error, argc=%d", argc);
+            return 0;
+        }
+
+        static int ToString(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                CheckSelf(FPrimaryAssetId);
+                auto ret = self->ToString();
+                LuaObject::push(L, ret);
+                return 1;
+            }
+            luaL_error(L, "call FPrimaryAssetId::ToString error, argc=%d", argc);
+            return 0;
+        }
+
+        static int FromString(lua_State* L) {
+            auto argc = lua_gettop(L);
+            if (argc == 1) {
+                auto String = LuaObject::checkValue<FString>(L, 1);
+                auto ret = __newFPrimaryAssetId();
+                *ret = FPrimaryAssetId::FromString(String);
+                LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", ret, UD_AUTOGC | UD_VALUETYPE);
+                return 1;
+            }
+            luaL_error(L, "call FPrimaryAssetId::FromString error, argc=%d", argc);
+            return 0;
+        }
+
+        static void bind(lua_State* L) {
+            AutoStack autoStack(L);
+            LuaObject::newType(L, "FPrimaryAssetId");
+            LuaObject::addOperator(L, "__eq", __eq);
+            LuaObject::addField(L, "PrimaryAssetType", get_PrimaryAssetType, set_PrimaryAssetType, true);
+            LuaObject::addMethod(L, "IsValid", IsValid, true);
+            LuaObject::addMethod(L, "ToString", ToString, true);
+            LuaObject::addMethod(L, "FromString", FromString, false);
+            LuaObject::addMethod(L, "clone", clone, true);
+            LuaObject::finishType(L, "FPrimaryAssetId", __ctor, __gc);
+        }
+
+    };
+
     int LuaWrapper::pushValue(lua_State* L, FStructProperty* p, UScriptStruct* uss, uint8* parms) {
         auto vptr = _pushStructMap.Find(uss);
         if (vptr != nullptr) {
@@ -7921,20 +8016,6 @@
             FInt32IntervalWrapper::bind(L);
         }
 
-        FPrimaryAssetTypeStruct = StaticGetBaseStructureInternal(TEXT("PrimaryAssetType"));
-        if (FPrimaryAssetTypeStruct) {
-            _pushStructMap.Add(FPrimaryAssetTypeStruct, __pushFPrimaryAssetType);
-            _checkStructMap.Add(FPrimaryAssetTypeStruct, __checkFPrimaryAssetType);
-            FPrimaryAssetTypeWrapper::bind(L);
-        }
-
-        FPrimaryAssetIdStruct = StaticGetBaseStructureInternal(TEXT("PrimaryAssetId"));
-        if (FPrimaryAssetIdStruct) {
-            _pushStructMap.Add(FPrimaryAssetIdStruct, __pushFPrimaryAssetId);
-            _checkStructMap.Add(FPrimaryAssetIdStruct, __checkFPrimaryAssetId);
-            FPrimaryAssetIdWrapper::bind(L);
-        }
-
         FSoftObjectPathStruct = StaticGetBaseStructureInternal(TEXT("SoftObjectPath"));
         if (FSoftObjectPathStruct) {
             _pushStructMap.Add(FSoftObjectPathStruct, __pushFSoftObjectPath);
@@ -7947,5 +8028,19 @@
             _pushStructMap.Add(FSoftClassPathStruct, __pushFSoftClassPath);
             _checkStructMap.Add(FSoftClassPathStruct, __checkFSoftClassPath);
             FSoftClassPathWrapper::bind(L);
+        }
+
+        FPrimaryAssetTypeStruct = StaticGetBaseStructureInternal(TEXT("PrimaryAssetType"));
+        if (FPrimaryAssetTypeStruct) {
+            _pushStructMap.Add(FPrimaryAssetTypeStruct, __pushFPrimaryAssetType);
+            _checkStructMap.Add(FPrimaryAssetTypeStruct, __checkFPrimaryAssetType);
+            FPrimaryAssetTypeWrapper::bind(L);
+        }
+
+        FPrimaryAssetIdStruct = StaticGetBaseStructureInternal(TEXT("PrimaryAssetId"));
+        if (FPrimaryAssetIdStruct) {
+            _pushStructMap.Add(FPrimaryAssetIdStruct, __pushFPrimaryAssetId);
+            _checkStructMap.Add(FPrimaryAssetIdStruct, __checkFPrimaryAssetId);
+            FPrimaryAssetIdWrapper::bind(L);
         }
     }

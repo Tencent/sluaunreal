@@ -827,12 +827,19 @@ namespace NS_SLUA
                         continue;
                     }
 
-                    int scriptNum = func->Script.Num();
-                
+                    auto& script = func->Script;
+                    int scriptNum = script.Num();
+
                     // func hooked by insert code
-                    if (scriptNum >= CodeSize && func->Script[0] == Ex_LuaOverride)
+                    if (scriptNum >= CodeSize && script[0] == Ex_LuaOverride)
                     {
-                        func->Script.RemoveAt(0, CodeSize, false);
+                        script.RemoveAt(0, CodeSize, false);
+                        if (script.Num() == 0)
+                        {
+                            // Fixed crash: avoid FFrame Construct initialize with "Code(InNode->Script.GetData())" error assign with not null data while play twice in editor!
+                            script.~TArray();
+                            new (&script) TArray<uint8>();
+                        }
                     }
                     
                     // func hooked by SetNativeFunc

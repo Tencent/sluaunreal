@@ -23,9 +23,11 @@
 #include "LuaStatProfile.h"
 
 #if PLATFORM_WINDOWS
-#ifdef TEXT
-#undef TEXT
-#endif
+#include "Windows/AllowWindowsPlatformTypes.h"
+#include "Windows/AllowWindowsPlatformAtomics.h"
+#include <winsock2.h>
+#include "Windows/HideWindowsPlatformAtomics.h"
+#include "Windows/HideWindowsPlatformTypes.h"
 #else
 #include <sys/ioctl.h>
 #endif

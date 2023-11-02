@@ -1209,7 +1209,7 @@ namespace NS_SLUA
                     int top = LuaState::pushErrorHandler(L) - 1;
                     lua_insert(L, -2);
                     
-                    lua_pushvalue(L, -2);
+                    lua_pushvalue(L, -4);
                     if (lua_pcall(L, 1, 1, top))
                         lua_pop(L, 1);
 

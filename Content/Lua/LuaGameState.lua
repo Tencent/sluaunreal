@@ -44,6 +44,7 @@ LuaGameState.MulticastRPC.TestMulticastRPC = {
 }
 
 function LuaGameState:ctor(selfType)
+    print("LuaGameState ctor", selfType, assert(selfType == require("LuaGameState")))
     self.Name = "LuaGameStateTestName"
 end
 

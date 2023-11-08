@@ -490,9 +490,6 @@ namespace NS_SLUA
 #endif
     }
 
-    // 实现IInstancedLuaInterface接口的对象getLuaFilePath时候bCDOLua需要用false参数
-    // 所以addClassRPCRecursive的luaFilePath参数从外部传入，复用bindOverrideFuncs已经获取到的luaFilePath
-    // 但是在该函数内部superCls的getLuaFilePath时候bCDOLua就可以是true，因为IInstancedLuaInterface只对最底层的子类有效
     bool LuaNet::addClassRPCRecursive(lua_State* L, UClass* cls, const FString& luaFilePath, LuaVar& cppSuperModule)
     {
         if (luaFilePath.IsEmpty()) { return false; }

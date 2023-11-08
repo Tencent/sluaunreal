@@ -14,7 +14,7 @@ class SLUA_UNREAL_API ALuaActor : public AActor, public ILuaOverriderInterface
 
 public:
     virtual FString GetLuaFilePath_Implementation() const override;
-    void PostInitializeComponents() override;
+    virtual void PostInitializeComponents() override;
     void PostLuaHook() override
     {
     }

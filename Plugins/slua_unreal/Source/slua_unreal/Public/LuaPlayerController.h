@@ -12,6 +12,11 @@ class SLUA_UNREAL_API ALuaPlayerController : public APlayerController, public IL
     GENERATED_UCLASS_BODY()
 
 public:
+    virtual void PostInitializeComponents() override;
+    void PostLuaHook() override
+    {
+    }
+
     virtual FString GetLuaFilePath_Implementation() const override;
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

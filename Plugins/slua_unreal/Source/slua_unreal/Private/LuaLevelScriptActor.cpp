@@ -1,6 +1,5 @@
 #include "LuaLevelScriptActor.h"
 #include "LuaState.h"
-#include "LuaOverrider.h"
 #if WITH_EDITOR
 #include "Editor.h"
 #endif

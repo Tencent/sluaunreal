@@ -1032,7 +1032,6 @@ namespace NS_SLUA {
         static void setupMetaTable(lua_State* L,const char* tn,lua_CFunction setupmt,lua_CFunction gc);
         static void setupMetaTable(lua_State* L, const char* tn, lua_CFunction setupmt, int gc);
         static void setupMetaTable(lua_State* L, const char* tn, lua_CFunction gc);
-        static void callRpc(lua_State* L, UObject* obj, UFunction* func, uint8* params);
         static void createTable(lua_State* L, const char* tn);
     };
 

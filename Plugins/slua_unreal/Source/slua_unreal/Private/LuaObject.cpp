@@ -675,25 +675,6 @@ namespace NS_SLUA {
         return 0;
     }
 
-    void* fillParamFromState(lua_State* L,FProperty* prop,uint8* params,int i) {
-
-        // if is out param, can accept nil
-        uint64 propflag = prop->GetPropertyFlags();
-        if((propflag&CPF_OutParm) && lua_isnil(L,i))
-            return nullptr;
-
-        auto checker = LuaObject::getChecker(prop);
-        if(checker) {
-            return checker(L,prop,params,i,false);
-        }
-        else {
-            FString tn = prop->GetClass()->GetName();
-            luaL_error(L,"unsupport param type %s at %d",TCHAR_TO_UTF8(*tn),i);
-            return nullptr;
-        }
-        
-    }
-
     int luaFunctionCall(lua_State* L, UObject* obj, UFunction* func, int paramOffset, int paramCount) {
         if (func->FunctionFlags & FUNC_Net) {
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)

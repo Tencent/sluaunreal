@@ -198,7 +198,6 @@ struct SLUA_UNREAL_API FLuaNetSerialization
 
 public:
     static int32 bEnableLuaNetReplicate;
-    static int32 SerializeVersion;
 
     FLuaNetSerialization();
 
@@ -216,8 +215,8 @@ protected:
     bool Write(FNetDeltaSerializeInfo& deltaParms, NS_SLUA::FLuaNetSerializationProxy* proxy);
     
     bool CompareProperties(UObject* obj, NS_SLUA::FLuaNetSerializationProxy& proxy, uint32 ReplicationFrame);
-    bool UpdateChangeListMgr_V1(NS_SLUA::FLuaNetSerializationProxy& proxy, uint32 ReplicationFrame);
-    void BuildSharedSerialization_V1(class UPackageMap* map, NS_SLUA::ClassLuaReplicated* classLuaReplicated,
+    bool UpdateChangeListMgr(NS_SLUA::FLuaNetSerializationProxy& proxy, uint32 ReplicationFrame);
+    void BuildSharedSerialization(class UPackageMap* map, NS_SLUA::ClassLuaReplicated* classLuaReplicated,
         NS_SLUA::FLuaNetSerializationProxy* proxy, const LuaBitArray& changes,
                                      const TMap<int32, LuaBitArray>& arrayChanges);
 
@@ -225,9 +224,6 @@ protected:
                                 const TMap<int32, LuaBitArray>& arrayChanges, uint8* data, int32 index,
                                 PrepareSerializeArrayCallback preapareCallback,
                                 const SerializeArrayCallback& serializeCallback);
-    
-    bool UpdateChangeListMgr(NS_SLUA::FLuaNetSerializationProxy& proxy, uint32 ReplicationFrame);
-    void BuildSharedSerialization(class UPackageMap* map, NS_SLUA::ClassLuaReplicated* classLuaReplicated, NS_SLUA::FLuaNetSerializationProxy* proxy, const LuaBitArray& changes);
     
     void CallOnRep(NS_SLUA::lua_State* L, const NS_SLUA::LuaVar& luaTable, const FString& propName, NS_SLUA::FProperty* prop, uint8* oldData);
     

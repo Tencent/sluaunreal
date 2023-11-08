@@ -355,13 +355,10 @@ namespace NS_SLUA
                 proxy.contentStruct = classReplicated.ustruct;
                 proxy.dirtyMark = LuaBitArray(classReplicated.properties.Num());
 
-                if (FLuaNetSerialization::SerializeVersion == 1)
+                proxy.flatDirtyMark = LuaBitArray(classReplicated.flatProperties.Num());
+                for (auto iter : classReplicated.flatArrayPropInfos)
                 {
-                    proxy.flatDirtyMark = LuaBitArray(classReplicated.flatProperties.Num());
-                    for (auto iter : classReplicated.flatArrayPropInfos)
-                    {
-                        proxy.arrayDirtyMark.Add(iter.Key, LuaBitArray(iter.Value.innerPropertyNum * ClassLuaReplicated::MaxArrayLimit));
-                    }
+                    proxy.arrayDirtyMark.Add(iter.Key, LuaBitArray(iter.Value.innerPropertyNum * ClassLuaReplicated::MaxArrayLimit));
                 }
                 
                 auto &content = proxy.values;

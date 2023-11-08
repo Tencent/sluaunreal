@@ -98,7 +98,7 @@ namespace NS_SLUA {
         , size(0)
         , uss(nullptr)
         , proxy(nullptr)
-        , luaReplicatedIndex(0)
+        , luaReplicatedIndex(InvalidReplicatedIndex)
         , isRef(false)
     {
     }

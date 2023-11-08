@@ -355,13 +355,10 @@ namespace NS_SLUA
                 proxy.contentStruct = classReplicated.ustruct;
                 proxy.dirtyMark = LuaBitArray(classReplicated.properties.Num());
 
-                if (FLuaNetSerialization::SerializeVersion == 1)
+                proxy.flatDirtyMark = LuaBitArray(classReplicated.flatProperties.Num());
+                for (auto iter : classReplicated.flatArrayPropInfos)
                 {
-                    proxy.flatDirtyMark = LuaBitArray(classReplicated.flatProperties.Num());
-                    for (auto iter : classReplicated.flatArrayPropInfos)
-                    {
-                        proxy.arrayDirtyMark.Add(iter.Key, LuaBitArray(iter.Value.innerPropertyNum * ClassLuaReplicated::MaxArrayLimit));
-                    }
+                    proxy.arrayDirtyMark.Add(iter.Key, LuaBitArray(iter.Value.innerPropertyNum * ClassLuaReplicated::MaxArrayLimit));
                 }
                 
                 auto &content = proxy.values;
@@ -493,9 +490,6 @@ namespace NS_SLUA
 #endif
     }
 
-    // 实现IInstancedLuaInterface接口的对象getLuaFilePath时候bCDOLua需要用false参数
-    // 所以addClassRPCRecursive的luaFilePath参数从外部传入，复用bindOverrideFuncs已经获取到的luaFilePath
-    // 但是在该函数内部superCls的getLuaFilePath时候bCDOLua就可以是true，因为IInstancedLuaInterface只对最底层的子类有效
     bool LuaNet::addClassRPCRecursive(lua_State* L, UClass* cls, const FString& luaFilePath, LuaVar& cppSuperModule)
     {
         if (luaFilePath.IsEmpty()) { return false; }

@@ -631,9 +631,9 @@ namespace NS_SLUA
         UClass* cls = (UClass*)Object;;
         if (cls )
         {
-            removeOneOverride(cls, true);
             if (overridedClasses.Contains(cls))
             {
+                removeOneOverride(cls, true);
                 overridedClasses.Remove(cls);
             }
 
@@ -956,8 +956,12 @@ namespace NS_SLUA
             clearSuperFuncCache(cls);
         }
 
+        for (auto cls : overridedClasses)
+        {
+            removeOneOverride(cls, false);
+            clearSuperFuncCache(cls);
+        }
         overridedClasses.Empty();
-
         LuaNet::addedRPCClasses.Empty();
     }
 #endif

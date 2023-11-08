@@ -382,9 +382,5 @@ namespace NS_SLUA {
         };
         double tickInternalTime = 0;
         TArray<LuaTickInfo> tickActors;
-
-    public:
-        typedef TMap<TWeakObjectPtr<UObject>, TArray<LuaState*>, FDefaultSetAllocator, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<UObject>, TArray<LuaState*>>> DelayHookMap;
-        static DelayHookMap delayHookStateMap;
     };
 }

@@ -21,7 +21,7 @@ public:
 
     UFUNCTION(Blueprintcallable)
         void UnRegistLuaTick();
-    
+
     virtual void InitializeComponent() override;
 
     void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

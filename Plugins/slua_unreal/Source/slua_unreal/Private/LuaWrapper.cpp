@@ -39,9 +39,7 @@
 uint16 luaReplicatedIndex = InvalidReplicatedIndex; \
 if (udptr->flag & UD_NETTYPE) \
 { \
-    proxy = udptr->proxy; \
-    if (proxy) \
-        luaReplicatedIndex = udptr->luaReplicatedIndex; \
+    luaReplicatedIndex = udptr->luaReplicatedIndex; \
 }
 
 

@@ -60,6 +60,15 @@ public:
 	FUserInfo1 others;
 };
 
+USTRUCT(BlueprintType)
+struct FArrayToBinStringTest
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    TArray<uint8> binString;
+};
+
 namespace NS_SLUA {
 	DefTypeName(FUserInfo);
 	DefTypeName(FUserInfo1);

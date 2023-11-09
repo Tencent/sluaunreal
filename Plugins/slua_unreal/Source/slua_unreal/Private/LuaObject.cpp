@@ -522,10 +522,43 @@ namespace NS_SLUA {
     }
 
     LuaObject::ReferencePusherPropertyFunction LuaObject::getReferencePusher(FProperty* prop) {
-        auto sp = CastField<FStructProperty>(prop);
-        if (sp && sp->Struct == FLuaBPVar::StaticStruct())
-            return nullptr;
-        return getReferencePusher(prop->GetClass());        
+        auto cls = prop->GetClass();
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
+        constexpr auto StructCastFlag = CASTCLASS_UStructProperty;
+        constexpr auto ArrayCastFlag = CASTCLASS_UArrayProperty;
+
+        if (cls->HasAnyCastFlag(StructCastFlag | ArrayCastFlag)) {
+            if (cls->HasAnyCastFlag(StructCastFlag)) {
+                auto sp = static_cast<FStructProperty*>(prop);
+                if (sp && sp->Struct == FSluaBPVar::StaticStruct())
+                    return nullptr;
+            }
+            else {
+                auto arrayProp = static_cast<FArrayProperty*>(prop);
+                if (arrayProp->Inner->GetClass() == FByteProperty::StaticClass()) {
+                    return nullptr;
+                }
+            }
+        }
+#else
+        constexpr auto StructCastFlag = CASTCLASS_FStructProperty;
+        constexpr auto ArrayCastFlag = CASTCLASS_FArrayProperty;
+
+        if (cls->HasAnyCastFlags(StructCastFlag | ArrayCastFlag)) {
+            if (cls->HasAnyCastFlags(StructCastFlag)) {
+                auto sp = static_cast<FStructProperty*>(prop);
+                if (sp && sp->Struct == FLuaBPVar::StaticStruct())
+                    return nullptr;
+            }
+            else if (cls->HasAnyCastFlags(ArrayCastFlag)) {
+                auto arrayProp = static_cast<FArrayProperty*>(prop);
+                if (arrayProp->Inner->GetClass() == FByteProperty::StaticClass()) {
+                    return nullptr;
+                }
+            }
+        }
+#endif
+        return getReferencePusher(cls);
     }
 
     void regPusher(FFieldClass* cls,LuaObject::PushPropertyFunction func) {

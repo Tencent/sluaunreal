@@ -401,7 +401,7 @@ namespace NS_SLUA {
             if (inner->GetClass() == FByteProperty::StaticClass())
             {
                 auto byteProperty = CastField<FByteProperty>(inner);
-                return byteProperty->Enum != nullptr;
+                return byteProperty->Enum == nullptr;
             }
 
             return false;

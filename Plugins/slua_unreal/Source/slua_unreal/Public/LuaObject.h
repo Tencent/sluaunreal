@@ -396,6 +396,17 @@ namespace NS_SLUA {
 #endif
         }
 
+        static inline bool isBinStringProperty(FProperty* inner)
+        {
+            if (inner->GetClass() == FByteProperty::StaticClass())
+            {
+                auto byteProperty = CastField<FByteProperty>(inner);
+                return byteProperty->Enum != nullptr;
+            }
+
+            return false;
+        }
+
         // create new enum type to lua, see DefEnum macro
         template<class T>
         static void newEnum(lua_State* L, const char* tn, const char* keys, std::initializer_list<T> values) {

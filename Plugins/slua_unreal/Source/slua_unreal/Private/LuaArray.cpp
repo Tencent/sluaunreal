@@ -245,7 +245,7 @@ namespace NS_SLUA {
     }
 
     int LuaArray::push(lua_State* L,FProperty* inner,FScriptArray* data, bool bIsNewInner) {
-        if (inner->GetClass() == FByteProperty::StaticClass())
+        if (LuaObject::isBinStringProperty(inner))
         {
             char* dest = (char*)data->GetData();
             int32 len = data->Num();
@@ -259,7 +259,7 @@ namespace NS_SLUA {
     }
 
     int LuaArray::push(lua_State* L, FArrayProperty* prop, FScriptArray* data) {
-        if (prop->Inner->GetClass() == FByteProperty::StaticClass())
+        if (LuaObject::isBinStringProperty(prop->Inner))
         {
             char* dest = (char*)data->GetData();
             int32 len = data->Num();

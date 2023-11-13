@@ -535,7 +535,7 @@ namespace NS_SLUA {
             }
             else {
                 auto arrayProp = static_cast<FArrayProperty*>(prop);
-                if (arrayProp->Inner->GetClass() == FByteProperty::StaticClass()) {
+                if (isBinStringProperty(arrayProp->Inner)) {
                     return nullptr;
                 }
             }
@@ -552,7 +552,7 @@ namespace NS_SLUA {
             }
             else if (cls->HasAnyCastFlags(ArrayCastFlag)) {
                 auto arrayProp = static_cast<FArrayProperty*>(prop);
-                if (arrayProp->Inner->GetClass() == FByteProperty::StaticClass()) {
+                if (isBinStringProperty(arrayProp->Inner)) {
                     return nullptr;
                 }
             }
@@ -1688,7 +1688,7 @@ namespace NS_SLUA {
         }
 
         auto scriptArray = (FScriptArray*)parms;
-        if (type == LUA_TSTRING && p->Inner->GetClass() == FByteProperty::StaticClass()) {
+        if (type == LUA_TSTRING && LuaObject::isBinStringProperty(p->Inner)) {
             size_t len;
             uint8* content = (uint8*)lua_tolstring(L, i, &len);
 #if ENGINE_MAJOR_VERSION==5

@@ -2520,7 +2520,7 @@ namespace NS_SLUA {
             FString name;
             // if is bp enum, can't get name as key
             if(isbpEnum)
-                name = e->GetDisplayNameTextByIndex(i).ToString();
+                name = *FTextInspector::GetSourceString(e->GetDisplayNameTextByIndex(i));
             else
                 name = e->GetNameStringByIndex(i);
             int64 value = e->GetValueByIndex(i);

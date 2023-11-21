@@ -91,6 +91,12 @@ end)
 
 t:TestUnicastDelegate("test unicast delegate")
 
+local FArrayToBinStringTest = import("ArrayToBinStringTest")
+local ArrayToBinStringTest = FArrayToBinStringTest()
+ArrayToBinStringTest.binString = "binString"
+assert(type(ArrayToBinStringTest.binString) == "string")
+print(ArrayToBinStringTest.binString)
+
 -- test TArray<UObject>
 
 foos = t.foos

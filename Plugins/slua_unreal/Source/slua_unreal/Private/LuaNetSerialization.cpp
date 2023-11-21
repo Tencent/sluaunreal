@@ -32,7 +32,9 @@ namespace NS_SLUA
             return;
         }
 
-        NS_SLUA::LuaReference::addRefByStruct(Collector, contentStruct.Get(), values.GetData());
+        auto collectStruct = contentStruct.Get();
+        LuaReference::addRefByStruct(Collector, collectStruct, values.GetData());
+        LuaReference::addRefByStruct(Collector, collectStruct, oldValues.GetData());
     }
 
     FLuaNetSerializationProxy::~FLuaNetSerializationProxy()

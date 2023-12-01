@@ -11,7 +11,7 @@
  * 
  */
 UCLASS()
-class DEMOCPP_API UMyGameInstance : public UGameInstance
+class UMyGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 	

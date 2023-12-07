@@ -256,7 +256,7 @@ namespace NS_SLUA
 
     void LuaNet::initFlatReplicatedProps(ClassLuaReplicated& classReplicated,
                                          ReplicateOffsetToMarkType& markIndex, UStruct* ustruct,
-                                         int32& index, int32 offset, int32 ownerPropIndex, NS_SLUA::FlatArrayPropInfo* arrayInfo)
+                                         int32& index, const int32 offset, int32 ownerPropIndex, NS_SLUA::FlatArrayPropInfo* arrayInfo)
     {
         bool outMost = ustruct == classReplicated.ustruct;
 
@@ -316,6 +316,12 @@ namespace NS_SLUA
             {
                 ownerPropIndex++;
             }
+        }
+
+        int32 structEndOffset = offset + ustruct->GetPropertiesSize();
+        if (!markIndex.Contains(structEndOffset))
+        {
+            markIndex.Add(structEndOffset, index);
         }
     }
 

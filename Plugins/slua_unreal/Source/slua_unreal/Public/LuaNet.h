@@ -55,7 +55,7 @@ namespace NS_SLUA
 
         static void initFlatReplicatedProps(ClassLuaReplicated& classReplicated,
                                             ReplicateOffsetToMarkType& markIndex, UStruct* ustruct, int32& index, 
-                                            int32 offset, int32 ownerPropIndex, NS_SLUA::FlatArrayPropInfo* arrayInfo);
+                                            const int32 offset, int32 ownerPropIndex, NS_SLUA::FlatArrayPropInfo* arrayInfo);
 
         static int __index(lua_State* L, UObject* obj, const char* keyName);
         static int __newindex(lua_State* L, UObject* obj, const char* keyName);

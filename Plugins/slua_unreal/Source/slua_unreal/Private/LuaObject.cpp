@@ -1259,8 +1259,6 @@ namespace NS_SLUA {
             else
                 return false;
         }
-        if (up->GetPropertyFlags() & CPF_BlueprintReadOnly)
-            luaL_error(L, "Property %s is readonly", name);
 
         auto checker = LuaObject::getChecker(up);
         if (!checker) luaL_error(L, "Property %s type is not support", name);
@@ -1415,8 +1413,6 @@ namespace NS_SLUA {
         auto* cls = ls->uss;
         FProperty* up = LuaObject::findCacheProperty(L, cls, name);
         if (!up) luaL_error(L, "Can't find property named %s", name);
-        if (up->GetPropertyFlags() & CPF_BlueprintReadOnly)
-            luaL_error(L, "Property %s is readonly", name);
 
         auto checker = LuaObject::getChecker(up);
         if(!checker) luaL_error(L,"Property %s type is not support",name);

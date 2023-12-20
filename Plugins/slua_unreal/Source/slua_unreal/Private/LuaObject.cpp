@@ -1337,8 +1337,17 @@ namespace NS_SLUA {
             return 1;
         }
 
+        lua_pop(L, 1); // pop previous key to compatible with LuaObject::pushReferenceAndCache method
+
         FString key = up->GetName();
         lua_pushstring(L, TCHAR_TO_UTF8(*key));
+
+        if (int res = LuaObject::fastIndex(L, (uint8*)obj, obj->GetClass()))
+        {
+            lua_pushvalue(L, 2);
+            lua_pushvalue(L, -2);
+            return res + 1;
+        }
 
         return LuaObject::push(L, up, obj, nullptr) + 1;
     }
@@ -1484,8 +1493,17 @@ namespace NS_SLUA {
             return 1;
         }
 
+        lua_pop(L, 1); // pop previous key to compatible with LuaObject::pushReferenceAndCache method
+
         FString key = getPropertyFriendlyName(up);
         lua_pushstring(L, TCHAR_TO_UTF8(*key));
+
+        if (int res = LuaObject::fastIndex(L, ls->buf, ls->uss))
+        {
+            lua_pushvalue(L, 2);
+            lua_pushvalue(L, -2);
+            return res + 1;
+        }
 
         return LuaObject::push(L, up, ls->buf + up->GetOffset_ForInternal(), nullptr) + 1;
     }

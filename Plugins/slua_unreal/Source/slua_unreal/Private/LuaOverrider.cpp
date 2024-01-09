@@ -68,7 +68,7 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
     ensure(obj);
     uint8* locals = Stack.Locals;
     
-    FProperty* returnProperty = nullptr;
+    FProperty* returnProperty = func->GetReturnProperty();
 
     bool bCallFromNative = false;
     bool bContextOp = false;
@@ -87,8 +87,6 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
             {
                 locals = (uint8*)FMemory_Alloca(func->ParmsSize);
                 FMemory::Memzero(locals, func->ParmsSize);
-
-                returnProperty = func->GetReturnProperty();
 
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
                 for (auto it = (FProperty*)func->Children; *Stack.Code != EX_EndFunctionParms; it = (FProperty*)it->Next)
@@ -133,7 +131,7 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
         NS_SLUA::Log::Error("LuaOverrideFunc L = nullptr, %s %s", TCHAR_TO_UTF8(*(obj->GetName())), TCHAR_TO_UTF8(*(func->GetName())));
         return;
     }
-    
+
     if (returnProperty && !returnProperty->HasAnyPropertyFlags(CPF_ZeroConstructor))
     {
         returnProperty->InitializeValue_InContainer(locals);

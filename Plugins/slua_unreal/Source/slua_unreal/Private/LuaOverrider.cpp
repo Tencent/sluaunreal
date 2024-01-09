@@ -919,11 +919,12 @@ namespace NS_SLUA
         if (NS_SLUA::LuaNet::classLuaReplicatedMap.Contains(cls))
         {    
             auto &classLuaReplicated = NS_SLUA::LuaNet::classLuaReplicatedMap.FindChecked(cls);
-            if (classLuaReplicated.ustruct.IsValid())
+            if (classLuaReplicated->ustruct.IsValid())
             {
-                classLuaReplicated.ustruct->RemoveFromRoot();
+                classLuaReplicated->ustruct->RemoveFromRoot();
             }
-
+            
+            delete classLuaReplicated;
             NS_SLUA::LuaNet::classLuaReplicatedMap.Remove(cls);
         }
     }

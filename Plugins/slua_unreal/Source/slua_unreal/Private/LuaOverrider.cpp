@@ -83,6 +83,8 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
 #endif
             bContextOp = true;
             func = Stack.CurrentNativeFunction;
+            returnProperty = func->GetReturnProperty();
+
             if (Stack.Code)
             {
                 locals = (uint8*)FMemory_Alloca(func->ParmsSize);

@@ -69,9 +69,12 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
     uint8* locals = Stack.Locals;
     
     FProperty* returnProperty = func->GetReturnProperty();
+    bool bReturnPropertyInitialized = false;
 
     bool bCallFromNative = false;
     bool bContextOp = false;
+    
+    TArray<FProperty*, TMemStackAllocator<>> propertyToDestructList;
 
     if (Stack.CurrentNativeFunction)
     {
@@ -87,8 +90,8 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
 
             if (Stack.Code)
             {
-                locals = (uint8*)FMemory_Alloca(func->ParmsSize);
-                FMemory::Memzero(locals, func->ParmsSize);
+                locals = (uint8*)FMemory_Alloca(func->PropertiesSize);
+                FMemory::Memzero(locals, func->PropertiesSize);
 
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
                 for (auto it = (FProperty*)func->Children; *Stack.Code != EX_EndFunctionParms; it = (FProperty*)it->Next)
@@ -96,11 +99,16 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
                 for (auto it = CastField<FProperty>(func->ChildProperties); *Stack.Code != EX_EndFunctionParms; it = CastField<FProperty>(it->Next))
 #endif
                 {
+                    it->InitializeValue_InContainer(locals);
                     Stack.Step(Stack.Object, it->ContainerPtrToValuePtr<uint8>(locals));
 
                     if (returnProperty && (it == returnProperty))
                     {
-                        returnProperty = nullptr;
+                        bReturnPropertyInitialized = true;
+                    }
+                    else
+                    {
+                        propertyToDestructList.Add(it);
                     }
                 }
                 Stack.SkipCode(1);
@@ -134,9 +142,10 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
         return;
     }
 
-    if (returnProperty && !returnProperty->HasAnyPropertyFlags(CPF_ZeroConstructor))
+    if (!bReturnPropertyInitialized && returnProperty && !returnProperty->HasAnyPropertyFlags(CPF_ZeroConstructor))
     {
         returnProperty->InitializeValue_InContainer(locals);
+        bReturnPropertyInitialized = true;
     }
     
     // Avoid recursive function call
@@ -270,7 +279,12 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
         Stack.Code = LocalOutCode;
     }
 
-    if (returnProperty)
+    for (auto& iter : propertyToDestructList)
+    {
+        iter->DestroyValue_InContainer(locals);
+    }
+
+    if (bReturnPropertyInitialized && returnProperty)
     {
         returnProperty->DestroyValue_InContainer(locals);
     }

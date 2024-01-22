@@ -801,22 +801,19 @@ namespace NS_SLUA
 
         if (!actorComponent || !luaInterface)
         {
-            if (!actorComponent || !luaInterface)
+            TArray<LuaOverrider*> overriderList;
             {
-                TArray<LuaOverrider*> overriderList;
+                FRWScopeLock lock(classHookMutex, SLT_ReadOnly);
+                auto overriderListPtr = objectOverriders.Find(obj);
+                if (overriderListPtr)
                 {
-                    FRWScopeLock lock(classHookMutex, SLT_ReadOnly);
-                    auto overriderListPtr = objectOverriders.Find(obj);
-                    if (overriderListPtr)
-                    {
-                        overriderList = *overriderListPtr; // copy overrider list, don't use '&' reference
-                    }
+                    overriderList = *overriderListPtr; // copy overrider list, don't use '&' reference
                 }
+            }
 
-                for (auto overrider : overriderList)
-                {
-                    overrider->bindOverrideFuncs(obj, cls);
-                }
+            for (auto overrider : overriderList)
+            {
+                overrider->bindOverrideFuncs(obj, cls);
             }
         }
 

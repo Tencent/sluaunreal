@@ -56,8 +56,6 @@ FAutoConsoleVariableRef CVarSluaEnableReference(
     TEXT("Whether enable struct reference."));
 
 namespace NS_SLUA {
-    static const FName NAME_LatentInfo = TEXT("LatentInfo");
-
     static const uint64 ReferenceCastFlags = FArrayProperty::StaticClassCastFlags()
         | FMapProperty::StaticClassCastFlags()
         | FSetProperty::StaticClassCastFlags();

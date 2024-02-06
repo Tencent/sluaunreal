@@ -105,7 +105,7 @@ namespace NS_SLUA
             if(propflag&CPF_ReturnParm)
                 continue;
                 
-            if (isLatentProperty(prop))
+            if (!isLatentProperty(prop))
             {
                 if (IsRealOutParam(propflag))
                 {

@@ -120,3 +120,10 @@ print("info",info)
 
 map1 = t:GetMap()
 print("map1",map1)
+
+local SluaTestCase=import('SluaTestCase');
+local t=SluaTestCase()
+for k, v in pairs(t) do
+    print("SluaTestCase iter", k, v)
+end
+print("SluaTestCase weakptr:", t.weakptr) ---expect as uobject type not LuaArray.

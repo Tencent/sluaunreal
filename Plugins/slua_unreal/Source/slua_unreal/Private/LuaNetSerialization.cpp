@@ -141,7 +141,6 @@ bool FLuaNetSerialization::NetDeltaSerialize(FNetDeltaSerializeInfo& deltaParms)
 
     if (deltaParms.bUpdateUnmappedObjects)
     {
-        // new version
         auto classLuaReplciated = NS_SLUA::LuaNet::getClassReplicatedProps(obj);
         auto &properties = classLuaReplciated->properties;
         auto &flatProperties = classLuaReplciated->flatProperties;
@@ -576,7 +575,7 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, NS_SLUA::FL
             auto &properties = classLuaReplicated->properties;
             auto &flatProperties = classLuaReplicated->flatProperties;
 
-            // update change list
+            // Update change list
             auto &changeHistorys = proxy->changeHistorys;
             auto &arrayChangeHistorys = proxy->arrayChangeHistorys; 
             
@@ -609,7 +608,7 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, NS_SLUA::FL
                 auto& lifetimeConditions = classLuaReplicated->lifetimeConditions;
                 if (!changes.IsEmpty())
                 {
-                    // filter changes
+                    // Filter changes
                     for (LuaBitArray::FIterator It(changes); It; ++It)
                     {
                         int32 index = *It;
@@ -653,7 +652,7 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, NS_SLUA::FL
 #endif
                             };
 
-                            // is array
+                            // Is array
                             if (sharedInfo.bArray)
                             {
                                 auto &flatPropInfo = flatProperties[index];
@@ -772,15 +771,37 @@ bool FLuaNetSerialization::CompareProperties(UObject* obj, NS_SLUA::FLuaNetSeria
                 auto &arrayPropInfo = classLuaReplicated->flatArrayPropInfos[flatOffset];
                 int32 innerPropNum = arrayPropInfo.innerPropertyNum;
                 int32 elementSize = innerProp->ElementSize;
+                auto& properties = arrayPropInfo.properties;
+                
+                uint8* arrayData = newArrayHelper.GetRawPtr(0);
+                uint8* oldArrayData = oldArrayHelper.GetRawPtr(0);
+
                 if (min != max)
                 {
                     arrayMark.AddRange(innerPropNum * min, innerPropNum * max - 1);
+
+                    int32 startCopyIndex = min;
+                    int32 endCopyIndex = FMath::Min(max, newLen);
+                    // Copy values to old array data from startCopyIndex to endCopyIndex
+                    if (endCopyIndex > startCopyIndex)
+                    {
+                        if (!(innerProp->PropertyFlags & CPF_IsPlainOldData))
+                        {
+                            for (int32 i = startCopyIndex; i < endCopyIndex; i++)
+                            {
+                                innerProp->CopyCompleteValue(oldArrayData + i * elementSize, arrayData + i * elementSize);
+                            }
+                        }
+                        else
+                        {
+                            int32 startOffset = startCopyIndex * elementSize;
+                            FMemory::Memcpy(oldArrayData + startOffset, arrayData + startOffset, (endCopyIndex - startCopyIndex) * elementSize);
+                        }
+                    }
                 }
-                auto &properties = arrayPropInfo.properties;
+                
                 bool bHasDiff = false;
-                // maybe much cost!
-                uint8* arrayData = newArrayHelper.GetRawPtr(0);
-                uint8* oldArrayData = oldArrayHelper.GetRawPtr(0);
+                // Maybe much cost!
                 for (int32 arrayIndex = 0; arrayIndex < min; arrayIndex++)
                 {
                     int32 elementOffset = elementSize * arrayIndex;

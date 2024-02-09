@@ -63,7 +63,13 @@ namespace NS_SLUA
     ClassLuaReplicated* LuaNet::getClassReplicatedProps(const UObject* obj)
     {
         auto cls = obj->GetClass();
-        return classLuaReplicatedMap.Find(cls);
+        auto classLuaReplicatedPtr = classLuaReplicatedMap.Find(cls);
+        if (classLuaReplicatedPtr)
+        {
+            return *classLuaReplicatedPtr;
+        }
+
+        return nullptr;
     }
 
     void LuaNet::removeObjectTable(UObject* obj)
@@ -91,8 +97,10 @@ namespace NS_SLUA
 
     void LuaNet::onObjectDeleted(UClass* cls)
     {
-        if (classLuaReplicatedMap.Contains(cls))
+        auto classLuaReplicatedPtr = classLuaReplicatedMap.Find(cls);
+        if (classLuaReplicatedPtr)
         {
+            delete * classLuaReplicatedPtr;
             classLuaReplicatedMap.Remove(cls);
         }
     }
@@ -115,7 +123,7 @@ namespace NS_SLUA
             
             if (classReplicatedPtr)
             {
-                return classReplicatedPtr;
+                return *classReplicatedPtr;
             }
             else
             {
@@ -128,7 +136,8 @@ namespace NS_SLUA
                         auto luaReplicatedTable = getLifetimeFunc.call();
                         if (luaReplicatedTable.isTable())
                         {
-                            auto& classReplicated = classLuaReplicatedMap.Add(cls);
+                            auto classReplicatedPtr = classLuaReplicatedMap.Add(cls, new ClassLuaReplicated());
+                            auto& classReplicated = *classReplicatedPtr;
                             classReplicated.ownerProperty = prop;
                     
                             auto &replicatedNameToIndexMap = classReplicated.replicatedNameToIndexMap;
@@ -256,7 +265,7 @@ namespace NS_SLUA
 
     void LuaNet::initFlatReplicatedProps(ClassLuaReplicated& classReplicated,
                                          ReplicateOffsetToMarkType& markIndex, UStruct* ustruct,
-                                         int32& index, int32 offset, int32 ownerPropIndex, NS_SLUA::FlatArrayPropInfo* arrayInfo)
+                                         int32& index, const int32 offset, int32 ownerPropIndex, NS_SLUA::FlatArrayPropInfo* arrayInfo)
     {
         bool outMost = ustruct == classReplicated.ustruct;
 
@@ -316,6 +325,12 @@ namespace NS_SLUA
             {
                 ownerPropIndex++;
             }
+        }
+
+        int32 structEndOffset = offset + ustruct->GetPropertiesSize();
+        if (!markIndex.Contains(structEndOffset))
+        {
+            markIndex.Add(structEndOffset, index);
         }
     }
 

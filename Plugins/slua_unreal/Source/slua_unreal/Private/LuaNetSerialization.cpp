@@ -664,7 +664,7 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, NS_SLUA::FL
                                     [&](NS_SLUA::FlatPropInfo& propInfo, FScriptArrayHelper& arrayHelper, int32 arrayIndex, int32 dirtyIndex)
                                             {
                                                 auto prop = propInfo.prop;
-												auto &arraySharedPropertyInfo = arraySharedSerializetion.SharedPropertyInfo;
+                                                auto &arraySharedPropertyInfo = arraySharedSerializetion.SharedPropertyInfo;
                                                 if (propInfo.bSupportSharedSerialize && arraySharedPropertyInfo.IsValidIndex(dirtyIndex) && arraySharedPropertyInfo[dirtyIndex].bShared)
                                                 {
                                                     writeShareSerializeBit(writer, sharedArrayData, arraySharedPropertyInfo[dirtyIndex]);

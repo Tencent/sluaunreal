@@ -664,9 +664,10 @@ bool FLuaNetSerialization::Write(FNetDeltaSerializeInfo& deltaParms, NS_SLUA::FL
                                     [&](NS_SLUA::FlatPropInfo& propInfo, FScriptArrayHelper& arrayHelper, int32 arrayIndex, int32 dirtyIndex)
                                             {
                                                 auto prop = propInfo.prop;
-                                                if (propInfo.bSupportSharedSerialize)
+                                                auto &arraySharedPropertyInfo = arraySharedSerializetion.SharedPropertyInfo;
+                                                if (propInfo.bSupportSharedSerialize && arraySharedPropertyInfo.IsValidIndex(dirtyIndex) && arraySharedPropertyInfo[dirtyIndex].bShared)
                                                 {
-                                                    writeShareSerializeBit(writer, sharedArrayData, arraySharedSerializetion.SharedPropertyInfo[dirtyIndex]);
+                                                    writeShareSerializeBit(writer, sharedArrayData, arraySharedPropertyInfo[dirtyIndex]);
                                                 }
                                                 else
                                                 {
@@ -883,7 +884,7 @@ bool FLuaNetSerialization::UpdateChangeListMgr(NS_SLUA::FLuaNetSerializationProx
 
         const int32 secondHistoryIndex = proxy.historyStart % NS_SLUA::FLuaNetSerializationProxy::MAX_CHANGE_HISTORY;
 
-        // merge change list
+        // Merge change list
         proxy.changeHistorys[secondHistoryIndex] |= proxy.changeHistorys[firstHistoryIndex];
 
         // proxy.arrayChangeHistorys[secondHistoryIndex] |= proxy.arrayChangeHistorys[firstHistoryIndex];

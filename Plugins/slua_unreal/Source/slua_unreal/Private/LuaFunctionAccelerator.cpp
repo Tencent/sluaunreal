@@ -20,14 +20,22 @@ namespace NS_SLUA
 {
     TMap<UFunction*, LuaFunctionAccelerator*> LuaFunctionAccelerator::cache;
 
+    inline bool isLatentProperty(FProperty* prop)
+    {
+        FStructProperty* structProp = CastField<FStructProperty>(prop);
+        if (structProp && (structProp->Struct == FLatentActionInfo::StaticStruct()))
+        {
+	        return true;
+        }
+	    return false;
+    }
+
     LuaFunctionAccelerator::LuaFunctionAccelerator(UFunction* inFunc)
         : func(inFunc)
         , bLuaOverride(ULuaOverrider::isUFunctionHooked(inFunc))
     {
         auto funcFlag = func->FunctionFlags;
         bNativeFunc = (funcFlag & EFunctionFlags::FUNC_Native) != 0;
-
-        static const FName NAME_LatentInfo = TEXT("LatentInfo");
 
         int propIndex = 0;
         for (TFieldIterator<FProperty> it(func); it && (it->PropertyFlags & CPF_Parm); ++it, ++propIndex)
@@ -59,7 +67,7 @@ namespace NS_SLUA
             else if (IsRealOutParam(propflag))
                 continue;
             
-            if (prop->GetFName() == NAME_LatentInfo)
+            if (isLatentProperty(prop))
             {
                 checkerRef->bLatent = true;
             }
@@ -97,7 +105,7 @@ namespace NS_SLUA
             if(propflag&CPF_ReturnParm)
                 continue;
                 
-            if (prop->GetFName() != NAME_LatentInfo)
+            if (!isLatentProperty(prop))
             {
                 if (IsRealOutParam(propflag))
                 {

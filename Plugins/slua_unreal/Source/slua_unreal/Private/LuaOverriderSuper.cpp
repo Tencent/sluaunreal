@@ -43,7 +43,7 @@ namespace NS_SLUA
             }
             return cachedFunc;
         }
-        luaL_error(L, "Can't find function %s in super", name);
+        luaL_error(L, "Can't find Class %s function %s in super", TCHAR_TO_UTF8(*cls->GetName()), name);
         return nullptr;
     }
 

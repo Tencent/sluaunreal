@@ -2600,7 +2600,7 @@ namespace NS_SLUA {
             unlinkProp(L, userdata);
         }
 
-        if (DeferGCStruct)
+        if (DeferGCStruct && !ls->isRef)
         {
             LuaState* luaState = LuaState::get(L);
             luaState->deferGCStruct.Add(ls);

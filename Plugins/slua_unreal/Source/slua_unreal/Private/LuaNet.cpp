@@ -136,8 +136,7 @@ namespace NS_SLUA
                         auto luaReplicatedTable = getLifetimeFunc.call();
                         if (luaReplicatedTable.isTable())
                         {
-                            auto classReplicatedPtr = classLuaReplicatedMap.Add(cls, new ClassLuaReplicated());
-                            auto& classReplicated = *classReplicatedPtr;
+                            auto& classReplicated = *classLuaReplicatedMap.Add(cls, new ClassLuaReplicated());
                             classReplicated.ownerProperty = prop;
                     
                             auto &replicatedNameToIndexMap = classReplicated.replicatedNameToIndexMap;

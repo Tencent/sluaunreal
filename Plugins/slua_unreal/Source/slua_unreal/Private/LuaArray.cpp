@@ -459,14 +459,15 @@ namespace NS_SLUA {
             luaL_error(L, "arg 1 expect LuaArray, but got nil!");
         }
         auto iter = new LuaArray::Enumerator();
-        
+        bool bReverse = !!lua_toboolean(L, 2);
         iter->arr = UD;
-        iter->index = 0;
+        iter->index = bReverse ? UD->num() - 1 : 0;
+        iter->bReverse = bReverse;
         lua_pushcfunction(L, LuaArray::Enumerable);
         LuaObject::pushType(L, iter, "LuaArray::Enumerator", nullptr, LuaArray::Enumerator::gc, 1);
         // hold referrence of LuaArray, avoid gc
         lua_pushvalue(L, 1);
-        lua_setuservalue(L,3);
+        lua_setuservalue(L,-2);
         LuaObject::pushNil(L);
         
         return 3;
@@ -484,15 +485,16 @@ namespace NS_SLUA {
             luaL_error(L, "%s arrays do not support LessGC enumeration! Only struct type arrays are supported!", TCHAR_TO_UTF8(*innerClass->GetName()));
         }
         auto iter = new LuaArray::EnumeratorLessGC();
-        
+        bool bReverse = !!lua_toboolean(L, 2);
         iter->arr = UD;
-        iter->index = 0;
+        iter->index = bReverse ? UD->num() - 1 : 0;
+        iter->bReverse = bReverse;
         iter->element = nullptr;
         lua_pushcfunction(L, LuaArray::EnumerableLessGC);
         LuaObject::pushType(L, iter, "LuaArray::EnumeratorLessGC", nullptr, LuaArray::EnumeratorLessGC::gc, 1);
         // hold referrence of LuaArray, avoid gc
         lua_pushvalue(L, 1);
-        lua_setuservalue(L,3);
+        lua_setuservalue(L,-2);
         LuaObject::pushNil(L);
         
         return 3;
@@ -507,7 +509,7 @@ namespace NS_SLUA {
             auto parms = ((uint8*)arr->array->GetData()) + UD->index * es;
             LuaObject::push(L, UD->index);
             LuaObject::push(L, element, parms);
-            UD->index += 1;
+            UD->index += UD->bReverse ? -1 : 1;
             return 2;
         } 
         return 0;
@@ -523,7 +525,7 @@ namespace NS_SLUA {
             auto es = element->ElementSize;
             auto parms = ((uint8*)arr->array->GetData()) + UD->index * es;
             LuaObject::push(L, UD->index);
-            if (index == 0)
+            if ((!UD->bReverse && index == 0) || (UD->bReverse && index == arr->num() - 1))
             {
                 LuaObject::push(L, element, parms);
                 
@@ -552,7 +554,7 @@ namespace NS_SLUA {
                 }
             }
             
-            UD->index += 1;
+            UD->index += UD->bReverse ? -1 : 1;
             return 2;
         } 
         return 0;

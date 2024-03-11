@@ -75,6 +75,11 @@ for k, v in arrLessGC:PairsLessGC() do
     print("arr item less gc detail:", v.X, v.Y, v.Z)
 end
 
+for k, v in arrLessGC:PairsLessGC(true) do
+    print("arr item less gc item:", k, v)
+    print("arr item less gc detail:", v.X, v.Y, v.Z)
+end
+
 local TestArray={}
 
 function TestArray.update()

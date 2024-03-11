@@ -106,14 +106,16 @@ namespace NS_SLUA {
         struct Enumerator {
             LuaArray* arr = nullptr;
             int32 index = 0;
+            bool bReverse = false;
             static int gc(lua_State* L);
         };
 
         struct EnumeratorLessGC
         {
             LuaArray* arr = nullptr;
+            class LuaVar* element;
             int32 index = 0;
-            class LuaVar* element; 
+            bool bReverse = false;
 
             static int gc(lua_State* L);
             ~EnumeratorLessGC();

@@ -76,7 +76,9 @@ namespace NS_SLUA {
         static int Insert(lua_State* L);
         static int Clear(lua_State* L);
         static int Pairs(lua_State* L);
+        static int PairsLessGC(lua_State* L);
         static int Enumerable(lua_State* L);
+        static int EnumerableLessGC(lua_State* L);
         static int CreateValueTypeObject(lua_State* L);
 
     private:
@@ -105,6 +107,16 @@ namespace NS_SLUA {
             LuaArray* arr = nullptr;
             int32 index = 0;
             static int gc(lua_State* L);
+        };
+
+        struct EnumeratorLessGC
+        {
+            LuaArray* arr = nullptr;
+            int32 index = 0;
+            class LuaVar* element; 
+
+            static int gc(lua_State* L);
+            ~EnumeratorLessGC();
         };
     };
 }

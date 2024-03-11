@@ -66,6 +66,15 @@ assert(t.strs:Get(0)=="1")
 strs:Clear()
 assert(t.strs:Num()==0)
 
+local arrLessGC = slua.Array(EPropertyClass.Struct, import("Vector"))
+arrLessGC:Add(FVector(1,2,3))
+arrLessGC:Add(FVector(2,2,3))
+arrLessGC:Add(FVector(3,2,3))
+for k, v in arrLessGC:PairsLessGC() do
+    print("arr item less gc item:", k, v)
+    print("arr item less gc detail:", v.X, v.Y, v.Z)
+end
+
 local TestArray={}
 
 function TestArray.update()

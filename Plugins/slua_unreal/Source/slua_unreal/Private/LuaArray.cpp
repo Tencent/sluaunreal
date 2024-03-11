@@ -22,7 +22,8 @@
 
 namespace NS_SLUA {
 
-    DefTypeName(LuaArray::Enumerator); 
+    DefTypeName(LuaArray::Enumerator);
+    DefTypeName(LuaArray::EnumeratorLessGC);
 
     void LuaArray::reg(lua_State* L) {
         SluaUtil::reg(L,"Array",__ctor);
@@ -471,6 +472,32 @@ namespace NS_SLUA {
         return 3;
     }
 
+    int LuaArray::PairsLessGC(lua_State* L)
+    {
+        CheckUD(LuaArray, L, 1);
+        if (!UD) {
+            luaL_error(L, "arg 1 expect LuaArray, but got nil!");
+        }
+        static auto structProp = FStructProperty::StaticClass();
+        auto innerClass = UD->inner->GetClass();
+        if (innerClass != structProp) {
+            luaL_error(L, "%s arrays do not support LessGC enumeration! Only struct type arrays are supported!", TCHAR_TO_UTF8(*innerClass->GetName()));
+        }
+        auto iter = new LuaArray::EnumeratorLessGC();
+        
+        iter->arr = UD;
+        iter->index = 0;
+        iter->element = nullptr;
+        lua_pushcfunction(L, LuaArray::EnumerableLessGC);
+        LuaObject::pushType(L, iter, "LuaArray::EnumeratorLessGC", nullptr, LuaArray::EnumeratorLessGC::gc, 1);
+        // hold referrence of LuaArray, avoid gc
+        lua_pushvalue(L, 1);
+        lua_setuservalue(L,3);
+        LuaObject::pushNil(L);
+        
+        return 3;
+    }
+
     int LuaArray::Enumerable(lua_State* L) {
         CheckUD(LuaArray::Enumerator, L, 1);
         auto arr = UD->arr;
@@ -480,6 +507,51 @@ namespace NS_SLUA {
             auto parms = ((uint8*)arr->array->GetData()) + UD->index * es;
             LuaObject::push(L, UD->index);
             LuaObject::push(L, element, parms);
+            UD->index += 1;
+            return 2;
+        } 
+        return 0;
+    }
+
+    int LuaArray::EnumerableLessGC(lua_State* L)
+    {
+        CheckUD(LuaArray::EnumeratorLessGC, L, 1);
+        auto arr = UD->arr;
+        int32 index = UD->index;
+        if (arr->isValidIndex(index)) {
+            auto element = arr->inner;
+            auto es = element->ElementSize;
+            auto parms = ((uint8*)arr->array->GetData()) + UD->index * es;
+            LuaObject::push(L, UD->index);
+            if (index == 0)
+            {
+                LuaObject::push(L, element, parms);
+                
+                UD->element = new LuaVar(L, -1);
+            }
+            else
+            {
+                auto inner = arr->inner;
+
+                UD->element->push(L);
+                auto genUD = (GenericUserData*)lua_touserdata(L, -1);
+                if (genUD->flag & UD_VALUETYPE)
+                {
+                    inner->DestroyValue(genUD->ud);
+                    inner->InitializeValue(genUD->ud);
+                    inner->CopyCompleteValue(genUD->ud, parms);
+                }
+                else
+                {
+                    LuaStruct* ls = (LuaStruct*)genUD->ud;
+                    auto uss = ls->uss;
+                    auto buf = ls->buf;
+                    uss->DestroyStruct(buf);
+                    uss->InitializeStruct(buf);
+                    uss->CopyScriptStruct(buf, parms);
+                }
+            }
+            
             UD->index += 1;
             return 2;
         } 
@@ -507,6 +579,7 @@ namespace NS_SLUA {
         LuaObject::setupMTSelfSearch(L);
 
         RegMetaMethod(L,Pairs);
+        RegMetaMethod(L,PairsLessGC);
         RegMetaMethod(L,Num);
         RegMetaMethod(L,Get);
         RegMetaMethod(L,Set);
@@ -540,5 +613,17 @@ namespace NS_SLUA {
         CheckUD(LuaArray::Enumerator, L, 1);
         delete UD;
         return 0;
+    }
+
+    int LuaArray::EnumeratorLessGC::gc(lua_State* L)
+    {
+        CheckUD(LuaArray::EnumeratorLessGC, L, 1);
+        delete UD;
+        return 0;
+    }
+
+    LuaArray::EnumeratorLessGC::~EnumeratorLessGC()
+    {
+        SafeDelete(element);
     }
 }

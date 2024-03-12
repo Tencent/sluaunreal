@@ -21,10 +21,6 @@
 #include "LuaNetSerialization.h"
 
 namespace NS_SLUA {
-
-    DefTypeName(LuaArray::Enumerator);
-    DefTypeName(LuaArray::EnumeratorLessGC);
-
     void LuaArray::reg(lua_State* L) {
         SluaUtil::reg(L,"Array",__ctor);
     }
@@ -377,7 +373,7 @@ namespace NS_SLUA {
         uint8* newElement = UD->add();
         auto checker = LuaObject::getChecker(element);
         if(checker) {
-	        checker(L,element,newElement,2,true);
+            checker(L,element,newElement,2,true);
 
             markDirty(UD);
 
@@ -458,17 +454,21 @@ namespace NS_SLUA {
         if (!UD) {
             luaL_error(L, "arg 1 expect LuaArray, but got nil!");
         }
-        auto iter = new LuaArray::Enumerator();
+
         bool bReverse = !!lua_toboolean(L, 2);
-        iter->arr = UD;
-        iter->index = bReverse ? UD->num() - 1 : 0;
-        iter->bReverse = bReverse;
-        lua_pushcfunction(L, LuaArray::Enumerable);
-        LuaObject::pushType(L, iter, "LuaArray::Enumerator", nullptr, LuaArray::Enumerator::gc, 1);
-        // hold referrence of LuaArray, avoid gc
-        lua_pushvalue(L, 1);
-        lua_setuservalue(L,-2);
-        LuaObject::pushNil(L);
+
+        if (bReverse)
+        {
+            lua_pushcfunction(L, LuaArray::IterateReverse);
+            lua_pushvalue(L, 1);
+            lua_pushinteger(L, UD->num());
+        }
+        else
+        {
+            lua_pushcfunction(L, LuaArray::Iterate);
+            lua_pushvalue(L, 1);
+            lua_pushinteger(L, -1);
+        }
         
         return 3;
     }
@@ -484,61 +484,106 @@ namespace NS_SLUA {
         if (innerClass != structProp) {
             luaL_error(L, "%s arrays do not support LessGC enumeration! Only struct type arrays are supported!", TCHAR_TO_UTF8(*innerClass->GetName()));
         }
-        auto iter = new LuaArray::EnumeratorLessGC();
+
+        if (UD->num() <= 1)
+        {
+            lua_pushcfunction(L, LuaArray::Iterate);
+            lua_pushvalue(L, 1);
+            lua_pushinteger(L, -1);
+            return 3;
+        }
+        
         bool bReverse = !!lua_toboolean(L, 2);
-        iter->arr = UD;
-        iter->index = bReverse ? UD->num() - 1 : 0;
-        iter->bReverse = bReverse;
-        iter->element = nullptr;
-        lua_pushcfunction(L, LuaArray::EnumerableLessGC);
-        LuaObject::pushType(L, iter, "LuaArray::EnumeratorLessGC", nullptr, LuaArray::EnumeratorLessGC::gc, 1);
-        // hold referrence of LuaArray, avoid gc
-        lua_pushvalue(L, 1);
-        lua_setuservalue(L,-2);
-        LuaObject::pushNil(L);
+
+        if (bReverse)
+        {
+            lua_pushnil(L);
+            lua_pushcclosure(L, LuaArray::IterateLessGCReverse, 1);
+            lua_pushvalue(L, 1);
+            lua_pushinteger(L, UD->num());
+        }
+        else
+        {
+            lua_pushnil(L);
+            lua_pushcclosure(L, IterateLessGC, 1);
+            lua_pushvalue(L, 1);
+            lua_pushinteger(L, -1);
+        }
         
         return 3;
     }
 
-    int LuaArray::Enumerable(lua_State* L) {
-        CheckUD(LuaArray::Enumerator, L, 1);
-        auto arr = UD->arr;
-        if (arr->isValidIndex(UD->index)) {
-            auto element = arr->inner;
+    int LuaArray::Iterate(lua_State* L) {
+        CheckUD(LuaArray, L, 1);
+        const int32 i = luaL_checkinteger(L, 2) + 1;
+        return PushElement(L, UD, i);
+    }
+
+    int LuaArray::IterateReverse(lua_State* L)
+    {
+        CheckUD(LuaArray, L, 1);
+        const int32 i = luaL_checkinteger(L, 2) - 1;
+        return PushElement(L, UD, i);
+    }
+
+    int LuaArray::PushElement(lua_State* L, LuaArray* UD, int32 index)
+    {
+        auto arr = UD->array;
+        if (arr->IsValidIndex(index))
+        {
+            auto element = UD->inner;
             auto es = element->ElementSize;
-            auto parms = ((uint8*)arr->array->GetData()) + UD->index * es;
-            LuaObject::push(L, UD->index);
+            auto parms = ((uint8*)arr->GetData()) + index * es;
+            lua_pushinteger(L, index);
             LuaObject::push(L, element, parms);
-            UD->index += UD->bReverse ? -1 : 1;
             return 2;
-        } 
+        }
+
         return 0;
     }
 
-    int LuaArray::EnumerableLessGC(lua_State* L)
+    int LuaArray::IterateLessGC(lua_State* L)
     {
-        CheckUD(LuaArray::EnumeratorLessGC, L, 1);
-        auto arr = UD->arr;
-        int32 index = UD->index;
-        if (arr->isValidIndex(index)) {
-            auto element = arr->inner;
+        CheckUD(LuaArray, L, 1);
+        const int32 i = luaL_checkinteger(L, 2) + 1;
+        return PushElementLessGC(L, UD, i);
+    }
+
+    int LuaArray::IterateLessGCReverse(lua_State* L)
+    {
+        CheckUD(LuaArray, L, 1);
+        const int32 i = luaL_checkinteger(L, 2) - 1;
+        return PushElementLessGC(L, UD, i);
+    }
+
+    int LuaArray::PushElementLessGC(lua_State* L, LuaArray* UD, int32 index)
+    {
+        auto arr = UD->array;
+        if (arr->IsValidIndex(index))
+        {
+            auto element = UD->inner;
             auto es = element->ElementSize;
-            auto parms = ((uint8*)arr->array->GetData()) + UD->index * es;
-            LuaObject::push(L, UD->index);
-            if ((!UD->bReverse && index == 0) || (UD->bReverse && index == arr->num() - 1))
+            auto parms = ((uint8*)arr->GetData()) + index * es;
+            lua_pushinteger(L, index);
+
+            auto genUD = (GenericUserData*)lua_touserdata(L, lua_upvalueindex(1));
+            if (!genUD)
             {
                 LuaObject::push(L, element, parms);
-                
-                UD->element = new LuaVar(L, -1);
+
+                CallInfo* ci = L->ci;
+#if 504 == LUA_VERSION_NUM
+                CClosure* cl = clCvalue(s2v(ci->func));
+#else
+                CClosure* cl = clCvalue(ci->func);
+#endif
+                setobj2n(L, &cl->upvalue[0], L->top - 1);
             }
             else
             {
-                auto inner = arr->inner;
-
-                UD->element->push(L);
-                auto genUD = (GenericUserData*)lua_touserdata(L, -1);
                 if (genUD->flag & UD_VALUETYPE)
                 {
+                    auto inner = UD->inner;
                     inner->DestroyValue(genUD->ud);
                     inner->InitializeValue(genUD->ud);
                     inner->CopyCompleteValue(genUD->ud, parms);
@@ -552,11 +597,13 @@ namespace NS_SLUA {
                     uss->InitializeStruct(buf);
                     uss->CopyScriptStruct(buf, parms);
                 }
+
+                lua_pushvalue(L,lua_upvalueindex(1));
             }
             
-            UD->index += UD->bReverse ? -1 : 1;
             return 2;
-        } 
+        }
+
         return 0;
     }
 
@@ -609,23 +656,5 @@ namespace NS_SLUA {
         
         delete userdata->ud;
         return 0;
-    }
-
-    int LuaArray::Enumerator::gc(lua_State* L) {
-        CheckUD(LuaArray::Enumerator, L, 1);
-        delete UD;
-        return 0;
-    }
-
-    int LuaArray::EnumeratorLessGC::gc(lua_State* L)
-    {
-        CheckUD(LuaArray::EnumeratorLessGC, L, 1);
-        delete UD;
-        return 0;
-    }
-
-    LuaArray::EnumeratorLessGC::~EnumeratorLessGC()
-    {
-        SafeDelete(element);
     }
 }

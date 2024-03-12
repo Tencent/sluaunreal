@@ -77,8 +77,12 @@ namespace NS_SLUA {
         static int Clear(lua_State* L);
         static int Pairs(lua_State* L);
         static int PairsLessGC(lua_State* L);
-        static int Enumerable(lua_State* L);
-        static int EnumerableLessGC(lua_State* L);
+        static int Iterate(lua_State* L);
+        static int IterateReverse(lua_State* L);
+        static int PushElement(lua_State* L, LuaArray* UD, int32 index);
+        static int IterateLessGC(lua_State* L);
+        static int IterateLessGCReverse(lua_State* L);
+        static int PushElementLessGC(lua_State* L, LuaArray* UD, int32 index);
         static int CreateValueTypeObject(lua_State* L);
 
     private:
@@ -102,23 +106,5 @@ namespace NS_SLUA {
 
         static int setupMT(lua_State* L);
         static int gc(lua_State* L);
-
-        struct Enumerator {
-            LuaArray* arr = nullptr;
-            int32 index = 0;
-            bool bReverse = false;
-            static int gc(lua_State* L);
-        };
-
-        struct EnumeratorLessGC
-        {
-            LuaArray* arr = nullptr;
-            class LuaVar* element;
-            int32 index = 0;
-            bool bReverse = false;
-
-            static int gc(lua_State* L);
-            ~EnumeratorLessGC();
-        };
     };
 }

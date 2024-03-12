@@ -70,6 +70,11 @@ local arrLessGC = slua.Array(EPropertyClass.Struct, import("Vector"))
 arrLessGC:Add(FVector(1,2,3))
 arrLessGC:Add(FVector(2,2,3))
 arrLessGC:Add(FVector(3,2,3))
+for k, v in arrLessGC:Pairs() do
+    print("arr item :", k, v)
+    print("arr item detail:", v.X, v.Y, v.Z)
+end
+
 for k, v in arrLessGC:PairsLessGC() do
     print("arr item less gc item:", k, v)
     print("arr item less gc detail:", v.X, v.Y, v.Z)
@@ -78,6 +83,18 @@ end
 for k, v in arrLessGC:PairsLessGC(true) do
     print("arr item less gc item:", k, v)
     print("arr item less gc detail:", v.X, v.Y, v.Z)
+end
+
+local FUserInfo = import("UserInfo")
+local arrUserInfo = slua.Array(EPropertyClass.Struct, import("UserInfo"))
+for i = 1, 3 do
+    local userInfo = FUserInfo()
+    userInfo.others.p2:Add(i)
+    arrUserInfo:Add(userInfo)
+end
+
+for k, v in arrUserInfo:PairsLessGC() do
+    print("arr item less gc UserInfo", k, v.others.p2:Get(0), v.others.p3)
 end
 
 local TestArray={}

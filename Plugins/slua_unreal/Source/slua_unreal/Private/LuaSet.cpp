@@ -207,9 +207,20 @@ namespace NS_SLUA
             luaL_error(L, "arg 1 expect LuaSet, but got nil!");
         }
 
-        lua_pushcfunction(L, LuaSet::Iterate);
-        lua_pushvalue(L, 1);
-        lua_pushinteger(L, -1);
+        bool bReverse = !!lua_toboolean(L, 2);
+
+        if (bReverse)
+        {
+            lua_pushcfunction(L, LuaSet::IterateReverse);
+            lua_pushvalue(L, 1);
+            lua_pushinteger(L, UD->num());
+        }
+        else
+        {
+            lua_pushcfunction(L, LuaSet::Iterate);
+            lua_pushvalue(L, 1);
+            lua_pushinteger(L, -1);
+        }
 
         return 3;
     }
@@ -218,6 +229,13 @@ namespace NS_SLUA
     {
         CheckUD(LuaSet, L, 1);
         const int32 i = luaL_checkinteger(L, 2) + 1;
+        return PushElement(L, UD, i);
+    }
+
+    int LuaSet::IterateReverse(lua_State* L)
+    {
+        CheckUD(LuaSet, L, 1);
+        const int32 i = luaL_checkinteger(L, 2) - 1;
         return PushElement(L, UD, i);
     }
 

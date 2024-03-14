@@ -74,6 +74,7 @@ namespace NS_SLUA {
         static int Clear(lua_State* L);
         static int Pairs(lua_State* L);
         static int Iterate(lua_State* L);
+        static int IterateReverse(lua_State* L);
         static int PushElement(lua_State* L, LuaSet* UD, int32 Index);
         static int CreateElementTypeObject(lua_State* L);
 

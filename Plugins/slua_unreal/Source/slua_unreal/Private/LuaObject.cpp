@@ -2353,10 +2353,17 @@ namespace NS_SLUA {
         auto p = CastField<FInterfaceProperty>(prop);
         ensure(p);
         UObject* obj = LuaObject::checkUD<UObject>(L, i);
-        void* interfacePtr = obj->GetInterfaceAddress(p->InterfaceClass);
-        if (!interfacePtr)
-            luaL_error(L, "arg %d expect interface class of %s, but got %s", TCHAR_TO_UTF8(*p->InterfaceClass->GetName()), 
-                        obj->GetClass() ? TCHAR_TO_UTF8(*obj->GetClass()->GetName()) : "");
+        void* interfacePtr = obj ? obj->GetInterfaceAddress(p->InterfaceClass) : nullptr;
+        if (!interfacePtr) {
+            FString clsName(TEXT(""));
+            if (obj) {
+				auto cls = obj->GetClass();
+                if (cls)
+					clsName = cls->GetName();
+            }
+            luaL_error(L, "arg %d expect interface class of %s, but got %s", i,
+                        TCHAR_TO_UTF8(*p->InterfaceClass->GetName()), TCHAR_TO_UTF8(*clsName));
+        }
         p->SetPropertyValue(parms, FScriptInterface(obj, interfacePtr));
         return nullptr;
     }

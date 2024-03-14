@@ -16,9 +16,6 @@
 
 namespace NS_SLUA
 {
-
-    DefTypeName(LuaSet::Enumerator);
-
     LuaSet::LuaSet(FProperty* Property, FScriptSet* Buffer, bool bIsRef, bool bIsNewInner)
         : Set(bIsRef ? Buffer : new FScriptSet())
         , InElementProperty(Property)
@@ -209,40 +206,33 @@ namespace NS_SLUA
         if (!UD) {
             luaL_error(L, "arg 1 expect LuaSet, but got nil!");
         }
-        Enumerator* Iter = new Enumerator();
 
-        Iter->Set = UD;
-        Iter->Index = 0;
-        Iter->Num = UD->Helper.Num();
-
-        lua_pushcfunction(L, LuaSet::Enumerable);
-        LuaObject::pushType(L, Iter, "LuaSet::Enumerator", nullptr, Enumerator::gc);
-        // Hold reference of LuaSet, avoiding GC
+        lua_pushcfunction(L, LuaSet::Iterate);
         lua_pushvalue(L, 1);
-        lua_setuservalue(L, 3);
-        LuaObject::pushNil(L);
+        lua_pushinteger(L, -1);
+
         return 3;
     }
 
-    int LuaSet::Enumerable(lua_State* L)
+    int LuaSet::Iterate(lua_State* L)
     {
-        CheckUD(LuaSet::Enumerator, L, 1);
-        LuaSet* Set = UD->Set;
-        FScriptSetHelper& Helper = Set->Helper;
+        CheckUD(LuaSet, L, 1);
+        const int32 i = luaL_checkinteger(L, 2) + 1;
+        return PushElement(L, UD, i);
+    }
 
-        while (UD->Num > 0)
+    int LuaSet::PushElement(lua_State* L, LuaSet* UD, int32 Index)
+    {
+        auto Set = UD->Set;
+        if (Set->IsValidIndex(Index))
         {
-            if (Helper.IsValidIndex(UD->Index))
-            {
-                const auto ElementPtr = Helper.GetElementPtr(UD->Index);
-                LuaObject::push(L, UD->Index);
-                LuaObject::push(L, Set->InElementProperty, ElementPtr);
-                UD->Index += 1;
-                UD->Num -= 1;
-                return 2;
-            }
-            UD->Index += 1;
+            auto Element = UD->InElementProperty;
+            auto Parms = UD->Helper.GetElementPtr(Index);
+            lua_pushinteger(L, Index);
+            LuaObject::push(L, Element, Parms);
+            return 2;
         }
+
         return 0;
     }
 
@@ -404,13 +394,6 @@ namespace NS_SLUA
             LuaObject::unlinkProp(L, userdata);
         }
         delete userdata->ud;
-        return 0;
-    }
-
-    int LuaSet::Enumerator::gc(lua_State* L)
-    {
-        CheckUD(LuaSet::Enumerator, L, 1);
-        delete UD;
         return 0;
     }
 }

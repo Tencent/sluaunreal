@@ -73,7 +73,8 @@ namespace NS_SLUA {
         static int Remove(lua_State* L);
         static int Clear(lua_State* L);
         static int Pairs(lua_State* L);
-        static int Enumerable(lua_State* L);
+        static int Iterate(lua_State* L);
+        static int PushElement(lua_State* L, LuaSet* UD, int32 Index);
         static int CreateElementTypeObject(lua_State* L);
 
     private:
@@ -86,14 +87,6 @@ namespace NS_SLUA {
 
         struct FLuaNetSerializationProxy* proxy;
         uint16 luaReplicatedIndex;
-
-        struct Enumerator
-        {
-            LuaSet* Set = nullptr;
-            int32 Index = 0;
-            int32 Num = 0;
-            static int gc(lua_State* L);
-        };
 
         static int setupMT(lua_State* L);
         static int gc(lua_State* L);

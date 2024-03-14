@@ -7,97 +7,97 @@
 #include "LuaNetSerialization.h"
 
 #define GET_SET_CHECKER() \
-    const auto ElementChecker = LuaObject::getChecker(UD->InElementProperty);\
-    if (!ElementChecker) { \
-        const auto tn = UD->InElementProperty->GetClass()->GetName(); \
+    const auto elementChecker = LuaObject::getChecker(UD->inner);\
+    if (!elementChecker) { \
+        const auto tn = UD->inner->GetClass()->GetName(); \
         luaL_error(L, "Nonsupport type %s", TCHAR_TO_UTF8(*tn)); \
         return 0; \
     }
 
 namespace NS_SLUA
 {
-    LuaSet::LuaSet(FProperty* Property, FScriptSet* Buffer, bool bIsRef, bool bIsNewInner)
-        : Set(bIsRef ? Buffer : new FScriptSet())
-        , InElementProperty(Property)
-        , Helper(FScriptSetHelper::CreateHelperFormElementProperty(InElementProperty, Set))
-        , IsRef(bIsRef)
+    void LuaSet::reg(lua_State* L)
+    {
+        SluaUtil::reg(L, "Set", __ctor);
+    }
+    
+    LuaSet::LuaSet(FProperty* property, FScriptSet* buffer, bool bIsRef, bool bIsNewInner)
+        : set(bIsRef ? buffer : new FScriptSet())
+        , inner(property)
+        , helper(FScriptSetHelper::CreateHelperFormElementProperty(inner, set))
+        , isRef(bIsRef)
         , isNewInner(bIsNewInner)
         , proxy(nullptr)
         , luaReplicatedIndex(InvalidReplicatedIndex)
     {
-        if (!IsRef)
+        if (!isRef)
         {
-            clone(Set, Property, Buffer);
+            clone(set, property, buffer);
         }
     }
 
-    LuaSet::LuaSet(FSetProperty* Property, FScriptSet* Buffer, bool bIsRef, FLuaNetSerializationProxy* netProxy, uint16 replicatedIndex)
-        : Set(bIsRef ? Buffer : new FScriptSet())
-        , InElementProperty(Property->ElementProp)
-        , Helper(FScriptSetHelper::CreateHelperFormElementProperty(InElementProperty, Set))
-        , IsRef(bIsRef)
+    LuaSet::LuaSet(FSetProperty* property, FScriptSet* buffer, bool bIsRef, FLuaNetSerializationProxy* netProxy, uint16 replicatedIndex)
+        : set(bIsRef ? buffer : new FScriptSet())
+        , inner(property->ElementProp)
+        , helper(FScriptSetHelper::CreateHelperFormElementProperty(inner, set))
+        , isRef(bIsRef)
         , isNewInner(false)
         , proxy(netProxy)
         , luaReplicatedIndex(replicatedIndex)
     {
-        if (!IsRef)
+        if (!isRef)
         {
-            clone(Set, Property, Buffer);
+            clone(set, property, buffer);
         }
     }
 
     LuaSet::~LuaSet()
     {
-        if (!IsRef)
+        if (!isRef)
         {
             clear();
-            ensure(Set);
-            SafeDelete(Set);
+            ensure(set);
+            SafeDelete(set);
         }
 
         if (isNewInner)
         {
 #if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
-            delete InElementProperty;
+            delete inner;
 #endif
         }
-        InElementProperty = nullptr;
+        inner = nullptr;
     }
 
-    void LuaSet::reg(lua_State* L)
+    void LuaSet::clone(FScriptSet* dstSet, FProperty* prop, const FScriptSet* srcSet)
     {
-        SluaUtil::reg(L, "Set", __ctor);
-    }
-
-    void LuaSet::clone(FScriptSet* DstSet, FProperty* InElementProperty, const FScriptSet* SrcSet)
-    {
-        if (!SrcSet)
+        if (!srcSet)
             return;
 
-        FScriptSetHelper DstHelper = FScriptSetHelper::CreateHelperFormElementProperty(InElementProperty, DstSet);
-        if (SrcSet->Num() == 0)
+        FScriptSetHelper dstHelper = FScriptSetHelper::CreateHelperFormElementProperty(prop, dstSet);
+        if (srcSet->Num() == 0)
         {
-            DstHelper.EmptyElements(0);
+            dstHelper.EmptyElements(0);
             return;
         }
-        FScriptSetHelper SrcHelper = FScriptSetHelper::CreateHelperFormElementProperty(InElementProperty, SrcSet);
-        DstHelper.EmptyElements(SrcHelper.Num());
+        FScriptSetHelper srcHelper = FScriptSetHelper::CreateHelperFormElementProperty(prop, srcSet);
+        dstHelper.EmptyElements(srcHelper.Num());
 
-        for (auto n = 0; n < SrcHelper.GetMaxIndex(); n++)
+        for (auto n = 0; n < srcHelper.GetMaxIndex(); n++)
         {
-            if (SrcHelper.IsValidIndex(n))
+            if (srcHelper.IsValidIndex(n))
             {
-                const auto ElementPtr = SrcHelper.GetElementPtr(n);
-                DstHelper.AddElement(ElementPtr);
+                const auto ElementPtr = srcHelper.GetElementPtr(n);
+                dstHelper.AddElement(ElementPtr);
             }
         }
     }
 
-    int LuaSet::push(lua_State* L, FProperty* Property, FScriptSet* Set, bool bIsNewInner)
+    int LuaSet::push(lua_State* L, FProperty* prop, FScriptSet* set, bool bIsNewInner)
     {
-        LuaSet* NewSet = new LuaSet(Property, Set, false, bIsNewInner);
-        LuaObject::addLink(L, NewSet->get());
-        return push(L, NewSet);
+        LuaSet* newSet = new LuaSet(prop, set, false, bIsNewInner);
+        LuaObject::addLink(L, newSet->get());
+        return push(L, newSet);
     }
 
     int LuaSet::push(lua_State* L, LuaSet* luaSet)
@@ -107,17 +107,17 @@ namespace NS_SLUA
 
     int LuaSet::__ctor(lua_State* L)
     {
-        FScriptSet Set = FScriptSet();
+        FScriptSet set = FScriptSet();
 
-        const auto ElementType = static_cast<EPropertyClass>(LuaObject::checkValue<int>(L, 1));
-        const auto UnClass = LuaObject::checkValueOpt<UClass*>(L, 2, nullptr);
+        const auto type = static_cast<EPropertyClass>(LuaObject::checkValue<int>(L, 1));
+        const auto cls = LuaObject::checkValueOpt<UClass*>(L, 2, nullptr);
 
-        if (ElementType == EPropertyClass::Object && !UnClass)
+        if (type == EPropertyClass::Object && !cls)
         {
             luaL_error(L, "The 2nd parameter should be UClass for the set of UObject");
         }
         
-        return push(L, PropertyProto::createProperty(PropertyProto(ElementType, UnClass)), &Set, true);
+        return push(L, PropertyProto::createProperty(PropertyProto(type, cls)), &set, true);
     }
 
     int LuaSet::Num(lua_State* L)
@@ -136,14 +136,14 @@ namespace NS_SLUA
             luaL_error(L, "arg 1 expect LuaSet, but got nil!");
         }
         GET_SET_CHECKER()
-        const FDefaultConstructedPropertyElement tempElement(UD->InElementProperty);
-        const auto ElementPtr = tempElement.GetObjAddress();
-        ElementChecker(L, UD->InElementProperty, static_cast<uint8*>(ElementPtr), 2, true);
+        const FDefaultConstructedPropertyElement tempElement(UD->inner);
+        const auto elementPtr = tempElement.GetObjAddress();
+        elementChecker(L, UD->inner, static_cast<uint8*>(elementPtr), 2, true);
 
-        const auto Index = UD->Helper.FindElementIndexFromHash(ElementPtr);
-        if (Index != INDEX_NONE)
+        const auto index = UD->helper.FindElementIndexFromHash(elementPtr);
+        if (index != INDEX_NONE)
         {
-            LuaObject::push(L, UD->InElementProperty, UD->Helper.GetElementPtr(Index));
+            LuaObject::push(L, UD->inner, UD->helper.GetElementPtr(index));
             LuaObject::push(L, true);
         }
         else
@@ -161,10 +161,10 @@ namespace NS_SLUA
             luaL_error(L, "arg 1 expect LuaSet, but got nil!");
         }
         GET_SET_CHECKER();
-        const FDefaultConstructedPropertyElement tempElement(UD->InElementProperty);
-        const auto ElementPtr = tempElement.GetObjAddress();
-        ElementChecker(L, UD->InElementProperty, static_cast<uint8*>(ElementPtr), 2, true);
-        UD->Helper.AddElement(ElementPtr);
+        const FDefaultConstructedPropertyElement tempElement(UD->inner);
+        const auto elementPtr = tempElement.GetObjAddress();
+        elementChecker(L, UD->inner, static_cast<uint8*>(elementPtr), 2, true);
+        UD->helper.AddElement(elementPtr);
 
         markDirty(UD);
 
@@ -178,13 +178,13 @@ namespace NS_SLUA
             luaL_error(L, "arg 1 expect LuaSet, but got nil!");
         }
         GET_SET_CHECKER();
-        const FDefaultConstructedPropertyElement tempElement(UD->InElementProperty);
-        const auto ElementPtr = tempElement.GetObjAddress();
-        ElementChecker(L, UD->InElementProperty, static_cast<uint8*>(ElementPtr), 2, true);
+        const FDefaultConstructedPropertyElement tempElement(UD->inner);
+        const auto elementPtr = tempElement.GetObjAddress();
+        elementChecker(L, UD->inner, static_cast<uint8*>(elementPtr), 2, true);
 
         markDirty(UD);
 
-        return LuaObject::push(L, UD->removeElement(ElementPtr));
+        return LuaObject::push(L, UD->removeElement(elementPtr));
     }
 
     int LuaSet::Clear(lua_State* L)
@@ -241,13 +241,13 @@ namespace NS_SLUA
 
     int LuaSet::PushElement(lua_State* L, LuaSet* UD, int32 Index)
     {
-        auto Set = UD->Set;
-        if (Set->IsValidIndex(Index))
+        auto set = UD->set;
+        if (set->IsValidIndex(Index))
         {
-            auto Element = UD->InElementProperty;
-            auto Parms = UD->Helper.GetElementPtr(Index);
+            auto inner = UD->inner;
+            auto parms = UD->helper.GetElementPtr(Index);
             lua_pushinteger(L, Index);
-            LuaObject::push(L, Element, Parms);
+            LuaObject::push(L, inner, parms);
             return 2;
         }
 
@@ -257,13 +257,13 @@ namespace NS_SLUA
     int LuaSet::CreateElementTypeObject(lua_State* L)
     {
         CheckUD(LuaSet, L, 1);
-        auto UnClass = UD->InElementProperty->GetClass();
-        if (UnClass)
+        auto cls = UD->inner->GetClass();
+        if (cls)
         {
-            const FDefaultConstructedPropertyElement tempElement(UD->InElementProperty);
-            const auto ElementPtr = tempElement.GetObjAddress();
-            if (ElementPtr)
-                return LuaObject::push(L, UD->InElementProperty, static_cast<uint8*>(ElementPtr));
+            const FDefaultConstructedPropertyElement tempElement(UD->inner);
+            const auto elementPtr = tempElement.GetObjAddress();
+            if (elementPtr)
+                return LuaObject::push(L, UD->inner, static_cast<uint8*>(elementPtr));
         }
         return 0;
     }
@@ -283,101 +283,101 @@ namespace NS_SLUA
 
     void LuaSet::AddReferencedObjects(FReferenceCollector& Collector)
     {
-        if (InElementProperty)
+        if (inner)
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             Collector.AddReferencedObject(InElementProperty);
 #else
-            InElementProperty->AddReferencedObjects(Collector);
+            inner->AddReferencedObjects(Collector);
 #endif
         
-        if (IsRef || num() <= 0)
+        if (isRef || num() <= 0)
             return;
 
-        if (!LuaReference::isRefProperty(InElementProperty))
+        if (!LuaReference::isRefProperty(inner))
             return;
         
-        bool Rehash = false;
-        for (int Index = Helper.GetMaxIndex() - 1; Index>= 0; Index--)
+        bool rehash = false;
+        for (int index = helper.GetMaxIndex() - 1; index>= 0; index--)
         {
-            if (Helper.IsValidIndex(Index))
+            if (helper.IsValidIndex(index))
             {
-                const auto ElementPtr = Helper.GetElementPtr(Index);
-                const bool ElementChanged = LuaReference::addRefByProperty(Collector, InElementProperty, ElementPtr);
-                if (ElementChanged)
+                const auto elementPtr = helper.GetElementPtr(index);
+                const bool bElementChanged = LuaReference::addRefByProperty(Collector, inner, elementPtr);
+                if (bElementChanged)
                 {
-                    removeAt(Index);
-                    Rehash = true;
+                    removeAt(index);
+                    rehash = true;
                 }
             }
         }
-        if (Rehash) Helper.Rehash();
+        if (rehash) helper.Rehash();
     }
 
     int LuaSet::num() const
     {
-        return Helper.Num();
+        return helper.Num();
     }
 
     void LuaSet::clear()
     {
-        if (!InElementProperty)
+        if (!inner)
             return;
         emptyElements();
     }
 
     FScriptSet* LuaSet::get() const
     {
-        return Set;
+        return set;
     }
 
     // Rewrite FScriptSetHelper::EmptyElements by adding ShouldFree judgment. If it's true, cal the original one.
-    void LuaSet::emptyElements(int32 Slack)
+    void LuaSet::emptyElements(int32 slack)
     {
-        if (!IsRef) 
+        if (!isRef) 
         {
-            Helper.EmptyElements();
+            helper.EmptyElements();
         }
         else 
         {
             checkSlow(Slack >= 0);
             const int32 OldNum = num();
-            if (OldNum || Slack) 
+            if (OldNum || slack) 
             {
-                Set->Empty(Slack, Helper.SetLayout);
+                set->Empty(slack, helper.SetLayout);
             }
         }
     }
 
     // Modify FScriptSetHelper::RemoveAt by adding ShouldFree judgment. If it's true, call the original one.
-    void LuaSet::removeAt(int32 Index, int32 Count)
+    void LuaSet::removeAt(int32 index, int32 count)
     {
-        if (!IsRef) {
-            Helper.RemoveAt(Index);
+        if (!isRef) {
+            helper.RemoveAt(index);
         }
         else {
-            check(Helper.IsValidIndex(Index));
-            for (; Count; ++Index) {
-                if (Helper.IsValidIndex(Index)) {
-                    Set->RemoveAt(Index, Helper.SetLayout);
-                    --Count;
+            check(helper.IsValidIndex(index));
+            for (; count; ++index) {
+                if (helper.IsValidIndex(index)) {
+                    set->RemoveAt(index, helper.SetLayout);
+                    --count;
                 }
             }
         }
     }
 
     // Modify FScriptSetHelper::RemoveAt for the use of our custom removeAt.
-    bool LuaSet::removeElement(const void* ElementToRemove)
+    bool LuaSet::removeElement(const void* elementToRemove)
     {
-        FProperty* LocalElementPropForCapture = InElementProperty;
-        const auto FoundIndex = Set->FindIndex(
-            ElementToRemove,
-            Helper.SetLayout,
-            [LocalElementPropForCapture](const void* Element) { return LocalElementPropForCapture->GetValueTypeHash(Element); },
-            [LocalElementPropForCapture](const void* A, const void* B) { return LocalElementPropForCapture->Identical(A, B); }
+        FProperty* localElementPropForCapture = inner;
+        const auto foundIndex = set->FindIndex(
+            elementToRemove,
+            helper.SetLayout,
+            [localElementPropForCapture](const void* Element) { return localElementPropForCapture->GetValueTypeHash(Element); },
+            [localElementPropForCapture](const void* A, const void* B) { return localElementPropForCapture->Identical(A, B); }
         );
-        if (FoundIndex != INDEX_NONE)
+        if (foundIndex != INDEX_NONE)
         {
-            removeAt(FoundIndex);
+            removeAt(foundIndex);
             return true;
         }
         else
@@ -408,7 +408,7 @@ namespace NS_SLUA
         auto self = userdata->ud;
         if (!userdata->parent && !(userdata->flag & UD_HADFREE))
             LuaObject::releaseLink(L, self->get());
-        if (self->IsRef) {
+        if (self->isRef) {
             LuaObject::unlinkProp(L, userdata);
         }
         delete userdata->ud;

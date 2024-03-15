@@ -213,7 +213,7 @@ namespace NS_SLUA
         {
             lua_pushcfunction(L, LuaSet::IterateReverse);
             lua_pushvalue(L, 1);
-            lua_pushinteger(L, UD->num());
+            lua_pushinteger(L, UD->helper.GetMaxIndex());
         }
         else
         {
@@ -228,15 +228,34 @@ namespace NS_SLUA
     int LuaSet::Iterate(lua_State* L)
     {
         CheckUD(LuaSet, L, 1);
-        const int32 i = luaL_checkinteger(L, 2) + 1;
-        return PushElement(L, UD, i);
+
+        auto set = UD->set;
+        int32 num = UD->helper.GetMaxIndex();
+        for (int32 i = luaL_checkinteger(L, 2) + 1; i < num; ++i)
+        {
+            if (set->IsValidIndex(i))
+            {
+                return PushElement(L, UD, i);
+            }
+        }
+
+        return 0;
     }
 
     int LuaSet::IterateReverse(lua_State* L)
     {
         CheckUD(LuaSet, L, 1);
-        const int32 i = luaL_checkinteger(L, 2) - 1;
-        return PushElement(L, UD, i);
+        
+        auto set = UD->set;
+        for (int32 i = luaL_checkinteger(L, 2) - 1; i >= 0; --i)
+        {
+            if (set->IsValidIndex(i))
+            {
+                return PushElement(L, UD, i);
+            }
+        }
+
+    	return 0;
     }
 
     int LuaSet::PushElement(lua_State* L, LuaSet* UD, int32 Index)

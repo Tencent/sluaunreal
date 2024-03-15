@@ -285,7 +285,7 @@ namespace NS_SLUA
     {
         if (inner)
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
-            Collector.AddReferencedObject(InElementProperty);
+            Collector.AddReferencedObject(inner);
 #else
             inner->AddReferencedObjects(Collector);
 #endif

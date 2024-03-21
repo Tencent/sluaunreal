@@ -854,24 +854,20 @@ namespace NS_SLUA {
             }
         }
 
-        lua_remove(L, -2);
         return t;
     }
 
     int luaFuncClosure(lua_State* L) {
         int argsCount = lua_gettop(L);
-        lua_pushvalue(L, lua_upvalueindex(1));
+        lua_pushvalue(L, lua_upvalueindex(2));
 
         UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
         if (!obj) {
             luaL_error(L, "arg 1 expect UObject, but got nil!");
         }
-        auto* table = ULuaOverrider::getObjectLuaTable(obj, L);
-        if (!table) {
-            luaL_error(L, "arg 1 expect table, but got nil!");
-        }
 
-        table->push(L);
+        // push self table
+    	lua_pushvalue(L, lua_upvalueindex(1));
 
         for (int i = 2; i <= argsCount; ++i) {
             lua_pushvalue(L, i);
@@ -1060,7 +1056,7 @@ namespace NS_SLUA {
             int t = getTableMember(L, *table, 2);
             if (t == LUA_TFUNCTION && !lua_iscfunction(L, -1))
             {
-                lua_pushcclosure(L, luaFuncClosure, 1);
+                lua_pushcclosure(L, luaFuncClosure, 2); // table and lua function as upvalue
                 cacheFunctionToUserValue(L, obj->GetClass());
             }
 
@@ -1099,7 +1095,7 @@ namespace NS_SLUA {
             int type = lua_gettable(L, -2);
             if (type != LUA_TNIL) {
                 if (type == LUA_TFUNCTION) {
-                    lua_pushcclosure(L, luaFuncClosure, 1);
+                    lua_pushcclosure(L, luaFuncClosure, 2); // table and lua function as upvalue
                     cacheFunctionToUserValue(L, obj->GetClass());
                 }
                 return 1;

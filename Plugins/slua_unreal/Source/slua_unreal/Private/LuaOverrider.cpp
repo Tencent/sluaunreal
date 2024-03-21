@@ -500,7 +500,6 @@ namespace NS_SLUA
     const char* LuaOverrider::UOBJECT_NAME = "Object";
     const char* LuaOverrider::SUPER_NAME = "Super";
     const char* LuaOverrider::CACHE_NAME = "__cache";
-    const char* LuaOverrider::INSTANCE_CACHE_NAME = "__instance_cache";
     const FName LuaOverrider::TRIGGER_ANIM_NOTIFY_FUNCTION_NAME = TEXT("TriggerAnimNotify");
 #if WITH_EDITOR
     ULuaOverrider::ClassNativeMap LuaOverrider::cacheNativeFuncs;

@@ -628,6 +628,28 @@ namespace NS_SLUA {
         }
     }
 
+    void cacheFunctionToUserValue(lua_State* L, UClass* cls)
+    {
+        int selfType = lua_type(L, 1);
+        
+        if (ensure(selfType == LUA_TUSERDATA)) 
+        {
+            if (lua_getuservalue(L, 1) == LUA_TNIL) 
+            {
+                lua_pop(L, 1);
+                lua_newtable(L);
+                lua_setuservalue(L, 1);
+                L->top++;
+                LuaObject::setUservalueMeta(L, cls);
+            }
+
+            lua_pushvalue(L, 2); // push key
+            lua_pushvalue(L, -3); // push reference value
+            lua_rawset(L, -3);
+            L->top--;
+        }
+    }
+
     int searchExtensionMethod(lua_State* L,UClass* cls,const char* name,bool isStatic=false) {
         int ret = 0;
         // search class and its super
@@ -849,14 +871,6 @@ namespace NS_SLUA {
             luaL_error(L, "arg 1 expect table, but got nil!");
         }
 
-        int retCountFix = 0;
-        if (lua_type(L, -1) == LUA_TSTRING) {
-            if (getTableMember(L, *table, argsCount + 1) != LUA_TFUNCTION) {
-                luaL_error(L, "can't find lua function %s", lua_tostring(L, -2));
-            }
-            retCountFix = 1;
-        }
-        
         table->push(L);
 
         for (int i = 2; i <= argsCount; ++i) {
@@ -864,7 +878,7 @@ namespace NS_SLUA {
         }
 
         lua_call(L, argsCount, LUA_MULTRET);
-        int retCount = lua_gettop(L) - argsCount - retCountFix;
+        int retCount = lua_gettop(L) - argsCount;
         return retCount;
     }
 
@@ -1046,12 +1060,8 @@ namespace NS_SLUA {
             int t = getTableMember(L, *table, 2);
             if (t == LUA_TFUNCTION && !lua_iscfunction(L, -1))
             {
-                lua_pushvalue(L, 2); // push function name instead of lua function
-                lua_pushcclosure(L, luaFuncClosure, 1); // push luaFuncClosure with function name upvalue
-                if (!objTable->isInstance)
-                {
-                    cacheFunction(L, nullptr);
-                }
+                lua_pushcclosure(L, luaFuncClosure, 1);
+                cacheFunctionToUserValue(L, obj->GetClass());
             }
 
             if (t != LUA_TNIL)
@@ -1085,53 +1095,12 @@ namespace NS_SLUA {
         auto* objTable = ULuaOverrider::getObjectTable(obj, L);
         if (objTable && objTable->table.getState() == L->l_G->mainthread) {
             objTable->table.push(L); // push self table
-            if (objTable->isInstance)
-            {
-                lua_pushstring(L, LuaOverrider::INSTANCE_CACHE_NAME);
-                if (lua_rawget(L, -2))
-                {
-                    lua_pushvalue(L, 2);
-                    if (lua_rawget(L, -2) != LUA_TNIL)
-                    {
-                        return 1;
-                    }
-                    lua_pop(L, 1);
-                }
-                lua_pop(L, 1);
-            }
-
             lua_pushvalue(L, 2);
             int type = lua_gettable(L, -2);
             if (type != LUA_TNIL) {
                 if (type == LUA_TFUNCTION) {
-                    if (objTable->isInstance)
-                    {
-                        lua_pushcclosure(L, luaFuncClosure, 1);
-                        // cache instance function in self.__instance_cache
-                        lua_pushstring(L, LuaOverrider::INSTANCE_CACHE_NAME);
-                        if (lua_rawget(L, -3) == LUA_TNIL)
-                        {
-                            lua_pop(L, 1);
-
-                            lua_newtable(L);
-                            lua_pushstring(L, LuaOverrider::INSTANCE_CACHE_NAME);
-                            lua_pushvalue(L, -2);
-                            lua_rawset(L, -5);
-                        }
-                        lua_pushvalue(L, 2);
-                        lua_pushvalue(L, -3);
-                        lua_rawset(L, -3);
-                        
-                        lua_pop(L, 1); // pop __instance_cache
-                    }
-                    else
-                    {
-                        lua_pop(L, 1); // pop lua function
-                        lua_pushvalue(L, 2); // push function name instead of lua function
-                        lua_pushcclosure(L, luaFuncClosure, 1); // push luaFuncClosure with function name upvalue
-
-                        cacheFunction(L, nullptr);
-                    }
+                    lua_pushcclosure(L, luaFuncClosure, 1);
+                    cacheFunctionToUserValue(L, obj->GetClass());
                 }
                 return 1;
             }

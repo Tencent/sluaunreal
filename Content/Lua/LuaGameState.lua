@@ -46,6 +46,7 @@ LuaGameState.MulticastRPC.TestMulticastRPC = {
 function LuaGameState:ctor(selfType)
     print("LuaGameState ctor", selfType, assert(selfType == require("LuaGameState")))
     self.Name = "LuaGameStateTestName"
+    self.TickCounter = 0
 end
 
 function LuaGameState:_PostConstruct()
@@ -75,6 +76,7 @@ function LuaGameState:GetLifetimeReplicatedProps()
         { "Position", ELifetimeCondition.COND_SimulatedOnly, FVectorType},
         { "TeamateNameList", ELifetimeCondition.COND_None, EPropertyClass.Array, EPropertyClass.Str},
         { "TeamatePositions", ELifetimeCondition.COND_None, EPropertyClass.Array, FVectorType},
+        { "TeamatePositionsAlways", ELifetimeCondition.COND_None, EPropertyClass.Array, FVectorType, RepNotifyCondition = 1},
     }
 end
 
@@ -141,6 +143,21 @@ function LuaGameState:OnRep_TeamatePositions()
     print("LuaGameState:OnRep_TeamatePositions: ")
     for k, v in pairs(self.TeamatePositions) do
         print("TeamatePositions: ", k, "Pos:", v.X, v.Y, v.Z)
+    end
+end
+
+function LuaGameState:OnRep_TeamatePositionsAlways()
+    print("LuaGameState:OnRep_TTeamatePositionsAlways: ")
+    for k, v in pairs(self.TeamatePositionsAlways) do
+        print("TeamatePositionsAlways: ", k, "Pos:", v.X, v.Y, v.Z)
+    end
+end
+
+function LuaGameState:ReceiveTick()
+    self.TickCounter = self.TickCounter + 1
+    if self.TickCounter % 100 == 0  then
+        print("LuaGameState::ReceiveTick TeamatePositionsAlways assign", self.TickCounter)
+        self.TeamatePositionsAlways = self.TeamatePositions
     end
 end
 

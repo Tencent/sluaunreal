@@ -143,6 +143,7 @@ namespace NS_SLUA
                             auto &replicatedIndexToNameMap = classReplicated.replicatedIndexToNameMap;
                             auto &properties = classReplicated.properties;
                             auto &lifetimeConditions = classReplicated.lifetimeConditions;
+                            auto &lifetimeRepNotifyConditions = classReplicated.lifetimeRepNotifyConditions;
                             
                             NS_SLUA::AutoStack as(L);
                             
@@ -227,6 +228,15 @@ namespace NS_SLUA
                                         properties.Add(childProperty);
 
                                         lifetimeConditions.Add(lifeCond);
+                                        
+                                        ELifetimeRepNotifyCondition repNotifyCondition = ELifetimeRepNotifyCondition::REPNOTIFY_OnChanged;
+                                        lua_getfield(L, -1, "RepNotifyCondition");
+                                        if (lua_isinteger(L, -1))
+                                        {
+                                            repNotifyCondition = (ELifetimeRepNotifyCondition)lua_tointeger(L, -1);
+                                        }
+                                        lua_pop(L, 1);
+                                        lifetimeRepNotifyConditions.Add(repNotifyCondition);
                                     }
 
                                     lua_pop(L, 1);

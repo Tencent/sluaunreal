@@ -302,12 +302,15 @@ namespace NS_SLUA
 
     void LuaSet::AddReferencedObjects(FReferenceCollector& Collector)
     {
-        if (inner)
+        if (inner) 
+        {
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             Collector.AddReferencedObject(inner);
 #else
-            inner->AddReferencedObjects(Collector);
+            auto ownerObject = inner->GetOwnerUObject();
+	        Collector.AddReferencedObject(ownerObject);
 #endif
+        }
         
         if (isRef || num() <= 0)
             return;

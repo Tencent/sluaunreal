@@ -32,8 +32,16 @@ namespace NS_SLUA {
         static int push(lua_State* L, LuaArray* luaArray);
 
         template<typename T>
-        static int push(lua_State* L, const TArray<T>& v) {
+        static typename std::enable_if<DeduceType<T>::value != EPropertyClass::Struct, int>::type push(lua_State* L, const TArray<T>& v) {
             FProperty* prop = PropertyProto::createDeduceProperty<T>();
+            auto array = reinterpret_cast<const FScriptArray*>(&v);
+            return push(L, prop, const_cast<FScriptArray*>(array), false);
+        }
+
+        template<typename T>
+        static typename std::enable_if<DeduceType<T>::value == EPropertyClass::Struct, int>::type push(lua_State* L, const TArray<T>& v)
+        {
+            FProperty* prop = PropertyProto::createDeduceProperty<T>(T::StaticStruct());
             auto array = reinterpret_cast<const FScriptArray*>(&v);
             return push(L, prop, const_cast<FScriptArray*>(array), false);
         }

@@ -97,6 +97,25 @@ namespace NS_SLUA {
             return prop;
         }
 
+        template<typename T>
+        static FProperty* createDeduceProperty(UScriptStruct* scriptStruct) {
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
+            static TMap<TWeakObjectPtr<UScriptStruct>, TWeakObjectPtr<FProperty>> CacheProperty;
+#else
+            static TMap<TWeakObjectPtr<UScriptStruct>, TWeakFieldPtr<FProperty>> CacheProperty;
+#endif
+            auto propPtr = CacheProperty.Find(scriptStruct);
+            if (propPtr && propPtr->Get())
+            {
+	            return propPtr->Get();
+            }
+
+            auto propertyClass = DeduceType<T>::value;
+            auto prop = createProperty(PropertyProto(propertyClass, scriptStruct));
+            CacheProperty.Add(scriptStruct, prop);
+            return prop;
+        }
+
         EPropertyClass type;
         EPropertyClass subType;
         UClass* cls;

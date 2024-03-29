@@ -37,9 +37,17 @@ namespace NS_SLUA {
         static int push(lua_State* L, LuaSet* luaSet);
 
         template<typename T>
-        static int push(lua_State* L, const TSet<T>& v)
+        static typename std::enable_if<DeduceType<T>::value != EPropertyClass::Struct, int>::type push(lua_State* L, const TSet<T>& v)
         {
             FProperty* property = PropertyProto::createDeduceProperty<T>();
+            const FScriptSet* set = reinterpret_cast<const FScriptSet*>(&v);
+            return push(L, property, const_cast<FScriptSet*>(set), false);
+        }
+
+        template<typename T>
+        static typename std::enable_if<DeduceType<T>::value == EPropertyClass::Struct, int>::type push(lua_State* L, const TSet<T>& v)
+        {
+            FProperty* property = PropertyProto::createDeduceProperty<T>(T::StaticStruct());
             const FScriptSet* set = reinterpret_cast<const FScriptSet*>(&v);
             return push(L, property, const_cast<FScriptSet*>(set), false);
         }

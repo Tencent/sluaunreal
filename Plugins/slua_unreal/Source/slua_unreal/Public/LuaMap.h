@@ -51,9 +51,26 @@ namespace NS_SLUA {
         static int push(lua_State* L, LuaMap* luaMap);
         
         template<typename K,typename V>
-        static int push(lua_State* L, const TMap<K, V>& v) {
+        static typename std::enable_if<DeduceType<K>::value != EPropertyClass::Struct && DeduceType<V>::value != EPropertyClass::Struct, int>::type
+    	push(lua_State* L, const TMap<K, V>& v) {
             FProperty* keyProp = PropertyProto::createDeduceProperty<K>();
             FProperty* valueProp = PropertyProto::createDeduceProperty<V>();
+            return push(L, keyProp, valueProp, reinterpret_cast<FScriptMap*>(const_cast<TMap<K, V>*>(&v)), false);
+        }
+
+        template<typename K, typename V>
+        static typename std::enable_if<DeduceType<K>::value != EPropertyClass::Struct && DeduceType<V>::value == EPropertyClass::Struct, int>::type
+            push(lua_State* L, const TMap<K, V>& v) {
+            FProperty* keyProp = PropertyProto::createDeduceProperty<K>();
+            FProperty* valueProp = PropertyProto::createDeduceProperty<V>(V::StaticStruct());
+            return push(L, keyProp, valueProp, reinterpret_cast<FScriptMap*>(const_cast<TMap<K, V>*>(&v)), false);
+        }
+
+        template<typename K, typename V>
+        static typename std::enable_if<DeduceType<K>::value == EPropertyClass::Struct && DeduceType<V>::value == EPropertyClass::Struct, int>::type
+            push(lua_State* L, const TMap<K, V>& v) {
+            FProperty* keyProp = PropertyProto::createDeduceProperty<K>(K::StaticStruct);
+            FProperty* valueProp = PropertyProto::createDeduceProperty<V>(V::StaticStruct());
             return push(L, keyProp, valueProp, reinterpret_cast<FScriptMap*>(const_cast<TMap<K, V>*>(&v)), false);
         }
 

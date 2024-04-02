@@ -100,7 +100,8 @@ namespace NS_SLUA {
         if (!isRef) {
             clear();
             ensure(map);
-            SafeDelete(map);
+            delete map;
+            map = nullptr;
         }
         if (isNewInner)
         {

@@ -861,13 +861,21 @@ namespace NS_SLUA {
         int argsCount = lua_gettop(L);
         lua_pushvalue(L, lua_upvalueindex(2));
 
+        // Push self table
+    	lua_pushvalue(L, lua_upvalueindex(1));
+
+        // Check if obj equal to self table's Object
         UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
         if (!obj) {
             luaL_error(L, "arg 1 expect UObject, but got nil!");
         }
 
-        // push self table
-    	lua_pushvalue(L, lua_upvalueindex(1));
+    	lua_pushstring(L, SLUA_CPPINST);
+        lua_rawget(L, -2);
+        if (lua_touserdata(L, -1) != obj) {
+            luaL_error(L, "Self table is mismatch argument 1 UObject. Don't save this function for call.");
+        }
+        lua_pop(L, 1);
 
         for (int i = 2; i <= argsCount; ++i) {
             lua_pushvalue(L, i);
@@ -1047,13 +1055,13 @@ namespace NS_SLUA {
         auto* objTable = ULuaOverrider::getObjectTable(obj, L);
         if (objTable)
         {
-            auto table = &objTable->table;
-            if (table->getState() != L->l_G->mainthread)
+            auto &table = objTable->table;
+            if (table.getState() != L->l_G->mainthread)
             {
                 return 0;
             }
 
-            int t = getTableMember(L, *table, 2);
+            int t = getTableMember(L, table, 2);
             if (t == LUA_TFUNCTION && !lua_iscfunction(L, -1))
             {
                 lua_pushcclosure(L, luaFuncClosure, 2); // table and lua function as upvalue

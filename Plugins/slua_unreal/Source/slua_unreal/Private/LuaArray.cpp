@@ -100,7 +100,8 @@ namespace NS_SLUA {
             // should destroy inner property value
             clear();
             ensure(array);
-            SafeDelete(array);
+            delete array;
+            array = nullptr;
         }
 
         if (isNewInner)

@@ -822,7 +822,7 @@ namespace NS_SLUA {
             UserData<WeakUObjectUD*>* ud = reinterpret_cast<UserData<WeakUObjectUD*>*>(lua_touserdata(L, 1));
             ensure(ud->flag&UD_WEAKUPTR);
             ud->flag |= UD_HADFREE;
-            SafeDelete(ud->ud);
+            delete ud->ud;
             return 0;
         }
 
@@ -851,7 +851,7 @@ namespace NS_SLUA {
             if (shared->getSharedReferenceCount() == 1) {
                 LuaObject::releaseLink(L, shared->get(L));
             }
-            SafeDelete(ud->ud);
+            delete ud->ud;
             return 0;
         }
 

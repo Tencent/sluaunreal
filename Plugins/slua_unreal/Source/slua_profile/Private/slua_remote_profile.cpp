@@ -41,7 +41,7 @@ namespace NS_SLUA
         StopTransport();
         
         Thread->WaitForCompletion();
-        SafeDelete(Thread);
+        delete Thread;
     }
 
     FOnProfileMessageDelegate& FProfileServer::OnProfileMessageRecv()

@@ -26,7 +26,11 @@ ULuaDelegate::ULuaDelegate(const FObjectInitializer& ObjectInitializer)
 }
 
 ULuaDelegate::~ULuaDelegate() {
-    SafeDelete(luafunction);
+    if (luafunction)
+    {
+	    delete luafunction;
+        luafunction = nullptr;
+    }
 }
 
 void ULuaDelegate::EventTrigger()
@@ -65,8 +69,11 @@ void ULuaDelegate::bindFunction(UFunction *ufunc) {
 
 void ULuaDelegate::dispose()
 {
-    SafeDelete(luafunction);
-    ufunction = nullptr;
+    if (luafunction)
+    {
+        delete luafunction;
+        luafunction = nullptr;
+    }
 }
 
 namespace NS_SLUA {

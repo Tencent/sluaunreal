@@ -486,7 +486,10 @@ namespace NS_SLUA {
         if (!mainState && overrider)
             overrider->removeOverrides();
 #endif
-        SafeDelete(overrider);
+        if (overrider) {
+	        delete overrider;
+            overrider = nullptr;
+        }
 
         releaseAllLink();
 
@@ -507,7 +510,10 @@ namespace NS_SLUA {
             L=nullptr;
         }
         objRefs.Empty();
-        SafeDelete(deadLoopCheck);
+        if (deadLoopCheck) {
+	        delete deadLoopCheck;
+            deadLoopCheck = nullptr;
+        }
 
         LuaMemoryProfile::stop();
 
@@ -1176,7 +1182,8 @@ namespace NS_SLUA {
     {
         Stop();
         thread->WaitForCompletion();
-        SafeDelete(thread);
+        delete thread;
+        thread = nullptr;
     }
 
     uint32 FDeadLoopCheck::Run()

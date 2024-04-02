@@ -57,7 +57,8 @@ namespace NS_SLUA
         {
             clear();
             ensure(set);
-            SafeDelete(set);
+            delete set;
+            set = nullptr;
         }
 
         if (isNewInner)

@@ -245,9 +245,14 @@ namespace NS_SLUA {
         return 0;
     }
 
-    int LuaMultiDelegate::gc(lua_State* L) { 
-        CheckUD(LuaMultiDelegateWrap,L,1);
-        delete UD;
+    int LuaMultiDelegate::gc(lua_State* L) {
+        auto userdata = (UserData<LuaMultiDelegateWrap*>*)lua_touserdata(L, 1);
+        auto self = userdata->ud;
+        if (!userdata->parent && !(userdata->flag & UD_HADFREE))
+            LuaObject::releaseLink(L, self->delegate);
+        if (userdata->parent)
+            LuaObject::unlinkProp(L, userdata);
+        delete self;
         return 0;    
     }
    
@@ -353,8 +358,13 @@ namespace NS_SLUA {
 
     int LuaDelegate::gc(lua_State* L)
     {
-        CheckUD(LuaDelegateWrap, L, 1);
-        delete UD;
+        auto userdata = (UserData<LuaDelegateWrap*>*)lua_touserdata(L, 1);
+        auto self = userdata->ud;
+        if (!userdata->parent && !(userdata->flag & UD_HADFREE))
+            LuaObject::releaseLink(L, self->delegate);
+        if (userdata->parent)
+            LuaObject::unlinkProp(L, userdata);
+        delete self;
         return 0;
     }
 

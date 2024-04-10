@@ -2069,6 +2069,28 @@ namespace NS_SLUA {
     }
 #endif
 
+    int referencePusherUDelegateProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress,uint16 replicateIndex)
+	{
+        int ret = pushUDelegateProperty(L, prop, parms, nullptr);
+        void* ud = lua_touserdata(L, -ret);
+        if (ud) 
+        {
+            LuaObject::linkProp(L, parentAddress, ud);
+        }
+        return 1;
+    }
+
+    int referencePusherUMulticastDelegateProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress,uint16 replicateIndex)
+	{
+		int ret = pushUMulticastDelegateProperty(L, prop, parms, nullptr);
+        void* ud = lua_touserdata(L, -ret);
+        if (ud) 
+        {
+            LuaObject::linkProp(L, parentAddress, ud);
+        }
+        return 1;
+    }
+
     void* checkUDelegateProperty(lua_State* L,FProperty* prop,uint8* parms,int i,bool bForceCopy) {
         auto p = CastField<FDelegateProperty>(prop);
         ensure(p);
@@ -2762,6 +2784,8 @@ namespace NS_SLUA {
         regReferencePusher(FStructProperty::StaticClass(), referencePusherUStructProperty);
         regReferencePusher(FSoftObjectProperty::StaticClass(), referencePusherUSoftObjectProperty);
         regReferencePusher(FSoftClassProperty::StaticClass(), referencePusherUSoftClassProperty);
+        regReferencePusher(FDelegateProperty::StaticClass(), referencePusherUDelegateProperty);
+        regReferencePusher(FMulticastDelegateProperty::StaticClass(), referencePusherUMulticastDelegateProperty);
         
         LuaWrapper::initExt(L);
         // For PUBG Mobile

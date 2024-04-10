@@ -435,14 +435,14 @@ namespace NS_SLUA {
     }
 
     int LuaMap::gc(lua_State* L) {
-        auto userdata = (UserData<LuaMap*>*)luaL_testudata(L, 1, "LuaMap");
+        auto userdata = (UserData<LuaMap*>*)lua_touserdata(L, 1);
         auto self = userdata->ud;
         if (!userdata->parent && !(userdata->flag & UD_HADFREE))
             LuaObject::releaseLink(L, self->get());
         if (self->isRef) {
             LuaObject::unlinkProp(L, userdata);
         }
-        delete userdata->ud;
+        delete self;
         return 0;
     }
 

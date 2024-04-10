@@ -2593,7 +2593,7 @@ namespace NS_SLUA {
 
     int LuaObject::gcStruct(lua_State* L) {
         QUICK_SCOPE_CYCLE_COUNTER(Stat_GCUStruct);
-        auto userdata = (UserData<LuaStruct*>*)luaL_testudata(L, 1, "LuaStruct");
+        auto userdata = (UserData<LuaStruct*>*)lua_touserdata(L, 1);
         auto ls = userdata->ud;
         if (!userdata->parent && !(userdata->flag & UD_HADFREE))
             releaseLink(L, ls->buf);

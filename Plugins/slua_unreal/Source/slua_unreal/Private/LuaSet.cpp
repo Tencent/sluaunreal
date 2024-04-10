@@ -427,14 +427,14 @@ namespace NS_SLUA
 
     int LuaSet::gc(lua_State* L)
     {
-        auto userdata = (UserData<LuaSet*>*)luaL_testudata(L, 1, "LuaSet");
+        auto userdata = (UserData<LuaSet*>*)lua_touserdata(L, 1);
         auto self = userdata->ud;
         if (!userdata->parent && !(userdata->flag & UD_HADFREE))
             LuaObject::releaseLink(L, self->get());
         if (self->isRef) {
             LuaObject::unlinkProp(L, userdata);
         }
-        delete userdata->ud;
+        delete self;
         return 0;
     }
 }

@@ -647,7 +647,7 @@ namespace NS_SLUA {
     }
 
     int LuaArray::gc(lua_State* L) {
-        auto userdata = (UserData<LuaArray*>*)luaL_testudata(L, 1, "LuaArray");
+        auto userdata = (UserData<LuaArray*>*)lua_touserdata(L, 1);
         auto self = userdata->ud;
         if (!userdata->parent && !(userdata->flag & UD_HADFREE)) {
             LuaObject::releaseLink(L, self->get());
@@ -656,7 +656,7 @@ namespace NS_SLUA {
             LuaObject::unlinkProp(L, userdata);
         }
         
-        delete userdata->ud;
+        delete self;
         return 0;
     }
 }

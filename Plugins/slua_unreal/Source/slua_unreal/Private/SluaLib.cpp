@@ -379,25 +379,10 @@ namespace NS_SLUA {
 
     int SluaUtil::removeDelegate(lua_State* L)
     {
-        if (!lua_islightuserdata(L, 1))
-            luaL_error(L, "arg 2 expect ULuaDelegate");
-        auto obj = reinterpret_cast<ULuaDelegate*>(lua_touserdata(L, 1));
-        auto state = LuaState::get(L);
-        auto& map = state->cacheSet();
-        if (!obj->IsValidLowLevel() || !LuaObject::isUObjectValid(obj) || !map.Contains(obj))
-        {
-#if UE_BUILD_DEVELOPMENT
-            luaL_error(L, "Invalid ULuaDelegate!");
-#else
-            return 0;
-#endif
-        }
-
-        obj->dispose();
-        // remove reference
-        LuaObject::removeRef(L, obj);
-
-        return 0;
+        int64 handle = lua_tointeger(L, 1);
+        if (handle <= 0)
+			luaL_error(L,"arg 1 expect integer type of handle");
+        return ULuaDelegate::removeLuaDelegateByHandle(L, handle);
     }
 
 #if UE_BUILD_DEVELOPMENT

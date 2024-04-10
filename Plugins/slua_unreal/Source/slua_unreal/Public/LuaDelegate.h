@@ -35,6 +35,10 @@ public:
 
     void dispose();
 
+    static int addLuaDelegate(NS_SLUA::lua_State* L, ULuaDelegate* obj);
+    static int removeLuaDelegate(NS_SLUA::lua_State* L, ULuaDelegate* obj);
+    static int removeLuaDelegateByHandle(NS_SLUA::lua_State* L, int64 handle);
+
 #if WITH_EDITOR
     void setPropName(const FString& name) {
         pName = name;
@@ -49,6 +53,8 @@ protected:
     NS_SLUA::LuaVar* luafunction;
     
     UFunction* ufunction;
+
+    int64 handle;
 
 #if WITH_EDITOR
     FString pName;

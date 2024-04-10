@@ -2249,7 +2249,6 @@ namespace NS_SLUA {
 
     const char* LuaObject::getType(lua_State* L, int p) {
         if (!lua_isuserdata(L, p)) {
-            lua_pop(L, 1);
             return "";
         }
         int tt = luaL_getmetafield(L, p, "__name");

@@ -622,7 +622,12 @@ namespace NS_SLUA {
         if(numOfVar==1 && vars[0].luatype==LV_USERDATA) {
             auto L = getState();
             push(L);
-            void* p = luaL_testudata(L, -1, t);
+            auto typeName = LuaObject::getType(L, -1);
+            if (strcmp(typeName, t) != 0) {
+                lua_pop(L,1);
+                return false;
+            }
+            void* p = lua_touserdata(L, -1);
             lua_pop(L,1);
             return p!=nullptr;
         }

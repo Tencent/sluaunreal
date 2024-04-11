@@ -45,4 +45,13 @@ class DEMOCPP_API AdemocppGameModeBase : public ALuaGameMode
 
 protected:
 	virtual void BeginPlay() override;
+
+    UFUNCTION()
+    void CallWithArray(const TArray<FPlayerData>& Array);
+
+    UFUNCTION()
+    void CallWithSet(const TSet<FPlayerData>& Set);
+
+    UFUNCTION()
+    void CallWithMap(const TMap<int32, FPlayerData>& Map);
 };

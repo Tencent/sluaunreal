@@ -862,7 +862,7 @@ namespace NS_SLUA {
         lua_pushvalue(L, lua_upvalueindex(2));
 
         // Push self table
-    	lua_pushvalue(L, lua_upvalueindex(1));
+        lua_pushvalue(L, lua_upvalueindex(1));
 
         // Check if obj equal to self table's Object
         UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
@@ -870,7 +870,7 @@ namespace NS_SLUA {
             luaL_error(L, "arg 1 expect UObject, but got nil!");
         }
 
-    	lua_pushstring(L, SLUA_CPPINST);
+        lua_pushstring(L, SLUA_CPPINST);
         lua_rawget(L, -2);
         if (lua_touserdata(L, -1) != obj) {
             luaL_error(L, "Self table is mismatch argument 1 UObject. Don't save this function for call.");
@@ -1659,6 +1659,40 @@ namespace NS_SLUA {
         return LuaObject::push(L, obj, ref);
     }
 
+    bool checkContainerInnerProperty(lua_State* L, int i, FProperty* expectInner, FProperty* argumentInner, const char* containerType)
+    {
+        auto expectInnerClass = expectInner->GetClass();
+        auto argumentInnerClass = argumentInner->GetClass();
+        if (argumentInnerClass != expectInnerClass)
+        {
+            luaL_error(L, "arg %d expect %s of %s, but got %s of %s", i, containerType,
+                expectInnerClass ? TCHAR_TO_UTF8(*expectInnerClass->GetName()) : "",
+                containerType,
+                argumentInnerClass ? TCHAR_TO_UTF8(*argumentInnerClass->GetName()) : "");
+        }
+
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
+        static constexpr auto StructPropCastFlag = CASTCLASS_UStructProperty;
+        if (expectInnerClass->HasAnyCastFlag(StructPropCastFlag))
+#else
+        static constexpr auto StructPropCastFlag = CASTCLASS_FStructProperty;
+        if (expectInnerClass->HasAnyCastFlags(StructPropCastFlag))
+#endif
+        {
+            FStructProperty* argumentStructProp = (FStructProperty*)argumentInner;
+            FStructProperty* innerStructProp = (FStructProperty*)expectInner;
+            if (argumentStructProp->Struct != innerStructProp->Struct)
+            {
+                luaL_error(L, "arg %d expect %s of %s, but got %s of %s", i, containerType,
+                        innerStructProp->Struct ? TCHAR_TO_UTF8(*innerStructProp->Struct->GetName()) : "",
+                        containerType,
+                        argumentStructProp->Struct ? TCHAR_TO_UTF8(*argumentStructProp->Struct->GetName()) : "");
+            }
+        }
+
+        return true;
+    }
+
     void* checkUArrayProperty(lua_State* L,FProperty* prop,uint8* parms,int i,bool bForceCopy) {
         auto p = CastField<FArrayProperty>(prop);
         ensure(p);
@@ -1704,6 +1738,8 @@ namespace NS_SLUA {
         if (!UD)
             luaL_error(L, "expect LuaArray at %d, but got nil", i);
 
+        checkContainerInnerProperty(L, i, p->Inner, UD->getInnerProp(), "Array");
+        
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         auto outerFunc = Cast<UFunction>(p->GetOuter());
 #else
@@ -1753,6 +1789,9 @@ namespace NS_SLUA {
         if (!UD)
             luaL_error(L, "expect LuaMap at %d, but got nil", i);
 
+        checkContainerInnerProperty(L, i, p->KeyProp, UD->getKeyProp(), "Map Key");
+        checkContainerInnerProperty(L, i, p->ValueProp, UD->getValueProp(), "Map Value");
+
         auto scriptMap = (FScriptMap*)parms;
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         auto outerFunc = Cast<UFunction>(p->GetOuter());
@@ -1799,6 +1838,8 @@ namespace NS_SLUA {
         CheckUD(LuaSet, L, i);
         if (!UD)
             luaL_error(L, "expect LuaSet at %d, but got nil", i);
+
+        checkContainerInnerProperty(L, i, p->ElementProp, UD->getInnerProp(), "Set");
 
         auto scriptSet = (FScriptSet*)params;
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
@@ -2070,7 +2111,7 @@ namespace NS_SLUA {
 #endif
 
     int referencePusherUDelegateProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress,uint16 replicateIndex)
-	{
+    {
         int ret = pushUDelegateProperty(L, prop, parms, nullptr);
         void* ud = lua_touserdata(L, -ret);
         if (ud) 
@@ -2081,8 +2122,8 @@ namespace NS_SLUA {
     }
 
     int referencePusherUMulticastDelegateProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress,uint16 replicateIndex)
-	{
-		int ret = pushUMulticastDelegateProperty(L, prop, parms, nullptr);
+    {
+        int ret = pushUMulticastDelegateProperty(L, prop, parms, nullptr);
         void* ud = lua_touserdata(L, -ret);
         if (ud) 
         {
@@ -2235,8 +2276,12 @@ namespace NS_SLUA {
             luaL_error(L, "expect struct but got nil");
         }
 
+        if (uss != ls->uss)
+            luaL_error(L, "expect struct of %s, but got struct of %s", TCHAR_TO_UTF8(*uss->GetName()), TCHAR_TO_UTF8(*ls->uss->GetName()));
+        
         if (p->GetSize() != ls->size)
             luaL_error(L, "expect struct size == %d, but got %d", p->GetSize(), ls->size);
+        
         if (!bForceCopy && IsReferenceParam(p->PropertyFlags, outerFunc)) {
             // shallow copy
             FMemory::Memcpy(parms, ls->buf, p->GetSize());
@@ -2351,9 +2396,9 @@ namespace NS_SLUA {
         if (!interfacePtr) {
             FString clsName(TEXT(""));
             if (obj) {
-				auto cls = obj->GetClass();
+                auto cls = obj->GetClass();
                 if (cls)
-					clsName = cls->GetName();
+                    clsName = cls->GetName();
             }
             luaL_error(L, "arg %d expect interface class of %s, but got %s", i,
                         TCHAR_TO_UTF8(*p->InterfaceClass->GetName()), TCHAR_TO_UTF8(*clsName));

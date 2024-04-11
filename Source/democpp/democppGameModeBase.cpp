@@ -21,3 +21,15 @@ void AdemocppGameModeBase::BeginPlay()
     PlayerDataMap.Add(5, { TEXT("HanMeiMei"), TEXT("6") });
     CallLuaFunction(TEXT("CppCallLuaFunctionWithMap"), PlayerDataMap);
 }
+
+void AdemocppGameModeBase::CallWithArray(const TArray<FPlayerData>& Array)
+{
+}
+
+void AdemocppGameModeBase::CallWithSet(const TSet<FPlayerData>& Set)
+{
+}
+
+void AdemocppGameModeBase::CallWithMap(const TMap<int32, FPlayerData>& Map)
+{
+}

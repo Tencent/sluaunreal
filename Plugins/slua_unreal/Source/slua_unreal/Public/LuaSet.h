@@ -64,7 +64,15 @@ namespace NS_SLUA {
         }
 #endif
 
-        FScriptSet* get() const;
+        FScriptSet* get() const
+        {
+            return set;
+        }
+        
+        FProperty* getInnerProp() const
+        {
+            return inner;
+        }
 
         template<typename T>
         const TSet<T>& asTSet(lua_State* L) const

@@ -84,6 +84,16 @@ namespace NS_SLUA {
             return map;
         }
 
+        FProperty* getKeyProp() const
+        {
+            return keyProp;
+        }
+
+        FProperty* getValueProp() const
+        {
+            return valueProp;
+        }
+
         static bool markDirty(LuaMap* luaMap);
 
         virtual void AddReferencedObjects( FReferenceCollector& Collector ) override;

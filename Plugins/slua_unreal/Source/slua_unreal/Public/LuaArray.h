@@ -50,8 +50,13 @@ namespace NS_SLUA {
         LuaArray(FArrayProperty* arrayProp, FScriptArray* buf, bool bIsRef, struct FLuaNetSerializationProxy* netProxy, uint16 replicatedIndex);
         ~LuaArray();
 
-        FScriptArray* get() {
+        FScriptArray* get() const {
             return array;
+        }
+
+        FProperty* getInnerProp() const
+        {
+            return inner;
         }
 
         static bool markDirty(LuaArray* luaArray);

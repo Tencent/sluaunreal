@@ -110,15 +110,32 @@ namespace NS_SLUA
     {
         FScriptSet set = FScriptSet();
 
-        const auto type = static_cast<EPropertyClass>(LuaObject::checkValue<int>(L, 1));
-        const auto cls = LuaObject::checkValueOpt<UClass*>(L, 2, nullptr);
-
-        if (type == EPropertyClass::Object && !cls)
+        FProperty* prop;
+        auto type = (EPropertyClass)LuaObject::checkValue<int>(L,1);
+        switch (type)
         {
-            luaL_error(L, "The 2nd parameter should be UClass for the set of UObject");
+        case EPropertyClass::Object:
+            {
+                auto cls = LuaObject::checkValueOpt<UClass*>(L, 2, nullptr);
+                if (!cls)
+                    luaL_error(L, "Set of UObject should have 2nd parameter is UClass");
+                prop = PropertyProto::createProperty(PropertyProto(type, cls));
+            }
+            break;
+        case EPropertyClass::Struct:
+            {
+                auto scriptStruct = LuaObject::checkValueOpt<UScriptStruct*>(L, 2, nullptr);
+                if (!scriptStruct)
+                    luaL_error(L, "Set of Struct should have 2nd parameter is UStruct");
+                prop = PropertyProto::createProperty(PropertyProto(type, scriptStruct));
+            }
+            break;
+        default:
+            prop = PropertyProto::createProperty(PropertyProto(type));
+            break;
         }
         
-        return push(L, PropertyProto::createProperty(PropertyProto(type, cls)), &set, true);
+        return push(L, prop, &set, true);
     }
 
     int LuaSet::Num(lua_State* L)
@@ -256,7 +273,7 @@ namespace NS_SLUA
             }
         }
 
-    	return 0;
+        return 0;
     }
 
     int LuaSet::PushElement(lua_State* L, LuaSet* UD, int32 Index)
@@ -309,7 +326,7 @@ namespace NS_SLUA
             Collector.AddReferencedObject(inner);
 #else
             auto ownerObject = inner->GetOwnerUObject();
-	        Collector.AddReferencedObject(ownerObject);
+            Collector.AddReferencedObject(ownerObject);
 #endif
         }
         
@@ -346,11 +363,6 @@ namespace NS_SLUA
         if (!inner)
             return;
         emptyElements();
-    }
-
-    FScriptSet* LuaSet::get() const
-    {
-        return set;
     }
 
     // Rewrite FScriptSetHelper::EmptyElements by adding ShouldFree judgment. If it's true, cal the original one.

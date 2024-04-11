@@ -283,15 +283,55 @@ namespace NS_SLUA {
     int LuaMap::__ctor(lua_State* L) {
         auto keyType = (EPropertyClass)LuaObject::checkValue<int>(L, 1);
         auto valueType = (EPropertyClass)LuaObject::checkValue<int>(L, 2);
-        auto cls = LuaObject::checkValueOpt<UClass*>(L, 3, nullptr);
-        auto cls2 = LuaObject::checkValueOpt<UClass*>(L, 4, nullptr);
-        if (keyType == EPropertyClass::Object && !cls)
-            luaL_error(L, "UObject key should have 3rd parameter is UClass");
-        if (valueType == EPropertyClass::Object && !cls2)
-            luaL_error(L, "UObject value should have 4th parameter is UClass");
 
-        auto keyProp = PropertyProto::createProperty(PropertyProto(keyType,cls));
-        auto valueProp = PropertyProto::createProperty(PropertyProto(valueType,cls2));
+        FProperty* keyProp;
+        FProperty* valueProp;
+        switch (keyType)
+        {
+        case EPropertyClass::Object:
+            {
+                auto cls = LuaObject::checkValueOpt<UClass*>(L, 3, nullptr);
+                if (!cls)
+                    luaL_error(L, "Map's UObject type of key should have 3rd parameter is UClass");
+                keyProp = PropertyProto::createProperty(PropertyProto(keyType, cls));
+            }
+            break;
+        case EPropertyClass::Struct:
+            {
+                auto scriptStruct = LuaObject::checkValueOpt<UScriptStruct*>(L, 3, nullptr);
+                if (!scriptStruct)
+                    luaL_error(L, "Map's Struct type of key should have 3rd parameter is UStruct");
+                keyProp = PropertyProto::createProperty(PropertyProto(keyType, scriptStruct));
+            }
+            break;
+        default:
+            keyProp = PropertyProto::createProperty(PropertyProto(keyType));
+            break;
+        }
+
+        switch (valueType)
+        {
+        case EPropertyClass::Object:
+            {
+                auto cls = LuaObject::checkValueOpt<UClass*>(L, 4, nullptr);
+                if (!cls)
+                    luaL_error(L, "UObject value should have 4th parameter is UClass");
+                valueProp = PropertyProto::createProperty(PropertyProto(valueType, cls));
+            }
+            break;
+        case EPropertyClass::Struct:
+            {
+                auto scriptStruct = LuaObject::checkValueOpt<UScriptStruct*>(L, 4, nullptr);
+                if (!scriptStruct)
+                    luaL_error(L, "Struct value should have 4th parameter is UStruct");
+                valueProp = PropertyProto::createProperty(PropertyProto(valueType, scriptStruct));
+            }
+            break;
+        default:
+            valueProp = PropertyProto::createProperty(PropertyProto(valueType));
+            break;
+        }
+        
         return push(L, keyProp, valueProp, nullptr, true);
     }
 

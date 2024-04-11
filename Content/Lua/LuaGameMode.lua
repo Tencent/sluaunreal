@@ -11,6 +11,9 @@ function LuaGameMode:CppCallLuaFunctionWithArray(List)
     for Index, Element in List:PairsLessGC() do
         print("Array of PlayerInfo: ", Element.PlayerName, Element.PlayerId)
     end
+    local FVector = import("Vector")
+    local EPropertyClass = import("EPropertyClass")
+    local Array = slua.Array(EPropertyClass.Struct, FVector)
 end
 
 function LuaGameMode:CppCallLuaFunctionWithSet(Set)
@@ -18,6 +21,9 @@ function LuaGameMode:CppCallLuaFunctionWithSet(Set)
     for Index, Element in pairs(Set) do
         print("Set of PlayerInfo: ", Element.PlayerName, Element.PlayerId)
     end
+    local FVector = import("Vector")
+    local EPropertyClass = import("EPropertyClass")
+    local Set = slua.Set(EPropertyClass.Struct, FVector)
 end
 
 function LuaGameMode:CppCallLuaFunctionWithMap(Map)
@@ -25,6 +31,9 @@ function LuaGameMode:CppCallLuaFunctionWithMap(Map)
     for Index, Element in pairs(Map) do
         print("Map of PlayerInfo: ", Index, Element.PlayerName, Element.PlayerId)
     end
+    local FVector = import("Vector")
+    local EPropertyClass = import("EPropertyClass")
+    local Map = slua.Map(EPropertyClass.Int, EPropertyClass.Struct, nil, FVector)
 end
 
 return Class(nil, nil, LuaGameMode)

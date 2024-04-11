@@ -277,23 +277,33 @@ namespace NS_SLUA {
     }
 
     int LuaArray::__ctor(lua_State* L) {
-        auto type = (EPropertyClass) LuaObject::checkValue<int>(L,1);
+        auto type = (EPropertyClass)LuaObject::checkValue<int>(L,1);
+        FProperty* prop;
+        switch (type)
+        {
+        case EPropertyClass::Object:
+            {
+                auto cls = LuaObject::checkValueOpt<UClass*>(L, 2, nullptr);
+                if (!cls)
+                    luaL_error(L, "Array of UObject should have second parameter is UClass");
+                prop = PropertyProto::createProperty(PropertyProto(type, cls));
+            }
+            break;
+        case EPropertyClass::Struct:
+            {
+                auto scriptStruct = LuaObject::checkValueOpt<UScriptStruct*>(L, 2, nullptr);
+                if (!scriptStruct)
+                    luaL_error(L, "Array of UStruct should have second parameter is UStruct");
+                prop = PropertyProto::createProperty(PropertyProto(type, scriptStruct));
+            }
+            break;
+        default:
+            prop = PropertyProto::createProperty(PropertyProto(type));
+            break;
+        }
+        
         auto array = FScriptArray();
-        if (type == EPropertyClass::Object)
-        {
-            auto cls = LuaObject::checkValueOpt<UClass*>(L, 2, nullptr);
-            if (!cls)
-                luaL_error(L, "Array of UObject should have second parameter is UClass");
-            return push(L, PropertyProto::createProperty(PropertyProto(type, cls)), &array, true);
-        }
-        else if (type == EPropertyClass::Struct)
-        {
-            auto scriptStruct = LuaObject::checkValueOpt<UScriptStruct*>(L, 2, nullptr);
-            if (!scriptStruct)
-                luaL_error(L, "Array of UStruct should have second parameter is UStruct");
-            return push(L, PropertyProto::createProperty(PropertyProto(type, scriptStruct)), &array, true);
-        }
-        return push(L, PropertyProto::createProperty(PropertyProto(type)), &array, true);
+        return push(L, prop, &array, true);
     }
 
     int LuaArray::Num(lua_State* L) {

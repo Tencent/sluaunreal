@@ -100,7 +100,12 @@ namespace NS_SLUA
         auto classLuaReplicatedPtr = classLuaReplicatedMap.Find(cls);
         if (classLuaReplicatedPtr)
         {
-            delete * classLuaReplicatedPtr;
+            auto classLuaReplicated = *classLuaReplicatedPtr;
+            if (classLuaReplicated->ustruct.IsValid())
+	        {
+	            classLuaReplicated->ustruct->RemoveFromRoot();
+	        }
+            delete classLuaReplicated;
             classLuaReplicatedMap.Remove(cls);
         }
     }

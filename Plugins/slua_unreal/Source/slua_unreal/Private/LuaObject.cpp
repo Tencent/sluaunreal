@@ -2276,7 +2276,7 @@ namespace NS_SLUA {
             luaL_error(L, "expect struct but got nil");
         }
 
-        if (uss != ls->uss)
+        if (!ls->uss->IsChildOf(uss))
             luaL_error(L, "expect struct of %s, but got struct of %s", TCHAR_TO_UTF8(*uss->GetName()), TCHAR_TO_UTF8(*ls->uss->GetName()));
         
         if (p->GetSize() != ls->size)

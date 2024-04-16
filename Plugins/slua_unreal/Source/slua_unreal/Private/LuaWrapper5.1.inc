@@ -928,6 +928,29 @@
             return 0;
         }
 
+        static int mul(lua_State* L) {
+            CheckSelf(FIntPoint);
+            if (lua_isnumber(L, 2)) {
+                auto Scale = LuaObject::checkValue<int>(L, 2);
+                *self = *self * Scale;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            if (LuaObject::matchType(L, 2, "FIntPoint")) {
+                auto Other = LuaObject::checkValue<FIntPoint*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                *self = *self * OtherRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FIntPoint operator mul error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __div(lua_State* L) {
             CheckSelf(FIntPoint);
             if (lua_isnumber(L, 2)) {
@@ -953,6 +976,29 @@
             return 0;
         }
 
+        static int div(lua_State* L) {
+            CheckSelf(FIntPoint);
+            if (lua_isnumber(L, 2)) {
+                auto Divisor = LuaObject::checkValue<int>(L, 2);
+                *self = *self / Divisor;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            if (LuaObject::matchType(L, 2, "FIntPoint")) {
+                auto Other = LuaObject::checkValue<FIntPoint*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                *self = *self / OtherRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FIntPoint operator div error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __add(lua_State* L) {
             CheckSelf(FIntPoint);
             if (LuaObject::matchType(L, 2, "FIntPoint")) {
@@ -971,6 +1017,23 @@
             return 0;
         }
 
+        static int add(lua_State* L) {
+            CheckSelf(FIntPoint);
+            if (LuaObject::matchType(L, 2, "FIntPoint")) {
+                auto Other = LuaObject::checkValue<FIntPoint*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                *self = *self + OtherRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FIntPoint operator add error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __sub(lua_State* L) {
             CheckSelf(FIntPoint);
             if (LuaObject::matchType(L, 2, "FIntPoint")) {
@@ -986,6 +1049,23 @@
                 return 1;
             }
             luaL_error(L, "FIntPoint operator__sub error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int sub(lua_State* L) {
+            CheckSelf(FIntPoint);
+            if (LuaObject::matchType(L, 2, "FIntPoint")) {
+                auto Other = LuaObject::checkValue<FIntPoint*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                *self = *self - OtherRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FIntPoint operator sub error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -1131,9 +1211,13 @@
             LuaObject::newType(L, "FIntPoint");
             LuaObject::addOperator(L, "__eq", __eq);
             LuaObject::addOperator(L, "__mul", __mul);
+            LuaObject::addOperator(L, "mul", mul);
             LuaObject::addOperator(L, "__div", __div);
+            LuaObject::addOperator(L, "div", div);
             LuaObject::addOperator(L, "__add", __add);
+            LuaObject::addOperator(L, "add", add);
             LuaObject::addOperator(L, "__sub", __sub);
+            LuaObject::addOperator(L, "sub", sub);
             LuaObject::addField(L, "X", get_X, set_X, true);
             LuaObject::addField(L, "Y", get_Y, set_Y, true);
             LuaObject::addField(L, "ZeroValue", get_ZeroValue, nullptr, false);
@@ -1233,6 +1317,29 @@
             return 0;
         }
 
+        static int mul(lua_State* L) {
+            CheckSelf(FIntVector);
+            if (LuaObject::matchType(L, 2, "FIntVector")) {
+                auto Other = LuaObject::checkValue<FIntVector*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                *self = *self * OtherRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            if (lua_isnumber(L, 2)) {
+                auto Scale = LuaObject::checkValue<int>(L, 2);
+                *self = *self * Scale;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FIntVector operator mul error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __div(lua_State* L) {
             CheckSelf(FIntVector);
             if (lua_isnumber(L, 2)) {
@@ -1243,6 +1350,18 @@
                 return 1;
             }
             luaL_error(L, "FIntVector operator__div error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int div(lua_State* L) {
+            CheckSelf(FIntVector);
+            if (lua_isnumber(L, 2)) {
+                auto Divisor = LuaObject::checkValue<int>(L, 2);
+                *self = *self / Divisor;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FIntVector operator div error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -1264,6 +1383,23 @@
             return 0;
         }
 
+        static int add(lua_State* L) {
+            CheckSelf(FIntVector);
+            if (LuaObject::matchType(L, 2, "FIntVector")) {
+                auto Other = LuaObject::checkValue<FIntVector*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                *self = *self + OtherRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FIntVector operator add error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __sub(lua_State* L) {
             CheckSelf(FIntVector);
             if (LuaObject::matchType(L, 2, "FIntVector")) {
@@ -1279,6 +1415,23 @@
                 return 1;
             }
             luaL_error(L, "FIntVector operator__sub error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int sub(lua_State* L) {
+            CheckSelf(FIntVector);
+            if (LuaObject::matchType(L, 2, "FIntVector")) {
+                auto Other = LuaObject::checkValue<FIntVector*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                *self = *self - OtherRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FIntVector operator sub error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -1400,9 +1553,13 @@
             LuaObject::newType(L, "FIntVector");
             LuaObject::addOperator(L, "__eq", __eq);
             LuaObject::addOperator(L, "__mul", __mul);
+            LuaObject::addOperator(L, "mul", mul);
             LuaObject::addOperator(L, "__div", __div);
+            LuaObject::addOperator(L, "div", div);
             LuaObject::addOperator(L, "__add", __add);
+            LuaObject::addOperator(L, "add", add);
             LuaObject::addOperator(L, "__sub", __sub);
+            LuaObject::addOperator(L, "sub", sub);
             LuaObject::addField(L, "X", get_X, set_X, true);
             LuaObject::addField(L, "Y", get_Y, set_Y, true);
             LuaObject::addField(L, "Z", get_Z, set_Z, true);
@@ -1514,6 +1671,29 @@
             return 0;
         }
 
+        static int mul(lua_State* L) {
+            CheckSelf(FIntVector4);
+            if (LuaObject::matchType(L, 2, "FIntVector4")) {
+                auto Other = LuaObject::checkValue<FIntVector4*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                *self = *self * OtherRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            if (lua_isnumber(L, 2)) {
+                auto Scale = LuaObject::checkValue<int>(L, 2);
+                *self = *self * Scale;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FIntVector4 operator mul error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __div(lua_State* L) {
             CheckSelf(FIntVector4);
             if (lua_isnumber(L, 2)) {
@@ -1524,6 +1704,18 @@
                 return 1;
             }
             luaL_error(L, "FIntVector4 operator__div error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int div(lua_State* L) {
+            CheckSelf(FIntVector4);
+            if (lua_isnumber(L, 2)) {
+                auto Divisor = LuaObject::checkValue<int>(L, 2);
+                *self = *self / Divisor;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FIntVector4 operator div error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -1545,6 +1737,23 @@
             return 0;
         }
 
+        static int add(lua_State* L) {
+            CheckSelf(FIntVector4);
+            if (LuaObject::matchType(L, 2, "FIntVector4")) {
+                auto Other = LuaObject::checkValue<FIntVector4*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                *self = *self + OtherRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FIntVector4 operator add error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __sub(lua_State* L) {
             CheckSelf(FIntVector4);
             if (LuaObject::matchType(L, 2, "FIntVector4")) {
@@ -1560,6 +1769,23 @@
                 return 1;
             }
             luaL_error(L, "FIntVector4 operator__sub error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int sub(lua_State* L) {
+            CheckSelf(FIntVector4);
+            if (LuaObject::matchType(L, 2, "FIntVector4")) {
+                auto Other = LuaObject::checkValue<FIntVector4*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                *self = *self - OtherRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FIntVector4 operator sub error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -1636,9 +1862,13 @@
             LuaObject::newType(L, "FIntVector4");
             LuaObject::addOperator(L, "__eq", __eq);
             LuaObject::addOperator(L, "__mul", __mul);
+            LuaObject::addOperator(L, "mul", mul);
             LuaObject::addOperator(L, "__div", __div);
+            LuaObject::addOperator(L, "div", div);
             LuaObject::addOperator(L, "__add", __add);
+            LuaObject::addOperator(L, "add", add);
             LuaObject::addOperator(L, "__sub", __sub);
+            LuaObject::addOperator(L, "sub", sub);
             LuaObject::addField(L, "X", get_X, set_X, true);
             LuaObject::addField(L, "Y", get_Y, set_Y, true);
             LuaObject::addField(L, "Z", get_Z, set_Z, true);
@@ -1710,6 +1940,23 @@
             return 0;
         }
 
+        static int add(lua_State* L) {
+            CheckSelf(FLinearColor);
+            if (LuaObject::matchType(L, 2, "FLinearColor")) {
+                auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
+                if (!ColorB) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& ColorBRef = *ColorB;
+                *self = *self + ColorBRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FLinearColor operator add error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __sub(lua_State* L) {
             CheckSelf(FLinearColor);
             if (LuaObject::matchType(L, 2, "FLinearColor")) {
@@ -1725,6 +1972,23 @@
                 return 1;
             }
             luaL_error(L, "FLinearColor operator__sub error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int sub(lua_State* L) {
+            CheckSelf(FLinearColor);
+            if (LuaObject::matchType(L, 2, "FLinearColor")) {
+                auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
+                if (!ColorB) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& ColorBRef = *ColorB;
+                *self = *self - ColorBRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FLinearColor operator sub error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -1753,6 +2017,29 @@
             return 0;
         }
 
+        static int mul(lua_State* L) {
+            CheckSelf(FLinearColor);
+            if (LuaObject::matchType(L, 2, "FLinearColor")) {
+                auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
+                if (!ColorB) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& ColorBRef = *ColorB;
+                *self = *self * ColorBRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            if (lua_isnumber(L, 2)) {
+                auto Scalar = LuaObject::checkValue<float>(L, 2);
+                *self = *self * Scalar;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FLinearColor operator mul error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __div(lua_State* L) {
             CheckSelf(FLinearColor);
             if (LuaObject::matchType(L, 2, "FLinearColor")) {
@@ -1775,6 +2062,29 @@
                 return 1;
             }
             luaL_error(L, "FLinearColor operator__div error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int div(lua_State* L) {
+            CheckSelf(FLinearColor);
+            if (LuaObject::matchType(L, 2, "FLinearColor")) {
+                auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
+                if (!ColorB) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& ColorBRef = *ColorB;
+                *self = *self / ColorBRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            if (lua_isnumber(L, 2)) {
+                auto Scalar = LuaObject::checkValue<float>(L, 2);
+                *self = *self / Scalar;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FLinearColor operator div error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -2307,9 +2617,13 @@
             AutoStack autoStack(L);
             LuaObject::newType(L, "FLinearColor");
             LuaObject::addOperator(L, "__add", __add);
+            LuaObject::addOperator(L, "add", add);
             LuaObject::addOperator(L, "__sub", __sub);
+            LuaObject::addOperator(L, "sub", sub);
             LuaObject::addOperator(L, "__mul", __mul);
+            LuaObject::addOperator(L, "mul", mul);
             LuaObject::addOperator(L, "__div", __div);
+            LuaObject::addOperator(L, "div", div);
             LuaObject::addOperator(L, "__eq", __eq);
             LuaObject::addField(L, "R", get_R, set_R, true);
             LuaObject::addField(L, "G", get_G, set_G, true);
@@ -6984,6 +7298,23 @@
             return 0;
         }
 
+        static int add(lua_State* L) {
+            CheckSelf(FVector);
+            if (LuaObject::matchType(L, 2, "FVector")) {
+                auto V = LuaObject::checkValue<FVector*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                *self = *self + VRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FVector operator add error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __sub(lua_State* L) {
             CheckSelf(FVector);
             if (LuaObject::matchType(L, 2, "FVector")) {
@@ -6999,6 +7330,23 @@
                 return 1;
             }
             luaL_error(L, "FVector operator__sub error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int sub(lua_State* L) {
+            CheckSelf(FVector);
+            if (LuaObject::matchType(L, 2, "FVector")) {
+                auto V = LuaObject::checkValue<FVector*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                *self = *self - VRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FVector operator sub error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -7020,6 +7368,23 @@
             return 0;
         }
 
+        static int mul(lua_State* L) {
+            CheckSelf(FVector);
+            if (LuaObject::matchType(L, 2, "FVector")) {
+                auto V = LuaObject::checkValue<FVector*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                *self = *self * VRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FVector operator mul error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __div(lua_State* L) {
             CheckSelf(FVector);
             if (LuaObject::matchType(L, 2, "FVector")) {
@@ -7035,6 +7400,23 @@
                 return 1;
             }
             luaL_error(L, "FVector operator__div error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int div(lua_State* L) {
+            CheckSelf(FVector);
+            if (LuaObject::matchType(L, 2, "FVector")) {
+                auto V = LuaObject::checkValue<FVector*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                *self = *self / VRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FVector operator div error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -8423,9 +8805,13 @@
             AutoStack autoStack(L);
             LuaObject::newType(L, "FVector");
             LuaObject::addOperator(L, "__add", __add);
+            LuaObject::addOperator(L, "add", add);
             LuaObject::addOperator(L, "__sub", __sub);
+            LuaObject::addOperator(L, "sub", sub);
             LuaObject::addOperator(L, "__mul", __mul);
+            LuaObject::addOperator(L, "mul", mul);
             LuaObject::addOperator(L, "__div", __div);
+            LuaObject::addOperator(L, "div", div);
             LuaObject::addOperator(L, "__eq", __eq);
             LuaObject::addField(L, "X", get_X, set_X, true);
             LuaObject::addField(L, "Y", get_Y, set_Y, true);
@@ -8587,6 +8973,23 @@
             return 0;
         }
 
+        static int add(lua_State* L) {
+            CheckSelf(FVector4);
+            if (LuaObject::matchType(L, 2, "FVector4")) {
+                auto V = LuaObject::checkValue<FVector4*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                *self = *self + VRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FVector4 operator add error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __sub(lua_State* L) {
             CheckSelf(FVector4);
             if (LuaObject::matchType(L, 2, "FVector4")) {
@@ -8602,6 +9005,23 @@
                 return 1;
             }
             luaL_error(L, "FVector4 operator__sub error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int sub(lua_State* L) {
+            CheckSelf(FVector4);
+            if (LuaObject::matchType(L, 2, "FVector4")) {
+                auto V = LuaObject::checkValue<FVector4*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                *self = *self - VRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FVector4 operator sub error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -8623,6 +9043,23 @@
             return 0;
         }
 
+        static int div(lua_State* L) {
+            CheckSelf(FVector4);
+            if (LuaObject::matchType(L, 2, "FVector4")) {
+                auto V = LuaObject::checkValue<FVector4*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                *self = *self / VRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FVector4 operator div error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __mul(lua_State* L) {
             CheckSelf(FVector4);
             if (LuaObject::matchType(L, 2, "FVector4")) {
@@ -8638,6 +9075,23 @@
                 return 1;
             }
             luaL_error(L, "FVector4 operator__mul error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int mul(lua_State* L) {
+            CheckSelf(FVector4);
+            if (LuaObject::matchType(L, 2, "FVector4")) {
+                auto V = LuaObject::checkValue<FVector4*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                *self = *self * VRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FVector4 operator mul error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -8972,9 +9426,13 @@
             AutoStack autoStack(L);
             LuaObject::newType(L, "FVector4");
             LuaObject::addOperator(L, "__add", __add);
+            LuaObject::addOperator(L, "add", add);
             LuaObject::addOperator(L, "__sub", __sub);
+            LuaObject::addOperator(L, "sub", sub);
             LuaObject::addOperator(L, "__div", __div);
+            LuaObject::addOperator(L, "div", div);
             LuaObject::addOperator(L, "__mul", __mul);
+            LuaObject::addOperator(L, "mul", mul);
             LuaObject::addOperator(L, "__eq", __eq);
             LuaObject::addField(L, "X", get_X, set_X, true);
             LuaObject::addField(L, "Y", get_Y, set_Y, true);
@@ -9104,6 +9562,23 @@
             return 0;
         }
 
+        static int add(lua_State* L) {
+            CheckSelf(FPlane);
+            if (LuaObject::matchType(L, 2, "FPlane")) {
+                auto V = LuaObject::checkValue<FPlane*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                *self = *self + VRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FPlane operator add error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __sub(lua_State* L) {
             CheckSelf(FPlane);
             if (LuaObject::matchType(L, 2, "FPlane")) {
@@ -9122,6 +9597,23 @@
             return 0;
         }
 
+        static int sub(lua_State* L) {
+            CheckSelf(FPlane);
+            if (LuaObject::matchType(L, 2, "FPlane")) {
+                auto V = LuaObject::checkValue<FPlane*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                *self = *self - VRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FPlane operator sub error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __div(lua_State* L) {
             CheckSelf(FPlane);
             if (lua_isnumber(L, 2)) {
@@ -9132,6 +9624,18 @@
                 return 1;
             }
             luaL_error(L, "FPlane operator__div error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int div(lua_State* L) {
+            CheckSelf(FPlane);
+            if (lua_isnumber(L, 2)) {
+                auto Scale = LuaObject::checkValue<double>(L, 2);
+                *self = *self / Scale;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FPlane operator div error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -9157,6 +9661,29 @@
                 return 1;
             }
             luaL_error(L, "FPlane operator__mul error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int mul(lua_State* L) {
+            CheckSelf(FPlane);
+            if (lua_isnumber(L, 2)) {
+                auto Scale = LuaObject::checkValue<double>(L, 2);
+                *self = *self * Scale;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            if (LuaObject::matchType(L, 2, "FPlane")) {
+                auto V = LuaObject::checkValue<FPlane*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                *self = *self * VRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FPlane operator mul error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -9340,9 +9867,13 @@
             LuaObject::newTypeWithBase(L, "FPlane", std::initializer_list<const char*>{ "TVector" });
             LuaObject::addOperator(L, "__eq", __eq);
             LuaObject::addOperator(L, "__add", __add);
+            LuaObject::addOperator(L, "add", add);
             LuaObject::addOperator(L, "__sub", __sub);
+            LuaObject::addOperator(L, "sub", sub);
             LuaObject::addOperator(L, "__div", __div);
+            LuaObject::addOperator(L, "div", div);
             LuaObject::addOperator(L, "__mul", __mul);
+            LuaObject::addOperator(L, "mul", mul);
             LuaObject::addField(L, "W", get_W, set_W, true);
             LuaObject::addMethod(L, "DiagnosticCheckNaN", DiagnosticCheckNaN, true);
             LuaObject::addMethod(L, "IsValid", IsValid, true);
@@ -9429,6 +9960,23 @@
             return 0;
         }
 
+        static int add(lua_State* L) {
+            CheckSelf(FQuat);
+            if (LuaObject::matchType(L, 2, "FQuat")) {
+                auto Q = LuaObject::checkValue<FQuat*>(L, 2);
+                if (!Q) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& QRef = *Q;
+                *self = *self + QRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FQuat operator add error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __sub(lua_State* L) {
             CheckSelf(FQuat);
             if (LuaObject::matchType(L, 2, "FQuat")) {
@@ -9444,6 +9992,23 @@
                 return 1;
             }
             luaL_error(L, "FQuat operator__sub error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int sub(lua_State* L) {
+            CheckSelf(FQuat);
+            if (LuaObject::matchType(L, 2, "FQuat")) {
+                auto Q = LuaObject::checkValue<FQuat*>(L, 2);
+                if (!Q) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& QRef = *Q;
+                *self = *self - QRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FQuat operator sub error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -9486,6 +10051,45 @@
                 return 1;
             }
             luaL_error(L, "FQuat operator__mul error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int mul(lua_State* L) {
+            CheckSelf(FQuat);
+            if (LuaObject::matchType(L, 2, "FQuat")) {
+                auto Q = LuaObject::checkValue<FQuat*>(L, 2);
+                if (!Q) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& QRef = *Q;
+                *self = *self * QRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            if (LuaObject::matchType(L, 2, "FQuat")) {
+                auto V = LuaObject::checkValue<FVector*>(L, 2);
+                if (!V) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& VRef = *V;
+                *self = *self * VRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            if (LuaObject::matchType(L, 2, "FQuat")) {
+                auto M = LuaObject::checkValue<FMatrix*>(L, 2);
+                if (!M) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& MRef = *M;
+                *self = *self * MRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FQuat operator mul error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -10413,8 +11017,11 @@
             AutoStack autoStack(L);
             LuaObject::newType(L, "FQuat");
             LuaObject::addOperator(L, "__add", __add);
+            LuaObject::addOperator(L, "add", add);
             LuaObject::addOperator(L, "__sub", __sub);
+            LuaObject::addOperator(L, "sub", sub);
             LuaObject::addOperator(L, "__mul", __mul);
+            LuaObject::addOperator(L, "mul", mul);
             LuaObject::addOperator(L, "__eq", __eq);
             LuaObject::addField(L, "X", get_X, set_X, true);
             LuaObject::addField(L, "Y", get_Y, set_Y, true);
@@ -10530,6 +11137,23 @@
             return 0;
         }
 
+        static int add(lua_State* L) {
+            CheckSelf(FRotator);
+            if (LuaObject::matchType(L, 2, "FRotator")) {
+                auto R = LuaObject::checkValue<FRotator*>(L, 2);
+                if (!R) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& RRef = *R;
+                *self = *self + RRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FRotator operator add error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __sub(lua_State* L) {
             CheckSelf(FRotator);
             if (LuaObject::matchType(L, 2, "FRotator")) {
@@ -10545,6 +11169,23 @@
                 return 1;
             }
             luaL_error(L, "FRotator operator__sub error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int sub(lua_State* L) {
+            CheckSelf(FRotator);
+            if (LuaObject::matchType(L, 2, "FRotator")) {
+                auto R = LuaObject::checkValue<FRotator*>(L, 2);
+                if (!R) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& RRef = *R;
+                *self = *self - RRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FRotator operator sub error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -11024,7 +11665,9 @@
             AutoStack autoStack(L);
             LuaObject::newType(L, "FRotator");
             LuaObject::addOperator(L, "__add", __add);
+            LuaObject::addOperator(L, "add", add);
             LuaObject::addOperator(L, "__sub", __sub);
+            LuaObject::addOperator(L, "sub", sub);
             LuaObject::addOperator(L, "__eq", __eq);
             LuaObject::addField(L, "Pitch", get_Pitch, set_Pitch, true);
             LuaObject::addField(L, "Yaw", get_Yaw, set_Yaw, true);
@@ -11148,6 +11791,23 @@
             return 0;
         }
 
+        static int add(lua_State* L) {
+            CheckSelf(FTransform);
+            if (LuaObject::matchType(L, 2, "FTransform")) {
+                auto Atom = LuaObject::checkValue<FTransform*>(L, 2);
+                if (!Atom) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& AtomRef = *Atom;
+                *self = *self + AtomRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FTransform operator add error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __mul(lua_State* L) {
             CheckSelf(FTransform);
             if (LuaObject::matchType(L, 2, "FTransform")) {
@@ -11175,6 +11835,34 @@
                 return 1;
             }
             luaL_error(L, "FTransform operator__mul error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int mul(lua_State* L) {
+            CheckSelf(FTransform);
+            if (LuaObject::matchType(L, 2, "FTransform")) {
+                auto Other = LuaObject::checkValue<FTransform*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                *self = *self * OtherRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            if (LuaObject::matchType(L, 2, "FTransform")) {
+                auto Other = LuaObject::checkValue<FQuat*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                *self = *self * OtherRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FTransform operator mul error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -12444,7 +13132,9 @@
             AutoStack autoStack(L);
             LuaObject::newType(L, "FTransform");
             LuaObject::addOperator(L, "__add", __add);
+            LuaObject::addOperator(L, "add", add);
             LuaObject::addOperator(L, "__mul", __mul);
+            LuaObject::addOperator(L, "mul", mul);
             LuaObject::addField(L, "Identity", get_Identity, nullptr, false);
             LuaObject::addMethod(L, "DiagnosticCheckNaN_Translate", DiagnosticCheckNaN_Translate, true);
             LuaObject::addMethod(L, "DiagnosticCheckNaN_Rotate", DiagnosticCheckNaN_Rotate, true);
@@ -12616,6 +13306,29 @@
             return 0;
         }
 
+        static int mul(lua_State* L) {
+            CheckSelf(FMatrix);
+            if (LuaObject::matchType(L, 2, "FMatrix")) {
+                auto Other = LuaObject::checkValue<FMatrix*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                *self = *self * OtherRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            if (lua_isnumber(L, 2)) {
+                auto Other = LuaObject::checkValue<double>(L, 2);
+                *self = *self * Other;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FMatrix operator mul error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
         static int __add(lua_State* L) {
             CheckSelf(FMatrix);
             if (LuaObject::matchType(L, 2, "FMatrix")) {
@@ -12631,6 +13344,23 @@
                 return 1;
             }
             luaL_error(L, "FMatrix operator__add error, arg=%d", lua_typename(L, 2));
+            return 0;
+        }
+
+        static int add(lua_State* L) {
+            CheckSelf(FMatrix);
+            if (LuaObject::matchType(L, 2, "FMatrix")) {
+                auto Other = LuaObject::checkValue<FMatrix*>(L, 2);
+                if (!Other) {
+                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
+                    return 0;
+                }
+                auto& OtherRef = *Other;
+                *self = *self + OtherRef;
+                lua_pushvalue(L, 1);
+                return 1;
+            }
+            luaL_error(L, "FMatrix operator add error, arg=%d", lua_typename(L, 2));
             return 0;
         }
 
@@ -13338,7 +14068,9 @@
             AutoStack autoStack(L);
             LuaObject::newType(L, "FMatrix");
             LuaObject::addOperator(L, "__mul", __mul);
+            LuaObject::addOperator(L, "mul", mul);
             LuaObject::addOperator(L, "__add", __add);
+            LuaObject::addOperator(L, "add", add);
             LuaObject::addOperator(L, "__eq", __eq);
             LuaObject::addField(L, "Identity", get_Identity, nullptr, false);
             LuaObject::addMethod(L, "DiagnosticCheckNaN", DiagnosticCheckNaN, true);

@@ -828,7 +828,7 @@ namespace NS_SLUA
                                 }
 
                                 auto pusher = LuaObject::getPusher(p);
-                                return pusher(L, p, proxy->values.GetData() + p->GetOffset_ForInternal(), nullptr);
+                                return pusher(L, p, proxy->values.GetData() + p->GetOffset_ForInternal(), 0, nullptr);
                             }
                         }
                     }

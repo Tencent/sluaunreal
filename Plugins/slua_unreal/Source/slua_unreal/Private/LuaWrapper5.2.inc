@@ -42,7 +42,7 @@
     static UScriptStruct* FRayStruct = nullptr;
     static UScriptStruct* FSphereStruct = nullptr;
 
-    typedef void(*pushStructFunction)(lua_State* L, FStructProperty* p, uint8* parms);
+    typedef void(*pushStructFunction)(lua_State* L, FStructProperty* p, uint8* parms, int i);
     typedef void* (*checkStructFunction)(lua_State* L, FStructProperty* p, uint8* parms, int i);
 
     TMap<UScriptStruct*, pushStructFunction> _pushStructMap;
@@ -52,7 +52,15 @@
         return new FIntPoint();
     }
 
-    static void __pushFIntPoint(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFIntPoint(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FIntPoint*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFIntPoint();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FIntPoint>(L, "FIntPoint", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -72,7 +80,15 @@
         return new FIntVector();
     }
 
-    static void __pushFIntVector(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFIntVector(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FIntVector*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFIntVector();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FIntVector>(L, "FIntVector", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -92,7 +108,15 @@
         return new FIntVector4();
     }
 
-    static void __pushFIntVector4(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFIntVector4(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FIntVector4*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFIntVector4();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FIntVector4>(L, "FIntVector4", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -112,7 +136,15 @@
         return new FLinearColor();
     }
 
-    static void __pushFLinearColor(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFLinearColor(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FLinearColor*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFLinearColor();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FLinearColor>(L, "FLinearColor", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -132,7 +164,15 @@
         return new FColor();
     }
 
-    static void __pushFColor(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFColor(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FColor*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFColor();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FColor>(L, "FColor", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -152,7 +192,15 @@
         return new FRandomStream();
     }
 
-    static void __pushFRandomStream(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFRandomStream(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FRandomStream*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFRandomStream();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FRandomStream>(L, "FRandomStream", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -172,7 +220,15 @@
         return new FGuid();
     }
 
-    static void __pushFGuid(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFGuid(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FGuid*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFGuid();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FGuid>(L, "FGuid", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -192,7 +248,15 @@
         return new FFallbackStruct();
     }
 
-    static void __pushFFallbackStruct(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFFallbackStruct(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FFallbackStruct*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFFallbackStruct();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FFallbackStruct>(L, "FFallbackStruct", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -212,7 +276,15 @@
         return new FInterpCurvePointFloat();
     }
 
-    static void __pushFInterpCurvePointFloat(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFInterpCurvePointFloat(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FInterpCurvePointFloat*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFInterpCurvePointFloat();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FInterpCurvePointFloat>(L, "FInterpCurvePointFloat", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -232,7 +304,15 @@
         return new FInterpCurvePointVector2D();
     }
 
-    static void __pushFInterpCurvePointVector2D(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFInterpCurvePointVector2D(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FInterpCurvePointVector2D*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFInterpCurvePointVector2D();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FInterpCurvePointVector2D>(L, "FInterpCurvePointVector2D", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -252,7 +332,15 @@
         return new FInterpCurvePointVector();
     }
 
-    static void __pushFInterpCurvePointVector(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFInterpCurvePointVector(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FInterpCurvePointVector*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFInterpCurvePointVector();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FInterpCurvePointVector>(L, "FInterpCurvePointVector", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -272,7 +360,15 @@
         return new FInterpCurvePointQuat();
     }
 
-    static void __pushFInterpCurvePointQuat(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFInterpCurvePointQuat(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FInterpCurvePointQuat*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFInterpCurvePointQuat();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FInterpCurvePointQuat>(L, "FInterpCurvePointQuat", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -292,7 +388,15 @@
         return new FInterpCurvePointTwoVectors();
     }
 
-    static void __pushFInterpCurvePointTwoVectors(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFInterpCurvePointTwoVectors(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FInterpCurvePointTwoVectors*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFInterpCurvePointTwoVectors();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FInterpCurvePointTwoVectors>(L, "FInterpCurvePointTwoVectors", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -312,7 +416,15 @@
         return new FInterpCurvePointLinearColor();
     }
 
-    static void __pushFInterpCurvePointLinearColor(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFInterpCurvePointLinearColor(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FInterpCurvePointLinearColor*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFInterpCurvePointLinearColor();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FInterpCurvePointLinearColor>(L, "FInterpCurvePointLinearColor", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -332,7 +444,15 @@
         return new FFloatRangeBound();
     }
 
-    static void __pushFFloatRangeBound(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFFloatRangeBound(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FFloatRangeBound*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFFloatRangeBound();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -352,7 +472,15 @@
         return new FFloatRange();
     }
 
-    static void __pushFFloatRange(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFFloatRange(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FFloatRange*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFFloatRange();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FFloatRange>(L, "FFloatRange", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -372,7 +500,15 @@
         return new FDoubleRangeBound();
     }
 
-    static void __pushFDoubleRangeBound(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFDoubleRangeBound(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FDoubleRangeBound*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFDoubleRangeBound();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FDoubleRangeBound>(L, "FDoubleRangeBound", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -392,7 +528,15 @@
         return new FDoubleRange();
     }
 
-    static void __pushFDoubleRange(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFDoubleRange(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FDoubleRange*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFDoubleRange();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FDoubleRange>(L, "FDoubleRange", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -412,7 +556,15 @@
         return new FInt32RangeBound();
     }
 
-    static void __pushFInt32RangeBound(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFInt32RangeBound(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FInt32RangeBound*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFInt32RangeBound();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -432,7 +584,15 @@
         return new FInt32Range();
     }
 
-    static void __pushFInt32Range(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFInt32Range(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FInt32Range*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFInt32Range();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FInt32Range>(L, "FInt32Range", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -452,7 +612,15 @@
         return new FFloatInterval();
     }
 
-    static void __pushFFloatInterval(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFFloatInterval(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FFloatInterval*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFFloatInterval();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FFloatInterval>(L, "FFloatInterval", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -472,7 +640,15 @@
         return new FDoubleInterval();
     }
 
-    static void __pushFDoubleInterval(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFDoubleInterval(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FDoubleInterval*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFDoubleInterval();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FDoubleInterval>(L, "FDoubleInterval", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -492,7 +668,15 @@
         return new FInt32Interval();
     }
 
-    static void __pushFInt32Interval(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFInt32Interval(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FInt32Interval*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFInt32Interval();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FInt32Interval>(L, "FInt32Interval", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -512,7 +696,15 @@
         return new FFrameNumber();
     }
 
-    static void __pushFFrameNumber(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFFrameNumber(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FFrameNumber*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFFrameNumber();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FFrameNumber>(L, "FFrameNumber", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -532,7 +724,15 @@
         return new FFrameTime();
     }
 
-    static void __pushFFrameTime(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFFrameTime(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FFrameTime*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFFrameTime();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FFrameTime>(L, "FFrameTime", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -552,7 +752,15 @@
         return new FSoftObjectPath();
     }
 
-    static void __pushFSoftObjectPath(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFSoftObjectPath(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FSoftObjectPath*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFSoftObjectPath();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FSoftObjectPath>(L, "FSoftObjectPath", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -572,7 +780,15 @@
         return new FSoftClassPath();
     }
 
-    static void __pushFSoftClassPath(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFSoftClassPath(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FSoftClassPath*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFSoftClassPath();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FSoftClassPath>(L, "FSoftClassPath", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -592,7 +808,15 @@
         return new FPrimaryAssetType();
     }
 
-    static void __pushFPrimaryAssetType(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFPrimaryAssetType(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FPrimaryAssetType*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFPrimaryAssetType();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FPrimaryAssetType>(L, "FPrimaryAssetType", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -612,7 +836,15 @@
         return new FPrimaryAssetId();
     }
 
-    static void __pushFPrimaryAssetId(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFPrimaryAssetId(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FPrimaryAssetId*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFPrimaryAssetId();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -632,7 +864,15 @@
         return new FDateTime();
     }
 
-    static void __pushFDateTime(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFDateTime(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FDateTime*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFDateTime();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FDateTime>(L, "FDateTime", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -652,7 +892,15 @@
         return new FTopLevelAssetPath();
     }
 
-    static void __pushFTopLevelAssetPath(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFTopLevelAssetPath(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FTopLevelAssetPath*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFTopLevelAssetPath();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FTopLevelAssetPath>(L, "FTopLevelAssetPath", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -672,7 +920,15 @@
         return new FVector2D();
     }
 
-    static void __pushFVector2D(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFVector2D(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FVector2D*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFVector2D();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FVector2D>(L, "FVector2D", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -692,7 +948,15 @@
         return new FVector();
     }
 
-    static void __pushFVector(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFVector(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FVector*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFVector();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FVector>(L, "FVector", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -712,7 +976,15 @@
         return new FVector4();
     }
 
-    static void __pushFVector4(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFVector4(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FVector4*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFVector4();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FVector4>(L, "FVector4", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -732,7 +1004,15 @@
         return new FPlane();
     }
 
-    static void __pushFPlane(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFPlane(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FPlane*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFPlane();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FPlane>(L, "FPlane", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -752,7 +1032,15 @@
         return new FQuat();
     }
 
-    static void __pushFQuat(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFQuat(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FQuat*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFQuat();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FQuat>(L, "FQuat", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -772,7 +1060,15 @@
         return new FRotator();
     }
 
-    static void __pushFRotator(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFRotator(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FRotator*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFRotator();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FRotator>(L, "FRotator", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -792,7 +1088,15 @@
         return new FTransform();
     }
 
-    static void __pushFTransform(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFTransform(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FTransform*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFTransform();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FTransform>(L, "FTransform", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -812,7 +1116,15 @@
         return new FMatrix();
     }
 
-    static void __pushFMatrix(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFMatrix(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FMatrix*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFMatrix();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FMatrix>(L, "FMatrix", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -832,7 +1144,15 @@
         return new FBox2D();
     }
 
-    static void __pushFBox2D(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFBox2D(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FBox2D*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFBox2D();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FBox2D>(L, "FBox2D", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -852,7 +1172,15 @@
         return new FRay();
     }
 
-    static void __pushFRay(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFRay(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FRay*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFRay();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FRay>(L, "FRay", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -872,7 +1200,15 @@
         return new FSphere();
     }
 
-    static void __pushFSphere(lua_State* L, FStructProperty* p, uint8* parms) {
+    static void __pushFSphere(lua_State* L, FStructProperty* p, uint8* parms, int i) {
+        if (i != 0) {
+            auto v = LuaObject::checkValue<FSphere*>(L, i);
+            if (v) {
+                p->CopyCompleteValue(v, parms);
+                lua_pushvalue(L, i);
+                return;
+            }
+        }
         auto ptr = __newFSphere();
         p->CopyCompleteValue(ptr, parms);
         LuaObject::push<FSphere>(L, "FSphere", ptr, UD_AUTOGC | UD_VALUETYPE);
@@ -10165,28 +10501,6 @@
                 lua_pushvalue(L, 1);
                 return 1;
             }
-            if (LuaObject::matchType(L, 2, "FVector")) {
-                auto V = LuaObject::checkValue<FVector*>(L, 2);
-                if (!V) {
-                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
-                    return 0;
-                }
-                auto& VRef = *V;
-                *self = *self * VRef;
-                lua_pushvalue(L, 1);
-                return 1;
-            }
-            if (LuaObject::matchType(L, 2, "FMatrix")) {
-                auto M = LuaObject::checkValue<FMatrix*>(L, 2);
-                if (!M) {
-                    luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
-                    return 0;
-                }
-                auto& MRef = *M;
-                *self = *self * MRef;
-                lua_pushvalue(L, 1);
-                return 1;
-            }
             luaL_error(L, "FQuat operator mul error, arg=%d", lua_typename(L, 2));
             return 0;
         }
@@ -14649,10 +14963,10 @@
 
     };
 
-    int LuaWrapper::pushValue(lua_State* L, FStructProperty* p, UScriptStruct* uss, uint8* parms) {
+    int LuaWrapper::pushValue(lua_State* L, FStructProperty* p, UScriptStruct* uss, uint8* parms, int i) {
         auto vptr = _pushStructMap.Find(uss);
         if (vptr != nullptr) {
-            (*vptr)(L, p, parms);
+            (*vptr)(L, p, parms, i);
             return 1;
         } else {
             return 0;

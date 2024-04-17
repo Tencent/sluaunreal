@@ -118,8 +118,10 @@ print("userArray",userArray)
 info = t.info
 print("info",info)
 
-map1 = t:GetMap()
+local map1 = t:GetMap()
 print("map1",map1)
+local map2 = t:GetMap(map1)
+print("map1 == map2", map1, map2, assert(map1 == map2))
 
 local SluaTestCase=import('SluaTestCase');
 local t=SluaTestCase()

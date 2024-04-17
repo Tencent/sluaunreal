@@ -354,7 +354,7 @@ namespace NS_SLUA {
         }
 
     public:
-        typedef int (*PushPropertyFunction)(lua_State* L,FProperty* prop,uint8* parms,NewObjectRecorder* objRecorder);
+        typedef int (*PushPropertyFunction)(lua_State* L,FProperty* prop,uint8* parms,int i,NewObjectRecorder* objRecorder);
         typedef void* (*CheckPropertyFunction)(lua_State* L,FProperty* prop,uint8* parms,int i,bool bForceCopy);
         typedef void (*ReferencePropertyFunction)(lua_State* L, FProperty* prop, uint8* src, void* dst);
         typedef int (*ReferencePusherPropertyFunction)(lua_State* L,FProperty* prop,uint8* parms,void* parentAdrres,uint16 replicateIndex);

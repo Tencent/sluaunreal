@@ -6708,7 +6708,7 @@
 
         static int __add(lua_State* L) {
             CheckSelf(FBox2D);
-            if (LuaObject::matchType(L, 2, "FBox2D")) {
+            if (LuaObject::matchType(L, 2, "FVector2D")) {
                 auto Other = LuaObject::checkValue<FVector2D*>(L, 2);
                 if (!Other) {
                     luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
@@ -6738,7 +6738,7 @@
 
         static int add(lua_State* L) {
             CheckSelf(FBox2D);
-            if (LuaObject::matchType(L, 2, "FBox2D")) {
+            if (LuaObject::matchType(L, 2, "FVector2D")) {
                 auto Other = LuaObject::checkValue<FVector2D*>(L, 2);
                 if (!Other) {
                     luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);

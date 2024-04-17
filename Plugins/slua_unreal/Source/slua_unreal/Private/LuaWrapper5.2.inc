@@ -10124,7 +10124,7 @@
                 LuaObject::push<FQuat>(L, "FQuat", ret, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
-            if (LuaObject::matchType(L, 2, "FQuat")) {
+            if (LuaObject::matchType(L, 2, "FVector")) {
                 auto V = LuaObject::checkValue<FVector*>(L, 2);
                 if (!V) {
                     luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
@@ -10136,7 +10136,7 @@
                 LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
-            if (LuaObject::matchType(L, 2, "FQuat")) {
+            if (LuaObject::matchType(L, 2, "FMatrix")) {
                 auto M = LuaObject::checkValue<FMatrix*>(L, 2);
                 if (!M) {
                     luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
@@ -10165,7 +10165,7 @@
                 lua_pushvalue(L, 1);
                 return 1;
             }
-            if (LuaObject::matchType(L, 2, "FQuat")) {
+            if (LuaObject::matchType(L, 2, "FVector")) {
                 auto V = LuaObject::checkValue<FVector*>(L, 2);
                 if (!V) {
                     luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
@@ -10176,7 +10176,7 @@
                 lua_pushvalue(L, 1);
                 return 1;
             }
-            if (LuaObject::matchType(L, 2, "FQuat")) {
+            if (LuaObject::matchType(L, 2, "FMatrix")) {
                 auto M = LuaObject::checkValue<FMatrix*>(L, 2);
                 if (!M) {
                     luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
@@ -11920,7 +11920,7 @@
                 LuaObject::push<FTransform>(L, "FTransform", ret, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
-            if (LuaObject::matchType(L, 2, "FTransform")) {
+            if (LuaObject::matchType(L, 2, "FQuat")) {
                 auto Other = LuaObject::checkValue<FQuat*>(L, 2);
                 if (!Other) {
                     luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);
@@ -11949,7 +11949,7 @@
                 lua_pushvalue(L, 1);
                 return 1;
             }
-            if (LuaObject::matchType(L, 2, "FTransform")) {
+            if (LuaObject::matchType(L, 2, "FQuat")) {
                 auto Other = LuaObject::checkValue<FQuat*>(L, 2);
                 if (!Other) {
                     luaL_error(L, "%s argument 2 is nullptr", __FUNCTION__);

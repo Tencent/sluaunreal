@@ -30,7 +30,11 @@ namespace NS_SLUA {
     DefTypeName(VectorRegister4d);
 #elif ((ENGINE_MINOR_VERSION>=3) && (ENGINE_MAJOR_VERSION==5))
     using FVector2 = UE::Math::TVector2<FVector::FReal>;
+#if (ENGINE_MINOR_VERSION==3)
     #include "LuaWrapper5.3Head.inc"
+#elif (ENGINE_MINOR_VERSION==4)
+    #include "LuaWrapper5.4Head.inc"
+#endif
 #endif
     DefTypeName(FSoftObjectPtr);
 

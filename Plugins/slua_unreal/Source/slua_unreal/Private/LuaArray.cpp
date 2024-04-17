@@ -596,8 +596,6 @@ namespace NS_SLUA {
                 if (genUD->flag & UD_VALUETYPE)
                 {
                     auto inner = UD->inner;
-                    inner->DestroyValue(genUD->ud);
-                    inner->InitializeValue(genUD->ud);
                     inner->CopyCompleteValue(genUD->ud, parms);
                 }
                 else
@@ -605,8 +603,6 @@ namespace NS_SLUA {
                     LuaStruct* ls = (LuaStruct*)genUD->ud;
                     auto uss = ls->uss;
                     auto buf = ls->buf;
-                    uss->DestroyStruct(buf);
-                    uss->InitializeStruct(buf);
                     uss->CopyScriptStruct(buf, parms);
                 }
 

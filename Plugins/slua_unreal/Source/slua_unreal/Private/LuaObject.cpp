@@ -153,8 +153,31 @@ namespace NS_SLUA {
         }
     }
 
+    static int findMember(lua_State* L,const char* name);
+    
+    static  int findMemberBase(lua_State* L,const char* name)
+    {
+        lua_getfield(L,-1, "__base");
+        luaL_checktype(L, -1, LUA_TTABLE);
+        // for each base
+        {
+            size_t cnt = lua_rawlen(L,-1);
+            int r = 0;
+            for(size_t n=0;n<cnt;n++) {
+                lua_geti(L,-1,n+1);
+                const char* tn = lua_tostring(L,-1);
+                lua_pop(L,1); // pop tn
+                luaL_getmetatable(L,tn);
+                luaL_checktype(L, -1, LUA_TTABLE);
+                if (findMember(L, name)) return 1;
+            }
+            lua_remove(L,-2); // remove __base
+            return r;
+        }
+    }
+
     static int findMember(lua_State* L,const char* name) {
-       int popn = 0;
+        int popn = 0;
         if ((++popn, lua_getfield(L, -1, name) != 0)) {
             lua_remove(L, -2); // remove mt
             return 1;
@@ -166,23 +189,7 @@ namespace NS_SLUA {
         } else {
             // find base
             lua_pop(L, popn);
-            lua_getfield(L,-1, "__base");
-            luaL_checktype(L, -1, LUA_TTABLE);
-            // for each base
-            {
-                size_t cnt = lua_rawlen(L,-1);
-                int r = 0;
-                for(size_t n=0;n<cnt;n++) {
-                    lua_geti(L,-1,n+1);
-                    const char* tn = lua_tostring(L,-1);
-                    lua_pop(L,1); // pop tn
-                    luaL_getmetatable(L,tn);
-                    luaL_checktype(L, -1, LUA_TTABLE);
-                    if (findMember(L, name)) return 1;
-                }
-                lua_remove(L,-2); // remove __base
-                return r;
-            }
+            return findMemberBase(L, name);
         }
     }
 
@@ -224,6 +231,46 @@ namespace NS_SLUA {
     int LuaObject::classIndex(lua_State* L) {
         lua_getmetatable(L, 1);
         const char* name = checkValue<const char*>(L, 2);
+        if (lua_type(L, 1) == LUA_TTABLE)
+        {
+            if (lua_getfield(L, -1, name) != LUA_TNIL)
+            {
+                return 1;
+            }
+            lua_pop(L, 1);
+
+            if (lua_getfield(L, -1, ".get") != LUA_TNIL)
+            {
+                if (lua_getfield(L, -1, name) != LUA_TNIL)
+                {
+                    lua_pushvalue(L, 1);
+                    lua_call(L, 1, 1);
+                    lua_remove(L, -2); // Remove .get
+
+                    // Check if it's const static value
+                    if (lua_getfield(L, -2, ".set") != LUA_TNIL)
+                    { 
+                        if (lua_getfield(L, -1, name) == LUA_TNIL) // Is const static
+                        {
+                            lua_pop(L, 2);
+
+                            // Save const static value to Table. eg. _G[FVector][Meta][OneVector] = ret
+                            lua_pushvalue(L, -1);
+                            lua_setfield(L, -3, name);
+                        }
+                        else
+                        {
+                            lua_pop(L, 2);
+                        }
+                    }
+                    return 1;
+                }
+                lua_pop(L, 2);
+            }
+            
+            return findMemberBase(L, name);
+        }
+        
         if (!findMember(L, name))
             luaL_error(L, "can't get %s", name);
         lua_remove(L, -2);
@@ -324,14 +371,21 @@ namespace NS_SLUA {
     }
 
     void LuaObject::addField(lua_State* L, const char* name, lua_CFunction getter, lua_CFunction setter, bool isInstance) {
-        lua_getfield(L, isInstance ? -1 : -2, ".get");
-        lua_pushcfunction(L, getter);
-        lua_setfield(L, -2, name);
-        lua_pop(L, 1);
-        lua_getfield(L, isInstance ? -1 : -2, ".set");
-        lua_pushcfunction(L, setter);
-        lua_setfield(L, -2, name);
-        lua_pop(L, 1);
+        if (getter)
+        {
+            lua_getfield(L, isInstance ? -1 : -2, ".get");
+            lua_pushcfunction(L, getter);
+            lua_setfield(L, -2, name);
+            lua_pop(L, 1);
+        }
+
+        if (setter)
+        {
+            lua_getfield(L, isInstance ? -1 : -2, ".set");
+            lua_pushcfunction(L, setter);
+            lua_setfield(L, -2, name);
+            lua_pop(L, 1);
+        }
     }
 
     void LuaObject::addOperator(lua_State* L, const char* name, lua_CFunction func) {

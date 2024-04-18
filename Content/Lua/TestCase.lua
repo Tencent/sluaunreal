@@ -31,6 +31,8 @@ print(string.format("v2 = %d,%d,%d", v2.X, v2.Y, v2.Z))
 print(string.format("v3 = %d,%d,%d", v3.X, v3.Y, v3.Z))
 print(string.format("i2=%d", i2))
 
+print("FVector.OneVector:", FVector.OneVector, FVector.OneVector)
+assert(FVector.OneVector == FVector.OneVector)
 local arr=t:GetArray();
 print("arr len",arr:Num())
 for i=0,arr:Num()-1 do

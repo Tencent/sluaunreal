@@ -157,23 +157,26 @@ namespace NS_SLUA {
     
     static  int findMemberBase(lua_State* L,const char* name)
     {
-        lua_getfield(L,-1, "__base");
-        luaL_checktype(L, -1, LUA_TTABLE);
-        // for each base
+        if (lua_getfield(L,-1, "__base") == LUA_TTABLE)
         {
-            size_t cnt = lua_rawlen(L,-1);
-            int r = 0;
-            for(size_t n=0;n<cnt;n++) {
-                lua_geti(L,-1,n+1);
-                const char* tn = lua_tostring(L,-1);
-                lua_pop(L,1); // pop tn
-                luaL_getmetatable(L,tn);
-                luaL_checktype(L, -1, LUA_TTABLE);
-                if (findMember(L, name)) return 1;
+            // for each base
+            {
+                size_t cnt = lua_rawlen(L,-1);
+                int r = 0;
+                for(size_t n=0;n<cnt;n++) {
+                    lua_geti(L,-1,n+1);
+                    const char* tn = lua_tostring(L,-1);
+                    lua_pop(L,1); // pop tn
+                    luaL_getmetatable(L,tn);
+                    luaL_checktype(L, -1, LUA_TTABLE);
+                    if (findMember(L, name)) return 1;
+                }
+                lua_remove(L,-2); // remove __base
+                return r;
             }
-            lua_remove(L,-2); // remove __base
-            return r;
         }
+
+        return 0;
     }
 
     static int findMember(lua_State* L,const char* name) {
@@ -2153,7 +2156,7 @@ namespace NS_SLUA {
             ((FLuaBPVar*)parms)->value.push(L);
             return 1;
         }
-		
+
         if (i != 0)
         {
             auto ls = LuaObject::checkUD<LuaStruct>(L,i);

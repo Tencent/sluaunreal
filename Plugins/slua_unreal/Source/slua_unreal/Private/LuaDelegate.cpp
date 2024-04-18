@@ -179,16 +179,15 @@ namespace NS_SLUA {
         if (handle <= 0)
             luaL_error(L,"arg 2 expect integer type of handle");
         auto objPtr = DelegateHandleToObjectMap.Find(handle);
-        if (!objPtr)
+        auto obj = objPtr ? objPtr->Get() : nullptr;
+        if (!obj)
         {
-#if UE_BUILD_DEVELOPMENT
-            luaL_error(L, "ULuaDelegate maybe remove twice!");
-#endif
+            return 0;
         }
-        auto obj = Cast<ULuaDelegate>(objPtr->Get());
+        auto delegateObj = Cast<ULuaDelegate>(obj);
 
         FScriptDelegate Delegate;
-        Delegate.BindUFunction(obj, TEXT("EventTrigger"));
+        Delegate.BindUFunction(delegateObj, TEXT("EventTrigger"));
 
         // remove delegate
 #if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
@@ -202,7 +201,7 @@ namespace NS_SLUA {
             UD->delegate->Remove(Delegate);
         }
 
-        ULuaDelegate::removeLuaDelegate(L, obj);
+        ULuaDelegate::removeLuaDelegate(L, delegateObj);
         return 0;
     }
 

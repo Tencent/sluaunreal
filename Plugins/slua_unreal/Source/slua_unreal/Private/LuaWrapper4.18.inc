@@ -786,33 +786,26 @@
         }
 
         static int IsNearlyZero(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FRotator);
                 auto Tolerance = LuaObject::checkValue<float>(L, 2);
                 auto ret = self->IsNearlyZero(Tolerance);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRotator::IsNearlyZero error, argc=%d", argc);
-            return 0;
         }
 
         static int IsZero(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRotator);
                 auto ret = self->IsZero();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRotator::IsZero error, argc=%d", argc);
-            return 0;
         }
 
         static int Equals(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FRotator);
                 auto R = LuaObject::checkValue<FRotator*>(L, 2);
                 if (!R) {
@@ -825,42 +818,49 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRotator::Equals error, argc=%d", argc);
-            return 0;
         }
 
         static int Add(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 4) {
+            {
                 CheckSelf(FRotator);
                 auto DeltaPitch = LuaObject::checkValue<float>(L, 2);
                 auto DeltaYaw = LuaObject::checkValue<float>(L, 3);
                 auto DeltaRoll = LuaObject::checkValue<float>(L, 4);
-                auto ret = __newFRotator();
-                *ret = self->Add(DeltaPitch, DeltaYaw, DeltaRoll);
-                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 5)) {
+                    auto ret = __newFRotator();
+                    *ret = self->Add(DeltaPitch, DeltaYaw, DeltaRoll);
+                    LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FRotator*>(L, 5);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FRotator type.", 5);
+                    *ret = self->Add(DeltaPitch, DeltaYaw, DeltaRoll);
+                    lua_pushvalue(L, 5);
+                }
                 return 1;
             }
-            luaL_error(L, "call FRotator::Add error, argc=%d", argc);
-            return 0;
         }
 
         static int GetInverse(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRotator);
-                auto ret = __newFRotator();
-                *ret = self->GetInverse();
-                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFRotator();
+                    *ret = self->GetInverse();
+                    LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FRotator*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FRotator type.", 2);
+                    *ret = self->GetInverse();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FRotator::GetInverse error, argc=%d", argc);
-            return 0;
         }
 
         static int GridSnap(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FRotator);
                 auto RotGrid = LuaObject::checkValue<FRotator*>(L, 2);
                 if (!RotGrid) {
@@ -868,44 +868,59 @@
                     return 0;
                 }
                 auto& RotGridRef = *RotGrid;
-                auto ret = __newFRotator();
-                *ret = self->GridSnap(RotGridRef);
-                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFRotator();
+                    *ret = self->GridSnap(RotGridRef);
+                    LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FRotator*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FRotator type.", 3);
+                    *ret = self->GridSnap(RotGridRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FRotator::GridSnap error, argc=%d", argc);
-            return 0;
         }
 
         static int Vector(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRotator);
-                auto ret = __newFVector();
-                *ret = self->Vector();
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector();
+                    *ret = self->Vector();
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 2);
+                    *ret = self->Vector();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FRotator::Vector error, argc=%d", argc);
-            return 0;
         }
 
         static int Euler(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRotator);
-                auto ret = __newFVector();
-                *ret = self->Euler();
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector();
+                    *ret = self->Euler();
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 2);
+                    *ret = self->Euler();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FRotator::Euler error, argc=%d", argc);
-            return 0;
         }
 
         static int RotateVector(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FRotator);
                 auto V = LuaObject::checkValue<FVector*>(L, 2);
                 if (!V) {
@@ -913,18 +928,23 @@
                     return 0;
                 }
                 auto& VRef = *V;
-                auto ret = __newFVector();
-                *ret = self->RotateVector(VRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->RotateVector(VRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->RotateVector(VRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FRotator::RotateVector error, argc=%d", argc);
-            return 0;
         }
 
         static int UnrotateVector(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FRotator);
                 auto V = LuaObject::checkValue<FVector*>(L, 2);
                 if (!V) {
@@ -932,57 +952,77 @@
                     return 0;
                 }
                 auto& VRef = *V;
-                auto ret = __newFVector();
-                *ret = self->UnrotateVector(VRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->UnrotateVector(VRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->UnrotateVector(VRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FRotator::UnrotateVector error, argc=%d", argc);
-            return 0;
         }
 
         static int Clamp(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRotator);
-                auto ret = __newFRotator();
-                *ret = self->Clamp();
-                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFRotator();
+                    *ret = self->Clamp();
+                    LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FRotator*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FRotator type.", 2);
+                    *ret = self->Clamp();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FRotator::Clamp error, argc=%d", argc);
-            return 0;
         }
 
         static int GetNormalized(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRotator);
-                auto ret = __newFRotator();
-                *ret = self->GetNormalized();
-                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFRotator();
+                    *ret = self->GetNormalized();
+                    LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FRotator*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FRotator type.", 2);
+                    *ret = self->GetNormalized();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FRotator::GetNormalized error, argc=%d", argc);
-            return 0;
         }
 
         static int GetDenormalized(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRotator);
-                auto ret = __newFRotator();
-                *ret = self->GetDenormalized();
-                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFRotator();
+                    *ret = self->GetDenormalized();
+                    LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FRotator*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FRotator type.", 2);
+                    *ret = self->GetDenormalized();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FRotator::GetDenormalized error, argc=%d", argc);
-            return 0;
         }
 
         static int GetComponentForAxis(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FRotator);
                 auto Axis = LuaObject::checkValue<int>(L, 2);
                 auto AxisVal = (EAxis::Type)Axis;
@@ -990,13 +1030,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRotator::GetComponentForAxis error, argc=%d", argc);
-            return 0;
         }
 
         static int SetComponentForAxis(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FRotator);
                 auto Axis = LuaObject::checkValue<int>(L, 2);
                 auto AxisVal = (EAxis::Type)Axis;
@@ -1004,24 +1041,18 @@
                 self->SetComponentForAxis(AxisVal, Component);
                 return 0;
             }
-            luaL_error(L, "call FRotator::SetComponentForAxis error, argc=%d", argc);
-            return 0;
         }
 
         static int Normalize(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRotator);
                 self->Normalize();
                 return 0;
             }
-            luaL_error(L, "call FRotator::Normalize error, argc=%d", argc);
-            return 0;
         }
 
         static int GetWindingAndRemainder(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FRotator);
                 auto Winding = LuaObject::checkValue<FRotator*>(L, 2);
                 if (!Winding) {
@@ -1040,161 +1071,131 @@
                 LuaObject::push<FRotator>(L, "FRotator", Remainder);
                 return 2;
             }
-            luaL_error(L, "call FRotator::GetWindingAndRemainder error, argc=%d", argc);
-            return 0;
         }
 
         static int ToString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRotator);
                 auto ret = self->ToString();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRotator::ToString error, argc=%d", argc);
-            return 0;
         }
 
         static int ToStringShort(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRotator);
                 auto ret = self->ToStringShort();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRotator::ToStringShort error, argc=%d", argc);
-            return 0;
         }
 
         static int ToCompactString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRotator);
                 auto ret = self->ToCompactString();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRotator::ToCompactString error, argc=%d", argc);
-            return 0;
         }
 
         static int InitFromString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FRotator);
                 auto InSourceString = LuaObject::checkValue<FString>(L, 2);
                 auto ret = self->InitFromString(InSourceString);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRotator::InitFromString error, argc=%d", argc);
-            return 0;
         }
 
         static int ContainsNaN(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRotator);
                 auto ret = self->ContainsNaN();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRotator::ContainsNaN error, argc=%d", argc);
-            return 0;
         }
 
         static int ClampAxis(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Angle = LuaObject::checkValue<float>(L, 1);
                 auto ret = FRotator::ClampAxis(Angle);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRotator::ClampAxis error, argc=%d", argc);
-            return 0;
         }
 
         static int NormalizeAxis(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Angle = LuaObject::checkValue<float>(L, 1);
                 auto ret = FRotator::NormalizeAxis(Angle);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRotator::NormalizeAxis error, argc=%d", argc);
-            return 0;
         }
 
         static int CompressAxisToByte(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Angle = LuaObject::checkValue<float>(L, 1);
                 auto ret = FRotator::CompressAxisToByte(Angle);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRotator::CompressAxisToByte error, argc=%d", argc);
-            return 0;
         }
 
         static int DecompressAxisFromByte(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Angle = LuaObject::checkValue<int>(L, 1);
                 auto AngleVal = (unsigned short)Angle;
                 auto ret = FRotator::DecompressAxisFromByte(AngleVal);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRotator::DecompressAxisFromByte error, argc=%d", argc);
-            return 0;
         }
 
         static int CompressAxisToShort(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Angle = LuaObject::checkValue<float>(L, 1);
                 auto ret = FRotator::CompressAxisToShort(Angle);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRotator::CompressAxisToShort error, argc=%d", argc);
-            return 0;
         }
 
         static int DecompressAxisFromShort(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Angle = LuaObject::checkValue<int>(L, 1);
                 auto AngleVal = (unsigned short)Angle;
                 auto ret = FRotator::DecompressAxisFromShort(AngleVal);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRotator::DecompressAxisFromShort error, argc=%d", argc);
-            return 0;
         }
 
         static int MakeFromEuler(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Euler = LuaObject::checkValue<FVector*>(L, 1);
                 if (!Euler) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
                     return 0;
                 }
                 auto& EulerRef = *Euler;
-                auto ret = __newFRotator();
-                *ret = FRotator::MakeFromEuler(EulerRef);
-                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFRotator();
+                    *ret = FRotator::MakeFromEuler(EulerRef);
+                    LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FRotator*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FRotator type.", 2);
+                    *ret = FRotator::MakeFromEuler(EulerRef);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FRotator::MakeFromEuler error, argc=%d", argc);
-            return 0;
         }
 
         static void bind(lua_State* L) {
@@ -1414,124 +1415,101 @@
         }
 
         static int DiagnosticCheckNaN_Translate(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
                 self->DiagnosticCheckNaN_Translate();
                 return 0;
             }
-            luaL_error(L, "call FTransform::DiagnosticCheckNaN_Translate error, argc=%d", argc);
-            return 0;
         }
 
         static int DiagnosticCheckNaN_Rotate(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
                 self->DiagnosticCheckNaN_Rotate();
                 return 0;
             }
-            luaL_error(L, "call FTransform::DiagnosticCheckNaN_Rotate error, argc=%d", argc);
-            return 0;
         }
 
         static int DiagnosticCheckNaN_Scale3D(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
                 self->DiagnosticCheckNaN_Scale3D();
                 return 0;
             }
-            luaL_error(L, "call FTransform::DiagnosticCheckNaN_Scale3D error, argc=%d", argc);
-            return 0;
         }
 
         static int DiagnosticCheckNaN_All(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
                 self->DiagnosticCheckNaN_All();
                 return 0;
             }
-            luaL_error(L, "call FTransform::DiagnosticCheckNaN_All error, argc=%d", argc);
-            return 0;
         }
 
         static int DiagnosticCheck_IsValid(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
                 self->DiagnosticCheck_IsValid();
                 return 0;
             }
-            luaL_error(L, "call FTransform::DiagnosticCheck_IsValid error, argc=%d", argc);
-            return 0;
         }
 
         static int DebugPrint(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
                 self->DebugPrint();
                 return 0;
             }
-            luaL_error(L, "call FTransform::DebugPrint error, argc=%d", argc);
-            return 0;
         }
 
         static int ToHumanReadableString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
                 auto ret = self->ToHumanReadableString();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::ToHumanReadableString error, argc=%d", argc);
-            return 0;
         }
 
         static int ToString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
                 auto ret = self->ToString();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::ToString error, argc=%d", argc);
-            return 0;
         }
 
         static int InitFromString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto InSourceString = LuaObject::checkValue<FString>(L, 2);
                 auto ret = self->InitFromString(InSourceString);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::InitFromString error, argc=%d", argc);
-            return 0;
         }
 
         static int Inverse(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
-                auto ret = __newFTransform();
-                *ret = self->Inverse();
-                LuaObject::push<FTransform>(L, "FTransform", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFTransform();
+                    *ret = self->Inverse();
+                    LuaObject::push<FTransform>(L, "FTransform", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FTransform*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FTransform type.", 2);
+                    *ret = self->Inverse();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::Inverse error, argc=%d", argc);
-            return 0;
         }
 
         static int Blend(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 4) {
+            {
                 CheckSelf(FTransform);
                 auto Atom1 = LuaObject::checkValue<FTransform*>(L, 2);
                 if (!Atom1) {
@@ -1549,13 +1527,10 @@
                 self->Blend(Atom1Ref, Atom2Ref, Alpha);
                 return 0;
             }
-            luaL_error(L, "call FTransform::Blend error, argc=%d", argc);
-            return 0;
         }
 
         static int BlendWith(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FTransform);
                 auto OtherAtom = LuaObject::checkValue<FTransform*>(L, 2);
                 if (!OtherAtom) {
@@ -1567,13 +1542,10 @@
                 self->BlendWith(OtherAtomRef, Alpha);
                 return 0;
             }
-            luaL_error(L, "call FTransform::BlendWith error, argc=%d", argc);
-            return 0;
         }
 
         static int ScaleTranslation(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto InScale3D = LuaObject::checkValue<FVector*>(L, 2);
                 if (!InScale3D) {
@@ -1584,49 +1556,37 @@
                 self->ScaleTranslation(InScale3DRef);
                 return 0;
             }
-            luaL_error(L, "call FTransform::ScaleTranslation error, argc=%d", argc);
-            return 0;
         }
 
         static int RemoveScaling(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto Tolerance = LuaObject::checkValue<float>(L, 2);
                 self->RemoveScaling(Tolerance);
                 return 0;
             }
-            luaL_error(L, "call FTransform::RemoveScaling error, argc=%d", argc);
-            return 0;
         }
 
         static int GetMaximumAxisScale(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
                 auto ret = self->GetMaximumAxisScale();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::GetMaximumAxisScale error, argc=%d", argc);
-            return 0;
         }
 
         static int GetMinimumAxisScale(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
                 auto ret = self->GetMinimumAxisScale();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::GetMinimumAxisScale error, argc=%d", argc);
-            return 0;
         }
 
         static int GetRelativeTransform(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto Other = LuaObject::checkValue<FTransform*>(L, 2);
                 if (!Other) {
@@ -1634,18 +1594,23 @@
                     return 0;
                 }
                 auto& OtherRef = *Other;
-                auto ret = __newFTransform();
-                *ret = self->GetRelativeTransform(OtherRef);
-                LuaObject::push<FTransform>(L, "FTransform", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFTransform();
+                    *ret = self->GetRelativeTransform(OtherRef);
+                    LuaObject::push<FTransform>(L, "FTransform", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FTransform*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FTransform type.", 3);
+                    *ret = self->GetRelativeTransform(OtherRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::GetRelativeTransform error, argc=%d", argc);
-            return 0;
         }
 
         static int GetRelativeTransformReverse(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto Other = LuaObject::checkValue<FTransform*>(L, 2);
                 if (!Other) {
@@ -1653,18 +1618,23 @@
                     return 0;
                 }
                 auto& OtherRef = *Other;
-                auto ret = __newFTransform();
-                *ret = self->GetRelativeTransformReverse(OtherRef);
-                LuaObject::push<FTransform>(L, "FTransform", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFTransform();
+                    *ret = self->GetRelativeTransformReverse(OtherRef);
+                    LuaObject::push<FTransform>(L, "FTransform", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FTransform*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FTransform type.", 3);
+                    *ret = self->GetRelativeTransformReverse(OtherRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::GetRelativeTransformReverse error, argc=%d", argc);
-            return 0;
         }
 
         static int SetToRelativeTransform(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto ParentTransform = LuaObject::checkValue<FTransform*>(L, 2);
                 if (!ParentTransform) {
@@ -1675,13 +1645,10 @@
                 self->SetToRelativeTransform(ParentTransformRef);
                 return 0;
             }
-            luaL_error(L, "call FTransform::SetToRelativeTransform error, argc=%d", argc);
-            return 0;
         }
 
         static int TransformPosition(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto V = LuaObject::checkValue<FVector*>(L, 2);
                 if (!V) {
@@ -1689,18 +1656,23 @@
                     return 0;
                 }
                 auto& VRef = *V;
-                auto ret = __newFVector();
-                *ret = self->TransformPosition(VRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->TransformPosition(VRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->TransformPosition(VRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::TransformPosition error, argc=%d", argc);
-            return 0;
         }
 
         static int TransformPositionNoScale(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto V = LuaObject::checkValue<FVector*>(L, 2);
                 if (!V) {
@@ -1708,18 +1680,23 @@
                     return 0;
                 }
                 auto& VRef = *V;
-                auto ret = __newFVector();
-                *ret = self->TransformPositionNoScale(VRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->TransformPositionNoScale(VRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->TransformPositionNoScale(VRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::TransformPositionNoScale error, argc=%d", argc);
-            return 0;
         }
 
         static int InverseTransformPosition(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto V = LuaObject::checkValue<FVector*>(L, 2);
                 if (!V) {
@@ -1727,18 +1704,23 @@
                     return 0;
                 }
                 auto& VRef = *V;
-                auto ret = __newFVector();
-                *ret = self->InverseTransformPosition(VRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->InverseTransformPosition(VRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->InverseTransformPosition(VRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::InverseTransformPosition error, argc=%d", argc);
-            return 0;
         }
 
         static int InverseTransformPositionNoScale(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto V = LuaObject::checkValue<FVector*>(L, 2);
                 if (!V) {
@@ -1746,18 +1728,23 @@
                     return 0;
                 }
                 auto& VRef = *V;
-                auto ret = __newFVector();
-                *ret = self->InverseTransformPositionNoScale(VRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->InverseTransformPositionNoScale(VRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->InverseTransformPositionNoScale(VRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::InverseTransformPositionNoScale error, argc=%d", argc);
-            return 0;
         }
 
         static int TransformVector(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto V = LuaObject::checkValue<FVector*>(L, 2);
                 if (!V) {
@@ -1765,18 +1752,23 @@
                     return 0;
                 }
                 auto& VRef = *V;
-                auto ret = __newFVector();
-                *ret = self->TransformVector(VRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->TransformVector(VRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->TransformVector(VRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::TransformVector error, argc=%d", argc);
-            return 0;
         }
 
         static int TransformVectorNoScale(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto V = LuaObject::checkValue<FVector*>(L, 2);
                 if (!V) {
@@ -1784,18 +1776,23 @@
                     return 0;
                 }
                 auto& VRef = *V;
-                auto ret = __newFVector();
-                *ret = self->TransformVectorNoScale(VRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->TransformVectorNoScale(VRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->TransformVectorNoScale(VRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::TransformVectorNoScale error, argc=%d", argc);
-            return 0;
         }
 
         static int InverseTransformVector(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto V = LuaObject::checkValue<FVector*>(L, 2);
                 if (!V) {
@@ -1803,18 +1800,23 @@
                     return 0;
                 }
                 auto& VRef = *V;
-                auto ret = __newFVector();
-                *ret = self->InverseTransformVector(VRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->InverseTransformVector(VRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->InverseTransformVector(VRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::InverseTransformVector error, argc=%d", argc);
-            return 0;
         }
 
         static int InverseTransformVectorNoScale(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto V = LuaObject::checkValue<FVector*>(L, 2);
                 if (!V) {
@@ -1822,62 +1824,82 @@
                     return 0;
                 }
                 auto& VRef = *V;
-                auto ret = __newFVector();
-                *ret = self->InverseTransformVectorNoScale(VRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->InverseTransformVectorNoScale(VRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->InverseTransformVectorNoScale(VRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::InverseTransformVectorNoScale error, argc=%d", argc);
-            return 0;
         }
 
         static int GetScaled(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto Scale = LuaObject::checkValue<float>(L, 2);
-                auto ret = __newFTransform();
-                *ret = self->GetScaled(Scale);
-                LuaObject::push<FTransform>(L, "FTransform", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFTransform();
+                    *ret = self->GetScaled(Scale);
+                    LuaObject::push<FTransform>(L, "FTransform", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FTransform*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FTransform type.", 3);
+                    *ret = self->GetScaled(Scale);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::GetScaled error, argc=%d", argc);
-            return 0;
         }
 
         static int GetScaledAxis(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto InAxis = LuaObject::checkValue<int>(L, 2);
                 auto InAxisVal = (EAxis::Type)InAxis;
-                auto ret = __newFVector();
-                *ret = self->GetScaledAxis(InAxisVal);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->GetScaledAxis(InAxisVal);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->GetScaledAxis(InAxisVal);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::GetScaledAxis error, argc=%d", argc);
-            return 0;
         }
 
         static int GetUnitAxis(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto InAxis = LuaObject::checkValue<int>(L, 2);
                 auto InAxisVal = (EAxis::Type)InAxis;
-                auto ret = __newFVector();
-                *ret = self->GetUnitAxis(InAxisVal);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->GetUnitAxis(InAxisVal);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->GetUnitAxis(InAxisVal);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::GetUnitAxis error, argc=%d", argc);
-            return 0;
         }
 
         static int Mirror(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FTransform);
                 auto MirrorAxis = LuaObject::checkValue<int>(L, 2);
                 auto MirrorAxisVal = (EAxis::Type)MirrorAxis;
@@ -1886,51 +1908,55 @@
                 self->Mirror(MirrorAxisVal, FlipAxisVal);
                 return 0;
             }
-            luaL_error(L, "call FTransform::Mirror error, argc=%d", argc);
-            return 0;
         }
 
         static int GetLocation(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
-                auto ret = __newFVector();
-                *ret = self->GetLocation();
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector();
+                    *ret = self->GetLocation();
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 2);
+                    *ret = self->GetLocation();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::GetLocation error, argc=%d", argc);
-            return 0;
         }
 
         static int Rotator(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
-                auto ret = __newFRotator();
-                *ret = self->Rotator();
-                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFRotator();
+                    *ret = self->Rotator();
+                    LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FRotator*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FRotator type.", 2);
+                    *ret = self->Rotator();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::Rotator error, argc=%d", argc);
-            return 0;
         }
 
         static int GetDeterminant(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
                 auto ret = self->GetDeterminant();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::GetDeterminant error, argc=%d", argc);
-            return 0;
         }
 
         static int SetLocation(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto Origin = LuaObject::checkValue<FVector*>(L, 2);
                 if (!Origin) {
@@ -1941,37 +1967,28 @@
                 self->SetLocation(OriginRef);
                 return 0;
             }
-            luaL_error(L, "call FTransform::SetLocation error, argc=%d", argc);
-            return 0;
         }
 
         static int ContainsNaN(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
                 auto ret = self->ContainsNaN();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::ContainsNaN error, argc=%d", argc);
-            return 0;
         }
 
         static int IsValid(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
                 auto ret = self->IsValid();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::IsValid error, argc=%d", argc);
-            return 0;
         }
 
         static int RotationEquals(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FTransform);
                 auto Other = LuaObject::checkValue<FTransform*>(L, 2);
                 if (!Other) {
@@ -1984,13 +2001,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::RotationEquals error, argc=%d", argc);
-            return 0;
         }
 
         static int TranslationEquals(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FTransform);
                 auto Other = LuaObject::checkValue<FTransform*>(L, 2);
                 if (!Other) {
@@ -2003,13 +2017,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::TranslationEquals error, argc=%d", argc);
-            return 0;
         }
 
         static int Scale3DEquals(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FTransform);
                 auto Other = LuaObject::checkValue<FTransform*>(L, 2);
                 if (!Other) {
@@ -2022,13 +2033,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::Scale3DEquals error, argc=%d", argc);
-            return 0;
         }
 
         static int Equals(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FTransform);
                 auto Other = LuaObject::checkValue<FTransform*>(L, 2);
                 if (!Other) {
@@ -2041,13 +2049,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::Equals error, argc=%d", argc);
-            return 0;
         }
 
         static int EqualsNoScale(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FTransform);
                 auto Other = LuaObject::checkValue<FTransform*>(L, 2);
                 if (!Other) {
@@ -2060,24 +2065,18 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::EqualsNoScale error, argc=%d", argc);
-            return 0;
         }
 
         static int SetIdentity(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
                 self->SetIdentity();
                 return 0;
             }
-            luaL_error(L, "call FTransform::SetIdentity error, argc=%d", argc);
-            return 0;
         }
 
         static int MultiplyScale3D(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto Scale3DMultiplier = LuaObject::checkValue<FVector*>(L, 2);
                 if (!Scale3DMultiplier) {
@@ -2088,13 +2087,10 @@
                 self->MultiplyScale3D(Scale3DMultiplierRef);
                 return 0;
             }
-            luaL_error(L, "call FTransform::MultiplyScale3D error, argc=%d", argc);
-            return 0;
         }
 
         static int SetTranslation(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto NewTranslation = LuaObject::checkValue<FVector*>(L, 2);
                 if (!NewTranslation) {
@@ -2105,13 +2101,10 @@
                 self->SetTranslation(NewTranslationRef);
                 return 0;
             }
-            luaL_error(L, "call FTransform::SetTranslation error, argc=%d", argc);
-            return 0;
         }
 
         static int CopyTranslation(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto Other = LuaObject::checkValue<FTransform*>(L, 2);
                 if (!Other) {
@@ -2122,13 +2115,10 @@
                 self->CopyTranslation(OtherRef);
                 return 0;
             }
-            luaL_error(L, "call FTransform::CopyTranslation error, argc=%d", argc);
-            return 0;
         }
 
         static int AddToTranslation(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto DeltaTranslation = LuaObject::checkValue<FVector*>(L, 2);
                 if (!DeltaTranslation) {
@@ -2139,13 +2129,10 @@
                 self->AddToTranslation(DeltaTranslationRef);
                 return 0;
             }
-            luaL_error(L, "call FTransform::AddToTranslation error, argc=%d", argc);
-            return 0;
         }
 
         static int CopyRotation(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto Other = LuaObject::checkValue<FTransform*>(L, 2);
                 if (!Other) {
@@ -2156,13 +2143,10 @@
                 self->CopyRotation(OtherRef);
                 return 0;
             }
-            luaL_error(L, "call FTransform::CopyRotation error, argc=%d", argc);
-            return 0;
         }
 
         static int SetScale3D(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto NewScale3D = LuaObject::checkValue<FVector*>(L, 2);
                 if (!NewScale3D) {
@@ -2173,13 +2157,10 @@
                 self->SetScale3D(NewScale3DRef);
                 return 0;
             }
-            luaL_error(L, "call FTransform::SetScale3D error, argc=%d", argc);
-            return 0;
         }
 
         static int CopyScale3D(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto Other = LuaObject::checkValue<FTransform*>(L, 2);
                 if (!Other) {
@@ -2190,13 +2171,10 @@
                 self->CopyScale3D(OtherRef);
                 return 0;
             }
-            luaL_error(L, "call FTransform::CopyScale3D error, argc=%d", argc);
-            return 0;
         }
 
         static int SetTranslationAndScale3D(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FTransform);
                 auto NewTranslation = LuaObject::checkValue<FVector*>(L, 2);
                 if (!NewTranslation) {
@@ -2213,62 +2191,63 @@
                 self->SetTranslationAndScale3D(NewTranslationRef, NewScale3DRef);
                 return 0;
             }
-            luaL_error(L, "call FTransform::SetTranslationAndScale3D error, argc=%d", argc);
-            return 0;
         }
 
         static int NormalizeRotation(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
                 self->NormalizeRotation();
                 return 0;
             }
-            luaL_error(L, "call FTransform::NormalizeRotation error, argc=%d", argc);
-            return 0;
         }
 
         static int IsRotationNormalized(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
                 auto ret = self->IsRotationNormalized();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::IsRotationNormalized error, argc=%d", argc);
-            return 0;
         }
 
         static int GetTranslation(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
-                auto ret = __newFVector();
-                *ret = self->GetTranslation();
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector();
+                    *ret = self->GetTranslation();
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 2);
+                    *ret = self->GetTranslation();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::GetTranslation error, argc=%d", argc);
-            return 0;
         }
 
         static int GetScale3D(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FTransform);
-                auto ret = __newFVector();
-                *ret = self->GetScale3D();
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector();
+                    *ret = self->GetScale3D();
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 2);
+                    *ret = self->GetScale3D();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::GetScale3D error, argc=%d", argc);
-            return 0;
         }
 
         static int CopyRotationPart(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto SrcBA = LuaObject::checkValue<FTransform*>(L, 2);
                 if (!SrcBA) {
@@ -2279,13 +2258,10 @@
                 self->CopyRotationPart(SrcBARef);
                 return 0;
             }
-            luaL_error(L, "call FTransform::CopyRotationPart error, argc=%d", argc);
-            return 0;
         }
 
         static int CopyTranslationAndScale3D(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FTransform);
                 auto SrcBA = LuaObject::checkValue<FTransform*>(L, 2);
                 if (!SrcBA) {
@@ -2296,13 +2272,10 @@
                 self->CopyTranslationAndScale3D(SrcBARef);
                 return 0;
             }
-            luaL_error(L, "call FTransform::CopyTranslationAndScale3D error, argc=%d", argc);
-            return 0;
         }
 
         static int AnyHasNegativeScale(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto InScale3D = LuaObject::checkValue<FVector*>(L, 1);
                 if (!InScale3D) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -2319,13 +2292,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::AnyHasNegativeScale error, argc=%d", argc);
-            return 0;
         }
 
         static int GetSafeScaleReciprocal(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto InScale = LuaObject::checkValue<FVector*>(L, 1);
                 if (!InScale) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -2333,18 +2303,23 @@
                 }
                 auto& InScaleRef = *InScale;
                 auto Tolerance = LuaObject::checkValue<float>(L, 2);
-                auto ret = __newFVector();
-                *ret = FTransform::GetSafeScaleReciprocal(InScaleRef, Tolerance);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = FTransform::GetSafeScaleReciprocal(InScaleRef, Tolerance);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = FTransform::GetSafeScaleReciprocal(InScaleRef, Tolerance);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::GetSafeScaleReciprocal error, argc=%d", argc);
-            return 0;
         }
 
         static int AreRotationsEqual(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 auto A = LuaObject::checkValue<FTransform*>(L, 1);
                 if (!A) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -2362,13 +2337,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::AreRotationsEqual error, argc=%d", argc);
-            return 0;
         }
 
         static int AreTranslationsEqual(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 auto A = LuaObject::checkValue<FTransform*>(L, 1);
                 if (!A) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -2386,13 +2358,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::AreTranslationsEqual error, argc=%d", argc);
-            return 0;
         }
 
         static int AreScale3DsEqual(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 auto A = LuaObject::checkValue<FTransform*>(L, 1);
                 if (!A) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -2410,13 +2379,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FTransform::AreScale3DsEqual error, argc=%d", argc);
-            return 0;
         }
 
         static int AddTranslations(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto A = LuaObject::checkValue<FTransform*>(L, 1);
                 if (!A) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -2429,18 +2395,23 @@
                     return 0;
                 }
                 auto& BRef = *B;
-                auto ret = __newFVector();
-                *ret = FTransform::AddTranslations(ARef, BRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = FTransform::AddTranslations(ARef, BRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = FTransform::AddTranslations(ARef, BRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::AddTranslations error, argc=%d", argc);
-            return 0;
         }
 
         static int SubtractTranslations(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto A = LuaObject::checkValue<FTransform*>(L, 1);
                 if (!A) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -2453,13 +2424,19 @@
                     return 0;
                 }
                 auto& BRef = *B;
-                auto ret = __newFVector();
-                *ret = FTransform::SubtractTranslations(ARef, BRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = FTransform::SubtractTranslations(ARef, BRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = FTransform::SubtractTranslations(ARef, BRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FTransform::SubtractTranslations error, argc=%d", argc);
-            return 0;
         }
 
         static void bind(lua_State* L) {
@@ -2883,62 +2860,73 @@
         }
 
         static int ToRGBE(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FLinearColor);
-                auto ret = __newFColor();
-                *ret = self->ToRGBE();
-                LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFColor();
+                    *ret = self->ToRGBE();
+                    LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FColor*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FColor type.", 2);
+                    *ret = self->ToRGBE();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::ToRGBE error, argc=%d", argc);
-            return 0;
         }
 
         static int ToRGBEFast(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FLinearColor);
-                auto ret = __newFColor();
-                *ret = self->ToRGBEFast();
-                LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFColor();
+                    *ret = self->ToRGBEFast();
+                    LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FColor*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FColor type.", 2);
+                    *ret = self->ToRGBEFast();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::ToRGBEFast error, argc=%d", argc);
-            return 0;
         }
 
         static int Component(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FLinearColor);
                 auto Index = LuaObject::checkValue<int>(L, 2);
                 auto ret = self->Component(Index);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::Component error, argc=%d", argc);
-            return 0;
         }
 
         static int GetClamped(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FLinearColor);
                 auto InMin = LuaObject::checkValue<float>(L, 2);
                 auto InMax = LuaObject::checkValue<float>(L, 3);
-                auto ret = __newFLinearColor();
-                *ret = self->GetClamped(InMin, InMax);
-                LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 4)) {
+                    auto ret = __newFLinearColor();
+                    *ret = self->GetClamped(InMin, InMax);
+                    LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FLinearColor*>(L, 4);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FLinearColor type.", 4);
+                    *ret = self->GetClamped(InMin, InMax);
+                    lua_pushvalue(L, 4);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::GetClamped error, argc=%d", argc);
-            return 0;
         }
 
         static int Equals(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FLinearColor);
                 auto ColorB = LuaObject::checkValue<FLinearColor*>(L, 2);
                 if (!ColorB) {
@@ -2951,286 +2939,335 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::Equals error, argc=%d", argc);
-            return 0;
         }
 
         static int CopyWithNewOpacity(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FLinearColor);
                 auto NewOpacicty = LuaObject::checkValue<float>(L, 2);
-                auto ret = __newFLinearColor();
-                *ret = self->CopyWithNewOpacity(NewOpacicty);
-                LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFLinearColor();
+                    *ret = self->CopyWithNewOpacity(NewOpacicty);
+                    LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FLinearColor*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FLinearColor type.", 3);
+                    *ret = self->CopyWithNewOpacity(NewOpacicty);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::CopyWithNewOpacity error, argc=%d", argc);
-            return 0;
         }
 
         static int LinearRGBToHSV(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FLinearColor);
-                auto ret = __newFLinearColor();
-                *ret = self->LinearRGBToHSV();
-                LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFLinearColor();
+                    *ret = self->LinearRGBToHSV();
+                    LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FLinearColor*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FLinearColor type.", 2);
+                    *ret = self->LinearRGBToHSV();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::LinearRGBToHSV error, argc=%d", argc);
-            return 0;
         }
 
         static int HSVToLinearRGB(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FLinearColor);
-                auto ret = __newFLinearColor();
-                *ret = self->HSVToLinearRGB();
-                LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFLinearColor();
+                    *ret = self->HSVToLinearRGB();
+                    LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FLinearColor*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FLinearColor type.", 2);
+                    *ret = self->HSVToLinearRGB();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::HSVToLinearRGB error, argc=%d", argc);
-            return 0;
         }
 
         static int Quantize(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FLinearColor);
-                auto ret = __newFColor();
-                *ret = self->Quantize();
-                LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFColor();
+                    *ret = self->Quantize();
+                    LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FColor*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FColor type.", 2);
+                    *ret = self->Quantize();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::Quantize error, argc=%d", argc);
-            return 0;
         }
 
         static int QuantizeFast(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FLinearColor);
-                auto ret = __newFColor();
-                *ret = self->QuantizeFast();
-                LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFColor();
+                    *ret = self->QuantizeFast();
+                    LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FColor*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FColor type.", 2);
+                    *ret = self->QuantizeFast();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::QuantizeFast error, argc=%d", argc);
-            return 0;
         }
 
         static int QuantizeRound(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FLinearColor);
-                auto ret = __newFColor();
-                *ret = self->QuantizeRound();
-                LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFColor();
+                    *ret = self->QuantizeRound();
+                    LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FColor*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FColor type.", 2);
+                    *ret = self->QuantizeRound();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::QuantizeRound error, argc=%d", argc);
-            return 0;
         }
 
         static int ToFColor(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FLinearColor);
                 auto bSRGB = LuaObject::checkValue<bool>(L, 2);
-                auto ret = __newFColor();
-                *ret = self->ToFColor(bSRGB);
-                LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFColor();
+                    *ret = self->ToFColor(bSRGB);
+                    LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FColor*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FColor type.", 3);
+                    *ret = self->ToFColor(bSRGB);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::ToFColor error, argc=%d", argc);
-            return 0;
         }
 
         static int ToColorFast(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FLinearColor);
                 auto bSRGB = LuaObject::checkValue<bool>(L, 2);
-                auto ret = __newFColor();
-                *ret = self->ToColorFast(bSRGB);
-                LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFColor();
+                    *ret = self->ToColorFast(bSRGB);
+                    LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FColor*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FColor type.", 3);
+                    *ret = self->ToColorFast(bSRGB);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::ToColorFast error, argc=%d", argc);
-            return 0;
         }
 
         static int Desaturate(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FLinearColor);
                 auto Desaturation = LuaObject::checkValue<float>(L, 2);
-                auto ret = __newFLinearColor();
-                *ret = self->Desaturate(Desaturation);
-                LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFLinearColor();
+                    *ret = self->Desaturate(Desaturation);
+                    LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FLinearColor*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FLinearColor type.", 3);
+                    *ret = self->Desaturate(Desaturation);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::Desaturate error, argc=%d", argc);
-            return 0;
         }
 
         static int GetMax(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FLinearColor);
                 auto ret = self->GetMax();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::GetMax error, argc=%d", argc);
-            return 0;
         }
 
         static int IsAlmostBlack(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FLinearColor);
                 auto ret = self->IsAlmostBlack();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::IsAlmostBlack error, argc=%d", argc);
-            return 0;
         }
 
         static int GetMin(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FLinearColor);
                 auto ret = self->GetMin();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::GetMin error, argc=%d", argc);
-            return 0;
         }
 
         static int GetLuminance(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FLinearColor);
                 auto ret = self->GetLuminance();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::GetLuminance error, argc=%d", argc);
-            return 0;
         }
 
         static int ToString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FLinearColor);
                 auto ret = self->ToString();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::ToString error, argc=%d", argc);
-            return 0;
         }
 
         static int InitFromString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FLinearColor);
                 auto InSourceString = LuaObject::checkValue<FString>(L, 2);
                 auto ret = self->InitFromString(InSourceString);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::InitFromString error, argc=%d", argc);
-            return 0;
         }
 
         static int FromSRGBColor(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Color = LuaObject::checkValue<FColor*>(L, 1);
                 if (!Color) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
                     return 0;
                 }
                 auto& ColorRef = *Color;
-                auto ret = __newFLinearColor();
-                *ret = FLinearColor::FromSRGBColor(ColorRef);
-                LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFLinearColor();
+                    *ret = FLinearColor::FromSRGBColor(ColorRef);
+                    LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FLinearColor*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FLinearColor type.", 2);
+                    *ret = FLinearColor::FromSRGBColor(ColorRef);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::FromSRGBColor error, argc=%d", argc);
-            return 0;
         }
 
         static int FromPow22Color(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Color = LuaObject::checkValue<FColor*>(L, 1);
                 if (!Color) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
                     return 0;
                 }
                 auto& ColorRef = *Color;
-                auto ret = __newFLinearColor();
-                *ret = FLinearColor::FromPow22Color(ColorRef);
-                LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFLinearColor();
+                    *ret = FLinearColor::FromPow22Color(ColorRef);
+                    LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FLinearColor*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FLinearColor type.", 2);
+                    *ret = FLinearColor::FromPow22Color(ColorRef);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::FromPow22Color error, argc=%d", argc);
-            return 0;
         }
 
         static int FGetHSV(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 auto H = LuaObject::checkValue<int>(L, 1);
                 auto HVal = (unsigned char)H;
                 auto S = LuaObject::checkValue<int>(L, 2);
                 auto SVal = (unsigned char)S;
                 auto V = LuaObject::checkValue<int>(L, 3);
                 auto VVal = (unsigned char)V;
-                auto ret = __newFLinearColor();
-                *ret = FLinearColor::FGetHSV(HVal, SVal, VVal);
-                LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 4)) {
+                    auto ret = __newFLinearColor();
+                    *ret = FLinearColor::FGetHSV(HVal, SVal, VVal);
+                    LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FLinearColor*>(L, 4);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FLinearColor type.", 4);
+                    *ret = FLinearColor::FGetHSV(HVal, SVal, VVal);
+                    lua_pushvalue(L, 4);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::FGetHSV error, argc=%d", argc);
-            return 0;
         }
 
         static int MakeRandomColor(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
-                auto ret = __newFLinearColor();
-                *ret = FLinearColor::MakeRandomColor();
-                LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+            {
+                if (lua_isnoneornil(L, 1)) {
+                    auto ret = __newFLinearColor();
+                    *ret = FLinearColor::MakeRandomColor();
+                    LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FLinearColor*>(L, 1);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FLinearColor type.", 1);
+                    *ret = FLinearColor::MakeRandomColor();
+                    lua_pushvalue(L, 1);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::MakeRandomColor error, argc=%d", argc);
-            return 0;
         }
 
         static int MakeFromColorTemperature(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Temp = LuaObject::checkValue<float>(L, 1);
-                auto ret = __newFLinearColor();
-                *ret = FLinearColor::MakeFromColorTemperature(Temp);
-                LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFLinearColor();
+                    *ret = FLinearColor::MakeFromColorTemperature(Temp);
+                    LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FLinearColor*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FLinearColor type.", 2);
+                    *ret = FLinearColor::MakeFromColorTemperature(Temp);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::MakeFromColorTemperature error, argc=%d", argc);
-            return 0;
         }
 
         static int Dist(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto V1 = LuaObject::checkValue<FLinearColor*>(L, 1);
                 if (!V1) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -3247,13 +3284,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::Dist error, argc=%d", argc);
-            return 0;
         }
 
         static int LerpUsingHSV(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 auto From = LuaObject::checkValue<FLinearColor*>(L, 1);
                 if (!From) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -3267,13 +3301,19 @@
                 }
                 auto& ToRef = *To;
                 auto Progress = LuaObject::checkValue<float>(L, 3);
-                auto ret = __newFLinearColor();
-                *ret = FLinearColor::LerpUsingHSV(FromRef, ToRef, Progress);
-                LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 4)) {
+                    auto ret = __newFLinearColor();
+                    *ret = FLinearColor::LerpUsingHSV(FromRef, ToRef, Progress);
+                    LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FLinearColor*>(L, 4);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FLinearColor type.", 4);
+                    *ret = FLinearColor::LerpUsingHSV(FromRef, ToRef, Progress);
+                    lua_pushvalue(L, 4);
+                }
                 return 1;
             }
-            luaL_error(L, "call FLinearColor::LerpUsingHSV error, argc=%d", argc);
-            return 0;
         }
 
         static void bind(lua_State* L) {
@@ -3550,192 +3590,203 @@
         }
 
         static int DWColor(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FColor);
                 auto ret = self->DWColor();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FColor::DWColor error, argc=%d", argc);
-            return 0;
         }
 
         static int FromRGBE(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FColor);
-                auto ret = __newFLinearColor();
-                *ret = self->FromRGBE();
-                LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFLinearColor();
+                    *ret = self->FromRGBE();
+                    LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FLinearColor*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FLinearColor type.", 2);
+                    *ret = self->FromRGBE();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FColor::FromRGBE error, argc=%d", argc);
-            return 0;
         }
 
         static int WithAlpha(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FColor);
                 auto Alpha = LuaObject::checkValue<int>(L, 2);
                 auto AlphaVal = (unsigned char)Alpha;
-                auto ret = __newFColor();
-                *ret = self->WithAlpha(AlphaVal);
-                LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFColor();
+                    *ret = self->WithAlpha(AlphaVal);
+                    LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FColor*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FColor type.", 3);
+                    *ret = self->WithAlpha(AlphaVal);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FColor::WithAlpha error, argc=%d", argc);
-            return 0;
         }
 
         static int ReinterpretAsLinear(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FColor);
-                auto ret = __newFLinearColor();
-                *ret = self->ReinterpretAsLinear();
-                LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFLinearColor();
+                    *ret = self->ReinterpretAsLinear();
+                    LuaObject::push<FLinearColor>(L, "FLinearColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FLinearColor*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FLinearColor type.", 2);
+                    *ret = self->ReinterpretAsLinear();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FColor::ReinterpretAsLinear error, argc=%d", argc);
-            return 0;
         }
 
         static int ToHex(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FColor);
                 auto ret = self->ToHex();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FColor::ToHex error, argc=%d", argc);
-            return 0;
         }
 
         static int ToString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FColor);
                 auto ret = self->ToString();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FColor::ToString error, argc=%d", argc);
-            return 0;
         }
 
         static int InitFromString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FColor);
                 auto InSourceString = LuaObject::checkValue<FString>(L, 2);
                 auto ret = self->InitFromString(InSourceString);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FColor::InitFromString error, argc=%d", argc);
-            return 0;
         }
 
         static int ToPackedARGB(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FColor);
                 auto ret = self->ToPackedARGB();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FColor::ToPackedARGB error, argc=%d", argc);
-            return 0;
         }
 
         static int ToPackedABGR(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FColor);
                 auto ret = self->ToPackedABGR();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FColor::ToPackedABGR error, argc=%d", argc);
-            return 0;
         }
 
         static int ToPackedRGBA(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FColor);
                 auto ret = self->ToPackedRGBA();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FColor::ToPackedRGBA error, argc=%d", argc);
-            return 0;
         }
 
         static int ToPackedBGRA(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FColor);
                 auto ret = self->ToPackedBGRA();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FColor::ToPackedBGRA error, argc=%d", argc);
-            return 0;
         }
 
         static int FromHex(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto HexString = LuaObject::checkValue<FString>(L, 1);
-                auto ret = __newFColor();
-                *ret = FColor::FromHex(HexString);
-                LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFColor();
+                    *ret = FColor::FromHex(HexString);
+                    LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FColor*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FColor type.", 2);
+                    *ret = FColor::FromHex(HexString);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FColor::FromHex error, argc=%d", argc);
-            return 0;
         }
 
         static int MakeRandomColor(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
-                auto ret = __newFColor();
-                *ret = FColor::MakeRandomColor();
-                LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+            {
+                if (lua_isnoneornil(L, 1)) {
+                    auto ret = __newFColor();
+                    *ret = FColor::MakeRandomColor();
+                    LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FColor*>(L, 1);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FColor type.", 1);
+                    *ret = FColor::MakeRandomColor();
+                    lua_pushvalue(L, 1);
+                }
                 return 1;
             }
-            luaL_error(L, "call FColor::MakeRandomColor error, argc=%d", argc);
-            return 0;
         }
 
         static int MakeRedToGreenColorFromScalar(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Scalar = LuaObject::checkValue<float>(L, 1);
-                auto ret = __newFColor();
-                *ret = FColor::MakeRedToGreenColorFromScalar(Scalar);
-                LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFColor();
+                    *ret = FColor::MakeRedToGreenColorFromScalar(Scalar);
+                    LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FColor*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FColor type.", 2);
+                    *ret = FColor::MakeRedToGreenColorFromScalar(Scalar);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FColor::MakeRedToGreenColorFromScalar error, argc=%d", argc);
-            return 0;
         }
 
         static int MakeFromColorTemperature(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Temp = LuaObject::checkValue<float>(L, 1);
-                auto ret = __newFColor();
-                *ret = FColor::MakeFromColorTemperature(Temp);
-                LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFColor();
+                    *ret = FColor::MakeFromColorTemperature(Temp);
+                    LuaObject::push<FColor>(L, "FColor", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FColor*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FColor type.", 2);
+                    *ret = FColor::MakeFromColorTemperature(Temp);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FColor::MakeFromColorTemperature error, argc=%d", argc);
-            return 0;
         }
 
         static void bind(lua_State* L) {
@@ -4139,8 +4190,7 @@
         }
 
         static int Equals(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FVector);
                 auto V = LuaObject::checkValue<FVector*>(L, 2);
                 if (!V) {
@@ -4153,39 +4203,30 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::Equals error, argc=%d", argc);
-            return 0;
         }
 
         static int AllComponentsEqual(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto Tolerance = LuaObject::checkValue<float>(L, 2);
                 auto ret = self->AllComponentsEqual(Tolerance);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::AllComponentsEqual error, argc=%d", argc);
-            return 0;
         }
 
         static int Component(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto Index = LuaObject::checkValue<int>(L, 2);
                 auto ret = self->Component(Index);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::Component error, argc=%d", argc);
-            return 0;
         }
 
         static int GetComponentForAxis(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto Axis = LuaObject::checkValue<int>(L, 2);
                 auto AxisVal = (EAxis::Type)Axis;
@@ -4193,13 +4234,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::GetComponentForAxis error, argc=%d", argc);
-            return 0;
         }
 
         static int SetComponentForAxis(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FVector);
                 auto Axis = LuaObject::checkValue<int>(L, 2);
                 auto AxisVal = (EAxis::Type)Axis;
@@ -4207,13 +4245,10 @@
                 self->SetComponentForAxis(AxisVal, Component);
                 return 0;
             }
-            luaL_error(L, "call FVector::SetComponentForAxis error, argc=%d", argc);
-            return 0;
         }
 
         static int Set(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 4) {
+            {
                 CheckSelf(FVector);
                 auto InX = LuaObject::checkValue<float>(L, 2);
                 auto InY = LuaObject::checkValue<float>(L, 3);
@@ -4221,61 +4256,46 @@
                 self->Set(InX, InY, InZ);
                 return 0;
             }
-            luaL_error(L, "call FVector::Set error, argc=%d", argc);
-            return 0;
         }
 
         static int GetMax(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
                 auto ret = self->GetMax();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::GetMax error, argc=%d", argc);
-            return 0;
         }
 
         static int GetAbsMax(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
                 auto ret = self->GetAbsMax();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::GetAbsMax error, argc=%d", argc);
-            return 0;
         }
 
         static int GetMin(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
                 auto ret = self->GetMin();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::GetMin error, argc=%d", argc);
-            return 0;
         }
 
         static int GetAbsMin(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
                 auto ret = self->GetAbsMin();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::GetAbsMin error, argc=%d", argc);
-            return 0;
         }
 
         static int ComponentMin(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto Other = LuaObject::checkValue<FVector*>(L, 2);
                 if (!Other) {
@@ -4283,18 +4303,23 @@
                     return 0;
                 }
                 auto& OtherRef = *Other;
-                auto ret = __newFVector();
-                *ret = self->ComponentMin(OtherRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->ComponentMin(OtherRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->ComponentMin(OtherRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::ComponentMin error, argc=%d", argc);
-            return 0;
         }
 
         static int ComponentMax(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto Other = LuaObject::checkValue<FVector*>(L, 2);
                 if (!Other) {
@@ -4302,129 +4327,115 @@
                     return 0;
                 }
                 auto& OtherRef = *Other;
-                auto ret = __newFVector();
-                *ret = self->ComponentMax(OtherRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->ComponentMax(OtherRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->ComponentMax(OtherRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::ComponentMax error, argc=%d", argc);
-            return 0;
         }
 
         static int GetAbs(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
-                auto ret = __newFVector();
-                *ret = self->GetAbs();
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector();
+                    *ret = self->GetAbs();
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 2);
+                    *ret = self->GetAbs();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::GetAbs error, argc=%d", argc);
-            return 0;
         }
 
         static int Size(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
                 auto ret = self->Size();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::Size error, argc=%d", argc);
-            return 0;
         }
 
         static int SizeSquared(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
                 auto ret = self->SizeSquared();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::SizeSquared error, argc=%d", argc);
-            return 0;
         }
 
         static int Size2D(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
                 auto ret = self->Size2D();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::Size2D error, argc=%d", argc);
-            return 0;
         }
 
         static int SizeSquared2D(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
                 auto ret = self->SizeSquared2D();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::SizeSquared2D error, argc=%d", argc);
-            return 0;
         }
 
         static int IsNearlyZero(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto Tolerance = LuaObject::checkValue<float>(L, 2);
                 auto ret = self->IsNearlyZero(Tolerance);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::IsNearlyZero error, argc=%d", argc);
-            return 0;
         }
 
         static int IsZero(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
                 auto ret = self->IsZero();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::IsZero error, argc=%d", argc);
-            return 0;
         }
 
         static int Normalize(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto Tolerance = LuaObject::checkValue<float>(L, 2);
                 auto ret = self->Normalize(Tolerance);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::Normalize error, argc=%d", argc);
-            return 0;
         }
 
         static int IsNormalized(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
                 auto ret = self->IsNormalized();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::IsNormalized error, argc=%d", argc);
-            return 0;
         }
 
         static int ToDirectionAndLength(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FVector);
                 auto OutDir = LuaObject::checkValue<FVector*>(L, 2);
                 if (!OutDir) {
@@ -4438,138 +4449,180 @@
                 LuaObject::push(L, OutLength);
                 return 2;
             }
-            luaL_error(L, "call FVector::ToDirectionAndLength error, argc=%d", argc);
-            return 0;
         }
 
         static int GetSignVector(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
-                auto ret = __newFVector();
-                *ret = self->GetSignVector();
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector();
+                    *ret = self->GetSignVector();
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 2);
+                    *ret = self->GetSignVector();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::GetSignVector error, argc=%d", argc);
-            return 0;
         }
 
         static int Projection(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
-                auto ret = __newFVector();
-                *ret = self->Projection();
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector();
+                    *ret = self->Projection();
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 2);
+                    *ret = self->Projection();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::Projection error, argc=%d", argc);
-            return 0;
         }
 
         static int GetUnsafeNormal(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
-                auto ret = __newFVector();
-                *ret = self->GetUnsafeNormal();
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector();
+                    *ret = self->GetUnsafeNormal();
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 2);
+                    *ret = self->GetUnsafeNormal();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::GetUnsafeNormal error, argc=%d", argc);
-            return 0;
         }
 
         static int GridSnap(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto GridSz = LuaObject::checkValue<float>(L, 2);
-                auto ret = __newFVector();
-                *ret = self->GridSnap(GridSz);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->GridSnap(GridSz);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->GridSnap(GridSz);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::GridSnap error, argc=%d", argc);
-            return 0;
         }
 
         static int BoundToCube(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto Radius = LuaObject::checkValue<float>(L, 2);
-                auto ret = __newFVector();
-                *ret = self->BoundToCube(Radius);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->BoundToCube(Radius);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->BoundToCube(Radius);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::BoundToCube error, argc=%d", argc);
-            return 0;
         }
 
         static int GetClampedToSize(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FVector);
                 auto Min = LuaObject::checkValue<float>(L, 2);
                 auto Max = LuaObject::checkValue<float>(L, 3);
-                auto ret = __newFVector();
-                *ret = self->GetClampedToSize(Min, Max);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 4)) {
+                    auto ret = __newFVector();
+                    *ret = self->GetClampedToSize(Min, Max);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 4);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 4);
+                    *ret = self->GetClampedToSize(Min, Max);
+                    lua_pushvalue(L, 4);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::GetClampedToSize error, argc=%d", argc);
-            return 0;
         }
 
         static int GetClampedToSize2D(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FVector);
                 auto Min = LuaObject::checkValue<float>(L, 2);
                 auto Max = LuaObject::checkValue<float>(L, 3);
-                auto ret = __newFVector();
-                *ret = self->GetClampedToSize2D(Min, Max);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 4)) {
+                    auto ret = __newFVector();
+                    *ret = self->GetClampedToSize2D(Min, Max);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 4);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 4);
+                    *ret = self->GetClampedToSize2D(Min, Max);
+                    lua_pushvalue(L, 4);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::GetClampedToSize2D error, argc=%d", argc);
-            return 0;
         }
 
         static int GetClampedToMaxSize(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto MaxSize = LuaObject::checkValue<float>(L, 2);
-                auto ret = __newFVector();
-                *ret = self->GetClampedToMaxSize(MaxSize);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->GetClampedToMaxSize(MaxSize);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->GetClampedToMaxSize(MaxSize);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::GetClampedToMaxSize error, argc=%d", argc);
-            return 0;
         }
 
         static int GetClampedToMaxSize2D(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto MaxSize = LuaObject::checkValue<float>(L, 2);
-                auto ret = __newFVector();
-                *ret = self->GetClampedToMaxSize2D(MaxSize);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->GetClampedToMaxSize2D(MaxSize);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->GetClampedToMaxSize2D(MaxSize);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::GetClampedToMaxSize2D error, argc=%d", argc);
-            return 0;
         }
 
         static int AddBounded(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FVector);
                 auto V = LuaObject::checkValue<FVector*>(L, 2);
                 if (!V) {
@@ -4581,39 +4634,38 @@
                 self->AddBounded(VRef, Radius);
                 return 0;
             }
-            luaL_error(L, "call FVector::AddBounded error, argc=%d", argc);
-            return 0;
         }
 
         static int Reciprocal(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
-                auto ret = __newFVector();
-                *ret = self->Reciprocal();
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector();
+                    *ret = self->Reciprocal();
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 2);
+                    *ret = self->Reciprocal();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::Reciprocal error, argc=%d", argc);
-            return 0;
         }
 
         static int IsUniform(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto Tolerance = LuaObject::checkValue<float>(L, 2);
                 auto ret = self->IsUniform(Tolerance);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::IsUniform error, argc=%d", argc);
-            return 0;
         }
 
         static int MirrorByVector(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto MirrorNormal = LuaObject::checkValue<FVector*>(L, 2);
                 if (!MirrorNormal) {
@@ -4621,18 +4673,23 @@
                     return 0;
                 }
                 auto& MirrorNormalRef = *MirrorNormal;
-                auto ret = __newFVector();
-                *ret = self->MirrorByVector(MirrorNormalRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->MirrorByVector(MirrorNormalRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->MirrorByVector(MirrorNormalRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::MirrorByVector error, argc=%d", argc);
-            return 0;
         }
 
         static int RotateAngleAxis(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FVector);
                 auto AngleDeg = LuaObject::checkValue<float>(L, 2);
                 auto Axis = LuaObject::checkValue<FVector*>(L, 3);
@@ -4641,46 +4698,61 @@
                     return 0;
                 }
                 auto& AxisRef = *Axis;
-                auto ret = __newFVector();
-                *ret = self->RotateAngleAxis(AngleDeg, AxisRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 4)) {
+                    auto ret = __newFVector();
+                    *ret = self->RotateAngleAxis(AngleDeg, AxisRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 4);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 4);
+                    *ret = self->RotateAngleAxis(AngleDeg, AxisRef);
+                    lua_pushvalue(L, 4);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::RotateAngleAxis error, argc=%d", argc);
-            return 0;
         }
 
         static int GetSafeNormal(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto Tolerance = LuaObject::checkValue<float>(L, 2);
-                auto ret = __newFVector();
-                *ret = self->GetSafeNormal(Tolerance);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->GetSafeNormal(Tolerance);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->GetSafeNormal(Tolerance);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::GetSafeNormal error, argc=%d", argc);
-            return 0;
         }
 
         static int GetSafeNormal2D(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto Tolerance = LuaObject::checkValue<float>(L, 2);
-                auto ret = __newFVector();
-                *ret = self->GetSafeNormal2D(Tolerance);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->GetSafeNormal2D(Tolerance);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->GetSafeNormal2D(Tolerance);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::GetSafeNormal2D error, argc=%d", argc);
-            return 0;
         }
 
         static int CosineAngle2D(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto B = LuaObject::checkValue<FVector*>(L, 2);
                 auto BVal = *B;
@@ -4688,13 +4760,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::CosineAngle2D error, argc=%d", argc);
-            return 0;
         }
 
         static int ProjectOnTo(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto A = LuaObject::checkValue<FVector*>(L, 2);
                 if (!A) {
@@ -4702,18 +4771,23 @@
                     return 0;
                 }
                 auto& ARef = *A;
-                auto ret = __newFVector();
-                *ret = self->ProjectOnTo(ARef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->ProjectOnTo(ARef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->ProjectOnTo(ARef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::ProjectOnTo error, argc=%d", argc);
-            return 0;
         }
 
         static int ProjectOnToNormal(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto Normal = LuaObject::checkValue<FVector*>(L, 2);
                 if (!Normal) {
@@ -4721,44 +4795,59 @@
                     return 0;
                 }
                 auto& NormalRef = *Normal;
-                auto ret = __newFVector();
-                *ret = self->ProjectOnToNormal(NormalRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = self->ProjectOnToNormal(NormalRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = self->ProjectOnToNormal(NormalRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::ProjectOnToNormal error, argc=%d", argc);
-            return 0;
         }
 
         static int ToOrientationRotator(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
-                auto ret = __newFRotator();
-                *ret = self->ToOrientationRotator();
-                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFRotator();
+                    *ret = self->ToOrientationRotator();
+                    LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FRotator*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FRotator type.", 2);
+                    *ret = self->ToOrientationRotator();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::ToOrientationRotator error, argc=%d", argc);
-            return 0;
         }
 
         static int Rotation(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
-                auto ret = __newFRotator();
-                *ret = self->Rotation();
-                LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFRotator();
+                    *ret = self->Rotation();
+                    LuaObject::push<FRotator>(L, "FRotator", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FRotator*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FRotator type.", 2);
+                    *ret = self->Rotation();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::Rotation error, argc=%d", argc);
-            return 0;
         }
 
         static int FindBestAxisVectors(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FVector);
                 auto Axis1 = LuaObject::checkValue<FVector*>(L, 2);
                 if (!Axis1) {
@@ -4777,123 +4866,101 @@
                 LuaObject::push<FVector>(L, "FVector", Axis2);
                 return 2;
             }
-            luaL_error(L, "call FVector::FindBestAxisVectors error, argc=%d", argc);
-            return 0;
         }
 
         static int UnwindEuler(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
                 self->UnwindEuler();
                 return 0;
             }
-            luaL_error(L, "call FVector::UnwindEuler error, argc=%d", argc);
-            return 0;
         }
 
         static int ContainsNaN(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
                 auto ret = self->ContainsNaN();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::ContainsNaN error, argc=%d", argc);
-            return 0;
         }
 
         static int IsUnit(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto LengthSquaredTolerance = LuaObject::checkValue<float>(L, 2);
                 auto ret = self->IsUnit(LengthSquaredTolerance);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::IsUnit error, argc=%d", argc);
-            return 0;
         }
 
         static int ToString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
                 auto ret = self->ToString();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::ToString error, argc=%d", argc);
-            return 0;
         }
 
         static int ToStringShort(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
                 auto ret = self->ToStringShort();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::ToStringShort error, argc=%d", argc);
-            return 0;
         }
 
         static int ToCompactString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
                 auto ret = self->ToCompactString();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::ToCompactString error, argc=%d", argc);
-            return 0;
         }
 
         static int InitFromString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector);
                 auto InSourceString = LuaObject::checkValue<FString>(L, 2);
                 auto ret = self->InitFromString(InSourceString);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::InitFromString error, argc=%d", argc);
-            return 0;
         }
 
         static int UnitCartesianToSpherical(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
-                auto ret = __newFVector2D();
-                *ret = self->UnitCartesianToSpherical();
-                LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector2D();
+                    *ret = self->UnitCartesianToSpherical();
+                    LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector2D*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector2D type.", 2);
+                    *ret = self->UnitCartesianToSpherical();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::UnitCartesianToSpherical error, argc=%d", argc);
-            return 0;
         }
 
         static int HeadingAngle(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector);
                 auto ret = self->HeadingAngle();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::HeadingAngle error, argc=%d", argc);
-            return 0;
         }
 
         static int CrossProduct(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto A = LuaObject::checkValue<FVector*>(L, 1);
                 if (!A) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -4906,18 +4973,23 @@
                     return 0;
                 }
                 auto& BRef = *B;
-                auto ret = __newFVector();
-                *ret = FVector::CrossProduct(ARef, BRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = FVector::CrossProduct(ARef, BRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = FVector::CrossProduct(ARef, BRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::CrossProduct error, argc=%d", argc);
-            return 0;
         }
 
         static int DotProduct(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto A = LuaObject::checkValue<FVector*>(L, 1);
                 if (!A) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -4934,13 +5006,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::DotProduct error, argc=%d", argc);
-            return 0;
         }
 
         static int CreateOrthonormalBasis(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 auto XAxis = LuaObject::checkValue<FVector*>(L, 1);
                 if (!XAxis) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -4965,13 +5034,10 @@
                 LuaObject::push<FVector>(L, "FVector", ZAxis);
                 return 3;
             }
-            luaL_error(L, "call FVector::CreateOrthonormalBasis error, argc=%d", argc);
-            return 0;
         }
 
         static int PointsAreSame(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto P = LuaObject::checkValue<FVector*>(L, 1);
                 if (!P) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -4988,13 +5054,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::PointsAreSame error, argc=%d", argc);
-            return 0;
         }
 
         static int PointsAreNear(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 auto Point1 = LuaObject::checkValue<FVector*>(L, 1);
                 if (!Point1) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -5012,13 +5075,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::PointsAreNear error, argc=%d", argc);
-            return 0;
         }
 
         static int PointPlaneDist(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 auto Point = LuaObject::checkValue<FVector*>(L, 1);
                 if (!Point) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -5041,8 +5101,6 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::PointPlaneDist error, argc=%d", argc);
-            return 0;
         }
 
         static int PointPlaneProject(lua_State* L) {
@@ -5071,7 +5129,7 @@
                 LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
-            if (argc == 4) {
+            if (argc == 4 || argc == 5) {
                 auto Point = LuaObject::checkValue<FVector*>(L, 1);
                 if (!Point) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -5096,9 +5154,17 @@
                     return 0;
                 }
                 auto& CRef = *C;
-                auto ret = __newFVector();
-                *ret = FVector::PointPlaneProject(PointRef, ARef, BRef, CRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 5)) {
+                    auto ret = __newFVector();
+                    *ret = FVector::PointPlaneProject(PointRef, ARef, BRef, CRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 5);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 5);
+                    *ret = FVector::PointPlaneProject(PointRef, ARef, BRef, CRef);
+                    lua_pushvalue(L, 5);
+                }
                 return 1;
             }
             luaL_error(L, "call FVector::PointPlaneProject error, argc=%d", argc);
@@ -5106,8 +5172,7 @@
         }
 
         static int VectorPlaneProject(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto V = LuaObject::checkValue<FVector*>(L, 1);
                 if (!V) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -5120,18 +5185,23 @@
                     return 0;
                 }
                 auto& PlaneNormalRef = *PlaneNormal;
-                auto ret = __newFVector();
-                *ret = FVector::VectorPlaneProject(VRef, PlaneNormalRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector();
+                    *ret = FVector::VectorPlaneProject(VRef, PlaneNormalRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 3);
+                    *ret = FVector::VectorPlaneProject(VRef, PlaneNormalRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::VectorPlaneProject error, argc=%d", argc);
-            return 0;
         }
 
         static int Dist(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto V1 = LuaObject::checkValue<FVector*>(L, 1);
                 if (!V1) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -5148,13 +5218,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::Dist error, argc=%d", argc);
-            return 0;
         }
 
         static int Distance(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto V1 = LuaObject::checkValue<FVector*>(L, 1);
                 if (!V1) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -5171,13 +5238,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::Distance error, argc=%d", argc);
-            return 0;
         }
 
         static int DistXY(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto V1 = LuaObject::checkValue<FVector*>(L, 1);
                 if (!V1) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -5194,13 +5258,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::DistXY error, argc=%d", argc);
-            return 0;
         }
 
         static int Dist2D(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto V1 = LuaObject::checkValue<FVector*>(L, 1);
                 if (!V1) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -5217,13 +5278,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::Dist2D error, argc=%d", argc);
-            return 0;
         }
 
         static int DistSquared(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto V1 = LuaObject::checkValue<FVector*>(L, 1);
                 if (!V1) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -5240,13 +5298,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::DistSquared error, argc=%d", argc);
-            return 0;
         }
 
         static int DistSquaredXY(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto V1 = LuaObject::checkValue<FVector*>(L, 1);
                 if (!V1) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -5263,13 +5318,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::DistSquaredXY error, argc=%d", argc);
-            return 0;
         }
 
         static int DistSquared2D(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto V1 = LuaObject::checkValue<FVector*>(L, 1);
                 if (!V1) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -5286,13 +5338,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::DistSquared2D error, argc=%d", argc);
-            return 0;
         }
 
         static int BoxPushOut(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto Normal = LuaObject::checkValue<FVector*>(L, 1);
                 if (!Normal) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -5309,13 +5358,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::BoxPushOut error, argc=%d", argc);
-            return 0;
         }
 
         static int Parallel(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 auto Normal1 = LuaObject::checkValue<FVector*>(L, 1);
                 if (!Normal1) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -5333,13 +5379,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::Parallel error, argc=%d", argc);
-            return 0;
         }
 
         static int Coincident(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 auto Normal1 = LuaObject::checkValue<FVector*>(L, 1);
                 if (!Normal1) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -5357,13 +5400,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::Coincident error, argc=%d", argc);
-            return 0;
         }
 
         static int Orthogonal(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 auto Normal1 = LuaObject::checkValue<FVector*>(L, 1);
                 if (!Normal1) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -5381,13 +5421,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::Orthogonal error, argc=%d", argc);
-            return 0;
         }
 
         static int Coplanar(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 5) {
+            {
                 auto Base1 = LuaObject::checkValue<FVector*>(L, 1);
                 if (!Base1) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -5417,13 +5454,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::Coplanar error, argc=%d", argc);
-            return 0;
         }
 
         static int Triple(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 auto X = LuaObject::checkValue<FVector*>(L, 1);
                 if (!X) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -5446,44 +5480,52 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector::Triple error, argc=%d", argc);
-            return 0;
         }
 
         static int RadiansToDegrees(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto RadVector = LuaObject::checkValue<FVector*>(L, 1);
                 if (!RadVector) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
                     return 0;
                 }
                 auto& RadVectorRef = *RadVector;
-                auto ret = __newFVector();
-                *ret = FVector::RadiansToDegrees(RadVectorRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector();
+                    *ret = FVector::RadiansToDegrees(RadVectorRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 2);
+                    *ret = FVector::RadiansToDegrees(RadVectorRef);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::RadiansToDegrees error, argc=%d", argc);
-            return 0;
         }
 
         static int DegreesToRadians(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto DegVector = LuaObject::checkValue<FVector*>(L, 1);
                 if (!DegVector) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
                     return 0;
                 }
                 auto& DegVectorRef = *DegVector;
-                auto ret = __newFVector();
-                *ret = FVector::DegreesToRadians(DegVectorRef);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector();
+                    *ret = FVector::DegreesToRadians(DegVectorRef);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 2);
+                    *ret = FVector::DegreesToRadians(DegVectorRef);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector::DegreesToRadians error, argc=%d", argc);
-            return 0;
         }
 
         static void bind(lua_State* L) {
@@ -5886,21 +5928,17 @@
         }
 
         static int Component(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector2D);
                 auto Index = LuaObject::checkValue<int>(L, 2);
                 auto ret = self->Component(Index);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector2D::Component error, argc=%d", argc);
-            return 0;
         }
 
         static int Equals(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FVector2D);
                 auto V = LuaObject::checkValue<FVector2D*>(L, 2);
                 if (!V) {
@@ -5913,139 +5951,122 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector2D::Equals error, argc=%d", argc);
-            return 0;
         }
 
         static int Set(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FVector2D);
                 auto InX = LuaObject::checkValue<float>(L, 2);
                 auto InY = LuaObject::checkValue<float>(L, 3);
                 self->Set(InX, InY);
                 return 0;
             }
-            luaL_error(L, "call FVector2D::Set error, argc=%d", argc);
-            return 0;
         }
 
         static int GetMax(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector2D);
                 auto ret = self->GetMax();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector2D::GetMax error, argc=%d", argc);
-            return 0;
         }
 
         static int GetAbsMax(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector2D);
                 auto ret = self->GetAbsMax();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector2D::GetAbsMax error, argc=%d", argc);
-            return 0;
         }
 
         static int GetMin(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector2D);
                 auto ret = self->GetMin();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector2D::GetMin error, argc=%d", argc);
-            return 0;
         }
 
         static int Size(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector2D);
                 auto ret = self->Size();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector2D::Size error, argc=%d", argc);
-            return 0;
         }
 
         static int SizeSquared(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector2D);
                 auto ret = self->SizeSquared();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector2D::SizeSquared error, argc=%d", argc);
-            return 0;
         }
 
         static int GetRotated(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector2D);
                 auto AngleDeg = LuaObject::checkValue<float>(L, 2);
-                auto ret = __newFVector2D();
-                *ret = self->GetRotated(AngleDeg);
-                LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector2D();
+                    *ret = self->GetRotated(AngleDeg);
+                    LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector2D*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector2D type.", 3);
+                    *ret = self->GetRotated(AngleDeg);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector2D::GetRotated error, argc=%d", argc);
-            return 0;
         }
 
         static int GetSafeNormal(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector2D);
                 auto Tolerance = LuaObject::checkValue<float>(L, 2);
-                auto ret = __newFVector2D();
-                *ret = self->GetSafeNormal(Tolerance);
-                LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector2D();
+                    *ret = self->GetSafeNormal(Tolerance);
+                    LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector2D*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector2D type.", 3);
+                    *ret = self->GetSafeNormal(Tolerance);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector2D::GetSafeNormal error, argc=%d", argc);
-            return 0;
         }
 
         static int Normalize(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector2D);
                 auto Tolerance = LuaObject::checkValue<float>(L, 2);
                 self->Normalize(Tolerance);
                 return 0;
             }
-            luaL_error(L, "call FVector2D::Normalize error, argc=%d", argc);
-            return 0;
         }
 
         static int IsNearlyZero(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector2D);
                 auto Tolerance = LuaObject::checkValue<float>(L, 2);
                 auto ret = self->IsNearlyZero(Tolerance);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector2D::IsNearlyZero error, argc=%d", argc);
-            return 0;
         }
 
         static int ToDirectionAndLength(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FVector2D);
                 auto OutDir = LuaObject::checkValue<FVector2D*>(L, 2);
                 if (!OutDir) {
@@ -6059,140 +6080,147 @@
                 LuaObject::push(L, OutLength);
                 return 2;
             }
-            luaL_error(L, "call FVector2D::ToDirectionAndLength error, argc=%d", argc);
-            return 0;
         }
 
         static int IsZero(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector2D);
                 auto ret = self->IsZero();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector2D::IsZero error, argc=%d", argc);
-            return 0;
         }
 
         static int RoundToVector(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector2D);
-                auto ret = __newFVector2D();
-                *ret = self->RoundToVector();
-                LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector2D();
+                    *ret = self->RoundToVector();
+                    LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector2D*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector2D type.", 2);
+                    *ret = self->RoundToVector();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector2D::RoundToVector error, argc=%d", argc);
-            return 0;
         }
 
         static int ClampAxes(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FVector2D);
                 auto MinAxisVal = LuaObject::checkValue<float>(L, 2);
                 auto MaxAxisVal = LuaObject::checkValue<float>(L, 3);
-                auto ret = __newFVector2D();
-                *ret = self->ClampAxes(MinAxisVal, MaxAxisVal);
-                LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 4)) {
+                    auto ret = __newFVector2D();
+                    *ret = self->ClampAxes(MinAxisVal, MaxAxisVal);
+                    LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector2D*>(L, 4);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector2D type.", 4);
+                    *ret = self->ClampAxes(MinAxisVal, MaxAxisVal);
+                    lua_pushvalue(L, 4);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector2D::ClampAxes error, argc=%d", argc);
-            return 0;
         }
 
         static int GetSignVector(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector2D);
-                auto ret = __newFVector2D();
-                *ret = self->GetSignVector();
-                LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector2D();
+                    *ret = self->GetSignVector();
+                    LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector2D*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector2D type.", 2);
+                    *ret = self->GetSignVector();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector2D::GetSignVector error, argc=%d", argc);
-            return 0;
         }
 
         static int GetAbs(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector2D);
-                auto ret = __newFVector2D();
-                *ret = self->GetAbs();
-                LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector2D();
+                    *ret = self->GetAbs();
+                    LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector2D*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector2D type.", 2);
+                    *ret = self->GetAbs();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector2D::GetAbs error, argc=%d", argc);
-            return 0;
         }
 
         static int ToString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector2D);
                 auto ret = self->ToString();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector2D::ToString error, argc=%d", argc);
-            return 0;
         }
 
         static int InitFromString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FVector2D);
                 auto InSourceString = LuaObject::checkValue<FString>(L, 2);
                 auto ret = self->InitFromString(InSourceString);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector2D::InitFromString error, argc=%d", argc);
-            return 0;
         }
 
         static int DiagnosticCheckNaN(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector2D);
                 self->DiagnosticCheckNaN();
                 return 0;
             }
-            luaL_error(L, "call FVector2D::DiagnosticCheckNaN error, argc=%d", argc);
-            return 0;
         }
 
         static int ContainsNaN(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector2D);
                 auto ret = self->ContainsNaN();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector2D::ContainsNaN error, argc=%d", argc);
-            return 0;
         }
 
         static int SphericalToUnitCartesian(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FVector2D);
-                auto ret = __newFVector();
-                *ret = self->SphericalToUnitCartesian();
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector();
+                    *ret = self->SphericalToUnitCartesian();
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 2);
+                    *ret = self->SphericalToUnitCartesian();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FVector2D::SphericalToUnitCartesian error, argc=%d", argc);
-            return 0;
         }
 
         static int DotProduct(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto A = LuaObject::checkValue<FVector2D*>(L, 1);
                 if (!A) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -6209,13 +6237,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector2D::DotProduct error, argc=%d", argc);
-            return 0;
         }
 
         static int DistSquared(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto V1 = LuaObject::checkValue<FVector2D*>(L, 1);
                 if (!V1) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -6232,13 +6257,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector2D::DistSquared error, argc=%d", argc);
-            return 0;
         }
 
         static int Distance(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto V1 = LuaObject::checkValue<FVector2D*>(L, 1);
                 if (!V1) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -6255,13 +6277,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector2D::Distance error, argc=%d", argc);
-            return 0;
         }
 
         static int CrossProduct(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto A = LuaObject::checkValue<FVector2D*>(L, 1);
                 if (!A) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -6278,8 +6297,6 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FVector2D::CrossProduct error, argc=%d", argc);
-            return 0;
         }
 
         static void bind(lua_State* L) {
@@ -6365,128 +6382,105 @@
         }
 
         static int Initialize(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FRandomStream);
                 auto InSeed = LuaObject::checkValue<int>(L, 2);
                 self->Initialize(InSeed);
                 return 0;
             }
-            luaL_error(L, "call FRandomStream::Initialize error, argc=%d", argc);
-            return 0;
         }
 
         static int Reset(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRandomStream);
                 self->Reset();
                 return 0;
             }
-            luaL_error(L, "call FRandomStream::Reset error, argc=%d", argc);
-            return 0;
         }
 
         static int GetInitialSeed(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRandomStream);
                 auto ret = self->GetInitialSeed();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRandomStream::GetInitialSeed error, argc=%d", argc);
-            return 0;
         }
 
         static int GenerateNewSeed(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRandomStream);
                 self->GenerateNewSeed();
                 return 0;
             }
-            luaL_error(L, "call FRandomStream::GenerateNewSeed error, argc=%d", argc);
-            return 0;
         }
 
         static int GetFraction(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRandomStream);
                 auto ret = self->GetFraction();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRandomStream::GetFraction error, argc=%d", argc);
-            return 0;
         }
 
         static int GetUnsignedInt(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRandomStream);
                 auto ret = self->GetUnsignedInt();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRandomStream::GetUnsignedInt error, argc=%d", argc);
-            return 0;
         }
 
         static int GetUnitVector(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRandomStream);
-                auto ret = __newFVector();
-                *ret = self->GetUnitVector();
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector();
+                    *ret = self->GetUnitVector();
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 2);
+                    *ret = self->GetUnitVector();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FRandomStream::GetUnitVector error, argc=%d", argc);
-            return 0;
         }
 
         static int GetCurrentSeed(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRandomStream);
                 auto ret = self->GetCurrentSeed();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRandomStream::GetCurrentSeed error, argc=%d", argc);
-            return 0;
         }
 
         static int FRand(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRandomStream);
                 auto ret = self->FRand();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRandomStream::FRand error, argc=%d", argc);
-            return 0;
         }
 
         static int RandHelper(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FRandomStream);
                 auto A = LuaObject::checkValue<int>(L, 2);
                 auto ret = self->RandHelper(A);
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRandomStream::RandHelper error, argc=%d", argc);
-            return 0;
         }
 
         static int RandRange(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FRandomStream);
                 auto Min = LuaObject::checkValue<int>(L, 2);
                 auto Max = LuaObject::checkValue<int>(L, 3);
@@ -6494,21 +6488,24 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FRandomStream::RandRange error, argc=%d", argc);
-            return 0;
         }
 
         static int VRand(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FRandomStream);
-                auto ret = __newFVector();
-                *ret = self->VRand();
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector();
+                    *ret = self->VRand();
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 2);
+                    *ret = self->VRand();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FRandomStream::VRand error, argc=%d", argc);
-            return 0;
         }
 
         static int VRandCone(lua_State* L) {
@@ -6527,7 +6524,7 @@
                 LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
                 return 1;
             }
-            if (argc == 4) {
+            if (argc == 4 || argc == 5) {
                 CheckSelf(FRandomStream);
                 auto Dir = LuaObject::checkValue<FVector*>(L, 2);
                 if (!Dir) {
@@ -6537,9 +6534,17 @@
                 auto& DirRef = *Dir;
                 auto HorizontalConeHalfAngleRad = LuaObject::checkValue<float>(L, 3);
                 auto VerticalConeHalfAngleRad = LuaObject::checkValue<float>(L, 4);
-                auto ret = __newFVector();
-                *ret = self->VRandCone(DirRef, HorizontalConeHalfAngleRad, VerticalConeHalfAngleRad);
-                LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 5)) {
+                    auto ret = __newFVector();
+                    *ret = self->VRandCone(DirRef, HorizontalConeHalfAngleRad, VerticalConeHalfAngleRad);
+                    LuaObject::push<FVector>(L, "FVector", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector*>(L, 5);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector type.", 5);
+                    *ret = self->VRandCone(DirRef, HorizontalConeHalfAngleRad, VerticalConeHalfAngleRad);
+                    lua_pushvalue(L, 5);
+                }
                 return 1;
             }
             luaL_error(L, "call FRandomStream::VRandCone error, argc=%d", argc);
@@ -6677,26 +6682,20 @@
         }
 
         static int Invalidate(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FGuid);
                 self->Invalidate();
                 return 0;
             }
-            luaL_error(L, "call FGuid::Invalidate error, argc=%d", argc);
-            return 0;
         }
 
         static int IsValid(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FGuid);
                 auto ret = self->IsValid();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FGuid::IsValid error, argc=%d", argc);
-            return 0;
         }
 
         static int ToString(lua_State* L) {
@@ -6720,20 +6719,24 @@
         }
 
         static int NewGuid(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
-                auto ret = __newFGuid();
-                *ret = FGuid::NewGuid();
-                LuaObject::push<FGuid>(L, "FGuid", ret, UD_AUTOGC | UD_VALUETYPE);
+            {
+                if (lua_isnoneornil(L, 1)) {
+                    auto ret = __newFGuid();
+                    *ret = FGuid::NewGuid();
+                    LuaObject::push<FGuid>(L, "FGuid", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FGuid*>(L, 1);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FGuid type.", 1);
+                    *ret = FGuid::NewGuid();
+                    lua_pushvalue(L, 1);
+                }
                 return 1;
             }
-            luaL_error(L, "call FGuid::NewGuid error, argc=%d", argc);
-            return 0;
         }
 
         static int Parse(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto GuidString = LuaObject::checkValue<FString>(L, 1);
                 auto OutGuid = LuaObject::checkValue<FGuid*>(L, 2);
                 if (!OutGuid) {
@@ -6746,13 +6749,10 @@
                 LuaObject::push<FGuid>(L, "FGuid", OutGuid);
                 return 2;
             }
-            luaL_error(L, "call FGuid::Parse error, argc=%d", argc);
-            return 0;
         }
 
         static int ParseExact(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 auto GuidString = LuaObject::checkValue<FString>(L, 1);
                 auto Format = LuaObject::checkValue<int>(L, 2);
                 auto FormatVal = (EGuidFormats)Format;
@@ -6767,8 +6767,6 @@
                 LuaObject::push<FGuid>(L, "FGuid", OutGuid);
                 return 2;
             }
-            luaL_error(L, "call FGuid::ParseExact error, argc=%d", argc);
-            return 0;
         }
 
         static void bind(lua_State* L) {
@@ -6970,8 +6968,7 @@
         }
 
         static int ComputeSquaredDistanceToPoint(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FBox2D);
                 auto Point = LuaObject::checkValue<FVector2D*>(L, 2);
                 if (!Point) {
@@ -6983,52 +6980,56 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FBox2D::ComputeSquaredDistanceToPoint error, argc=%d", argc);
-            return 0;
         }
 
         static int ExpandBy(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FBox2D);
                 auto W = LuaObject::checkValue<float>(L, 2);
-                auto ret = __newFBox2D();
-                *ret = self->ExpandBy(W);
-                LuaObject::push<FBox2D>(L, "FBox2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFBox2D();
+                    *ret = self->ExpandBy(W);
+                    LuaObject::push<FBox2D>(L, "FBox2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FBox2D*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FBox2D type.", 3);
+                    *ret = self->ExpandBy(W);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FBox2D::ExpandBy error, argc=%d", argc);
-            return 0;
         }
 
         static int GetArea(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FBox2D);
                 auto ret = self->GetArea();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FBox2D::GetArea error, argc=%d", argc);
-            return 0;
         }
 
         static int GetCenter(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FBox2D);
-                auto ret = __newFVector2D();
-                *ret = self->GetCenter();
-                LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector2D();
+                    *ret = self->GetCenter();
+                    LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector2D*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector2D type.", 2);
+                    *ret = self->GetCenter();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FBox2D::GetCenter error, argc=%d", argc);
-            return 0;
         }
 
         static int GetCenterAndExtents(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 3) {
+            {
                 CheckSelf(FBox2D);
                 auto center = LuaObject::checkValue<FVector2D*>(L, 2);
                 if (!center) {
@@ -7047,13 +7048,10 @@
                 LuaObject::push<FVector2D>(L, "FVector2D", Extents);
                 return 2;
             }
-            luaL_error(L, "call FBox2D::GetCenterAndExtents error, argc=%d", argc);
-            return 0;
         }
 
         static int GetClosestPointTo(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FBox2D);
                 auto Point = LuaObject::checkValue<FVector2D*>(L, 2);
                 if (!Point) {
@@ -7061,55 +7059,67 @@
                     return 0;
                 }
                 auto& PointRef = *Point;
-                auto ret = __newFVector2D();
-                *ret = self->GetClosestPointTo(PointRef);
-                LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFVector2D();
+                    *ret = self->GetClosestPointTo(PointRef);
+                    LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector2D*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector2D type.", 3);
+                    *ret = self->GetClosestPointTo(PointRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FBox2D::GetClosestPointTo error, argc=%d", argc);
-            return 0;
         }
 
         static int GetExtent(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FBox2D);
-                auto ret = __newFVector2D();
-                *ret = self->GetExtent();
-                LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector2D();
+                    *ret = self->GetExtent();
+                    LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector2D*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector2D type.", 2);
+                    *ret = self->GetExtent();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FBox2D::GetExtent error, argc=%d", argc);
-            return 0;
         }
 
         static int GetSize(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FBox2D);
-                auto ret = __newFVector2D();
-                *ret = self->GetSize();
-                LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFVector2D();
+                    *ret = self->GetSize();
+                    LuaObject::push<FVector2D>(L, "FVector2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FVector2D*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FVector2D type.", 2);
+                    *ret = self->GetSize();
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FBox2D::GetSize error, argc=%d", argc);
-            return 0;
         }
 
         static int Init(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FBox2D);
                 self->Init();
                 return 0;
             }
-            luaL_error(L, "call FBox2D::Init error, argc=%d", argc);
-            return 0;
         }
 
         static int Intersect(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FBox2D);
                 auto other = LuaObject::checkValue<FBox2D*>(L, 2);
                 if (!other) {
@@ -7121,13 +7131,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FBox2D::Intersect error, argc=%d", argc);
-            return 0;
         }
 
         static int IsInside(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FBox2D);
                 auto TestPoint = LuaObject::checkValue<FVector2D*>(L, 2);
                 if (!TestPoint) {
@@ -7139,13 +7146,10 @@
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FBox2D::IsInside error, argc=%d", argc);
-            return 0;
         }
 
         static int ShiftBy(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FBox2D);
                 auto Offset = LuaObject::checkValue<FVector2D*>(L, 2);
                 if (!Offset) {
@@ -7153,25 +7157,28 @@
                     return 0;
                 }
                 auto& OffsetRef = *Offset;
-                auto ret = __newFBox2D();
-                *ret = self->ShiftBy(OffsetRef);
-                LuaObject::push<FBox2D>(L, "FBox2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFBox2D();
+                    *ret = self->ShiftBy(OffsetRef);
+                    LuaObject::push<FBox2D>(L, "FBox2D", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FBox2D*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FBox2D type.", 3);
+                    *ret = self->ShiftBy(OffsetRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FBox2D::ShiftBy error, argc=%d", argc);
-            return 0;
         }
 
         static int ToString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FBox2D);
                 auto ret = self->ToString();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FBox2D::ToString error, argc=%d", argc);
-            return 0;
         }
 
         static void bind(lua_State* L) {
@@ -7237,64 +7244,83 @@
         }
 
         static int Exclusive(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Value = LuaObject::checkValue<float>(L, 1);
-                auto ret = __newFFloatRangeBound();
-                *ret = FFloatRangeBound::Exclusive(Value);
-                LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFFloatRangeBound();
+                    *ret = FFloatRangeBound::Exclusive(Value);
+                    LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FFloatRangeBound*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FFloatRangeBound type.", 2);
+                    *ret = FFloatRangeBound::Exclusive(Value);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FFloatRangeBound::Exclusive error, argc=%d", argc);
-            return 0;
         }
 
         static int Inclusive(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Value = LuaObject::checkValue<float>(L, 1);
-                auto ret = __newFFloatRangeBound();
-                *ret = FFloatRangeBound::Inclusive(Value);
-                LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFFloatRangeBound();
+                    *ret = FFloatRangeBound::Inclusive(Value);
+                    LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FFloatRangeBound*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FFloatRangeBound type.", 2);
+                    *ret = FFloatRangeBound::Inclusive(Value);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FFloatRangeBound::Inclusive error, argc=%d", argc);
-            return 0;
         }
 
         static int Open(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
-                auto ret = __newFFloatRangeBound();
-                *ret = FFloatRangeBound::Open();
-                LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+            {
+                if (lua_isnoneornil(L, 1)) {
+                    auto ret = __newFFloatRangeBound();
+                    *ret = FFloatRangeBound::Open();
+                    LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FFloatRangeBound*>(L, 1);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FFloatRangeBound type.", 1);
+                    *ret = FFloatRangeBound::Open();
+                    lua_pushvalue(L, 1);
+                }
                 return 1;
             }
-            luaL_error(L, "call FFloatRangeBound::Open error, argc=%d", argc);
-            return 0;
         }
 
         static int FlipInclusion(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Bound = LuaObject::checkValue<FFloatRangeBound*>(L, 1);
                 if (!Bound) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
                     return 0;
                 }
                 auto& BoundRef = *Bound;
-                auto ret = __newFFloatRangeBound();
-                *ret = FFloatRangeBound::FlipInclusion(BoundRef);
-                LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFFloatRangeBound();
+                    *ret = FFloatRangeBound::FlipInclusion(BoundRef);
+                    LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FFloatRangeBound*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FFloatRangeBound type.", 2);
+                    *ret = FFloatRangeBound::FlipInclusion(BoundRef);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FFloatRangeBound::FlipInclusion error, argc=%d", argc);
-            return 0;
         }
 
         static int MaxLower(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto A = LuaObject::checkValue<FFloatRangeBound*>(L, 1);
                 if (!A) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -7307,18 +7333,23 @@
                     return 0;
                 }
                 auto& BRef = *B;
-                auto ret = __newFFloatRangeBound();
-                *ret = FFloatRangeBound::MaxLower(ARef, BRef);
-                LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFFloatRangeBound();
+                    *ret = FFloatRangeBound::MaxLower(ARef, BRef);
+                    LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FFloatRangeBound*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FFloatRangeBound type.", 3);
+                    *ret = FFloatRangeBound::MaxLower(ARef, BRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FFloatRangeBound::MaxLower error, argc=%d", argc);
-            return 0;
         }
 
         static int MaxUpper(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto A = LuaObject::checkValue<FFloatRangeBound*>(L, 1);
                 if (!A) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -7331,18 +7362,23 @@
                     return 0;
                 }
                 auto& BRef = *B;
-                auto ret = __newFFloatRangeBound();
-                *ret = FFloatRangeBound::MaxUpper(ARef, BRef);
-                LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFFloatRangeBound();
+                    *ret = FFloatRangeBound::MaxUpper(ARef, BRef);
+                    LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FFloatRangeBound*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FFloatRangeBound type.", 3);
+                    *ret = FFloatRangeBound::MaxUpper(ARef, BRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FFloatRangeBound::MaxUpper error, argc=%d", argc);
-            return 0;
         }
 
         static int MinLower(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto A = LuaObject::checkValue<FFloatRangeBound*>(L, 1);
                 if (!A) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -7355,18 +7391,23 @@
                     return 0;
                 }
                 auto& BRef = *B;
-                auto ret = __newFFloatRangeBound();
-                *ret = FFloatRangeBound::MinLower(ARef, BRef);
-                LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFFloatRangeBound();
+                    *ret = FFloatRangeBound::MinLower(ARef, BRef);
+                    LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FFloatRangeBound*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FFloatRangeBound type.", 3);
+                    *ret = FFloatRangeBound::MinLower(ARef, BRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FFloatRangeBound::MinLower error, argc=%d", argc);
-            return 0;
         }
 
         static int MinUpper(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto A = LuaObject::checkValue<FFloatRangeBound*>(L, 1);
                 if (!A) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -7379,13 +7420,19 @@
                     return 0;
                 }
                 auto& BRef = *B;
-                auto ret = __newFFloatRangeBound();
-                *ret = FFloatRangeBound::MinUpper(ARef, BRef);
-                LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFFloatRangeBound();
+                    *ret = FFloatRangeBound::MinUpper(ARef, BRef);
+                    LuaObject::push<FFloatRangeBound>(L, "FFloatRangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FFloatRangeBound*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FFloatRangeBound type.", 3);
+                    *ret = FFloatRangeBound::MinUpper(ARef, BRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FFloatRangeBound::MinUpper error, argc=%d", argc);
-            return 0;
         }
 
         static void bind(lua_State* L) {
@@ -7446,53 +7493,73 @@
         }
 
         static int Empty(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
-                auto ret = __newFFloatRange();
-                *ret = FFloatRange::Empty();
-                LuaObject::push<FFloatRange>(L, "FFloatRange", ret, UD_AUTOGC | UD_VALUETYPE);
+            {
+                if (lua_isnoneornil(L, 1)) {
+                    auto ret = __newFFloatRange();
+                    *ret = FFloatRange::Empty();
+                    LuaObject::push<FFloatRange>(L, "FFloatRange", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FFloatRange*>(L, 1);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FFloatRange type.", 1);
+                    *ret = FFloatRange::Empty();
+                    lua_pushvalue(L, 1);
+                }
                 return 1;
             }
-            luaL_error(L, "call FFloatRange::Empty error, argc=%d", argc);
-            return 0;
         }
 
         static int All(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
-                auto ret = __newFFloatRange();
-                *ret = FFloatRange::All();
-                LuaObject::push<FFloatRange>(L, "FFloatRange", ret, UD_AUTOGC | UD_VALUETYPE);
+            {
+                if (lua_isnoneornil(L, 1)) {
+                    auto ret = __newFFloatRange();
+                    *ret = FFloatRange::All();
+                    LuaObject::push<FFloatRange>(L, "FFloatRange", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FFloatRange*>(L, 1);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FFloatRange type.", 1);
+                    *ret = FFloatRange::All();
+                    lua_pushvalue(L, 1);
+                }
                 return 1;
             }
-            luaL_error(L, "call FFloatRange::All error, argc=%d", argc);
-            return 0;
         }
 
         static int AtLeast(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Value = LuaObject::checkValue<float>(L, 1);
-                auto ret = __newFFloatRange();
-                *ret = FFloatRange::AtLeast(Value);
-                LuaObject::push<FFloatRange>(L, "FFloatRange", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFFloatRange();
+                    *ret = FFloatRange::AtLeast(Value);
+                    LuaObject::push<FFloatRange>(L, "FFloatRange", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FFloatRange*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FFloatRange type.", 2);
+                    *ret = FFloatRange::AtLeast(Value);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FFloatRange::AtLeast error, argc=%d", argc);
-            return 0;
         }
 
         static int AtMost(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Value = LuaObject::checkValue<float>(L, 1);
-                auto ret = __newFFloatRange();
-                *ret = FFloatRange::AtMost(Value);
-                LuaObject::push<FFloatRange>(L, "FFloatRange", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFFloatRange();
+                    *ret = FFloatRange::AtMost(Value);
+                    LuaObject::push<FFloatRange>(L, "FFloatRange", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FFloatRange*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FFloatRange type.", 2);
+                    *ret = FFloatRange::AtMost(Value);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FFloatRange::AtMost error, argc=%d", argc);
-            return 0;
         }
 
         static void bind(lua_State* L) {
@@ -7543,64 +7610,83 @@
         }
 
         static int Exclusive(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Value = LuaObject::checkValue<int>(L, 1);
-                auto ret = __newFInt32RangeBound();
-                *ret = FInt32RangeBound::Exclusive(Value);
-                LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFInt32RangeBound();
+                    *ret = FInt32RangeBound::Exclusive(Value);
+                    LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FInt32RangeBound*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FInt32RangeBound type.", 2);
+                    *ret = FInt32RangeBound::Exclusive(Value);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FInt32RangeBound::Exclusive error, argc=%d", argc);
-            return 0;
         }
 
         static int Inclusive(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Value = LuaObject::checkValue<int>(L, 1);
-                auto ret = __newFInt32RangeBound();
-                *ret = FInt32RangeBound::Inclusive(Value);
-                LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFInt32RangeBound();
+                    *ret = FInt32RangeBound::Inclusive(Value);
+                    LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FInt32RangeBound*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FInt32RangeBound type.", 2);
+                    *ret = FInt32RangeBound::Inclusive(Value);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FInt32RangeBound::Inclusive error, argc=%d", argc);
-            return 0;
         }
 
         static int Open(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
-                auto ret = __newFInt32RangeBound();
-                *ret = FInt32RangeBound::Open();
-                LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+            {
+                if (lua_isnoneornil(L, 1)) {
+                    auto ret = __newFInt32RangeBound();
+                    *ret = FInt32RangeBound::Open();
+                    LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FInt32RangeBound*>(L, 1);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FInt32RangeBound type.", 1);
+                    *ret = FInt32RangeBound::Open();
+                    lua_pushvalue(L, 1);
+                }
                 return 1;
             }
-            luaL_error(L, "call FInt32RangeBound::Open error, argc=%d", argc);
-            return 0;
         }
 
         static int FlipInclusion(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Bound = LuaObject::checkValue<FInt32RangeBound*>(L, 1);
                 if (!Bound) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
                     return 0;
                 }
                 auto& BoundRef = *Bound;
-                auto ret = __newFInt32RangeBound();
-                *ret = FInt32RangeBound::FlipInclusion(BoundRef);
-                LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFInt32RangeBound();
+                    *ret = FInt32RangeBound::FlipInclusion(BoundRef);
+                    LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FInt32RangeBound*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FInt32RangeBound type.", 2);
+                    *ret = FInt32RangeBound::FlipInclusion(BoundRef);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FInt32RangeBound::FlipInclusion error, argc=%d", argc);
-            return 0;
         }
 
         static int MaxLower(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto A = LuaObject::checkValue<FInt32RangeBound*>(L, 1);
                 if (!A) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -7613,18 +7699,23 @@
                     return 0;
                 }
                 auto& BRef = *B;
-                auto ret = __newFInt32RangeBound();
-                *ret = FInt32RangeBound::MaxLower(ARef, BRef);
-                LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFInt32RangeBound();
+                    *ret = FInt32RangeBound::MaxLower(ARef, BRef);
+                    LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FInt32RangeBound*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FInt32RangeBound type.", 3);
+                    *ret = FInt32RangeBound::MaxLower(ARef, BRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FInt32RangeBound::MaxLower error, argc=%d", argc);
-            return 0;
         }
 
         static int MaxUpper(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto A = LuaObject::checkValue<FInt32RangeBound*>(L, 1);
                 if (!A) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -7637,18 +7728,23 @@
                     return 0;
                 }
                 auto& BRef = *B;
-                auto ret = __newFInt32RangeBound();
-                *ret = FInt32RangeBound::MaxUpper(ARef, BRef);
-                LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFInt32RangeBound();
+                    *ret = FInt32RangeBound::MaxUpper(ARef, BRef);
+                    LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FInt32RangeBound*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FInt32RangeBound type.", 3);
+                    *ret = FInt32RangeBound::MaxUpper(ARef, BRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FInt32RangeBound::MaxUpper error, argc=%d", argc);
-            return 0;
         }
 
         static int MinLower(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto A = LuaObject::checkValue<FInt32RangeBound*>(L, 1);
                 if (!A) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -7661,18 +7757,23 @@
                     return 0;
                 }
                 auto& BRef = *B;
-                auto ret = __newFInt32RangeBound();
-                *ret = FInt32RangeBound::MinLower(ARef, BRef);
-                LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFInt32RangeBound();
+                    *ret = FInt32RangeBound::MinLower(ARef, BRef);
+                    LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FInt32RangeBound*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FInt32RangeBound type.", 3);
+                    *ret = FInt32RangeBound::MinLower(ARef, BRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FInt32RangeBound::MinLower error, argc=%d", argc);
-            return 0;
         }
 
         static int MinUpper(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 auto A = LuaObject::checkValue<FInt32RangeBound*>(L, 1);
                 if (!A) {
                     luaL_error(L, "%s argument 1 is nullptr", __FUNCTION__);
@@ -7685,13 +7786,19 @@
                     return 0;
                 }
                 auto& BRef = *B;
-                auto ret = __newFInt32RangeBound();
-                *ret = FInt32RangeBound::MinUpper(ARef, BRef);
-                LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 3)) {
+                    auto ret = __newFInt32RangeBound();
+                    *ret = FInt32RangeBound::MinUpper(ARef, BRef);
+                    LuaObject::push<FInt32RangeBound>(L, "FInt32RangeBound", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FInt32RangeBound*>(L, 3);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FInt32RangeBound type.", 3);
+                    *ret = FInt32RangeBound::MinUpper(ARef, BRef);
+                    lua_pushvalue(L, 3);
+                }
                 return 1;
             }
-            luaL_error(L, "call FInt32RangeBound::MinUpper error, argc=%d", argc);
-            return 0;
         }
 
         static void bind(lua_State* L) {
@@ -7752,53 +7859,73 @@
         }
 
         static int Empty(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
-                auto ret = __newFInt32Range();
-                *ret = FInt32Range::Empty();
-                LuaObject::push<FInt32Range>(L, "FInt32Range", ret, UD_AUTOGC | UD_VALUETYPE);
+            {
+                if (lua_isnoneornil(L, 1)) {
+                    auto ret = __newFInt32Range();
+                    *ret = FInt32Range::Empty();
+                    LuaObject::push<FInt32Range>(L, "FInt32Range", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FInt32Range*>(L, 1);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FInt32Range type.", 1);
+                    *ret = FInt32Range::Empty();
+                    lua_pushvalue(L, 1);
+                }
                 return 1;
             }
-            luaL_error(L, "call FInt32Range::Empty error, argc=%d", argc);
-            return 0;
         }
 
         static int All(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
-                auto ret = __newFInt32Range();
-                *ret = FInt32Range::All();
-                LuaObject::push<FInt32Range>(L, "FInt32Range", ret, UD_AUTOGC | UD_VALUETYPE);
+            {
+                if (lua_isnoneornil(L, 1)) {
+                    auto ret = __newFInt32Range();
+                    *ret = FInt32Range::All();
+                    LuaObject::push<FInt32Range>(L, "FInt32Range", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FInt32Range*>(L, 1);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FInt32Range type.", 1);
+                    *ret = FInt32Range::All();
+                    lua_pushvalue(L, 1);
+                }
                 return 1;
             }
-            luaL_error(L, "call FInt32Range::All error, argc=%d", argc);
-            return 0;
         }
 
         static int AtLeast(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Value = LuaObject::checkValue<int>(L, 1);
-                auto ret = __newFInt32Range();
-                *ret = FInt32Range::AtLeast(Value);
-                LuaObject::push<FInt32Range>(L, "FInt32Range", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFInt32Range();
+                    *ret = FInt32Range::AtLeast(Value);
+                    LuaObject::push<FInt32Range>(L, "FInt32Range", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FInt32Range*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FInt32Range type.", 2);
+                    *ret = FInt32Range::AtLeast(Value);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FInt32Range::AtLeast error, argc=%d", argc);
-            return 0;
         }
 
         static int AtMost(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto Value = LuaObject::checkValue<int>(L, 1);
-                auto ret = __newFInt32Range();
-                *ret = FInt32Range::AtMost(Value);
-                LuaObject::push<FInt32Range>(L, "FInt32Range", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFInt32Range();
+                    *ret = FInt32Range::AtMost(Value);
+                    LuaObject::push<FInt32Range>(L, "FInt32Range", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FInt32Range*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FInt32Range type.", 2);
+                    *ret = FInt32Range::AtMost(Value);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FInt32Range::AtMost error, argc=%d", argc);
-            return 0;
         }
 
         static void bind(lua_State* L) {
@@ -7956,200 +8083,149 @@
         }
 
         static int ToString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FSoftObjectPath);
                 auto ret = self->ToString();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FSoftObjectPath::ToString error, argc=%d", argc);
-            return 0;
         }
 
         static int GetAssetPathString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FSoftObjectPath);
                 auto ret = self->GetAssetPathString();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FSoftObjectPath::GetAssetPathString error, argc=%d", argc);
-            return 0;
         }
 
         static int GetSubPathString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FSoftObjectPath);
                 auto ret = self->GetSubPathString();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FSoftObjectPath::GetSubPathString error, argc=%d", argc);
-            return 0;
         }
 
         static int GetLongPackageName(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FSoftObjectPath);
                 auto ret = self->GetLongPackageName();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FSoftObjectPath::GetLongPackageName error, argc=%d", argc);
-            return 0;
         }
 
         static int GetAssetName(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FSoftObjectPath);
                 auto ret = self->GetAssetName();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FSoftObjectPath::GetAssetName error, argc=%d", argc);
-            return 0;
         }
 
         static int SetPath(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 2) {
+            {
                 CheckSelf(FSoftObjectPath);
                 auto Path = LuaObject::checkValue<FString>(L, 2);
                 self->SetPath(Path);
                 return 0;
             }
-            luaL_error(L, "call FSoftObjectPath::SetPath error, argc=%d", argc);
-            return 0;
         }
 
         static int Reset(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FSoftObjectPath);
                 self->Reset();
                 return 0;
             }
-            luaL_error(L, "call FSoftObjectPath::Reset error, argc=%d", argc);
-            return 0;
         }
 
         static int IsValid(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FSoftObjectPath);
                 auto ret = self->IsValid();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FSoftObjectPath::IsValid error, argc=%d", argc);
-            return 0;
         }
 
         static int IsNull(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FSoftObjectPath);
                 auto ret = self->IsNull();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FSoftObjectPath::IsNull error, argc=%d", argc);
-            return 0;
         }
 
         static int IsAsset(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FSoftObjectPath);
                 auto ret = self->IsAsset();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FSoftObjectPath::IsAsset error, argc=%d", argc);
-            return 0;
         }
 
         static int IsSubobject(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FSoftObjectPath);
                 auto ret = self->IsSubobject();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FSoftObjectPath::IsSubobject error, argc=%d", argc);
-            return 0;
         }
 
         static int PreSavePath(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FSoftObjectPath);
                 auto ret = self->PreSavePath();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FSoftObjectPath::PreSavePath error, argc=%d", argc);
-            return 0;
         }
 
         static int PostLoadPath(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FSoftObjectPath);
                 self->PostLoadPath();
                 return 0;
             }
-            luaL_error(L, "call FSoftObjectPath::PostLoadPath error, argc=%d", argc);
-            return 0;
         }
 
         static int FixupForPIE(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FSoftObjectPath);
                 self->FixupForPIE();
                 return 0;
             }
-            luaL_error(L, "call FSoftObjectPath::FixupForPIE error, argc=%d", argc);
-            return 0;
         }
 
         static int GetCurrentTag(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
+            {
                 auto ret = FSoftObjectPath::GetCurrentTag();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FSoftObjectPath::GetCurrentTag error, argc=%d", argc);
-            return 0;
         }
 
         static int InvalidateTag(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
+            {
                 auto ret = FSoftObjectPath::InvalidateTag();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FSoftObjectPath::InvalidateTag error, argc=%d", argc);
-            return 0;
         }
 
         static int ClearPIEPackageNames(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 0) {
+            {
                 FSoftObjectPath::ClearPIEPackageNames();
                 return 0;
             }
-            luaL_error(L, "call FSoftObjectPath::ClearPIEPackageNames error, argc=%d", argc);
-            return 0;
         }
 
         static void bind(lua_State* L) {
@@ -8278,27 +8354,21 @@
         }
 
         static int IsValid(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FPrimaryAssetType);
                 auto ret = self->IsValid();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FPrimaryAssetType::IsValid error, argc=%d", argc);
-            return 0;
         }
 
         static int ToString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FPrimaryAssetType);
                 auto ret = self->ToString();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FPrimaryAssetType::ToString error, argc=%d", argc);
-            return 0;
         }
 
         static void bind(lua_State* L) {
@@ -8382,40 +8452,39 @@
         }
 
         static int IsValid(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FPrimaryAssetId);
                 auto ret = self->IsValid();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FPrimaryAssetId::IsValid error, argc=%d", argc);
-            return 0;
         }
 
         static int ToString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 CheckSelf(FPrimaryAssetId);
                 auto ret = self->ToString();
                 LuaObject::push(L, ret);
                 return 1;
             }
-            luaL_error(L, "call FPrimaryAssetId::ToString error, argc=%d", argc);
-            return 0;
         }
 
         static int FromString(lua_State* L) {
-            auto argc = lua_gettop(L);
-            if (argc == 1) {
+            {
                 auto String = LuaObject::checkValue<FString>(L, 1);
-                auto ret = __newFPrimaryAssetId();
-                *ret = FPrimaryAssetId::FromString(String);
-                LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", ret, UD_AUTOGC | UD_VALUETYPE);
+                if (lua_isnoneornil(L, 2)) {
+                    auto ret = __newFPrimaryAssetId();
+                    *ret = FPrimaryAssetId::FromString(String);
+                    LuaObject::push<FPrimaryAssetId>(L, "FPrimaryAssetId", ret, UD_AUTOGC | UD_VALUETYPE);
+                } else {
+                    auto ret = LuaObject::checkValue<FPrimaryAssetId*>(L, 2);
+                    if (!ret)
+                        luaL_error(L, "arg %d expect FPrimaryAssetId type.", 2);
+                    *ret = FPrimaryAssetId::FromString(String);
+                    lua_pushvalue(L, 2);
+                }
                 return 1;
             }
-            luaL_error(L, "call FPrimaryAssetId::FromString error, argc=%d", argc);
-            return 0;
         }
 
         static void bind(lua_State* L) {

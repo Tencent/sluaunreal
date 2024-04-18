@@ -33,6 +33,17 @@ print(string.format("i2=%d", i2))
 
 print("FVector.OneVector:", FVector.OneVector, FVector.OneVector)
 assert(FVector.OneVector == FVector.OneVector)
+--[[local normalVector = FVector.OneVector:GetSafeNormal(0, FVector.OneVector)
+print("FVector NormalVector:", normalVector, normalVector.X, normalVector.Y, normalVector.Z)
+FVector.UpVector:GetSafeNormal(0, FVector.OneVector, normalVector)
+print("FVector NormalVector:", normalVector, normalVector.X, normalVector.Y, normalVector.Z)
+]]
+
+local Out1 = FVector2D()
+FVector2D.Max(FVector2D(0, 0), FVector2D(1, 1), Out1)
+local Out2 = FVector2D.Max(FVector2D(1, 1), FVector2D(0, 0), Out1)
+print(assert(tostring(Out1) == tostring(Out2)), Out1, Out2, Out1.X, Out1.Y)
+
 local arr=t:GetArray();
 print("arr len",arr:Num())
 for i=0,arr:Num()-1 do

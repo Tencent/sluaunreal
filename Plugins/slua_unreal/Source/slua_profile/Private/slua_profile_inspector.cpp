@@ -413,7 +413,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
     static int mouseUpMemIdx = -1;
     static bool isMouseButtonDown = false;
     static bool isMemMouseButtonDown = false;
-    cpuProfilerWidget->SetOnMouseButtonDown(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
+    cpuProfilerWidget->SetOnMouseButtonDown(FPointerEventHandler::CreateLambda([this](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
         // stop scorlling and show the profiler info which we click
         isMouseButtonDown = true;
         stopChartRolling = true;
@@ -437,12 +437,12 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
     }));
 
 
-    cpuProfilerWidget->SetOnMouseButtonUp(FPointerEventHandler::CreateLambda([=](const FGeometry&, const FPointerEvent&) -> FReply {
+    cpuProfilerWidget->SetOnMouseButtonUp(FPointerEventHandler::CreateLambda([](const FGeometry&, const FPointerEvent&) -> FReply {
         isMouseButtonDown = false;
         return FReply::Handled();
     }));
 
-    cpuProfilerWidget->SetOnMouseMove(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
+    cpuProfilerWidget->SetOnMouseMove(FPointerEventHandler::CreateLambda([this](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
         // calc sampleIdx
         FVector2D cursorPos = inventoryGeometry.AbsoluteToLocal(mouseEvent.GetScreenSpacePosition());
         int sampleIdx = cpuProfilerWidget->CalcHoverSampleIdx(cursorPos);
@@ -479,12 +479,12 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
     }));
     
 #if PLATFORM_WINDOWS
-    cpuProfilerWidget->SetOnMouseLeave(FSimpleNoReplyPointerEventHandler::CreateLambda([=](const FPointerEvent&) {
+    cpuProfilerWidget->SetOnMouseLeave(FSimpleNoReplyPointerEventHandler::CreateLambda([](const FPointerEvent&) {
         isMouseButtonDown = false;
     }));
 #endif
 
-    memProfilerWidget->SetOnMouseButtonDown(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
+    memProfilerWidget->SetOnMouseButtonDown(FPointerEventHandler::CreateLambda([this](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
         // stop scorlling and show the profiler info which we click
         isMemMouseButtonDown = true;
         isMemMouseButtonUp = false;
@@ -507,7 +507,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
         return FReply::Handled();
     }));
     
-    memProfilerWidget->SetOnMouseMove(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
+    memProfilerWidget->SetOnMouseMove(FPointerEventHandler::CreateLambda([this](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
         // calc sampleIdx
         FVector2D cursorPos = inventoryGeometry.AbsoluteToLocal(mouseEvent.GetScreenSpacePosition());
         int sampleIdx = memProfilerWidget->CalcHoverSampleIdx(cursorPos) + memViewBeginIndex;
@@ -542,7 +542,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
     }));
 
 
-    memProfilerWidget->SetOnMouseButtonUp(FPointerEventHandler::CreateLambda([=](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
+    memProfilerWidget->SetOnMouseButtonUp(FPointerEventHandler::CreateLambda([this](const FGeometry& inventoryGeometry, const FPointerEvent& mouseEvent) -> FReply {
         isMemMouseButtonUp = true;
         
         if (mouseUpPoint.X != mouseDownPoint.X
@@ -558,7 +558,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
     }));
 
 #if PLATFORM_WINDOWS
-    memProfilerWidget->SetOnMouseLeave(FSimpleNoReplyPointerEventHandler::CreateLambda([=](const FPointerEvent&) {
+    memProfilerWidget->SetOnMouseLeave(FSimpleNoReplyPointerEventHandler::CreateLambda([](const FPointerEvent&) {
         isMemMouseButtonDown = false;
     }));
 #endif
@@ -661,9 +661,9 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                     .TabIcon(FEditorStyle::GetBrush("ProfilerCommand.StatsProfiler"))
 #endif
                     .TabName(FText::FromString("CPU Usages"))
-                    .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-                    tabSwitcher->SetActiveWidgetIndex(0);
-                    return FReply::Handled();
+                    .OnClicked(FOnClicked::CreateLambda([this]() -> FReply {
+                        tabSwitcher->SetActiveWidgetIndex(0);
+                        return FReply::Handled();
                     }))
                 ]
 
@@ -679,8 +679,8 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                     .TabIcon(FEditorStyle::GetBrush("ProfilerCommand.MemoryProfiler"))
 #endif
                     .TabName(FText::FromString("Memory Usages"))
-                    .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-                    tabSwitcher->SetActiveWidgetIndex(1);
+                    .OnClicked(FOnClicked::CreateLambda([this]() -> FReply {
+                        tabSwitcher->SetActiveWidgetIndex(1);
                         return FReply::Handled();
                     }))
                 ]
@@ -709,9 +709,9 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                     [
                         SNew(SButton).Text(FText::FromName("Clear"))
                         .ContentPadding(FMargin(2.0, 2.0))
-                        .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-                        OnClearBtnClicked();
-                        return FReply::Handled();
+                        .OnClicked(FOnClicked::CreateLambda([this]() -> FReply {
+                            OnClearBtnClicked();
+                            return FReply::Handled();
                         }))
                     ]
 
@@ -719,9 +719,9 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                     [
                         SNew(SButton).Text(FText::FromName("SaveFile"))
                         .ContentPadding(FMargin(2.0, 2.0))
-                        .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-                        OnSaveFileBtnClicked();
-                        return FReply::Handled();
+                        .OnClicked(FOnClicked::CreateLambda([this]() -> FReply {
+                            OnSaveFileBtnClicked();
+                            return FReply::Handled();
                         }))
                     ]
 
@@ -729,9 +729,9 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                     [
                         SNew(SButton).Text(FText::FromName("LoadFile"))
                         .ContentPadding(FMargin(2.0, 2.0))
-                        .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-                        OnLoadFileBtnClicked();
-                        return FReply::Handled();
+                        .OnClicked(FOnClicked::CreateLambda([this]() -> FReply {
+                            OnLoadFileBtnClicked();
+                            return FReply::Handled();
                         }))
                     ]
                 ]
@@ -749,7 +749,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                     SNew(SVerticalBox)
                     + SVerticalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left)
                     [
-                        SNew(STextBlock).Text_Lambda([=]() {
+                        SNew(STextBlock).Text_Lambda([this]() {
                             FString titleStr = FString::Printf(TEXT("Tick Index:%d"),cpuViewBeginIndex);
                             return FText::FromString(titleStr); })
                     ]
@@ -771,7 +771,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                         SNew(SVerticalBox)
                         + SVerticalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Center)
                         [
-                            SNew(STextBlock).Text_Lambda([=]() {
+                            SNew(STextBlock).Text_Lambda([this]() {
                                 FString titleStr = FString::Printf(TEXT("============================ CPU profiler Max(%.3f ms), Avg(%.3f ms) ============================"),
                                                                maxProfileSamplesCostTime / perMilliSec, avgProfileSamplesCostTime / perMilliSec);
                                 return FText::FromString(titleStr); })
@@ -805,9 +805,9 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                         + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Right).Padding(0, 3.0f, 15.0f, 0).AutoWidth()
                         [
                             SNew(STextBlock)
-                            .Text_Lambda([=]() {
-                            FString totalMemory = TEXT("Total : ") + ChooseMemoryUnit(luaTotalMemSize);
-                            return FText::FromString(totalMemory);
+                            .Text_Lambda([this]() {
+                                FString totalMemory = TEXT("Total : ") + ChooseMemoryUnit(luaTotalMemSize);
+                                return FText::FromString(totalMemory);
                             })
                         ]
 
@@ -816,9 +816,9 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                         [
                             SNew(SButton).Text(FText::FromName("Clear"))
                             .ContentPadding(FMargin(2.0, 2.0))
-                            .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-                            OnClearBtnClicked();
-                            return FReply::Handled();
+                            .OnClicked(FOnClicked::CreateLambda([this]() -> FReply {
+                                OnClearBtnClicked();
+                                return FReply::Handled();
                             }))    
                         ]
 
@@ -826,19 +826,19 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                         [
                             SNew(SButton).Text(FText::FromName("SaveFile"))
                             .ContentPadding(FMargin(2.0, 2.0))
-                            .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-                            OnSaveFileBtnClicked();
-                            return FReply::Handled();
-                                }))
+                            .OnClicked(FOnClicked::CreateLambda([this]() -> FReply {
+                                OnSaveFileBtnClicked();
+                                return FReply::Handled();
+                            }))
                         ]
 
                         + SHorizontalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left).MaxWidth(60.0f)
                         [
                             SNew(SButton).Text(FText::FromName("LoadFile"))
                             .ContentPadding(FMargin(2.0, 2.0))
-                            .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
-                            OnLoadFileBtnClicked();
-                            return FReply::Handled();
+                            .OnClicked(FOnClicked::CreateLambda([this]() -> FReply {
+                                OnLoadFileBtnClicked();
+                                return FReply::Handled();
                             }))
                         ]
                     
@@ -847,7 +847,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                              SNew(SButton)
                              .Text(FText::FromName("Forced GC"))
                              .ContentPadding(FMargin(2.0, 2.0))
-                             .OnClicked(FOnClicked::CreateLambda([=]() -> FReply {
+                             .OnClicked(FOnClicked::CreateLambda([this]() -> FReply {
                                  FArrayWriter messageWriter;
                                  int bytesSend = 0;
                                  int hookEvent = NS_SLUA::ProfilerHookEvent::PHE_MEMORY_GC;
@@ -899,9 +899,10 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                         SNew(SVerticalBox)
                         + SVerticalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Left)
                         [
-                            SNew(STextBlock).Text_Lambda([=]() {
+                            SNew(STextBlock).Text_Lambda([this]() {
                                 FString titleStr = FString::Printf(TEXT("Tick Index:%d"),memViewBeginIndex);
-                                return FText::FromString(titleStr); })
+                                return FText::FromString(titleStr);
+                            })
                         ]
                     ]
                 
@@ -921,13 +922,13 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                             SNew(SVerticalBox)
                             + SVerticalBox::Slot().HAlign(EHorizontalAlignment::HAlign_Center).Padding(0, 10.0f)
                             [
-                                SNew(STextBlock).Text_Lambda([=]() {
-                                FString titleStr = TEXT("============================ Memory profiler Max("
-                                                 + ChooseMemoryUnit(maxLuaMemory)
-                                                 +"), Avg("
-                                                 + ChooseMemoryUnit(avgLuaMemory)
-                                                 +") ============================");
-                                return FText::FromString(titleStr);
+                                SNew(STextBlock).Text_Lambda([this]() {
+                                    FString titleStr = TEXT("============================ Memory profiler Max("
+                                                     + ChooseMemoryUnit(maxLuaMemory)
+                                                     +"), Avg("
+                                                     + ChooseMemoryUnit(avgLuaMemory)
+                                                     +") ============================");
+                                    return FText::FromString(titleStr);
                                 })
                             ]
                         ]
@@ -976,7 +977,7 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<Fil
     .Padding(2.0f)
     [
          SNew(SHeaderRow)
-         + SHeaderRow::Column("Overview").DefaultLabel(TAttribute<FText>::Create([=]() {
+         + SHeaderRow::Column("Overview").DefaultLabel(TAttribute<FText>::Create([Item]() {
             if (!Item->hint.IsEmpty())
             {
                 FString fileNameInfo = FPaths::GetCleanFilename(Item->hint);
@@ -989,7 +990,7 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<Fil
         }))
          .FixedWidth(fixRowWidth)
 
-         + SHeaderRow::Column("Memory Size").DefaultLabel(TAttribute<FText>::Create([=]() {
+         + SHeaderRow::Column("Memory Size").DefaultLabel(TAttribute<FText>::Create([this, Item]() {
             if (Item->size >= 0)
             {
                 return FText::FromString(ChooseMemoryUnit(Item->size / 1024.0));
@@ -1065,18 +1066,18 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateRowForList(TSharedPtr<Functi
         .Padding(2.0f)
         [
             SNew(SHeaderRow)
-            + SHeaderRow::Column("Overview").DefaultLabel(TAttribute<FText>::Create([=]() {
+            + SHeaderRow::Column("Overview").DefaultLabel(TAttribute<FText>::Create([this, Item]() {
                 FString Name = GenBrevFuncName(Item->functionName);
                 return FText::FromString(Name);
             }))
-            .FixedWidth(rowWidth).DefaultTooltip(TAttribute<FText>::Create([=]() {
+            .FixedWidth(rowWidth).DefaultTooltip(TAttribute<FText>::Create([Item]() {
                 return FText::FromString(Item->functionName);
             }))
-            + SHeaderRow::Column("Time ms").DefaultLabel(TAttribute<FText>::Create([=]() {
+            + SHeaderRow::Column("Time ms").DefaultLabel(TAttribute<FText>::Create([this, Item]() {
                 return FText::AsNumber(Item->costTime / perMilliSec);
             }))
             .FixedWidth(fixRowWidth)
-                + SHeaderRow::Column("Calls").DefaultLabel(TAttribute<FText>::Create([=]() {
+                + SHeaderRow::Column("Calls").DefaultLabel(TAttribute<FText>::Create([Item]() {
             return FText::AsNumber(Item->countOfCalls);
             }))
             .FixedWidth(fixRowWidth)
@@ -1385,7 +1386,7 @@ void SProfilerWidget::Construct(const FArguments& InArgs)
     
     CalcMemStdText(m_maxMemSize);
 
-    SetToolTipText(TAttribute<FText>::Create([=]() {
+    SetToolTipText(TAttribute<FText>::Create([this]() {
         if (m_toolTipVal < 0)
             return FText::FromString("");
         else

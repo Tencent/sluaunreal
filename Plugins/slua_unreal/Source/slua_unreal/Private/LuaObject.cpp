@@ -1412,7 +1412,7 @@ namespace NS_SLUA {
 
         const char* name = lua_tostring(L, 2);
         
-        auto* cls = ls->uss;
+        auto* cls = ls->getUScriptStruct();
         FProperty* up = LuaObject::findCacheProperty(L, cls, name);
         if(!up) {
             // index self metatable.
@@ -1462,7 +1462,7 @@ namespace NS_SLUA {
         }
         const char* name = lua_tostring(L, 2);
 
-        auto* cls = ls->uss;
+        auto* cls = ls->getUScriptStruct();
         FProperty* up = LuaObject::findCacheProperty(L, cls, name);
         if (!up) luaL_error(L, "Can't find property named %s", name);
 
@@ -1516,7 +1516,7 @@ namespace NS_SLUA {
     int instanceStructNext(lua_State* L) {
         LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L, 1);
         
-        auto* cls = ls->uss;
+        auto* cls = ls->getUScriptStruct();
         FProperty* up = nullptr;
 
         lua_settop(L, 2);
@@ -2261,7 +2261,11 @@ namespace NS_SLUA {
 
 #if ENGINE_MAJOR_VERSION==5
     int pushUObjectPtrProperty(lua_State* L,FProperty* prop,uint8* parms,int i,NewObjectRecorder* objRecorder) {
+#if ENGINE_MINOR_VERSION >= 4
+        auto p = CastField<FObjectProperty>(prop);
+#else
         auto p = CastField<FObjectPtrProperty>(prop);
+#endif
         ensure(p);
         auto objPtr = p->GetPropertyValue(parms);
         UObject* o = objPtr.Get();
@@ -2887,7 +2891,11 @@ namespace NS_SLUA {
         regPusher(FMulticastSparseDelegateProperty::StaticClass(), pushUMulticastSparseDelegateProperty);
 #endif
 #if ENGINE_MAJOR_VERSION==5
+#if ENGINE_MINOR_VERSION >= 4
+        regPusher(FObjectProperty::StaticClass(),pushUObjectPtrProperty);
+#else
         regPusher(FObjectPtrProperty::StaticClass(),pushUObjectPtrProperty);
+#endif
 #endif
         regPusher(FObjectProperty::StaticClass(),pushUObjectProperty);
         regPusher(FArrayProperty::StaticClass(),pushUArrayProperty);

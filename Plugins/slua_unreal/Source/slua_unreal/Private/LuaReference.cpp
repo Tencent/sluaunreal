@@ -128,7 +128,11 @@ namespace NS_SLUA {
                 UObject* obj = p->GetObjectPropertyValue(base);
                 if (obj && obj->IsValidLowLevel())
                 {
-                    UObject* newobj = obj;
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION >= 4
+                    TObjectPtr<UObject> newobj = obj;
+#else
+                    auto newobj = obj;
+#endif
                     collector.AddReferencedObject(newobj);
 
                     if (newobj != obj)

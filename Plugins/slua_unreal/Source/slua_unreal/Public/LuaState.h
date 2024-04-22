@@ -87,7 +87,11 @@ namespace NS_SLUA {
         int stackLayer;
     };
 
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION >= 4
+    typedef TMap<TObjectPtr<UObject>, GenericUserData*> UObjectRefMap;
+#else
     typedef TMap<UObject*, GenericUserData*> UObjectRefMap;
+#endif
 
     class SLUA_UNREAL_API LuaState 
         : public FUObjectArray::FUObjectDeleteListener
@@ -148,7 +152,7 @@ namespace NS_SLUA {
         virtual void Tick(float dtime);
         virtual TStatId GetStatId() const;
 #if (ENGINE_MINOR_VERSION<=18) && (ENGINE_MAJOR_VERSION==4)
-		virtual bool IsTickable() const override { return true; }
+        virtual bool IsTickable() const override { return true; }
 #endif
         void tickGC(float dtime);
         void tickLuaActors(float dtime);
@@ -356,7 +360,11 @@ namespace NS_SLUA {
 
         TMap<lua_State*, int> threadToRef;                                // coroutine -> ref
         TMap<int, lua_State*> refToThread;                                // coroutine -> ref
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION >= 4
+        TObjectPtr<ULatentDelegate> latentDelegate;
+#else
         ULatentDelegate* latentDelegate;
+#endif
         
         int currentCallStack;
         TArray<ObjectSet> newObjectsInCallStack;

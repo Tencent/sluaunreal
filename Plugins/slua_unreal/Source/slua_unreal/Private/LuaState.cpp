@@ -487,7 +487,7 @@ namespace NS_SLUA {
             overrider->removeOverrides();
 #endif
         if (overrider) {
-	        delete overrider;
+            delete overrider;
             overrider = nullptr;
         }
 
@@ -511,7 +511,7 @@ namespace NS_SLUA {
         }
         objRefs.Empty();
         if (deadLoopCheck) {
-	        delete deadLoopCheck;
+            delete deadLoopCheck;
             deadLoopCheck = nullptr;
         }
 
@@ -867,7 +867,7 @@ namespace NS_SLUA {
         // so check and remove it
         for (UObjectRefMap::TIterator it(objRefs); it; ++it)
         {
-            UObject* item = it.Key();
+            auto item = it.Key();
             GenericUserData* userData = it.Value();
             if (userData && !(userData->flag & UD_REFERENCE))
             {

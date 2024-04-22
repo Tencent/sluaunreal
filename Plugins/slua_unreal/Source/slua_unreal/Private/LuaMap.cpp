@@ -132,7 +132,11 @@ namespace NS_SLUA {
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             Collector.AddReferencedObject(keyProp);
 #else
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION >= 4
+            TObjectPtr<UObject> ownerObject = keyProp->GetOwnerUObject();
+#else
             auto ownerObject = keyProp->GetOwnerUObject();
+#endif
             Collector.AddReferencedObject(ownerObject);
 #endif
         }
@@ -141,7 +145,11 @@ namespace NS_SLUA {
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             Collector.AddReferencedObject(valueProp);
 #else
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION >= 4
+            TObjectPtr<UObject> ownerObject = valueProp->GetOwnerUObject();
+#else
             auto ownerObject = valueProp->GetOwnerUObject();
+#endif
             Collector.AddReferencedObject(ownerObject);
 #endif
         }

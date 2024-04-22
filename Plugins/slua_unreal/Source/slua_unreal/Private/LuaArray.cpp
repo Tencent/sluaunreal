@@ -150,7 +150,11 @@ namespace NS_SLUA {
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             Collector.AddReferencedObject(inner);
 #else
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION >= 4
+            TObjectPtr<UObject> ownerObject = inner->GetOwnerUObject();
+#else
             auto ownerObject = inner->GetOwnerUObject();
+#endif
             Collector.AddReferencedObject(ownerObject);
 #endif
         }

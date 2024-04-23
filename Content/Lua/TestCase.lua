@@ -31,6 +31,19 @@ print(string.format("v2 = %d,%d,%d", v2.X, v2.Y, v2.Z))
 print(string.format("v3 = %d,%d,%d", v3.X, v3.Y, v3.Z))
 print(string.format("i2=%d", i2))
 
+print("FVector.OneVector:", FVector.OneVector, FVector.OneVector)
+assert(FVector.OneVector == FVector.OneVector)
+--[[local normalVector = FVector.OneVector:GetSafeNormal(0, FVector.OneVector)
+print("FVector NormalVector:", normalVector, normalVector.X, normalVector.Y, normalVector.Z)
+FVector.UpVector:GetSafeNormal(0, FVector.OneVector, normalVector)
+print("FVector NormalVector:", normalVector, normalVector.X, normalVector.Y, normalVector.Z)
+]]
+
+local Out1 = FVector2D()
+FVector2D.Max(FVector2D(0, 0), FVector2D(1, 1), Out1)
+local Out2 = FVector2D.Max(FVector2D(1, 1), FVector2D(0, 0), Out1)
+print(assert(tostring(Out1) == tostring(Out2)), Out1, Out2, Out1.X, Out1.Y)
+
 local arr=t:GetArray();
 print("arr len",arr:Num())
 for i=0,arr:Num()-1 do
@@ -118,8 +131,10 @@ print("userArray",userArray)
 info = t.info
 print("info",info)
 
-map1 = t:GetMap()
+local map1 = t:GetMap()
 print("map1",map1)
+local map2 = t:GetMap(map1)
+print("map1 == map2", map1, map2, assert(map1 == map2))
 
 local SluaTestCase=import('SluaTestCase');
 local t=SluaTestCase()

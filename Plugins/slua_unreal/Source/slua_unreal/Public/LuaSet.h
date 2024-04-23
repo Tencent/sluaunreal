@@ -26,21 +26,30 @@ namespace NS_SLUA {
     class SLUA_UNREAL_API LuaSet : public FGCObject {
 
     public:
-        LuaSet(FProperty* Property, FScriptSet* Buffer, bool bIsRef, bool bIsNewInner);
-        LuaSet(FSetProperty* Property, FScriptSet* Buffer, bool bIsRef, struct FLuaNetSerializationProxy* netProxy, uint16 replicatedIndex);
+        static void reg(lua_State* L);
+        
+        LuaSet(FProperty* property, FScriptSet* buffer, bool bIsRef, bool bIsNewInner);
+        LuaSet(FSetProperty* property, FScriptSet* buffer, bool bIsRef, struct FLuaNetSerializationProxy* netProxy, uint16 replicatedIndex);
         ~LuaSet();
         
-        static void reg(lua_State* L);
-        static void clone(FScriptSet* DstSet, FProperty* Property, const FScriptSet* SrcSet);
-        static int push(lua_State* L, FProperty* Property, FScriptSet* Set, bool bIsNewInner);
+        static void clone(FScriptSet* dstSet, FProperty* prop, const FScriptSet* srcSet);
+        static int push(lua_State* L, FProperty* prop, FScriptSet* set, bool bIsNewInner);
         static int push(lua_State* L, LuaSet* luaSet);
 
         template<typename T>
-        static int push(lua_State* L, const TSet<T>& V)
+        static typename std::enable_if<DeduceType<T>::value != EPropertyClass::Struct, int>::type push(lua_State* L, const TSet<T>& v)
         {
-            FProperty* Property = PropertyProto::createDeduceProperty<T>();
-            const FScriptSet* Set = reinterpret_cast<const FScriptSet*>(&V);
-            return push(L, Property, const_cast<FScriptSet*>(Set), false);
+            FProperty* property = PropertyProto::createDeduceProperty<T>();
+            const FScriptSet* set = reinterpret_cast<const FScriptSet*>(&v);
+            return push(L, property, const_cast<FScriptSet*>(set), false);
+        }
+
+        template<typename T>
+        static typename std::enable_if<DeduceType<T>::value == EPropertyClass::Struct, int>::type push(lua_State* L, const TSet<T>& v)
+        {
+            FProperty* property = PropertyProto::createDeduceProperty<T>(T::StaticStruct());
+            const FScriptSet* set = reinterpret_cast<const FScriptSet*>(&v);
+            return push(L, property, const_cast<FScriptSet*>(set), false);
         }
 
         static bool markDirty(LuaSet* luaSet);
@@ -55,14 +64,22 @@ namespace NS_SLUA {
         }
 #endif
 
-        FScriptSet* get() const;
+        FScriptSet* get() const
+        {
+            return set;
+        }
+        
+        FProperty* getInnerProp() const
+        {
+            return inner;
+        }
 
         template<typename T>
         const TSet<T>& asTSet(lua_State* L) const
         {
-            if (sizeof(T) != InElementProperty->ElementSize)
-                luaL_error(L, "Cast to TSet error, element size doesn't match (%d, %d)", sizeof(T), InElementProperty->ElementSize);
-            return *(reinterpret_cast<const TSet<T>*>(Set));
+            if (sizeof(T) != inner->ElementSize)
+                luaL_error(L, "Cast to TSet error, element size doesn't match (%d, %d)", sizeof(T), inner->ElementSize);
+            return *(reinterpret_cast<const TSet<T>*>(set));
         }
         
     protected:
@@ -73,35 +90,29 @@ namespace NS_SLUA {
         static int Remove(lua_State* L);
         static int Clear(lua_State* L);
         static int Pairs(lua_State* L);
-        static int Enumerable(lua_State* L);
+        static int Iterate(lua_State* L);
+        static int IterateReverse(lua_State* L);
+        static int PushElement(lua_State* L, LuaSet* UD, int32 Index);
         static int CreateElementTypeObject(lua_State* L);
 
     private:
-        FScriptSet* Set;
-        FProperty* InElementProperty;
-        FScriptSetHelper Helper;
+        FScriptSet* set;
+        FProperty* inner;
+        FScriptSetHelper helper;
 
-        bool IsRef;
+        bool isRef;
         bool isNewInner;
 
         struct FLuaNetSerializationProxy* proxy;
         uint16 luaReplicatedIndex;
-
-        struct Enumerator
-        {
-            LuaSet* Set = nullptr;
-            int32 Index = 0;
-            int32 Num = 0;
-            static int gc(lua_State* L);
-        };
 
         static int setupMT(lua_State* L);
         static int gc(lua_State* L);
 
         int32 num() const;
         void clear();
-        void emptyElements(int32 Slack = 0);
-        void removeAt(int32 Index, int32 Count = 1);
-        bool removeElement(const void* ElementToRemove);
+        void emptyElements(int32 slack = 0);
+        void removeAt(int32 index, int32 count = 1);
+        bool removeElement(const void* elementToRemove);
     };
 }

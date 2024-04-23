@@ -500,7 +500,6 @@ namespace NS_SLUA
     const char* LuaOverrider::UOBJECT_NAME = "Object";
     const char* LuaOverrider::SUPER_NAME = "Super";
     const char* LuaOverrider::CACHE_NAME = "__cache";
-    const char* LuaOverrider::INSTANCE_CACHE_NAME = "__instance_cache";
     const FName LuaOverrider::TRIGGER_ANIM_NOTIFY_FUNCTION_NAME = TEXT("TriggerAnimNotify");
 #if WITH_EDITOR
     ULuaOverrider::ClassNativeMap LuaOverrider::cacheNativeFuncs;
@@ -650,8 +649,6 @@ namespace NS_SLUA
                 removeOneOverride(cls, true);
                 overridedClasses.Remove(cls);
             }
-
-            LuaNet::onObjectDeleted(cls);
 
             FRWScopeLock lock(classHookMutex, SLT_Write);
             classConstructors.Remove(cls);
@@ -923,27 +920,20 @@ namespace NS_SLUA
 
         classHookedFuncs.Remove(cls);
         classAddedFuncs.Remove(cls);
-        cacheNativeFuncs.Remove(cls);
+        if (cls->IsValidLowLevel())
+        {
+        	cacheNativeFuncs.Remove(cls);
+        }
 #endif
         classHookedFuncNames.Remove(cls);
 
-        if (NS_SLUA::LuaNet::classLuaReplicatedMap.Contains(cls))
-        {    
-            auto &classLuaReplicated = NS_SLUA::LuaNet::classLuaReplicatedMap.FindChecked(cls);
-            if (classLuaReplicated->ustruct.IsValid())
-            {
-                classLuaReplicated->ustruct->RemoveFromRoot();
-            }
-            
-            delete classLuaReplicated;
-            NS_SLUA::LuaNet::classLuaReplicatedMap.Remove(cls);
-        }
+        LuaNet::onObjectDeleted(cls);
     }
 
 #if WITH_EDITOR
     void clearSuperFuncCache(UClass* cls)
     {
-        if (!IsValid(cls))
+        if (!cls->IsValidLowLevel() || !IsValid(cls))
         {
             return;
         }
@@ -960,7 +950,7 @@ namespace NS_SLUA
             removeOneOverride(cls, false);
             clearSuperFuncCache(cls);
         }
-
+        
         classAddedFuncs.GetKeys(classArray);
         for (auto cls : classArray)
         {

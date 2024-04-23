@@ -153,21 +153,12 @@ namespace NS_SLUA {
         }
     }
 
-    static int findMember(lua_State* L,const char* name) {
-       int popn = 0;
-        if ((++popn, lua_getfield(L, -1, name) != 0)) {
-            lua_remove(L, -2); // remove mt
-            return 1;
-        } else if ((++popn, lua_getfield(L, -2, ".get")) && (++popn, lua_getfield(L, -1, name))) {
-            lua_pushvalue(L, 1);
-            lua_call(L, 1, 1);
-            lua_remove(L, -2); // remove .get
-            return 1;
-        } else {
-            // find base
-            lua_pop(L, popn);
-            lua_getfield(L,-1, "__base");
-            luaL_checktype(L, -1, LUA_TTABLE);
+    static int findMember(lua_State* L,const char* name);
+    
+    static  int findMemberBase(lua_State* L,const char* name)
+    {
+        if (lua_getfield(L,-1, "__base") == LUA_TTABLE)
+        {
             // for each base
             {
                 size_t cnt = lua_rawlen(L,-1);
@@ -183,6 +174,25 @@ namespace NS_SLUA {
                 lua_remove(L,-2); // remove __base
                 return r;
             }
+        }
+
+        return 0;
+    }
+
+    static int findMember(lua_State* L,const char* name) {
+        int popn = 0;
+        if ((++popn, lua_getfield(L, -1, name) != 0)) {
+            lua_remove(L, -2); // remove mt
+            return 1;
+        } else if ((++popn, lua_getfield(L, -2, ".get")) && (++popn, lua_getfield(L, -1, name))) {
+            lua_pushvalue(L, 1);
+            lua_call(L, 1, 1);
+            lua_remove(L, -2); // remove .get
+            return 1;
+        } else {
+            // find base
+            lua_pop(L, popn);
+            return findMemberBase(L, name);
         }
     }
 
@@ -224,6 +234,46 @@ namespace NS_SLUA {
     int LuaObject::classIndex(lua_State* L) {
         lua_getmetatable(L, 1);
         const char* name = checkValue<const char*>(L, 2);
+        if (lua_type(L, 1) == LUA_TTABLE)
+        {
+            if (lua_getfield(L, -1, name) != LUA_TNIL)
+            {
+                return 1;
+            }
+            lua_pop(L, 1);
+
+            if (lua_getfield(L, -1, ".get") != LUA_TNIL)
+            {
+                if (lua_getfield(L, -1, name) != LUA_TNIL)
+                {
+                    lua_pushvalue(L, 1);
+                    lua_call(L, 1, 1);
+                    lua_remove(L, -2); // Remove .get
+
+                    // Check if it's const static value
+                    if (lua_getfield(L, -2, ".set") != LUA_TNIL)
+                    { 
+                        if (lua_getfield(L, -1, name) == LUA_TNIL) // Is const static
+                        {
+                            lua_pop(L, 2);
+
+                            // Save const static value to Table. eg. _G[FVector][Meta][OneVector] = ret
+                            lua_pushvalue(L, -1);
+                            lua_setfield(L, -3, name);
+                        }
+                        else
+                        {
+                            lua_pop(L, 2);
+                        }
+                    }
+                    return 1;
+                }
+                lua_pop(L, 2);
+            }
+            
+            return findMemberBase(L, name);
+        }
+        
         if (!findMember(L, name))
             luaL_error(L, "can't get %s", name);
         lua_remove(L, -2);
@@ -324,14 +374,21 @@ namespace NS_SLUA {
     }
 
     void LuaObject::addField(lua_State* L, const char* name, lua_CFunction getter, lua_CFunction setter, bool isInstance) {
-        lua_getfield(L, isInstance ? -1 : -2, ".get");
-        lua_pushcfunction(L, getter);
-        lua_setfield(L, -2, name);
-        lua_pop(L, 1);
-        lua_getfield(L, isInstance ? -1 : -2, ".set");
-        lua_pushcfunction(L, setter);
-        lua_setfield(L, -2, name);
-        lua_pop(L, 1);
+        if (getter)
+        {
+            lua_getfield(L, isInstance ? -1 : -2, ".get");
+            lua_pushcfunction(L, getter);
+            lua_setfield(L, -2, name);
+            lua_pop(L, 1);
+        }
+
+        if (setter)
+        {
+            lua_getfield(L, isInstance ? -1 : -2, ".set");
+            lua_pushcfunction(L, setter);
+            lua_setfield(L, -2, name);
+            lua_pop(L, 1);
+        }
     }
 
     void LuaObject::addOperator(lua_State* L, const char* name, lua_CFunction func) {
@@ -628,6 +685,28 @@ namespace NS_SLUA {
         }
     }
 
+    void cacheFunctionToUserValue(lua_State* L, UClass* cls)
+    {
+        int selfType = lua_type(L, 1);
+        
+        if (ensure(selfType == LUA_TUSERDATA)) 
+        {
+            if (lua_getuservalue(L, 1) == LUA_TNIL) 
+            {
+                lua_pop(L, 1);
+                lua_newtable(L);
+                lua_setuservalue(L, 1);
+                L->top++;
+                LuaObject::setUservalueMeta(L, cls);
+            }
+
+            lua_pushvalue(L, 2); // push key
+            lua_pushvalue(L, -3); // push reference value
+            lua_rawset(L, -3);
+            L->top--;
+        }
+    }
+
     int searchExtensionMethod(lua_State* L,UClass* cls,const char* name,bool isStatic=false) {
         int ret = 0;
         // search class and its super
@@ -832,39 +911,35 @@ namespace NS_SLUA {
             }
         }
 
-        lua_remove(L, -2);
         return t;
     }
 
     int luaFuncClosure(lua_State* L) {
         int argsCount = lua_gettop(L);
+        lua_pushvalue(L, lua_upvalueindex(2));
+
+        // Push self table
         lua_pushvalue(L, lua_upvalueindex(1));
 
+        // Check if obj equal to self table's Object
         UObject* obj = LuaObject::checkValue<UObject*>(L, 1);
         if (!obj) {
             luaL_error(L, "arg 1 expect UObject, but got nil!");
         }
-        auto* table = ULuaOverrider::getObjectLuaTable(obj, L);
-        if (!table) {
-            luaL_error(L, "arg 1 expect table, but got nil!");
-        }
 
-        int retCountFix = 0;
-        if (lua_type(L, -1) == LUA_TSTRING) {
-            if (getTableMember(L, *table, argsCount + 1) != LUA_TFUNCTION) {
-                luaL_error(L, "can't find lua function %s", lua_tostring(L, -2));
-            }
-            retCountFix = 1;
+        lua_pushstring(L, SLUA_CPPINST);
+        lua_rawget(L, -2);
+        if (lua_touserdata(L, -1) != obj) {
+            luaL_error(L, "Self table is mismatch argument 1 UObject. Don't save this function for call.");
         }
-        
-        table->push(L);
+        lua_pop(L, 1);
 
         for (int i = 2; i <= argsCount; ++i) {
             lua_pushvalue(L, i);
         }
 
         lua_call(L, argsCount, LUA_MULTRET);
-        int retCount = lua_gettop(L) - argsCount - retCountFix;
+        int retCount = lua_gettop(L) - argsCount;
         return retCount;
     }
 
@@ -907,7 +982,7 @@ namespace NS_SLUA {
                         }
                         else
                         {
-                            return ((PushPropertyFunction)pusher)(L, prop, parent + prop->GetOffset_ForInternal(), nullptr);
+                            return ((PushPropertyFunction)pusher)(L, prop, parent + prop->GetOffset_ForInternal(), 0, nullptr);
                         }
                     }
                     lua_pop(L, 2);
@@ -950,7 +1025,7 @@ namespace NS_SLUA {
                         }
                         else
                         {
-                            return ((PushPropertyFunction)pusher)(L, prop, parent + prop->GetOffset_ForInternal(), nullptr);
+                            return ((PushPropertyFunction)pusher)(L, prop, parent + prop->GetOffset_ForInternal(), 0, nullptr);
                         }
                     }
                     lua_pop(L, 2);
@@ -1037,21 +1112,17 @@ namespace NS_SLUA {
         auto* objTable = ULuaOverrider::getObjectTable(obj, L);
         if (objTable)
         {
-            auto table = &objTable->table;
-            if (table->getState() != L->l_G->mainthread)
+            auto &table = objTable->table;
+            if (table.getState() != L->l_G->mainthread)
             {
                 return 0;
             }
 
-            int t = getTableMember(L, *table, 2);
+            int t = getTableMember(L, table, 2);
             if (t == LUA_TFUNCTION && !lua_iscfunction(L, -1))
             {
-                lua_pushvalue(L, 2); // push function name instead of lua function
-                lua_pushcclosure(L, luaFuncClosure, 1); // push luaFuncClosure with function name upvalue
-                if (!objTable->isInstance)
-                {
-                    cacheFunction(L, nullptr);
-                }
+                lua_pushcclosure(L, luaFuncClosure, 2); // table and lua function as upvalue
+                cacheFunctionToUserValue(L, obj->GetClass());
             }
 
             if (t != LUA_TNIL)
@@ -1085,53 +1156,12 @@ namespace NS_SLUA {
         auto* objTable = ULuaOverrider::getObjectTable(obj, L);
         if (objTable && objTable->table.getState() == L->l_G->mainthread) {
             objTable->table.push(L); // push self table
-            if (objTable->isInstance)
-            {
-                lua_pushstring(L, LuaOverrider::INSTANCE_CACHE_NAME);
-                if (lua_rawget(L, -2))
-                {
-                    lua_pushvalue(L, 2);
-                    if (lua_rawget(L, -2) != LUA_TNIL)
-                    {
-                        return 1;
-                    }
-                    lua_pop(L, 1);
-                }
-                lua_pop(L, 1);
-            }
-
             lua_pushvalue(L, 2);
             int type = lua_gettable(L, -2);
             if (type != LUA_TNIL) {
                 if (type == LUA_TFUNCTION) {
-                    if (objTable->isInstance)
-                    {
-                        lua_pushcclosure(L, luaFuncClosure, 1);
-                        // cache instance function in self.__instance_cache
-                        lua_pushstring(L, LuaOverrider::INSTANCE_CACHE_NAME);
-                        if (lua_rawget(L, -3) == LUA_TNIL)
-                        {
-                            lua_pop(L, 1);
-
-                            lua_newtable(L);
-                            lua_pushstring(L, LuaOverrider::INSTANCE_CACHE_NAME);
-                            lua_pushvalue(L, -2);
-                            lua_rawset(L, -5);
-                        }
-                        lua_pushvalue(L, 2);
-                        lua_pushvalue(L, -3);
-                        lua_rawset(L, -3);
-                        
-                        lua_pop(L, 1); // pop __instance_cache
-                    }
-                    else
-                    {
-                        lua_pop(L, 1); // pop lua function
-                        lua_pushvalue(L, 2); // push function name instead of lua function
-                        lua_pushcclosure(L, luaFuncClosure, 1); // push luaFuncClosure with function name upvalue
-
-                        cacheFunction(L, nullptr);
-                    }
+                    lua_pushcclosure(L, luaFuncClosure, 2); // table and lua function as upvalue
+                    cacheFunctionToUserValue(L, obj->GetClass());
                 }
                 return 1;
             }
@@ -1212,7 +1242,7 @@ namespace NS_SLUA {
             auto pusher = getPusher(up);
             if (pusher) {
                 cachePropertyOperator(L, up, cls, (void*)pusher, (void*)getChecker(up), false);
-                return pusher(L, up, up->ContainerPtrToValuePtr<uint8>(obj), nullptr);
+                return pusher(L, up, up->ContainerPtrToValuePtr<uint8>(obj), 0, nullptr);
             }
             else {
                 FString clsName = up->GetClass()->GetName();
@@ -1382,7 +1412,7 @@ namespace NS_SLUA {
 
         const char* name = lua_tostring(L, 2);
         
-        auto* cls = ls->uss;
+        auto* cls = ls->getUScriptStruct();
         FProperty* up = LuaObject::findCacheProperty(L, cls, name);
         if(!up) {
             // index self metatable.
@@ -1408,7 +1438,7 @@ namespace NS_SLUA {
         auto pusher = LuaObject::getPusher(up);
         if (pusher) {
             cachePropertyOperator(L, up, cls, (void*)pusher, (void*)LuaObject::getChecker(up), false);
-            return pusher(L, up, ls->buf + up->GetOffset_ForInternal(), nullptr);
+            return pusher(L, up, ls->buf + up->GetOffset_ForInternal(), 0, nullptr);
         }
         else {
             FString clsName = up->GetClass()->GetName();
@@ -1432,7 +1462,7 @@ namespace NS_SLUA {
         }
         const char* name = lua_tostring(L, 2);
 
-        auto* cls = ls->uss;
+        auto* cls = ls->getUScriptStruct();
         FProperty* up = LuaObject::findCacheProperty(L, cls, name);
         if (!up) luaL_error(L, "Can't find property named %s", name);
 
@@ -1486,7 +1516,7 @@ namespace NS_SLUA {
     int instanceStructNext(lua_State* L) {
         LuaStruct* ls = LuaObject::checkValue<LuaStruct*>(L, 1);
         
-        auto* cls = ls->uss;
+        auto* cls = ls->getUScriptStruct();
         FProperty* up = nullptr;
 
         lua_settop(L, 2);
@@ -1621,47 +1651,117 @@ namespace NS_SLUA {
     }
 
     template<typename T>
-    int pushUProperty(lua_State* L,FProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
+    int pushUProperty(lua_State* L,FProperty* prop,uint8* parms,int i,NewObjectRecorder* objRecorder) {
         auto p= (T*)prop;
         return LuaObject::push(L,p->GetPropertyValue(parms));
     }
 
-    int pushEnumProperty(lua_State* L, FProperty* prop, uint8* parms,NewObjectRecorder* objRecorder) {
+    int pushEnumProperty(lua_State* L, FProperty* prop, uint8* parms,int i,NewObjectRecorder* objRecorder) {
         auto p = CastField<FEnumProperty>(prop);
         ensure(p);
         auto p2 = p->GetUnderlyingProperty();
         ensure(p2);
-        int i = p2->GetSignedIntPropertyValue(parms);
-        return LuaObject::push(L, i);
+        int e = p2->GetSignedIntPropertyValue(parms);
+        return LuaObject::push(L, e);
     }
 
-    int pushUArrayProperty(lua_State* L,FProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
+    bool checkContainerInnerProperty(lua_State* L, int i, FProperty* expectInner, FProperty* argumentInner, const char* containerType)
+    {
+        auto expectInnerClass = expectInner->GetClass();
+        auto argumentInnerClass = argumentInner->GetClass();
+        if (argumentInnerClass != expectInnerClass)
+        {
+            luaL_error(L, "arg %d expect %s of %s, but got %s of %s", i, containerType,
+                expectInnerClass ? TCHAR_TO_UTF8(*expectInnerClass->GetName()) : "",
+                containerType,
+                argumentInnerClass ? TCHAR_TO_UTF8(*argumentInnerClass->GetName()) : "");
+        }
+
+#if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
+        static constexpr auto StructPropCastFlag = CASTCLASS_UStructProperty;
+        if (expectInnerClass->HasAnyCastFlag(StructPropCastFlag))
+#else
+        static constexpr auto StructPropCastFlag = CASTCLASS_FStructProperty;
+        if (expectInnerClass->HasAnyCastFlags(StructPropCastFlag))
+#endif
+        {
+            FStructProperty* argumentStructProp = (FStructProperty*)argumentInner;
+            FStructProperty* innerStructProp = (FStructProperty*)expectInner;
+            if (argumentStructProp->Struct != innerStructProp->Struct)
+            {
+                luaL_error(L, "arg %d expect %s of %s, but got %s of %s", i, containerType,
+                        innerStructProp->Struct ? TCHAR_TO_UTF8(*innerStructProp->Struct->GetName()) : "",
+                        containerType,
+                        argumentStructProp->Struct ? TCHAR_TO_UTF8(*argumentStructProp->Struct->GetName()) : "");
+            }
+        }
+
+        return true;
+    }
+
+    int pushUArrayProperty(lua_State* L,FProperty* prop,uint8* parms,int i,NewObjectRecorder* objRecorder) {
         auto p = CastField<FArrayProperty>(prop);
         ensure(p);
-        return LuaArray::push(L, p, p->GetPropertyValuePtr(parms));
+        FScriptArray* v = p->GetPropertyValuePtr(parms);
+        if (i != 0)
+        {
+            LuaArray* luaArrray = LuaObject::checkUD<LuaArray>(L,i);
+            if (luaArrray)
+            {
+                checkContainerInnerProperty(L, i, p->Inner, luaArrray->getInnerProp(), "Array");
+                LuaArray::clone(luaArrray->get(), p->Inner, v);
+                lua_pushvalue(L, i);
+                return 1;
+            }
+        }
+        return LuaArray::push(L, p, v);
     }
 
-    int pushUMapProperty(lua_State* L,FProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
+    int pushUMapProperty(lua_State* L,FProperty* prop,uint8* parms,int i,NewObjectRecorder* objRecorder) {
         auto p = CastField<FMapProperty>(prop);
         ensure(p);
         FScriptMap* v = p->GetPropertyValuePtr(parms);
+        if (i != 0)
+        {
+            LuaMap* luaMap = LuaObject::checkUD<LuaMap>(L,i);
+            if (luaMap)
+            {
+                checkContainerInnerProperty(L, i, p->KeyProp, luaMap->getKeyProp(), "Map Key");
+                checkContainerInnerProperty(L, i, p->ValueProp, luaMap->getValueProp(), "Map Value");
+                LuaMap::clone(luaMap->get(), p->KeyProp, p->ValueProp, v);
+                lua_pushvalue(L, i);
+                return 1;
+            }
+        }
         return LuaMap::push(L, p->KeyProp, p->ValueProp, v, false);
     }
     
-    int pushUSetProperty(lua_State* L, FProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
+    int pushUSetProperty(lua_State* L, FProperty* prop, uint8* parms, int i, NewObjectRecorder* objRecorder) {
         auto p = CastField<FSetProperty>(prop);
         ensure(p);
-        return LuaSet::push(L, p->ElementProp, p->GetPropertyValuePtr(parms), false);
+        FScriptSet* v = p->GetPropertyValuePtr(parms);
+        if (i != 0)
+        {
+            LuaSet* luaSet = LuaObject::checkUD<LuaSet>(L,i);
+            if (luaSet)
+            {
+                checkContainerInnerProperty(L, i, p->ElementProp, luaSet->getInnerProp(), "Set");
+                LuaSet::clone(luaSet->get(), p->ElementProp, v);
+                lua_pushvalue(L, i);
+                return 1;
+            }
+        }
+        return LuaSet::push(L, p->ElementProp, v, false);
     }
 
-    int pushUWeakProperty(lua_State* L, FProperty* prop, uint8* parms,NewObjectRecorder* objRecorder) {
+    int pushUWeakProperty(lua_State* L, FProperty* prop, uint8* parms, int i, NewObjectRecorder* objRecorder) {
         auto p = CastField<FWeakObjectProperty>(prop);
         ensure(p);
         FWeakObjectPtr v = p->GetPropertyValue(parms);
         return LuaObject::push(L, v);
     }
 
-    int pushUSoftObjectProperty(lua_State *L, FProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
+    int pushUSoftObjectProperty(lua_State *L, FProperty* prop, uint8* parms, int i, NewObjectRecorder* objRecorder) {
         auto p = CastField<FSoftObjectProperty>(prop);
         ensure(p);
         FSoftObjectPtr v = p->GetPropertyValue(parms);
@@ -1669,7 +1769,7 @@ namespace NS_SLUA {
         return LuaObject::push<FSoftObjectPtr>(L, "FSoftObjectPtr", softObjectPtr, UD_AUTOGC | UD_VALUETYPE);
     }
     
-    int pushUSoftClassProperty(lua_State *L, FProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
+    int pushUSoftClassProperty(lua_State *L, FProperty* prop, uint8* parms, int i, NewObjectRecorder* objRecorder) {
         auto p = CastField<FSoftClassProperty>(prop);
         ensure(p);
         FSoftObjectPtr v = p->GetPropertyValue(parms);
@@ -1677,7 +1777,7 @@ namespace NS_SLUA {
         return LuaObject::push<FSoftObjectPtr>(L, "FSoftObjectPtr", softObjectPtr, UD_AUTOGC | UD_VALUETYPE);
     }
 
-    int pushUInterfaceProperty(lua_State *L, FProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
+    int pushUInterfaceProperty(lua_State *L, FProperty* prop, uint8* parms, int i, NewObjectRecorder* objRecorder) {
         auto p = CastField<FInterfaceProperty>(prop);
         ensure(p);
         auto &scriptInterface = p->GetPropertyValue(parms);
@@ -1731,6 +1831,8 @@ namespace NS_SLUA {
         if (!UD)
             luaL_error(L, "expect LuaArray at %d, but got nil", i);
 
+        checkContainerInnerProperty(L, i, p->Inner, UD->getInnerProp(), "Array");
+        
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         auto outerFunc = Cast<UFunction>(p->GetOuter());
 #else
@@ -1780,6 +1882,9 @@ namespace NS_SLUA {
         if (!UD)
             luaL_error(L, "expect LuaMap at %d, but got nil", i);
 
+        checkContainerInnerProperty(L, i, p->KeyProp, UD->getKeyProp(), "Map Key");
+        checkContainerInnerProperty(L, i, p->ValueProp, UD->getValueProp(), "Map Value");
+
         auto scriptMap = (FScriptMap*)parms;
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         auto outerFunc = Cast<UFunction>(p->GetOuter());
@@ -1826,6 +1931,8 @@ namespace NS_SLUA {
         CheckUD(LuaSet, L, i);
         if (!UD)
             luaL_error(L, "expect LuaSet at %d, but got nil", i);
+
+        checkContainerInnerProperty(L, i, p->ElementProp, UD->getInnerProp(), "Set");
 
         auto scriptSet = (FScriptSet*)params;
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
@@ -2036,18 +2143,37 @@ namespace NS_SLUA {
         return 1;
     }
 
-    int pushUStructProperty(lua_State* L,FProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
+    int pushUStructProperty(lua_State* L,FProperty* prop,uint8* parms,int i,NewObjectRecorder* objRecorder) {
         auto p = CastField<FStructProperty>(prop);
         ensure(p);
         auto uss = p->Struct;
 
-        if (LuaWrapper::pushValue(L, p, uss, parms))
+        if (LuaWrapper::pushValue(L, p, uss, parms, i))
             return 1;
 
         // Comment For PUBG Mobile
         if (uss == FLuaBPVar::StaticStruct()) {
             ((FLuaBPVar*)parms)->value.push(L);
             return 1;
+        }
+
+        if (i != 0)
+        {
+            auto ls = LuaObject::checkUD<LuaStruct>(L,i);
+            if (ls)
+            {
+                if (!ls->uss->IsChildOf(uss))
+                    luaL_error(L, "expect struct of %s, but got struct of %s", TCHAR_TO_UTF8(*uss->GetName()), TCHAR_TO_UTF8(*ls->uss->GetName()));
+        
+                if (p->GetSize() != ls->size)
+                    luaL_error(L, "expect struct size == %d, but got %d", p->GetSize(), ls->size);
+                
+                auto dstUss = ls->uss;
+                uint8* buf = ls->buf;
+                dstUss->CopyScriptStruct(buf, parms);
+                lua_pushvalue(L, i);
+                return 1;
+            }
         }
 
         uint32 size = uss->GetStructureSize() ? uss->GetStructureSize() : 1;
@@ -2062,14 +2188,14 @@ namespace NS_SLUA {
         return ret;
     }  
 
-    int pushUDelegateProperty(lua_State* L, FProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
+    int pushUDelegateProperty(lua_State* L, FProperty* prop, uint8* parms, int i, NewObjectRecorder* objRecorder) {
         auto p = CastField<FDelegateProperty>(prop);
         ensure(p);
         FScriptDelegate* delegate = p->GetPropertyValuePtr(parms);
         return LuaDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
     }
 
-    int pushUMulticastDelegateProperty(lua_State* L,FProperty* prop,uint8* parms, NewObjectRecorder* objRecorder) {
+    int pushUMulticastDelegateProperty(lua_State* L,FProperty* prop,uint8* parms, int i, NewObjectRecorder* objRecorder) {
         auto p = CastField<FMulticastDelegateProperty>(prop);
         ensure(p);
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
@@ -2081,20 +2207,42 @@ namespace NS_SLUA {
     }
 
 #if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
-    int pushUMulticastInlineDelegateProperty(lua_State* L,FProperty* prop,uint8* parms, NewObjectRecorder* objRecorder) {
+    int pushUMulticastInlineDelegateProperty(lua_State* L,FProperty* prop,uint8* parms, int i, NewObjectRecorder* objRecorder) {
         auto p = CastField<FMulticastInlineDelegateProperty>(prop);
         ensure(p);
         FMulticastScriptDelegate* delegate = const_cast<FMulticastScriptDelegate*>(p->GetMulticastDelegate(parms));
         return LuaMultiDelegate::push(L, delegate, p->SignatureFunction, prop->GetNameCPP());
     }
 
-    int pushUMulticastSparseDelegateProperty(lua_State* L, FProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
+    int pushUMulticastSparseDelegateProperty(lua_State* L, FProperty* prop, uint8* parms, int i, NewObjectRecorder* objRecorder) {
         auto p = CastField<FMulticastSparseDelegateProperty>(prop);
         ensure(p);
         FSparseDelegate* SparseDelegate = (FSparseDelegate*)parms;
         return LuaMultiDelegate::push(L, p, SparseDelegate, p->SignatureFunction, prop->GetNameCPP());
     }
 #endif
+
+    int referencePusherUDelegateProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress,uint16 replicateIndex)
+    {
+        int ret = pushUDelegateProperty(L, prop, parms, 0, nullptr);
+        void* ud = lua_touserdata(L, -ret);
+        if (ud) 
+        {
+            LuaObject::linkProp(L, parentAddress, ud);
+        }
+        return 1;
+    }
+
+    int referencePusherUMulticastDelegateProperty(lua_State* L,FProperty* prop,uint8* parms,void* parentAddress,uint16 replicateIndex)
+    {
+        int ret = pushUMulticastDelegateProperty(L, prop, parms, 0, nullptr);
+        void* ud = lua_touserdata(L, -ret);
+        if (ud) 
+        {
+            LuaObject::linkProp(L, parentAddress, ud);
+        }
+        return 1;
+    }
 
     void* checkUDelegateProperty(lua_State* L,FProperty* prop,uint8* parms,int i,bool bForceCopy) {
         auto p = CastField<FDelegateProperty>(prop);
@@ -2112,8 +2260,12 @@ namespace NS_SLUA {
     }
 
 #if ENGINE_MAJOR_VERSION==5
-    int pushUObjectPtrProperty(lua_State* L,FProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
+    int pushUObjectPtrProperty(lua_State* L,FProperty* prop,uint8* parms,int i,NewObjectRecorder* objRecorder) {
+#if ENGINE_MINOR_VERSION >= 4
+        auto p = CastField<FObjectProperty>(prop);
+#else
         auto p = CastField<FObjectPtrProperty>(prop);
+#endif
         ensure(p);
         auto objPtr = p->GetPropertyValue(parms);
         UObject* o = objPtr.Get();
@@ -2122,7 +2274,7 @@ namespace NS_SLUA {
     }
 #endif
      
-    int pushUObjectProperty(lua_State* L,FProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
+    int pushUObjectProperty(lua_State* L,FProperty* prop,uint8* parms,int i,NewObjectRecorder* objRecorder) {
         auto p = CastField<FObjectProperty>(prop);
         ensure(p);
         UObject* o = p->GetPropertyValue(parms);
@@ -2240,8 +2392,12 @@ namespace NS_SLUA {
             luaL_error(L, "expect struct but got nil");
         }
 
+        if (!ls->uss->IsChildOf(uss))
+            luaL_error(L, "expect struct of %s, but got struct of %s", TCHAR_TO_UTF8(*uss->GetName()), TCHAR_TO_UTF8(*ls->uss->GetName()));
+        
         if (p->GetSize() != ls->size)
             luaL_error(L, "expect struct size == %d, but got %d", p->GetSize(), ls->size);
+        
         if (!bForceCopy && IsReferenceParam(p->PropertyFlags, outerFunc)) {
             // shallow copy
             FMemory::Memcpy(parms, ls->buf, p->GetSize());
@@ -2254,7 +2410,6 @@ namespace NS_SLUA {
 
     const char* LuaObject::getType(lua_State* L, int p) {
         if (!lua_isuserdata(L, p)) {
-            lua_pop(L, 1);
             return "";
         }
         int tt = luaL_getmetafield(L, p, "__name");
@@ -2269,7 +2424,7 @@ namespace NS_SLUA {
         return "";
     }
     
-    int pushUClassProperty(lua_State* L, FProperty* prop, uint8* parms, NewObjectRecorder* objRecorder) {
+    int pushUClassProperty(lua_State* L, FProperty* prop, uint8* parms, int i, NewObjectRecorder* objRecorder) {
         auto p = CastField<FClassProperty>(prop);
         ensure(p);
         UClass* cls = Cast<UClass>(p->GetPropertyValue(parms));
@@ -2353,10 +2508,17 @@ namespace NS_SLUA {
         auto p = CastField<FInterfaceProperty>(prop);
         ensure(p);
         UObject* obj = LuaObject::checkUD<UObject>(L, i);
-        void* interfacePtr = obj->GetInterfaceAddress(p->InterfaceClass);
-        if (!interfacePtr)
-            luaL_error(L, "arg %d expect interface class of %s, but got %s", TCHAR_TO_UTF8(*p->InterfaceClass->GetName()), 
-                        obj->GetClass() ? TCHAR_TO_UTF8(*obj->GetClass()->GetName()) : "");
+        void* interfacePtr = obj ? obj->GetInterfaceAddress(p->InterfaceClass) : nullptr;
+        if (!interfacePtr) {
+            FString clsName(TEXT(""));
+            if (obj) {
+                auto cls = obj->GetClass();
+                if (cls)
+                    clsName = cls->GetName();
+            }
+            luaL_error(L, "arg %d expect interface class of %s, but got %s", i,
+                        TCHAR_TO_UTF8(*p->InterfaceClass->GetName()), TCHAR_TO_UTF8(*clsName));
+        }
         p->SetPropertyValue(parms, FScriptInterface(obj, interfacePtr));
         return nullptr;
     }
@@ -2592,7 +2754,7 @@ namespace NS_SLUA {
 
     int LuaObject::gcStruct(lua_State* L) {
         QUICK_SCOPE_CYCLE_COUNTER(Stat_GCUStruct);
-        auto userdata = (UserData<LuaStruct*>*)luaL_testudata(L, 1, "LuaStruct");
+        auto userdata = (UserData<LuaStruct*>*)lua_touserdata(L, 1);
         auto ls = userdata->ud;
         if (!userdata->parent && !(userdata->flag & UD_HADFREE))
             releaseLink(L, ls->buf);
@@ -2729,7 +2891,11 @@ namespace NS_SLUA {
         regPusher(FMulticastSparseDelegateProperty::StaticClass(), pushUMulticastSparseDelegateProperty);
 #endif
 #if ENGINE_MAJOR_VERSION==5
+#if ENGINE_MINOR_VERSION >= 4
+        regPusher(FObjectProperty::StaticClass(),pushUObjectPtrProperty);
+#else
         regPusher(FObjectPtrProperty::StaticClass(),pushUObjectPtrProperty);
+#endif
 #endif
         regPusher(FObjectProperty::StaticClass(),pushUObjectProperty);
         regPusher(FArrayProperty::StaticClass(),pushUArrayProperty);
@@ -2782,6 +2948,8 @@ namespace NS_SLUA {
         regReferencePusher(FStructProperty::StaticClass(), referencePusherUStructProperty);
         regReferencePusher(FSoftObjectProperty::StaticClass(), referencePusherUSoftObjectProperty);
         regReferencePusher(FSoftClassProperty::StaticClass(), referencePusherUSoftClassProperty);
+        regReferencePusher(FDelegateProperty::StaticClass(), referencePusherUDelegateProperty);
+        regReferencePusher(FMulticastDelegateProperty::StaticClass(), referencePusherUMulticastDelegateProperty);
         
         LuaWrapper::initExt(L);
         // For PUBG Mobile
@@ -2807,7 +2975,7 @@ namespace NS_SLUA {
     int LuaObject::push(lua_State* L,FProperty* prop,uint8* parms,NewObjectRecorder* objRecorder) {
         auto pusher = getPusher(prop);
         if (pusher)
-            return pusher(L,prop,parms,objRecorder);
+            return pusher(L,prop,parms,0,objRecorder);
         else {
             FString clsName = prop->GetClass()->GetName();
             FString propName = prop->GetName();

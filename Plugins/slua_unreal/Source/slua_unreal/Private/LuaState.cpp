@@ -486,7 +486,10 @@ namespace NS_SLUA {
         if (!mainState && overrider)
             overrider->removeOverrides();
 #endif
-        SafeDelete(overrider);
+        if (overrider) {
+            delete overrider;
+            overrider = nullptr;
+        }
 
         releaseAllLink();
 
@@ -507,7 +510,10 @@ namespace NS_SLUA {
             L=nullptr;
         }
         objRefs.Empty();
-        SafeDelete(deadLoopCheck);
+        if (deadLoopCheck) {
+            delete deadLoopCheck;
+            deadLoopCheck = nullptr;
+        }
 
         LuaMemoryProfile::stop();
 
@@ -861,7 +867,7 @@ namespace NS_SLUA {
         // so check and remove it
         for (UObjectRefMap::TIterator it(objRefs); it; ++it)
         {
-            UObject* item = it.Key();
+            auto item = it.Key();
             GenericUserData* userData = it.Value();
             if (userData && !(userData->flag & UD_REFERENCE))
             {
@@ -1176,7 +1182,8 @@ namespace NS_SLUA {
     {
         Stop();
         thread->WaitForCompletion();
-        SafeDelete(thread);
+        delete thread;
+        thread = nullptr;
     }
 
     uint32 FDeadLoopCheck::Run()

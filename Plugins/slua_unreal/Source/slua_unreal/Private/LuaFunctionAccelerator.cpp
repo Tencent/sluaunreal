@@ -234,6 +234,7 @@ namespace NS_SLUA
             (*lastOut)->NextOutParm = NULL;
         }
 
+        int argNum = lua_gettop(L);
         
         for (auto& checkerInfo : paramsChecker)
         {
@@ -319,7 +320,7 @@ namespace NS_SLUA
         if (bHasReturnParam)
         {
             auto returnProperty = returnPusherInfo.prop;
-            ret += returnPusherInfo.pusher(L, returnProperty, params + returnPusherInfo.offset, objRecorder);
+            ret += returnPusherInfo.pusher(L, returnProperty, params + returnPusherInfo.offset, i <= argNum ? i : 0, objRecorder);
         }
 
         i = offset;
@@ -338,7 +339,7 @@ namespace NS_SLUA
             }
             else
             {
-                ret += pusherInfo.pusher(L, prop, src, objRecorder);
+                ret += pusherInfo.pusher(L, prop, src, 0, objRecorder);
             }
         }
         
@@ -411,7 +412,7 @@ namespace NS_SLUA
         if (bHasReturnParam)
         {
             auto returnProperty = returnPusherInfo.prop;
-            ret += returnPusherInfo.pusher(L, returnProperty, params + returnPusherInfo.offset, objRecorder);
+            ret += returnPusherInfo.pusher(L, returnProperty, params + returnPusherInfo.offset, 0, objRecorder);
         }
 
         for (auto &pusherInfo : outPropsPusher)
@@ -429,7 +430,7 @@ namespace NS_SLUA
             }
             else
             {
-                ret += pusherInfo.pusher(L, prop, src, objRecorder);
+                ret += pusherInfo.pusher(L, prop, src, 0, objRecorder);
             }
         }
         

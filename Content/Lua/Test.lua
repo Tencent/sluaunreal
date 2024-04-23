@@ -56,6 +56,7 @@ function testcase()
 
     TestMap = require 'TestMap'
     TestArray = require 'TestArray'
+    TestSet = require 'TestSet'
     TestActor = require 'TestActor'
 
     -- slua can detect dead loop code

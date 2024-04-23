@@ -40,6 +40,7 @@ namespace NS_SLUA
         ReplicatedIndexToNameMap replicatedIndexToNameMap;
             
         TArray<ELifetimeCondition> lifetimeConditions;
+        TArray<ELifetimeRepNotifyCondition> lifetimeRepNotifyConditions;
         TSet<ReplicateIndexType> repNotifies;
 
         TWeakObjectPtr<UStruct> ustruct;

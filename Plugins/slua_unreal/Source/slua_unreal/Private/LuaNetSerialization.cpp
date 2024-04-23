@@ -735,15 +735,20 @@ bool FLuaNetSerialization::CompareProperties(UObject* obj, NS_SLUA::FLuaNetSeria
     auto data = proxy.values.GetData();
     auto oldData = proxy.oldValues.GetData();
     auto classLuaReplicated = NS_SLUA::LuaNet::getClassReplicatedProps(obj);
+    auto &properties = classLuaReplicated->properties;
+    auto &lifetimeRepNotifyConditions = classLuaReplicated->lifetimeRepNotifyConditions;
+    auto &propertyOffsetToMarkIndex = classLuaReplicated->propertyOffsetToMarkIndex;
+    auto &flatProperties = classLuaReplicated->flatProperties;
+    auto &flatArrayPropInfos = classLuaReplicated->flatArrayPropInfos;
     for (LuaBitArray::FIterator It(proxy.dirtyMark); It; ++It)
     {
         int32 propIndex = *It;
-        auto prop = classLuaReplicated->properties[propIndex];
+        auto prop = properties[propIndex];
+        bool bAlwaysNotify = lifetimeRepNotifyConditions[propIndex] == ELifetimeRepNotifyCondition::REPNOTIFY_Always;
         int32 propOffset = prop->GetOffset_ForInternal();
         int32 propSize = prop->GetSize();
-        int32 startIndex = classLuaReplicated->propertyOffsetToMarkIndex[propOffset];
-        int32 endIndex = classLuaReplicated->propertyOffsetToMarkIndex[propOffset + propSize];
-        auto &flatProperties = classLuaReplicated->flatProperties;
+        int32 startIndex = propertyOffsetToMarkIndex[propOffset];
+        int32 endIndex = propertyOffsetToMarkIndex[propOffset + propSize];
         for (int32 flatIndex = startIndex; flatIndex < endIndex; flatIndex++)
         {
             auto flatPropInfo = flatProperties[flatIndex];
@@ -769,10 +774,10 @@ bool FLuaNetSerialization::CompareProperties(UObject* obj, NS_SLUA::FLuaNetSeria
                 oldArrayHelper.Resize(newLen);
 
                 auto &arrayMark = proxy.arrayDirtyMark[flatOffset];
-                auto &arrayPropInfo = classLuaReplicated->flatArrayPropInfos[flatOffset];
+                auto &arrayPropInfo = flatArrayPropInfos[flatOffset];
                 int32 innerPropNum = arrayPropInfo.innerPropertyNum;
                 int32 elementSize = innerProp->ElementSize;
-                auto& properties = arrayPropInfo.properties;
+                auto& arrayFlatProperties = arrayPropInfo.properties;
                 
                 uint8* arrayData = newArrayHelper.GetRawPtr(0);
                 uint8* oldArrayData = oldArrayHelper.GetRawPtr(0);
@@ -809,10 +814,10 @@ bool FLuaNetSerialization::CompareProperties(UObject* obj, NS_SLUA::FLuaNetSeria
                     int32 markOffset = innerPropNum * arrayIndex;
                     for (int32 innerIndex = 0; innerIndex < innerPropNum; innerIndex++)
                     {
-                        auto &flatArrayPropInfo = properties[innerIndex];
+                        auto &flatArrayPropInfo = arrayFlatProperties[innerIndex];
                         int32 offset = flatArrayPropInfo.offset + elementOffset;
                         auto innerFlatProp = flatArrayPropInfo.prop;
-                        if (!innerFlatProp->Identical(oldArrayData + offset, arrayData + offset))
+                        if (bAlwaysNotify || !innerFlatProp->Identical(oldArrayData + offset, arrayData + offset))
                         {
                             arrayMark.Add(markOffset + innerIndex);
                             innerFlatProp->CopyCompleteValue(oldArrayData + offset, arrayData + offset);
@@ -826,7 +831,7 @@ bool FLuaNetSerialization::CompareProperties(UObject* obj, NS_SLUA::FLuaNetSeria
                     proxy.flatDirtyMark.Add(flatIndex);
                 }
             }
-            else if (!flatProp->Identical(oldData + flatOffset,  data+ flatOffset))
+            else if (bAlwaysNotify || !flatProp->Identical(oldData + flatOffset,  data+ flatOffset))
             {
                 proxy.flatDirtyMark.Add(flatIndex);
                 flatProp->CopyCompleteValue(oldData + flatOffset,  data + flatOffset);

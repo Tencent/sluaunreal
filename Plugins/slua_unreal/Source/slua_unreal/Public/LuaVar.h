@@ -115,7 +115,12 @@ namespace NS_SLUA {
         T* asUserdata(const char* t) const {
             auto L = getState();
             push(L);
-            UserData<T*>* ud = reinterpret_cast<UserData<T*>*>(luaL_testudata(L, -1, t));
+            auto typeName = LuaObject::getType(L, -1);
+            if (strcmp(typeName, t) != 0) {
+                lua_pop(L,1);
+                return nullptr;
+            }
+            UserData<T*>* ud = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, -1));
             lua_pop(L,1);
             return ud?ud->ud:nullptr;
         }
@@ -125,7 +130,12 @@ namespace NS_SLUA {
         {
             auto L = getState();
             push(L);
-            T* p = static_cast<T*>(luaL_testudata(L, -1, t));
+            auto typeName = LuaObject::getType(L, -1);
+            if (strcmp(typeName, t) != 0) {
+                lua_pop(L,1);
+                return nullptr;
+            }
+            T* p = static_cast<T*>(lua_touserdata(L, -1));
             lua_pop(L,1);
             return p;
         }

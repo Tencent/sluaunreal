@@ -100,7 +100,12 @@ namespace NS_SLUA
         auto classLuaReplicatedPtr = classLuaReplicatedMap.Find(cls);
         if (classLuaReplicatedPtr)
         {
-            delete * classLuaReplicatedPtr;
+            auto classLuaReplicated = *classLuaReplicatedPtr;
+            if (classLuaReplicated->ustruct.IsValid())
+	        {
+	            classLuaReplicated->ustruct->RemoveFromRoot();
+	        }
+            delete classLuaReplicated;
             classLuaReplicatedMap.Remove(cls);
         }
     }
@@ -143,6 +148,7 @@ namespace NS_SLUA
                             auto &replicatedIndexToNameMap = classReplicated.replicatedIndexToNameMap;
                             auto &properties = classReplicated.properties;
                             auto &lifetimeConditions = classReplicated.lifetimeConditions;
+                            auto &lifetimeRepNotifyConditions = classReplicated.lifetimeRepNotifyConditions;
                             
                             NS_SLUA::AutoStack as(L);
                             
@@ -227,6 +233,15 @@ namespace NS_SLUA
                                         properties.Add(childProperty);
 
                                         lifetimeConditions.Add(lifeCond);
+                                        
+                                        ELifetimeRepNotifyCondition repNotifyCondition = ELifetimeRepNotifyCondition::REPNOTIFY_OnChanged;
+                                        lua_getfield(L, -1, "RepNotifyCondition");
+                                        if (lua_isinteger(L, -1))
+                                        {
+                                            repNotifyCondition = (ELifetimeRepNotifyCondition)lua_tointeger(L, -1);
+                                        }
+                                        lua_pop(L, 1);
+                                        lifetimeRepNotifyConditions.Add(repNotifyCondition);
                                     }
 
                                     lua_pop(L, 1);
@@ -813,7 +828,7 @@ namespace NS_SLUA
                                 }
 
                                 auto pusher = LuaObject::getPusher(p);
-                                return pusher(L, p, proxy->values.GetData() + p->GetOffset_ForInternal(), nullptr);
+                                return pusher(L, p, proxy->values.GetData() + p->GetOffset_ForInternal(), 0, nullptr);
                             }
                         }
                     }

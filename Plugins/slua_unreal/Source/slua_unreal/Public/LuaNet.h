@@ -64,7 +64,7 @@ namespace NS_SLUA
         static int addListener(lua_State* L);
         static int removeListener(lua_State* L);
         
-        typedef TMap<TWeakObjectPtr<UClass>, ClassLuaReplicated*, FDefaultSetAllocator, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<UClass>, ClassLuaReplicated*>> ClassLuaReplicatedMap;
+        typedef TMap<UClass*, ClassLuaReplicated*> ClassLuaReplicatedMap;
         static ClassLuaReplicatedMap classLuaReplicatedMap;
 
         typedef TMap<void*, FLuaNetSerializationProxy*> LuaNetSerializationMap;

@@ -96,7 +96,11 @@ namespace NS_SLUA {
     struct SLUA_UNREAL_API LuaStruct : public FGCObject {
         uint8* buf;
         uint32 size;
+#if (ENGINE_MINOR_VERSION>=4) && (ENGINE_MAJOR_VERSION==5)
+        TObjectPtr<UScriptStruct> uss;
+#else
         UScriptStruct* uss;
+#endif
 
         struct FLuaNetSerializationProxy* proxy;
         uint16 luaReplicatedIndex;
@@ -108,6 +112,15 @@ namespace NS_SLUA {
         void Init(uint8* buf,uint32 size,UScriptStruct* uss,bool isRef);
 
         virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
+
+        inline UScriptStruct* getUScriptStruct() const
+        {
+#if (ENGINE_MINOR_VERSION>=4) && (ENGINE_MAJOR_VERSION==5)
+            return uss.Get();
+#else
+            return uss;
+#endif
+        }
 
 #if !((ENGINE_MINOR_VERSION<20) && (ENGINE_MAJOR_VERSION==4))
         virtual FString GetReferencerName() const override
@@ -354,7 +367,7 @@ namespace NS_SLUA {
         }
 
     public:
-        typedef int (*PushPropertyFunction)(lua_State* L,FProperty* prop,uint8* parms,NewObjectRecorder* objRecorder);
+        typedef int (*PushPropertyFunction)(lua_State* L,FProperty* prop,uint8* parms,int i,NewObjectRecorder* objRecorder);
         typedef void* (*CheckPropertyFunction)(lua_State* L,FProperty* prop,uint8* parms,int i,bool bForceCopy);
         typedef void (*ReferencePropertyFunction)(lua_State* L, FProperty* prop, uint8* src, void* dst);
         typedef int (*ReferencePusherPropertyFunction)(lua_State* L,FProperty* prop,uint8* parms,void* parentAdrres,uint16 replicateIndex);
@@ -822,7 +835,7 @@ namespace NS_SLUA {
             UserData<WeakUObjectUD*>* ud = reinterpret_cast<UserData<WeakUObjectUD*>*>(lua_touserdata(L, 1));
             ensure(ud->flag&UD_WEAKUPTR);
             ud->flag |= UD_HADFREE;
-            SafeDelete(ud->ud);
+            delete ud->ud;
             return 0;
         }
 
@@ -851,7 +864,7 @@ namespace NS_SLUA {
             if (shared->getSharedReferenceCount() == 1) {
                 LuaObject::releaseLink(L, shared->get(L));
             }
-            SafeDelete(ud->ud);
+            delete ud->ud;
             return 0;
         }
 

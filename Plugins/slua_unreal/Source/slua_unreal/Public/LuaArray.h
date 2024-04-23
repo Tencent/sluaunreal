@@ -32,8 +32,16 @@ namespace NS_SLUA {
         static int push(lua_State* L, LuaArray* luaArray);
 
         template<typename T>
-        static int push(lua_State* L, const TArray<T>& v) {
+        static typename std::enable_if<DeduceType<T>::value != EPropertyClass::Struct, int>::type push(lua_State* L, const TArray<T>& v) {
             FProperty* prop = PropertyProto::createDeduceProperty<T>();
+            auto array = reinterpret_cast<const FScriptArray*>(&v);
+            return push(L, prop, const_cast<FScriptArray*>(array), false);
+        }
+
+        template<typename T>
+        static typename std::enable_if<DeduceType<T>::value == EPropertyClass::Struct, int>::type push(lua_State* L, const TArray<T>& v)
+        {
+            FProperty* prop = PropertyProto::createDeduceProperty<T>(T::StaticStruct());
             auto array = reinterpret_cast<const FScriptArray*>(&v);
             return push(L, prop, const_cast<FScriptArray*>(array), false);
         }
@@ -42,8 +50,13 @@ namespace NS_SLUA {
         LuaArray(FArrayProperty* arrayProp, FScriptArray* buf, bool bIsRef, struct FLuaNetSerializationProxy* netProxy, uint16 replicatedIndex);
         ~LuaArray();
 
-        FScriptArray* get() {
+        FScriptArray* get() const {
             return array;
+        }
+
+        FProperty* getInnerProp() const
+        {
+            return inner;
         }
 
         static bool markDirty(LuaArray* luaArray);
@@ -76,7 +89,13 @@ namespace NS_SLUA {
         static int Insert(lua_State* L);
         static int Clear(lua_State* L);
         static int Pairs(lua_State* L);
-        static int Enumerable(lua_State* L);
+        static int PairsLessGC(lua_State* L);
+        static int Iterate(lua_State* L);
+        static int IterateReverse(lua_State* L);
+        static int PushElement(lua_State* L, LuaArray* UD, int32 index);
+        static int IterateLessGC(lua_State* L);
+        static int IterateLessGCReverse(lua_State* L);
+        static int PushElementLessGC(lua_State* L, LuaArray* UD, int32 index);
         static int CreateValueTypeObject(lua_State* L);
 
     private:
@@ -100,11 +119,5 @@ namespace NS_SLUA {
 
         static int setupMT(lua_State* L);
         static int gc(lua_State* L);
-
-        struct Enumerator {
-            LuaArray* arr = nullptr;
-            int32 index = 0;
-            static int gc(lua_State* L);
-        };
     };
 }

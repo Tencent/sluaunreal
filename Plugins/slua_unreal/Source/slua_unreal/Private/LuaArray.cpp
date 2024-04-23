@@ -21,9 +21,6 @@
 #include "LuaNetSerialization.h"
 
 namespace NS_SLUA {
-
-    DefTypeName(LuaArray::Enumerator); 
-
     void LuaArray::reg(lua_State* L) {
         SluaUtil::reg(L,"Array",__ctor);
     }
@@ -103,7 +100,8 @@ namespace NS_SLUA {
             // should destroy inner property value
             clear();
             ensure(array);
-            SafeDelete(array);
+            delete array;
+            array = nullptr;
         }
 
         if (isNewInner)
@@ -152,7 +150,12 @@ namespace NS_SLUA {
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
             Collector.AddReferencedObject(inner);
 #else
-            inner->AddReferencedObjects(Collector);
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION >= 4
+            TObjectPtr<UObject> ownerObject = inner->GetOwnerUObject();
+#else
+            auto ownerObject = inner->GetOwnerUObject();
+#endif
+            Collector.AddReferencedObject(ownerObject);
 #endif
         }
 
@@ -278,23 +281,33 @@ namespace NS_SLUA {
     }
 
     int LuaArray::__ctor(lua_State* L) {
-        auto type = (EPropertyClass) LuaObject::checkValue<int>(L,1);
+        auto type = (EPropertyClass)LuaObject::checkValue<int>(L,1);
+        FProperty* prop;
+        switch (type)
+        {
+        case EPropertyClass::Object:
+            {
+                auto cls = LuaObject::checkValueOpt<UClass*>(L, 2, nullptr);
+                if (!cls)
+                    luaL_error(L, "Array of UObject should have second parameter is UClass");
+                prop = PropertyProto::createProperty(PropertyProto(type, cls));
+            }
+            break;
+        case EPropertyClass::Struct:
+            {
+                auto scriptStruct = LuaObject::checkValueOpt<UScriptStruct*>(L, 2, nullptr);
+                if (!scriptStruct)
+                    luaL_error(L, "Array of UStruct should have second parameter is UStruct");
+                prop = PropertyProto::createProperty(PropertyProto(type, scriptStruct));
+            }
+            break;
+        default:
+            prop = PropertyProto::createProperty(PropertyProto(type));
+            break;
+        }
+        
         auto array = FScriptArray();
-        if (type == EPropertyClass::Object)
-        {
-            auto cls = LuaObject::checkValueOpt<UClass*>(L, 2, nullptr);
-            if (!cls)
-                luaL_error(L, "Array of UObject should have second parameter is UClass");
-            return push(L, PropertyProto::createProperty(PropertyProto(type, cls)), &array, true);
-        }
-        else if (type == EPropertyClass::Struct)
-        {
-            auto scriptStruct = LuaObject::checkValueOpt<UScriptStruct*>(L, 2, nullptr);
-            if (!scriptStruct)
-                luaL_error(L, "Array of UStruct should have second parameter is UStruct");
-            return push(L, PropertyProto::createProperty(PropertyProto(type, scriptStruct)), &array, true);
-        }
-        return push(L, PropertyProto::createProperty(PropertyProto(type)), &array, true);
+        return push(L, prop, &array, true);
     }
 
     int LuaArray::Num(lua_State* L) {
@@ -376,7 +389,7 @@ namespace NS_SLUA {
         uint8* newElement = UD->add();
         auto checker = LuaObject::getChecker(element);
         if(checker) {
-	        checker(L,element,newElement,2,true);
+            checker(L,element,newElement,2,true);
 
             markDirty(UD);
 
@@ -457,32 +470,152 @@ namespace NS_SLUA {
         if (!UD) {
             luaL_error(L, "arg 1 expect LuaArray, but got nil!");
         }
-        auto iter = new LuaArray::Enumerator();
-        
-        iter->arr = UD;
-        iter->index = 0;
-        lua_pushcfunction(L, LuaArray::Enumerable);
-        LuaObject::pushType(L, iter, "LuaArray::Enumerator", nullptr, LuaArray::Enumerator::gc, 1);
-        // hold referrence of LuaArray, avoid gc
-        lua_pushvalue(L, 1);
-        lua_setuservalue(L,3);
-        LuaObject::pushNil(L);
+
+        bool bReverse = !!lua_toboolean(L, 2);
+
+        if (bReverse)
+        {
+            lua_pushcfunction(L, LuaArray::IterateReverse);
+            lua_pushvalue(L, 1);
+            lua_pushinteger(L, UD->num());
+        }
+        else
+        {
+            lua_pushcfunction(L, LuaArray::Iterate);
+            lua_pushvalue(L, 1);
+            lua_pushinteger(L, -1);
+        }
         
         return 3;
     }
 
-    int LuaArray::Enumerable(lua_State* L) {
-        CheckUD(LuaArray::Enumerator, L, 1);
-        auto arr = UD->arr;
-        if (arr->isValidIndex(UD->index)) {
-            auto element = arr->inner;
+    int LuaArray::PairsLessGC(lua_State* L)
+    {
+        CheckUD(LuaArray, L, 1);
+        if (!UD) {
+            luaL_error(L, "arg 1 expect LuaArray, but got nil!");
+        }
+        static auto structProp = FStructProperty::StaticClass();
+        auto innerClass = UD->inner->GetClass();
+        if (innerClass != structProp) {
+            luaL_error(L, "%s arrays do not support LessGC enumeration! Only struct type arrays are supported!", TCHAR_TO_UTF8(*innerClass->GetName()));
+        }
+
+        if (UD->num() <= 1)
+        {
+            lua_pushcfunction(L, LuaArray::Iterate);
+            lua_pushvalue(L, 1);
+            lua_pushinteger(L, -1);
+            return 3;
+        }
+        
+        bool bReverse = !!lua_toboolean(L, 2);
+
+        if (bReverse)
+        {
+            lua_pushnil(L);
+            lua_pushcclosure(L, LuaArray::IterateLessGCReverse, 1);
+            lua_pushvalue(L, 1);
+            lua_pushinteger(L, UD->num());
+        }
+        else
+        {
+            lua_pushnil(L);
+            lua_pushcclosure(L, IterateLessGC, 1);
+            lua_pushvalue(L, 1);
+            lua_pushinteger(L, -1);
+        }
+        
+        return 3;
+    }
+
+    int LuaArray::Iterate(lua_State* L) {
+        CheckUD(LuaArray, L, 1);
+        const int32 i = luaL_checkinteger(L, 2) + 1;
+        return PushElement(L, UD, i);
+    }
+
+    int LuaArray::IterateReverse(lua_State* L)
+    {
+        CheckUD(LuaArray, L, 1);
+        const int32 i = luaL_checkinteger(L, 2) - 1;
+        return PushElement(L, UD, i);
+    }
+
+    int LuaArray::PushElement(lua_State* L, LuaArray* UD, int32 index)
+    {
+        auto arr = UD->array;
+        if (arr->IsValidIndex(index))
+        {
+            auto element = UD->inner;
             auto es = element->ElementSize;
-            auto parms = ((uint8*)arr->array->GetData()) + UD->index * es;
-            LuaObject::push(L, UD->index);
+            auto parms = ((uint8*)arr->GetData()) + index * es;
+            lua_pushinteger(L, index);
             LuaObject::push(L, element, parms);
-            UD->index += 1;
             return 2;
-        } 
+        }
+
+        return 0;
+    }
+
+    int LuaArray::IterateLessGC(lua_State* L)
+    {
+        CheckUD(LuaArray, L, 1);
+        const int32 i = luaL_checkinteger(L, 2) + 1;
+        return PushElementLessGC(L, UD, i);
+    }
+
+    int LuaArray::IterateLessGCReverse(lua_State* L)
+    {
+        CheckUD(LuaArray, L, 1);
+        const int32 i = luaL_checkinteger(L, 2) - 1;
+        return PushElementLessGC(L, UD, i);
+    }
+
+    int LuaArray::PushElementLessGC(lua_State* L, LuaArray* UD, int32 index)
+    {
+        auto arr = UD->array;
+        if (arr->IsValidIndex(index))
+        {
+            auto element = UD->inner;
+            auto es = element->ElementSize;
+            auto parms = ((uint8*)arr->GetData()) + index * es;
+            lua_pushinteger(L, index);
+
+            auto genUD = (GenericUserData*)lua_touserdata(L, lua_upvalueindex(1));
+            if (!genUD)
+            {
+                LuaObject::push(L, element, parms);
+
+                CallInfo* ci = L->ci;
+#if 504 == LUA_VERSION_NUM
+                CClosure* cl = clCvalue(s2v(ci->func));
+#else
+                CClosure* cl = clCvalue(ci->func);
+#endif
+                setobj2n(L, &cl->upvalue[0], L->top - 1);
+            }
+            else
+            {
+                if (genUD->flag & UD_VALUETYPE)
+                {
+                    auto inner = UD->inner;
+                    inner->CopyCompleteValue(genUD->ud, parms);
+                }
+                else
+                {
+                    LuaStruct* ls = (LuaStruct*)genUD->ud;
+                    auto uss = ls->uss;
+                    auto buf = ls->buf;
+                    uss->CopyScriptStruct(buf, parms);
+                }
+
+                lua_pushvalue(L,lua_upvalueindex(1));
+            }
+            
+            return 2;
+        }
+
         return 0;
     }
 
@@ -507,6 +640,7 @@ namespace NS_SLUA {
         LuaObject::setupMTSelfSearch(L);
 
         RegMetaMethod(L,Pairs);
+        RegMetaMethod(L,PairsLessGC);
         RegMetaMethod(L,Num);
         RegMetaMethod(L,Get);
         RegMetaMethod(L,Set);
@@ -523,7 +657,7 @@ namespace NS_SLUA {
     }
 
     int LuaArray::gc(lua_State* L) {
-        auto userdata = (UserData<LuaArray*>*)luaL_testudata(L, 1, "LuaArray");
+        auto userdata = (UserData<LuaArray*>*)lua_touserdata(L, 1);
         auto self = userdata->ud;
         if (!userdata->parent && !(userdata->flag & UD_HADFREE)) {
             LuaObject::releaseLink(L, self->get());
@@ -532,13 +666,7 @@ namespace NS_SLUA {
             LuaObject::unlinkProp(L, userdata);
         }
         
-        delete userdata->ud;
-        return 0;
-    }
-
-    int LuaArray::Enumerator::gc(lua_State* L) {
-        CheckUD(LuaArray::Enumerator, L, 1);
-        delete UD;
+        delete self;
         return 0;
     }
 }

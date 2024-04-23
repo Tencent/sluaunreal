@@ -23,10 +23,6 @@
 #include "Engine/World.h"
 #include "lua.h"
 
-#ifndef SafeDelete
-#define SafeDelete(ptr) if(ptr) { delete ptr;ptr=nullptr; }
-#endif
-
 namespace NS_SLUA {
 
     template<typename T>

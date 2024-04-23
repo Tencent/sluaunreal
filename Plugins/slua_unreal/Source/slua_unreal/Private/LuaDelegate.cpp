@@ -18,15 +18,23 @@
 #include "LuaState.h"
 #include "SluaUtil.h"
 
+static TMap<int64, TWeakObjectPtr<UObject>> DelegateHandleToObjectMap;
+static int64 DelegateHandle = 0;
+
 ULuaDelegate::ULuaDelegate(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
     ,luafunction(nullptr)
     ,ufunction(nullptr)
+    ,handle(0)
 {
 }
 
 ULuaDelegate::~ULuaDelegate() {
-    SafeDelete(luafunction);
+    if (luafunction)
+    {
+        delete luafunction;
+        luafunction = nullptr;
+    }
 }
 
 void ULuaDelegate::EventTrigger()
@@ -65,8 +73,50 @@ void ULuaDelegate::bindFunction(UFunction *ufunc) {
 
 void ULuaDelegate::dispose()
 {
-    SafeDelete(luafunction);
-    ufunction = nullptr;
+    if (luafunction)
+    {
+        delete luafunction;
+        luafunction = nullptr;
+    }
+}
+
+int ULuaDelegate::addLuaDelegate(NS_SLUA::lua_State* L, ULuaDelegate* obj)
+{
+    DelegateHandle++;
+    obj->handle = DelegateHandle;
+    DelegateHandleToObjectMap.Emplace(DelegateHandle, obj);
+
+    // add reference
+    NS_SLUA::LuaObject::addRef(L,obj,nullptr,true);
+
+    lua_pushinteger(L, DelegateHandle);
+    return 1;
+}
+
+int ULuaDelegate::removeLuaDelegate(NS_SLUA::lua_State* L, ULuaDelegate* obj)
+{
+    DelegateHandleToObjectMap.Remove(obj->handle);
+
+    // remove reference
+    NS_SLUA::LuaObject::removeRef(L,obj);
+    obj->dispose();
+
+    return 0;
+}
+
+int ULuaDelegate::removeLuaDelegateByHandle(slua::lua_State* L, int64 handle)
+{
+    auto objPtr = DelegateHandleToObjectMap.Find(handle);
+    if (!objPtr)
+    {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+    auto obj = Cast<ULuaDelegate>(objPtr->Get());
+    removeLuaDelegate(L, obj);
+
+    lua_pushboolean(L, 1);
+    return 1;
 }
 
 namespace NS_SLUA {
@@ -119,32 +169,25 @@ namespace NS_SLUA {
             UD->delegate->AddUnique(Delegate);
         }
 
-        // add reference
-        LuaObject::addRef(L,obj,nullptr,true);
-
-        lua_pushlightuserdata(L,obj);
-        return 1;
+        return ULuaDelegate::addLuaDelegate(L, obj);
     }
 
     int LuaMultiDelegate::Remove(lua_State* L) {
         CheckUD(LuaMultiDelegateWrap,L,1);
-        if(!lua_islightuserdata(L,2))
-            luaL_error(L,"arg 2 expect ULuaDelegate");
-        auto obj =  reinterpret_cast<ULuaDelegate*>(lua_touserdata(L,2));
 
-        auto *luaState = LuaState::get(L);
-        auto &map = luaState->cacheSet();
-        
-        if (!map.Contains(obj) || !obj->IsValidLowLevel())
+        int64 handle = lua_tointeger(L, 2);
+        if (handle <= 0)
+            luaL_error(L,"arg 2 expect integer type of handle");
+        auto objPtr = DelegateHandleToObjectMap.Find(handle);
+        auto obj = objPtr ? objPtr->Get() : nullptr;
+        if (!obj)
         {
-#if UE_BUILD_DEVELOPMENT
-            luaL_error(L, "Invalid ULuaDelegate!");
-#endif
             return 0;
         }
+        auto delegateObj = Cast<ULuaDelegate>(obj);
 
         FScriptDelegate Delegate;
-        Delegate.BindUFunction(obj, TEXT("EventTrigger"));
+        Delegate.BindUFunction(delegateObj, TEXT("EventTrigger"));
 
         // remove delegate
 #if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
@@ -158,10 +201,7 @@ namespace NS_SLUA {
             UD->delegate->Remove(Delegate);
         }
 
-        // remove reference
-        LuaObject::removeRef(L,obj);
-        obj->dispose();
-
+        ULuaDelegate::removeLuaDelegate(L, delegateObj);
         return 0;
     }
 
@@ -174,8 +214,7 @@ namespace NS_SLUA {
                 ULuaDelegate* delegateObj = Cast<ULuaDelegate>(it);
                 if (delegateObj)
                 {
-                    delegateObj->dispose();
-                    LuaObject::removeRef(L, it);
+                    ULuaDelegate::removeLuaDelegate(L, delegateObj);
                 }
             }
         };
@@ -238,9 +277,14 @@ namespace NS_SLUA {
         return 0;
     }
 
-    int LuaMultiDelegate::gc(lua_State* L) { 
-        CheckUD(LuaMultiDelegateWrap,L,1);
-        delete UD;
+    int LuaMultiDelegate::gc(lua_State* L) {
+        auto userdata = (UserData<LuaMultiDelegateWrap*>*)lua_touserdata(L, 1);
+        auto self = userdata->ud;
+        if (!userdata->parent && !(userdata->flag & UD_HADFREE))
+            LuaObject::releaseLink(L, self->delegate);
+        if (userdata->parent)
+            LuaObject::unlinkProp(L, userdata);
+        delete self;
         return 0;    
     }
    
@@ -285,8 +329,7 @@ namespace NS_SLUA {
             ULuaDelegate* delegateObj = Cast<ULuaDelegate>(object);
             if (delegateObj)
             {
-                LuaObject::removeRef(L, object);
-                delegateObj->dispose();
+                ULuaDelegate::removeLuaDelegate(L, delegateObj);
             }
         }
         ldw->delegate->Clear();
@@ -308,11 +351,7 @@ namespace NS_SLUA {
 
         UD->delegate->BindUFunction(obj, TEXT("EventTrigger"));
 
-        // add reference
-        LuaObject::addRef(L, obj, nullptr, true);
-
-        lua_pushlightuserdata(L, obj);
-        return 1;
+        return ULuaDelegate::addLuaDelegate(L, obj);
     }
 
     int LuaDelegate::Clear(lua_State* L)
@@ -346,8 +385,13 @@ namespace NS_SLUA {
 
     int LuaDelegate::gc(lua_State* L)
     {
-        CheckUD(LuaDelegateWrap, L, 1);
-        delete UD;
+        auto userdata = (UserData<LuaDelegateWrap*>*)lua_touserdata(L, 1);
+        auto self = userdata->ud;
+        if (!userdata->parent && !(userdata->flag & UD_HADFREE))
+            LuaObject::releaseLink(L, self->delegate);
+        if (userdata->parent)
+            LuaObject::unlinkProp(L, userdata);
+        delete self;
         return 0;
     }
 

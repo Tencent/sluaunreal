@@ -58,7 +58,11 @@ namespace NS_SLUA {
         {
             return;
         }
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION >= 4
+        bool BegunPlay = World->GetBegunPlay();
+#else
         bool BegunPlay = World->bBegunPlay;
+#endif
         if (!BegunPlay)
         {
             if (SimulatingObj && SimulatingObj->GetClass() == Obj->GetClass())

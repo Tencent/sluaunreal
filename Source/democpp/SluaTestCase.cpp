@@ -311,10 +311,14 @@ namespace NS_SLUA {
 
 	DefLuaClass(FHttpModule)
 		DefLuaMethod_With_Lambda(Get, true, []()->FHttpModule* {
-		return &FHttpModule::Get();
+			return &FHttpModule::Get();
 		})
 		DefLuaMethod(CreateRequest, &FHttpModule::CreateRequest)
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION >= 4
+		DefLuaMethod(GetHttpTimeout, &FHttpModule::GetHttpActivityTimeout)
+#else
 		DefLuaMethod(GetHttpTimeout, &FHttpModule::GetHttpTimeout)
+#endif
 
 	EndDef(FHttpModule,nullptr)
 }

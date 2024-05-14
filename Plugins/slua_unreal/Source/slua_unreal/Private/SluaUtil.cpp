@@ -20,6 +20,8 @@
 #include <chrono>
 
 namespace NS_SLUA {
+    uint32 SimpleString::Seed = FPlatformTime::Cycles();
+
     FString getUObjName(UObject* obj) {
 #if WITH_EDITOR
         if (auto ld = Cast<ULuaDelegate>(obj)) {

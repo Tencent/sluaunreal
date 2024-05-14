@@ -355,8 +355,10 @@ namespace NS_SLUA {
                 vars[n].s->release();
         }
         numOfVar = 0;
-        delete[] vars;
-        vars = nullptr;
+        if (vars) {
+            delete[] vars;
+            vars = nullptr;
+        }
     }
 
     void LuaVar::alloc(int n) {

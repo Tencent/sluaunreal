@@ -148,60 +148,144 @@ namespace NS_SLUA {
     int LuaMultiDelegate::Add(lua_State* L) {
         CheckUD(LuaMultiDelegateWrap,L,1);
 
-        // bind luafucntion and signature function
-        auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(),ULuaDelegate::StaticClass());
+        int type = lua_type(L, 2);
+        switch (type)
+        {
+        case LUA_TFUNCTION:
+            {
+                // bind luafucntion and signature function
+                auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(),ULuaDelegate::StaticClass());
 #if WITH_EDITOR
-        obj->setPropName(UD->pName);
+                obj->setPropName(UD->pName);
 #endif
-        obj->bindFunction(L,2,UD->funcAcc->func);
+                obj->bindFunction(L,2,UD->funcAcc->func);
 
-        // add event listener
-        FScriptDelegate Delegate;
-        Delegate.BindUFunction(obj, TEXT("EventTrigger"));
+                // add event listener
+                FScriptDelegate Delegate;
+                Delegate.BindUFunction(obj, TEXT("EventTrigger"));
 #if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
-        if (UD->sparseProp)
-        {
-            UD->sparseProp->AddDelegate(Delegate, nullptr, UD->sparseDelegate);
-        }
-        else
+                if (UD->sparseProp)
+                {
+                    UD->sparseProp->AddDelegate(Delegate, nullptr, UD->sparseDelegate);
+                }
+                else
 #endif
-        {
-            UD->delegate->AddUnique(Delegate);
+                {
+                    UD->delegate->AddUnique(Delegate);
+                }
+                return ULuaDelegate::addLuaDelegate(L, obj);
+            }
+            break;
+        case LUA_TUSERDATA:
+        case LUA_TTABLE:
+            {
+                UObject* obj = LuaObject::checkUD<UObject>(L, 2);
+                if (!obj)
+                {
+                    luaL_error(L, "Argument 2nd expect UObject but got %s!", lua_typename(L, 2));
+                }
+
+                FName funcName = UTF8_TO_TCHAR(lua_tostring(L, 3));
+                auto cls = obj->GetClass();
+                if (!cls->FindFunctionByName(funcName))
+                {
+                    luaL_error(L, "Can't find function %s to bind to delegate!", lua_tostring(L, 3));
+                }
+                // add event listener
+                FScriptDelegate Delegate;
+                Delegate.BindUFunction(obj, funcName);
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
+                if (UD->sparseProp)
+                {
+                    UD->sparseProp->AddDelegate(Delegate, nullptr, UD->sparseDelegate);
+                }
+                else
+#endif
+                {
+                    UD->delegate->AddUnique(Delegate);
+                }
+            }
+            break;
+        default:
+            break;
         }
 
-        return ULuaDelegate::addLuaDelegate(L, obj);
+        return 0;
     }
 
     int LuaMultiDelegate::Remove(lua_State* L) {
         CheckUD(LuaMultiDelegateWrap,L,1);
 
-        int64 handle = lua_tointeger(L, 2);
-        if (handle <= 0)
-            luaL_error(L,"arg 2 expect integer type of handle");
-        auto objPtr = DelegateHandleToObjectMap.Find(handle);
-        auto obj = objPtr ? objPtr->Get() : nullptr;
-        if (!obj)
+        int type = lua_type(L, 2);
+        switch (type)
         {
-            return 0;
-        }
-        auto delegateObj = Cast<ULuaDelegate>(obj);
+        case LUA_TNUMBER:
+            {
+                int64 handle = lua_tointeger(L, 2);
+                if (handle <= 0)
+                    luaL_error(L,"arg 2 expect integer type of handle");
+                auto objPtr = DelegateHandleToObjectMap.Find(handle);
+                auto obj = objPtr ? objPtr->Get() : nullptr;
+                if (!obj)
+                {
+                    return 0;
+                }
+                auto delegateObj = Cast<ULuaDelegate>(obj);
 
-        FScriptDelegate Delegate;
-        Delegate.BindUFunction(delegateObj, TEXT("EventTrigger"));
+                FScriptDelegate Delegate;
+                Delegate.BindUFunction(delegateObj, TEXT("EventTrigger"));
 
-        // remove delegate
+                // remove delegate
 #if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
-        if (UD->sparseProp)
-        {
-            UD->sparseProp->RemoveDelegate(Delegate, nullptr, UD->sparseDelegate);
-        }
-        else
+                if (UD->sparseProp)
+                {
+                    UD->sparseProp->RemoveDelegate(Delegate, nullptr, UD->sparseDelegate);
+                }
+                else
 #endif
-        {
-            UD->delegate->Remove(Delegate);
-        }
+                {
+                    UD->delegate->Remove(Delegate);
+                }
 
-        ULuaDelegate::removeLuaDelegate(L, delegateObj);
+                ULuaDelegate::removeLuaDelegate(L, delegateObj);
+            }
+            break;
+        case LUA_TUSERDATA:
+        case LUA_TTABLE:
+            {
+                UObject* obj = LuaObject::checkUD<UObject>(L, 2);
+                if (!obj)
+                {
+                    luaL_error(L, "Argument 2nd expect UObject but got %s!", lua_typename(L, 2));
+                }
+
+                FName funcName = UTF8_TO_TCHAR(lua_tostring(L, 3));
+                auto cls = obj->GetClass();
+                if (!cls->FindFunctionByName(funcName))
+                {
+                    luaL_error(L, "Can't find function %s to bind to delegate!", lua_tostring(L, 3));
+                }
+                // add event listener
+                FScriptDelegate Delegate;
+                Delegate.BindUFunction(obj, funcName);
+
+                // remove delegate
+#if !((ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4))
+                if (UD->sparseProp)
+                {
+                    UD->sparseProp->RemoveDelegate(Delegate, nullptr, UD->sparseDelegate);
+                }
+                else
+#endif
+                {
+                    UD->delegate->Remove(Delegate);
+                }
+            }
+            break;
+        default:
+            break;
+        }
+        
         return 0;
     }
 
@@ -342,16 +426,47 @@ namespace NS_SLUA {
         // clear old delegate object
         if(UD) clear(L,UD);
 
-        // bind luafucntion and signature function
-        auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(), ULuaDelegate::StaticClass());
+        int type = lua_type(L, 2);
+        switch (type)
+        {
+        case LUA_TFUNCTION:
+            {
+                // bind luafucntion and signature function
+                auto obj = NewObject<ULuaDelegate>((UObject*)GetTransientPackage(), ULuaDelegate::StaticClass());
 #if WITH_EDITOR 
-        obj->setPropName(UD->pName);
+                obj->setPropName(UD->pName);
 #endif
-        obj->bindFunction(L, 2, UD->funcAcc->func);
+                obj->bindFunction(L, 2, UD->funcAcc->func);
 
-        UD->delegate->BindUFunction(obj, TEXT("EventTrigger"));
+                UD->delegate->BindUFunction(obj, TEXT("EventTrigger"));
 
-        return ULuaDelegate::addLuaDelegate(L, obj);
+                return ULuaDelegate::addLuaDelegate(L, obj);
+            }
+            break;
+        case LUA_TUSERDATA:
+        case LUA_TTABLE:
+            {
+                UObject* obj = LuaObject::checkUD<UObject>(L, 2);
+                if (!obj)
+                {
+                    luaL_error(L, "Argument 2nd expect UObject but got %s!", lua_typename(L, 2));
+                }
+
+                FName funcName = UTF8_TO_TCHAR(lua_tostring(L, 3));
+                auto cls = obj->GetClass();
+                if (!cls->FindFunctionByName(funcName))
+                {
+                    luaL_error(L, "Can't find function %s to bind to delegate!", lua_tostring(L, 3));
+                }
+
+                UD->delegate->BindUFunction(obj, funcName);
+            }
+            break;
+        default:
+            break;
+        }
+
+        return 0;
     }
 
     int LuaDelegate::Clear(lua_State* L)

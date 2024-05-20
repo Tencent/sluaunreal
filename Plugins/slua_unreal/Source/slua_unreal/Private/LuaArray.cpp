@@ -13,7 +13,6 @@
 
 #include "LuaArray.h"
 #include "LuaObject.h"
-#include <string>
 
 #include "SluaLib.h"
 #include "LuaState.h"
@@ -588,12 +587,18 @@ namespace NS_SLUA {
                 LuaObject::push(L, element, parms);
 
                 CallInfo* ci = L->ci;
-#if 504 == LUA_VERSION_NUM
-                CClosure* cl = clCvalue(s2v(ci->func));
+
+#if LUA_VERSION_NUM > 503
+                auto func = s2v(ci->func);
 #else
-                CClosure* cl = clCvalue(ci->func);
+                auto func = ci->func;
 #endif
-                setobj2n(L, &cl->upvalue[0], L->top - 1);
+                setobjs2s(L, L->top, func);
+                L->top++;
+
+                lua_pushvalue(L, -2);
+                lua_setupvalue(L, -2, 1);
+                L->top--;
             }
             else
             {

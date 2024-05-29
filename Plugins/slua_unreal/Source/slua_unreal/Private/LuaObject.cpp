@@ -971,7 +971,11 @@ namespace NS_SLUA {
 
                         auto prop = (FProperty*)pvalue(&f->upvalue[0]);
                         void* pusher = pvalue(&f->upvalue[1]);
+#if LUA_VERSION_NUM >= 504
+                        bool bReferencePusher = l_isfalse(&f->upvalue[3]);
+#else
                         bool bReferencePusher = !!bvalue(&f->upvalue[3]);
+#endif
                         if (bReferencePusher)
                         {
                             auto ud = reinterpret_cast<GenericUserData*>(lua_touserdata(L, 1));
@@ -1016,7 +1020,13 @@ namespace NS_SLUA {
 
                         auto prop = (FProperty*)pvalue(&f->upvalue[0]);
                         void* pusher = pvalue(&f->upvalue[1]);
+
+#if LUA_VERSION_NUM >= 504
+                        bool bReferencePusher = l_isfalse(&f->upvalue[3]);
+#else
                         bool bReferencePusher = !!bvalue(&f->upvalue[3]);
+#endif
+
                         if (bReferencePusher)
                         {
                             return pushReferenceAndCache((ReferencePusherPropertyFunction)pusher, L,

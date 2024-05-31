@@ -588,11 +588,7 @@ namespace NS_SLUA {
 
                 CallInfo* ci = L->ci;
 
-#if LUA_VERSION_NUM > 503
-                auto func = s2v(ci->func);
-#else
                 auto func = ci->func;
-#endif
                 setobjs2s(L, L->top, func);
                 L->top++;
 

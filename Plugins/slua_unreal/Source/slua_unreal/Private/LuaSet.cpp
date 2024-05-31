@@ -378,7 +378,7 @@ namespace NS_SLUA
         }
         else 
         {
-            checkSlow(Slack >= 0);
+            checkSlow(slack >= 0);
             const int32 OldNum = num();
             if (OldNum || slack) 
             {

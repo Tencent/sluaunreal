@@ -17,6 +17,9 @@
 #endif
 
 #include "LuaObject.h"
+#if LUA_VERSION_NUM >= 504
+#include <lgc.h>
+#endif
 #include "LuaDelegate.h"
 #include "LatentDelegate.h"
 #include "UObject/Class.h"
@@ -895,13 +898,16 @@ namespace NS_SLUA {
             if (type == LUA_TFUNCTION)
             {
                 // get metatable __index function's upvalue[0]
-#if LUA_VERSION_NUM > 503
+#if LUA_VERSION_NUM >= 504
+#define G(L) (L->l_G)
                 TValue* v = s2v(L->top - 1);
                 CClosure* f = clCvalue(v);
+                setobj2s(L, L->top - 1, &f->upvalue[0]);
+#undef G
 #else
                 CClosure* f = clCvalue(L->top - 1);
-#endif
                 setobj2s(L, L->top - 1, &f->upvalue[0]);
+#endif
 
                 lua_pushvalue(L, -2); // push self table
                 lua_pushvalue(L, keyIndex); // push key
@@ -972,7 +978,7 @@ namespace NS_SLUA {
                         auto prop = (FProperty*)pvalue(&f->upvalue[0]);
                         void* pusher = pvalue(&f->upvalue[1]);
 #if LUA_VERSION_NUM >= 504
-                        bool bReferencePusher = l_isfalse(&f->upvalue[3]);
+                        bool bReferencePusher = !l_isfalse(&f->upvalue[3]);
 #else
                         bool bReferencePusher = !!bvalue(&f->upvalue[3]);
 #endif
@@ -1022,7 +1028,7 @@ namespace NS_SLUA {
                         void* pusher = pvalue(&f->upvalue[1]);
 
 #if LUA_VERSION_NUM >= 504
-                        bool bReferencePusher = l_isfalse(&f->upvalue[3]);
+                        bool bReferencePusher = !l_isfalse(&f->upvalue[3]);
 #else
                         bool bReferencePusher = !!bvalue(&f->upvalue[3]);
 #endif

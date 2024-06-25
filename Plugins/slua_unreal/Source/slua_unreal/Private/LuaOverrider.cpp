@@ -246,7 +246,7 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
 
     if (bCallFromNative || !Stack.OutParms || bContextOp)
     {
-        if (RESULT_PARAM && func->ReturnValueOffset != MAX_uint16)
+        if (!bCallSuper && (RESULT_PARAM && func->ReturnValueOffset != MAX_uint16))
         {
             auto prop = func->GetReturnProperty();
             FOutParmRec* out = bContextOp ? nullptr : Stack.OutParms;
@@ -922,7 +922,7 @@ namespace NS_SLUA
         classAddedFuncs.Remove(cls);
         if (cls->IsValidLowLevel())
         {
-        	cacheNativeFuncs.Remove(cls);
+            cacheNativeFuncs.Remove(cls);
         }
 #endif
         classHookedFuncNames.Remove(cls);
@@ -1249,13 +1249,22 @@ namespace NS_SLUA
         lua_pop(L, 2);
 #endif
         
-        if (!overridedClasses.Contains(cls)) {
+        if (!overridedClasses.Contains(cls) || bHookInstancedObj) {
             SCOPE_CYCLE_COUNTER(STAT_LuaOverrider_do_bindOverrideFuncs);
 
-            overridedClasses.Add(cls);
+            overridedClasses.Emplace(cls);
 
             TSet<FName> funcNames;
             getLuaFunctions(L, funcNames, luaModule);
+
+            if (bHookInstancedObj)
+            {
+                auto hookedFuncsPtr = classHookedFuncNames.Find(cls);
+                if (hookedFuncsPtr)
+                {
+                    funcNames = hookedFuncsPtr->Difference(funcNames);
+                }
+            }
 
             int hookCounter = 0;
             for (auto& funcName : funcNames) {
@@ -1272,7 +1281,10 @@ namespace NS_SLUA
 
             luaNet->addClassRPC(L, cls, luaFilePath);
             //NS_SLUA::Log::Log("LuaOverrider::bindOverrideFuncs luafile:%s totalFuncs:%d, cost:%.5fs", TCHAR_TO_UTF8(*luaFilePath), hookCounter, FPlatformTime::Seconds() - CurTime);
-            classHookedFuncNames.Add(cls, funcNames);
+            if (!bHookInstancedObj)
+            {
+                classHookedFuncNames.Emplace(cls, funcNames);
+            }
         }
 
         bool bNetReplicated = false;

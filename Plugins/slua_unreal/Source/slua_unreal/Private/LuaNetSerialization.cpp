@@ -849,7 +849,7 @@ bool FLuaNetSerialization::UpdateChangeListMgr(NS_SLUA::FLuaNetSerializationProx
         return false;
     }
 
-    if (proxy.dirtyMark.IsEmpty())
+    if (proxy.flatDirtyMark.IsEmpty())
     {
         proxy.bDirtyThisFrame = false;
         proxy.lastReplicationFrame = ReplicationFrame;

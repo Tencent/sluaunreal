@@ -764,7 +764,7 @@ bool FLuaNetSerialization::CompareProperties(UObject* obj, NS_SLUA::FLuaNetSeria
                 if (newArrayNum > NS_SLUA::ClassLuaReplicated::MaxArrayLimit)
                 {
                     UE_LOG(Slua, Error, TEXT("FLuaNetSerialization::CompareProperties Error: Object[%s]'s replicated property[%s] array num[%d] is greater than MaxArrayLimit!"),
-                        *obj->GetFullName(), *flatProp->GetName(), newArrayNum);
+                        *obj->GetFullName(), *classLuaReplicated->replicatedIndexToNameMap[propIndex], newArrayNum);
                 }
                 int32 newLen = FMath::Min(newArrayNum, NS_SLUA::ClassLuaReplicated::MaxArrayLimit);
                 int32 oldLen = oldArrayHelper.Num();
@@ -849,7 +849,7 @@ bool FLuaNetSerialization::UpdateChangeListMgr(NS_SLUA::FLuaNetSerializationProx
         return false;
     }
 
-    if (proxy.dirtyMark.IsEmpty())
+    if (proxy.flatDirtyMark.IsEmpty())
     {
         proxy.bDirtyThisFrame = false;
         proxy.lastReplicationFrame = ReplicationFrame;

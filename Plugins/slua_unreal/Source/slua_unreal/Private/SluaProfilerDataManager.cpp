@@ -30,7 +30,7 @@ void SluaProfilerDataManager::StopManager()
 }
 
 
-void SluaProfilerDataManager::ReceiveProfileData(int hookEvent, int64 time, int lineDefined, FString funcName, FString shortSrc)
+void SluaProfilerDataManager::ReceiveProfileData(int hookEvent, int64 time, int lineDefined, const FString& funcName, const FString& shortSrc)
 {
     if (ProcessRunnable)
     {
@@ -63,7 +63,7 @@ void SluaProfilerDataManager::ClearData()
 }
 
 
-void SluaProfilerDataManager::SaveDataWithData(int CpuViewBeginIndex, int MemViewBeginIndex, ProfileNodeArrayArray& ProfileData, MemNodeInfoList LuaMemNodeList, FString SavePath)
+void SluaProfilerDataManager::SaveDataWithData(int CpuViewBeginIndex, int MemViewBeginIndex, ProfileNodeArrayArray& ProfileData, const MemNodeInfoList& LuaMemNodeList, FString SavePath)
 {
     if (!ProcessRunnable)
     {
@@ -266,7 +266,7 @@ uint32 FProfileDataProcessRunnable::Run()
     return 0;
 }
 
-void FProfileDataProcessRunnable::ReceiveProfileData(int hookEvent, int64 time, int lineDefined, FString funcName, FString shortSrc)
+void FProfileDataProcessRunnable::ReceiveProfileData(int hookEvent, int64 time, int lineDefined, const FString& funcName, const FString& shortSrc)
 {
     if (!bIsRecording)
     {
@@ -372,7 +372,7 @@ void FProfileDataProcessRunnable::SaveData()
 }
 
 
-void FProfileDataProcessRunnable::SaveDataWithData(int CpuViewBeginIndex, int MemViewBeginIndex, ProfileNodeArrayArray& ProfileData, MemNodeInfoList& LuaMemNodeList, FString SavePath)
+void FProfileDataProcessRunnable::SaveDataWithData(int CpuViewBeginIndex, int MemViewBeginIndex, ProfileNodeArrayArray& ProfileData, const MemNodeInfoList& LuaMemNodeList, FString SavePath)
 {
     UE_LOG(Slua, Log, TEXT("BEGIN SAVE DATA"));
     bool tempRecording = bIsRecording;
@@ -435,7 +435,7 @@ void FProfileDataProcessRunnable::LoadData(const TArray<uint8>& FileData, int& C
     }
 }
 
-void FProfileDataProcessRunnable::SerializeSave(FBufferArchive* BufferArchive, int CpuViewBeginIndex, int MemViewBeginIndex, ProfileNodeArrayArray& ProfileData, MemNodeInfoList& LuaMemNodeList)
+void FProfileDataProcessRunnable::SerializeSave(FBufferArchive* BufferArchive, int CpuViewBeginIndex, int MemViewBeginIndex, ProfileNodeArrayArray& ProfileData, const MemNodeInfoList& LuaMemNodeList)
 {
     UE_LOG(Slua, Log, TEXT("BEGIN SerializeSave ProfileNum : %d, CpuViewBeginIndex: %d, "), ProfileData.Num(), CpuViewBeginIndex);
     BufferArchive->Seek(0);

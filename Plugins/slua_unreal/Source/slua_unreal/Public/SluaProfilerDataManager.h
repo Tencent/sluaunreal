@@ -22,12 +22,12 @@ public:
     virtual uint32 Run() override;
 
     //接收性能数据
-    void ReceiveProfileData(int hookEvent, int64 time, int lineDefined, FString funcName, FString shortSrc);
+    void ReceiveProfileData(int hookEvent, int64 time, int lineDefined, const FString& funcName, const FString& shortSrc);
     //接收内存数据
     void ReceiveMemoryData(int hookEvent, TArray<NS_SLUA::LuaMemInfo>& memInfoList);
 
     //用外部数据存储数据
-    void SaveDataWithData(int CpuViewBeginIndex, int MemViewBeginIndex,ProfileNodeArrayArray& ProfileData, MemNodeInfoList& LuaMemNodeList, FString SavePath = "");
+    void SaveDataWithData(int CpuViewBeginIndex, int MemViewBeginIndex,ProfileNodeArrayArray& ProfileData, const MemNodeInfoList& LuaMemNodeList, FString SavePath = "");
 
     //存储数据
     void SaveData();
@@ -72,7 +72,7 @@ private:
     void ClearCurProfiler();
 
     //压缩存储及解压部分 BEGIN
-    void SerializeSave(FBufferArchive* BufferArchive, int CpuViewBeginIndex, int MemViewBeginIndex, ProfileNodeArrayArray& ProfileData, MemNodeInfoList& LuaMemNodeList);
+    void SerializeSave(FBufferArchive* BufferArchive, int CpuViewBeginIndex, int MemViewBeginIndex, ProfileNodeArrayArray& ProfileData, const MemNodeInfoList& LuaMemNodeList);
     void DeserializeCompressedSave(FBufferArchive* BufAr, int& CpuViewBeginIndex, int& MemViewBeginIndex, ProfileNodeArrayArray& ProfileData, MemNodeInfoList& LuaMemNodeList);
     //压缩存储及解压部分 END
 };
@@ -85,12 +85,12 @@ public:
     static void StopManager();
 
     //接收性能数据
-    static void ReceiveProfileData(int hookEvent, int64 time, int lineDefined, FString funcName, FString shortSrc);
+    static void ReceiveProfileData(int hookEvent, int64 time, int lineDefined, const FString& funcName, const FString& shortSrc);
     //接收内存数据
 	static void ReceiveMemoryData(int hookEvent, TArray<NS_SLUA::LuaMemInfo>& memInfoList);
 
     //用外部数据存储数据
-    static void SaveDataWithData(int CpuViewBeginIndex, int MemViewBeginIndex, ProfileNodeArrayArray& ProfileData, MemNodeInfoList LuaMemNodeList, FString SavePath = "");
+    static void SaveDataWithData(int CpuViewBeginIndex, int MemViewBeginIndex, ProfileNodeArrayArray& ProfileData, const MemNodeInfoList& LuaMemNodeList, FString SavePath = "");
 
     //开始录制
     static void BeginRecord();

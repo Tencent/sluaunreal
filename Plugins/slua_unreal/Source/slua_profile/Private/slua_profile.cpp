@@ -132,7 +132,8 @@ TSharedRef<class SDockTab> Fslua_profileModule::OnSpawnPluginTab(const FSpawnTab
         auto tab = sluaProfilerInspector->GetSDockTab();
 
         tab->SetOnTabClosed(SDockTab::FOnTabClosedCallback::CreateRaw(this, &Fslua_profileModule::OnTabClosed));
-        SluaProfilerDataManager::InitProfileNode(funcProfilerRoot, ROOT_NAME, 0);
+
+        SluaProfilerDataManager::InitProfileNode(funcProfilerRoot, *FLuaFunctionDefine::Root, 0);
         sluaProfilerInspector->ProfileServer = MakeShareable(new NS_SLUA::FProfileServer());
         sluaProfilerInspector->ProfileServer->OnProfileMessageRecv().BindLambda([this](NS_SLUA::FProfileMessagePtr Message) {
             this->debug_hook_c(Message);
@@ -167,7 +168,7 @@ void Flua_profileCommands::RegisterCommands()
 
 void Fslua_profileModule::ClearCurProfiler()
 {
-    SluaProfilerDataManager::InitProfileNode(funcProfilerRoot, ROOT_NAME, 0);
+    SluaProfilerDataManager::InitProfileNode(funcProfilerRoot, *FLuaFunctionDefine::Root, 0);
     currentMemory = MakeShareable(new MemoryFrame());
     currentMemory->bMemoryTick = false;
     profilerStack.Empty();
@@ -199,14 +200,15 @@ void Fslua_profileModule::debug_hook_c(NS_SLUA::FProfileMessagePtr Message)
         {
             return;
         }
-        FString functionName = short_src;
+        /*FString functionName = short_src;
         functionName += ":";
         functionName += FString::FromInt(linedefined);
         functionName += " ";
         functionName += name;
+        */
         //UE_LOG(LogTemp, Log, TEXT("Profile Call %s"), *functionName);
 
-        SluaProfilerDataManager::WatchBegin(functionName, nanoseconds, funcProfilerRoot, profilerStack);
+        SluaProfilerDataManager::WatchBegin(short_src, linedefined, name, nanoseconds, funcProfilerRoot, profilerStack);
     }
     else if (event == NS_SLUA::ProfilerHookEvent::PHE_RETURN)
     {
@@ -215,14 +217,15 @@ void Fslua_profileModule::debug_hook_c(NS_SLUA::FProfileMessagePtr Message)
             return;
         }
         
-        FString functionName = short_src;
+        /*FString functionName = short_src;
         functionName += ":";
         functionName += FString::FromInt(linedefined);
         functionName += " ";
         functionName += name;
+        */
         //UE_LOG(LogTemp, Log, TEXT("Profile Return %s"), *functionName);
 
-        SluaProfilerDataManager::WatchEnd(functionName, nanoseconds, profilerStack);
+        SluaProfilerDataManager::WatchEnd(short_src, linedefined, name, nanoseconds, profilerStack);
     }
     else if (event == NS_SLUA::ProfilerHookEvent::PHE_TICK)
     {
@@ -241,15 +244,16 @@ void Fslua_profileModule::debug_hook_c(NS_SLUA::FProfileMessagePtr Message)
     }
     else if (event == NS_SLUA::ProfilerHookEvent::PHE_ENTER_COROUTINE)
     {
-        FString functionName = TEXT("");
+        /*FString functionName = TEXT("");
         functionName += ":";
         functionName += FString::FromInt(linedefined);
         functionName += " ";
         functionName += name;
+        */
 
         //UE_LOG(LogTemp, Log, TEXT("Profile CoBegin %s"), *functionName);
         
-        SluaProfilerDataManager::CoroutineBegin(functionName, nanoseconds, funcProfilerRoot, profilerStack);
+        SluaProfilerDataManager::CoroutineBegin(linedefined, name, nanoseconds, funcProfilerRoot, profilerStack);
     }
     else if (event == NS_SLUA::ProfilerHookEvent::PHE_EXIT_COROUTINE)
     {

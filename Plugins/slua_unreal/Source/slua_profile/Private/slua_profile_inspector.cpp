@@ -81,9 +81,10 @@ void SProfilerInspector::StartChartRolling()
     isMemMouseButtonUp = false;
 }
 
-FString SProfilerInspector::GenBrevFuncName(const FString &functionName)
+FString SProfilerInspector::GenBrevFuncName(const FLuaFunctionDefine &functionDefine)
 {
     TArray<FString> strArray;
+    FString functionName = functionDefine.GetFullName();
     FString brevName = functionName;
     brevName.ReplaceInline(TEXT("\\"), TEXT("/"));
     int32 arrayNum = brevName.ParseIntoArray(strArray, TEXT("/"));
@@ -959,7 +960,7 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<Fil
     FText difference;
     FLinearColor linearColor;
     
-    if(Item->lineNumber.Equals("-1", ESearchCase::CaseSensitive))
+    if(Item->lineNumber == -1)
         difference = FText::FromString("");
     else
         difference = FText::FromString(ChooseMemoryUnit(Item->difference / 1024.0));
@@ -978,12 +979,13 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<Fil
     [
          SNew(SHeaderRow)
          + SHeaderRow::Column("Overview").DefaultLabel(TAttribute<FText>::Create([Item]() {
-            if (!Item->hint.IsEmpty())
+            FString fileName = FProfileNameSet::GlobalProfileNameSet->GetStringByIndex(Item->fileNameIndex);
+            if (!fileName.IsEmpty())
             {
-                FString fileNameInfo = FPaths::GetCleanFilename(Item->hint);
+                FString fileNameInfo = FPaths::GetCleanFilename(fileName);
                 
-                if(!Item->lineNumber.Equals("-1", ESearchCase::CaseSensitive))
-                    fileNameInfo += ":" + Item->lineNumber;
+                if(Item->lineNumber != -1)
+                    fileNameInfo += ":" + FString::FromInt(Item->lineNumber);
                 return FText::FromString(fileNameInfo);
             }
             return FText::FromString("");
@@ -1011,10 +1013,9 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<Fil
 
 void SProfilerInspector::OnGetMemChildrenForTree(TSharedPtr<FileMemInfo> Parent, TArray<TSharedPtr<FileMemInfo>>& OutChildren)
 {
-    if(!Parent->lineNumber.Equals("-1", ESearchCase::CaseSensitive)) return;
-
-    FString fileName = Parent->hint;
-    auto &fileInfos = shownFileInfo.FindChecked(fileName);
+    if (Parent->lineNumber != -1) return;
+    FString fileName = FProfileNameSet::GlobalProfileNameSet->GetStringByIndex(Parent->fileNameIndex);
+    auto &fileInfos = shownFileInfo.FindChecked(Parent->fileNameIndex);
     for (auto &line:fileInfos)
     {
         OutChildren.Add(line.Value);
@@ -1040,7 +1041,7 @@ void SProfilerInspector::OnGetChildrenForTree(TSharedPtr<FunctionProfileNode> pa
     }
 
     TSharedPtr<FunctionProfileNode> otherNode = MakeShareable(new FunctionProfileNode);
-    SluaProfilerDataManager::InitProfileNode(otherNode, "Other", parent->layerIdx + 1);
+    SluaProfilerDataManager::InitProfileNode(otherNode, *FLuaFunctionDefine::Other, parent->layerIdx + 1);
     otherNode->costTime = parent->costTime - childNodeCostTime;
     OutChildren.Add(otherNode);
     OutChildren.StableSort([](const TSharedPtr<FunctionProfileNode>& lhs, const TSharedPtr<FunctionProfileNode>& rhs)
@@ -1067,11 +1068,11 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateRowForList(TSharedPtr<Functi
         [
             SNew(SHeaderRow)
             + SHeaderRow::Column("Overview").DefaultLabel(TAttribute<FText>::Create([this, Item]() {
-                FString Name = GenBrevFuncName(Item->functionName);
+                FString Name = GenBrevFuncName(Item->functionDefine);
                 return FText::FromString(Name);
             }))
             .FixedWidth(rowWidth).DefaultTooltip(TAttribute<FText>::Create([Item]() {
-                return FText::FromString(Item->functionName);
+                return FText::FromString(Item->functionDefine.GetFullName());
             }))
             + SHeaderRow::Column("Time ms").DefaultLabel(TAttribute<FText>::Create([this, Item]() {
                 return FText::AsNumber(Item->costTime / perMilliSec);
@@ -1097,7 +1098,8 @@ void SProfilerInspector::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& mem
         memoryInfoMap.Add(memFileInfo.ptr, memFileInfo);
         lastLuaTotalMemSize += memFileInfo.size;
 
-        auto* fileInfos = memNode->infoList.Find(memFileInfo.hint);
+        uint32 fileNameIndex = FProfileNameSet::GlobalProfileNameSet->GetOrCreateIndex(memFileInfo.hint);
+        auto* fileInfos = memNode->infoList.Find(fileNameIndex);
         if (!fileInfos)
         {
 #if ENGINE_MAJOR_VERSION==5
@@ -1105,7 +1107,7 @@ void SProfilerInspector::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& mem
 #else
             TMap<int, TSharedPtr<FileMemInfo, ESPMode::Fast>> newFileInfos;
 #endif
-            fileInfos = &memNode->infoList.Add(memFileInfo.hint, newFileInfos);
+            fileInfos = &memNode->infoList.Add(fileNameIndex, newFileInfos);
         }
 
         auto lineInfo = fileInfos->Find(memFileInfo.lineNumber);
@@ -1116,20 +1118,20 @@ void SProfilerInspector::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& mem
         else
         {
             FileMemInfo* fileInfo = new FileMemInfo();
-            fileInfo->hint = memFileInfo.hint;
-            fileInfo->lineNumber = FString::Printf(TEXT("%d"), memFileInfo.lineNumber);
+            fileInfo->fileNameIndex = fileNameIndex;
+            fileInfo->lineNumber = memFileInfo.lineNumber;
             fileInfo->size = memFileInfo.size;
             fileInfos->Add(memFileInfo.lineNumber, MakeShareable(fileInfo));
         }
 
-        auto* parentFileInfo = memNode->parentFileMap.Find(memFileInfo.hint);
+        auto* parentFileInfo = memNode->parentFileMap.Find(fileNameIndex);
         if (!parentFileInfo)
         {
             FileMemInfo* fileInfo = new FileMemInfo();
-            fileInfo->hint = memFileInfo.hint;
-            fileInfo->lineNumber = TEXT("-1");
+            fileInfo->fileNameIndex = fileNameIndex;
+            fileInfo->lineNumber = -1;
             fileInfo->size = memFileInfo.size;
-            memNode->parentFileMap.Add(memFileInfo.hint, MakeShareable(fileInfo));
+            memNode->parentFileMap.Add(fileNameIndex, MakeShareable(fileInfo));
         }
         else
         {
@@ -1144,14 +1146,15 @@ void SProfilerInspector::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& mem
             memoryInfoMap.Remove(memFileInfo.ptr);
             lastLuaTotalMemSize -= memFileInfo.size;
 
-            auto fileInfos = memNode->infoList.Find(memFileInfo.hint);
+            uint32 fileNameIndex = FProfileNameSet::GlobalProfileNameSet->GetOrCreateIndex(memFileInfo.hint);
+            auto fileInfos = memNode->infoList.Find(fileNameIndex);
             if (fileInfos)
             {
                 auto* lineInfo = fileInfos->Find(memFileInfo.lineNumber);
                 if (lineInfo)
                 {
                     (*lineInfo)->size -= memFileInfo.size;
-                    ensureMsgf((*lineInfo)->size >= 0, TEXT("Error: %s line[%d] size is negative!"), *(*lineInfo)->hint, memFileInfo.lineNumber);
+                    ensureMsgf((*lineInfo)->size >= 0, TEXT("Error: %s line[%d] size is negative!"), *FProfileNameSet::GlobalProfileNameSet->GetStringByIndex((*lineInfo)->fileNameIndex), memFileInfo.lineNumber);
                     if ((*lineInfo)->size <= 0)
                     {
                         fileInfos->Remove(memFileInfo.lineNumber);
@@ -1159,7 +1162,7 @@ void SProfilerInspector::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& mem
                 }
             }
 
-            auto& parentFileInfo = memNode->parentFileMap.FindChecked(memFileInfo.hint);
+            auto& parentFileInfo = memNode->parentFileMap.FindChecked(fileNameIndex);
             parentFileInfo->size -= memFileInfo.size;
         }
     };
@@ -1279,8 +1282,8 @@ void SProfilerInspector::CalcPointMemdiff(int beginIndex, int endIndex)
 
     for (auto& fileInfoIter : allLuaMemNodeList[beginIndex]->infoList)
     {
-        const FString& fileHint = fileInfoIter.Key;
-        auto *showInfo = shownFileInfo.Find(fileHint);
+        auto fileNameIndex = fileInfoIter.Key;
+        auto *showInfo = shownFileInfo.Find(fileNameIndex);
         if (showInfo)
         {
             for (auto& lineInfo : fileInfoIter.Value)
@@ -1294,7 +1297,7 @@ void SProfilerInspector::CalcPointMemdiff(int beginIndex, int endIndex)
                 else
                 {
                     FileMemInfo *newInfo = new FileMemInfo();
-                    newInfo->hint = lineInfo.Value->hint;
+                    newInfo->fileNameIndex = lineInfo.Value->fileNameIndex;
                     newInfo->lineNumber = lineInfo.Value->lineNumber;
                     newInfo->size = 0.0f;
                     newInfo->difference -= lineInfo.Value->size;

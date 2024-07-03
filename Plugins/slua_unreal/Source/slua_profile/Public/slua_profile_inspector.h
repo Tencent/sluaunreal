@@ -116,7 +116,7 @@ private:
     void ShowProfilerTree(TArray<TSharedPtr<FunctionProfileNode>>&selectedProfiler);
     void CheckBoxChanged(ECheckBoxState newState);
     
-    FString GenBrevFuncName(const FString &functionName);
+    FString GenBrevFuncName(const FLuaFunctionDefine &functionDefine);
     
     void RestartMemoryStatistis();
     void OnClearBtnClicked();

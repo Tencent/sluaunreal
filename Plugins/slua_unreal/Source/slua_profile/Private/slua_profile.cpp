@@ -200,12 +200,6 @@ void Fslua_profileModule::debug_hook_c(NS_SLUA::FProfileMessagePtr Message)
         {
             return;
         }
-        /*FString functionName = short_src;
-        functionName += ":";
-        functionName += FString::FromInt(linedefined);
-        functionName += " ";
-        functionName += name;
-        */
         //UE_LOG(LogTemp, Log, TEXT("Profile Call %s"), *functionName);
 
         SluaProfilerDataManager::WatchBegin(short_src, linedefined, name, nanoseconds, funcProfilerRoot, profilerStack);
@@ -217,12 +211,6 @@ void Fslua_profileModule::debug_hook_c(NS_SLUA::FProfileMessagePtr Message)
             return;
         }
         
-        /*FString functionName = short_src;
-        functionName += ":";
-        functionName += FString::FromInt(linedefined);
-        functionName += " ";
-        functionName += name;
-        */
         //UE_LOG(LogTemp, Log, TEXT("Profile Return %s"), *functionName);
 
         SluaProfilerDataManager::WatchEnd(short_src, linedefined, name, nanoseconds, profilerStack);
@@ -244,13 +232,6 @@ void Fslua_profileModule::debug_hook_c(NS_SLUA::FProfileMessagePtr Message)
     }
     else if (event == NS_SLUA::ProfilerHookEvent::PHE_ENTER_COROUTINE)
     {
-        /*FString functionName = TEXT("");
-        functionName += ":";
-        functionName += FString::FromInt(linedefined);
-        functionName += " ";
-        functionName += name;
-        */
-
         //UE_LOG(LogTemp, Log, TEXT("Profile CoBegin %s"), *functionName);
         
         SluaProfilerDataManager::CoroutineBegin(linedefined, name, nanoseconds, funcProfilerRoot, profilerStack);

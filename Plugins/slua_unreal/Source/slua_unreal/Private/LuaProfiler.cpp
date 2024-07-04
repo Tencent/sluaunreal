@@ -482,6 +482,9 @@ namespace NS_SLUA {
             profiler.callField("stop", profiler);
             selfProfiler.Remove(LS);
         }
+
+        SluaProfilerDataManager::EndRecord();
+
         tcpSocket = nullptr;
         ignoreHook = false;
         currentHookState = HookState::UNHOOK;

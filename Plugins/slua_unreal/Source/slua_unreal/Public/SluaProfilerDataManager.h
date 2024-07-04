@@ -39,10 +39,15 @@ public:
 
     void ClearData();
 
-    bool bIsRecording = false;
+    void StartRecord();
+    void StopRecord();
+
 private:
+    void SerializeFrameData(FArchive& ar, TArray<TSharedPtr<FunctionProfileNode>>& frameFuncRootArr, TSharedPtr<FProflierMemNode>& frameMemNode);
+
     FRunnableThread* WorkerThread;
 
+    bool bIsRecording = false;
     bool RunnableStart = false;
 
     int cpuViewBeginIndex;
@@ -60,6 +65,10 @@ private:
     ProfileCallInfoArray profilerStack;
     MemoryFramePtr currentMemory;
     LuaMemInfoMap memoryInfo;
+
+    FArchive* frameArchive = nullptr;
+    bool bCanStartFrameRecord = false;
+    bool bFrameFirstRecord = false;
 
     void PreProcessData(TSharedPtr<FunctionProfileNode> funcInfoRoot, TMap<int64, NS_SLUA::LuaMemInfo>& memoryInfoMap, MemoryFramePtr memoryFrame);
 

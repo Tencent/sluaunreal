@@ -4,42 +4,6 @@ FProfileNameSet* FProfileNameSet::GlobalProfileNameSet = nullptr;
 FLuaFunctionDefine* FLuaFunctionDefine::Root = new FLuaFunctionDefine();
 FLuaFunctionDefine* FLuaFunctionDefine::Other = new FLuaFunctionDefine();
 
-void FProfileNodeArray::Serialize(FArchive& Ar)
-{
-    if (Ar.IsLoading())
-    {
-        int32 childNum = 0;
-        Ar << childNum;
-        NodeArray.Reserve(childNum);
-
-        for (int i = 0; i < childNum; ++i)
-        {
-            FString name;
-            TSharedPtr<FunctionProfileNode> node = MakeShared<FunctionProfileNode>();
-            node->Serialize(Ar);
-            NodeArray.Add(node);
-        }
-    }
-    else if (Ar.IsSaving())
-    {
-        int32 childNum = NodeArray.Num();
-        Ar << childNum;
-
-        for (auto node : NodeArray)
-        {
-            if(node.IsValid())
-            {
-                node->Serialize(Ar);
-            }
-            else
-            {
-                TSharedPtr<FunctionProfileNode> emptyNode = MakeShared<FunctionProfileNode>();
-                emptyNode->Serialize(Ar);
-            }
-        }
-    }
-}
-
 void FileMemInfo::Serialize(FArchive& Ar)
 {
     Ar << fileNameIndex;

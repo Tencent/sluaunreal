@@ -27,36 +27,31 @@ static const int cMaxViewHeight = 200;
 static const int cRefreshDisCount = 10;
 static int32 ProfileVersion = 4;
 
-USTRUCT()
-struct SLUA_UNREAL_API FProfileNodeArray
+enum SLUA_UNREAL_API FSaveMode
 {
-    GENERATED_BODY();
-
-public:
-    TArray<TSharedPtr<FunctionProfileNode>> NodeArray;
-
-    void Serialize(FArchive& Ar);
+    AllInOne,
+    Frame,
+    EndOfFrame,
 };
 
-USTRUCT()
 struct SLUA_UNREAL_API FProfileNameSet
 {
-    GENERATED_BODY()
-
     static constexpr uint32 InvalidIndex = 0;
     static FProfileNameSet* GlobalProfileNameSet;
 
-    UPROPERTY()
     TMap<uint32, FString> indexToString;
 
-    UPROPERTY()
     TMap<FString, uint32> stringToIndex;
 
-    UPROPERTY()
     TSet<uint32> indexSet;
+
+    TMap<uint32, FString> increaseString;
+
+    FCriticalSection mutex;
 
     uint32 GetOrCreateIndex(const FString& content)
     {
+        FScopeLock lock(&mutex);
         uint32* indexPtr = stringToIndex.Find(content);
         if (indexPtr)
         {
@@ -71,12 +66,16 @@ struct SLUA_UNREAL_API FProfileNameSet
 
         stringToIndex.Emplace(content, hashKey);
         indexToString.Emplace(hashKey, content);
+        indexSet.Add(hashKey);
+
+        increaseString.Emplace(hashKey, content);
 
         return hashKey;
     }
 
     uint32 GetIndex(const FString& content)
     {
+        FScopeLock lock(&mutex);
         uint32* indexPtr = stringToIndex.Find(content);
         if (indexPtr)
         {
@@ -88,6 +87,7 @@ struct SLUA_UNREAL_API FProfileNameSet
 
     FString GetStringByIndex(uint32 index)
     {
+        FScopeLock lock(&mutex);
         FString* content = indexToString.Find(index);
         if (content)
         {
@@ -97,11 +97,21 @@ struct SLUA_UNREAL_API FProfileNameSet
         return TEXT("");
     }
 
-    friend FArchive& operator<<(FArchive& Ar, FProfileNameSet& ProfileNameSet)
+    friend FArchive& operator<<(FArchive& Ar, FProfileNameSet& profileNameSet)
     {
-        Ar << ProfileNameSet.indexToString;
-        Ar << ProfileNameSet.stringToIndex;
-        Ar << ProfileNameSet.indexSet;
+        FScopeLock lock(&profileNameSet.mutex);
+
+        Ar << profileNameSet.indexToString;
+        Ar << profileNameSet.indexSet;
+        if (Ar.IsLoading())
+        {
+            auto& stringToIndex = profileNameSet.stringToIndex;
+            for (auto iter = profileNameSet.indexToString.CreateConstIterator(); iter; ++iter)
+            {
+                stringToIndex.Emplace(iter.Value(), iter.Key());
+            }
+        }
+        profileNameSet.increaseString.Empty();
         return Ar;
     }
 };

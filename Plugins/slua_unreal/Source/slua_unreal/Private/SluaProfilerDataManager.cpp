@@ -287,13 +287,6 @@ void FProfileDataProcessRunnable::ReceiveProfileData(int hookEvent, int64 time, 
         {
             return;
         }
-        /*FString functionName = shortSrc;
-        functionName += ":";
-        functionName += FString::FromInt(lineDefined);
-        functionName += " ";
-        functionName += funcName;
-        */
-        //UE_LOG(Slua, Log, TEXT("Profile Call %s"), *functionName);
 
         SluaProfilerDataManager::WatchBegin(shortSrc, lineDefined, funcName, time, funcProfilerRoot, profilerStack);
     }
@@ -303,14 +296,6 @@ void FProfileDataProcessRunnable::ReceiveProfileData(int hookEvent, int64 time, 
         {
             return;
         }
-
-        /*FString functionName = shortSrc;
-        functionName += ":";
-        functionName += FString::FromInt(lineDefined);
-        functionName += " ";
-        functionName += funcName;
-        */
-        //UE_LOG(Slua, Log, TEXT("Profile Return %s"), *functionName);
 
         SluaProfilerDataManager::WatchEnd(shortSrc, lineDefined, funcName, time, profilerStack);
     }
@@ -322,15 +307,9 @@ void FProfileDataProcessRunnable::ReceiveProfileData(int hookEvent, int64 time, 
     }
     else if (hookEvent == NS_SLUA::ProfilerHookEvent::PHE_ENTER_COROUTINE)
     {
-        FString functionName = TEXT("");
-        functionName += ":";
-        functionName += FString::FromInt(lineDefined);
-        functionName += " ";
-        functionName += funcName;
-
         //UE_LOG(Slua, Log, TEXT("Profile CoBegin %s"), *functionName);
 
-        SluaProfilerDataManager::CoroutineBegin(lineDefined, functionName, time, funcProfilerRoot, profilerStack);
+        SluaProfilerDataManager::CoroutineBegin(lineDefined, funcName, time, funcProfilerRoot, profilerStack);
     }
     else if (hookEvent == NS_SLUA::ProfilerHookEvent::PHE_EXIT_COROUTINE)
     {
@@ -438,7 +417,7 @@ void FProfileDataProcessRunnable::SerializeSave(FArchive* inAR, int inCpuViewBeg
     *inAR << inCpuViewBeginIndex;
     int32 allDataLen = inProfileData.Num();
     *inAR << allDataLen;
-    TSharedPtr<FunctionProfileNode> emptyNode = MakeShared<FunctionProfileNode>();
+
     //cpu
     for (int i = 0; i < allDataLen; i++) {
         auto& arr = inProfileData[i];

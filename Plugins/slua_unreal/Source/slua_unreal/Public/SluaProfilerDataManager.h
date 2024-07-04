@@ -34,8 +34,6 @@ public:
     //解压数据
     void LoadData(const FString& filePath, int& inCpuViewBeginIndex, int& inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, MemNodeInfoList& inLuaMemNodeList);
 
-    //每帧组合以及发送数据
-    bool Tick(slua::LuaState* LS);
     //清除数据
     void OnClearDataWithCallBack(TFunction<void()>&& Callback);
 

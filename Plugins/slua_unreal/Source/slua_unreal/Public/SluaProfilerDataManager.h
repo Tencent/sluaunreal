@@ -32,7 +32,7 @@ public:
     //存储数据
     void SaveData();
     //解压数据
-    void LoadData(const TArray<uint8>& inFileData, int& inCpuViewBeginIndex, int& inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, MemNodeInfoList& inLuaMemNodeList);
+    void LoadData(const FString& filePath, int& inCpuViewBeginIndex, int& inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, MemNodeInfoList& inLuaMemNodeList);
 
     //每帧组合以及发送数据
     bool Tick(slua::LuaState* LS);
@@ -71,10 +71,8 @@ private:
     void initLuaMemChartList();
     void ClearCurProfiler();
 
-    //压缩存储及解压部分 BEGIN
-    void SerializeSave(FBufferArchive* inBufferArchive, int inCpuViewBeginIndex, int inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, const MemNodeInfoList& inLuaMemNodeList);
-    void DeserializeCompressedLoad(FBufferArchive* inBufAr, int& inCpuViewBeginIndex, int& inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, MemNodeInfoList& inLuaMemNodeList);
-    //压缩存储及解压部分 END
+    void SerializeSave(FArchive* inAR, int inCpuViewBeginIndex, int inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, const MemNodeInfoList& inLuaMemNodeList);
+    void SerializeLoad(FArchive* inAR, int& inCpuViewBeginIndex, int& inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, MemNodeInfoList& inLuaMemNodeList);
 };
 
 class SLUA_UNREAL_API SluaProfilerDataManager
@@ -101,7 +99,7 @@ public:
     //存储数据
     static void SaveData();
     //解压数据
-    static void LoadData(const TArray<uint8>& inFileData, int& inCpuViewBeginIndex, int& inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, MemNodeInfoList& inLuaMemNodeList);
+    static void LoadData(const FString& filePath, int& inCpuViewBeginIndex, int& inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, MemNodeInfoList& inLuaMemNodeList);
 
     //清除数据
     static void OnClearDataWithCallBack(TFunction<void()>&& Callback);

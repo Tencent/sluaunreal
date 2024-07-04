@@ -346,7 +346,7 @@ void SProfilerInspector::OnLoadFileBtnClicked()
             loadPath = OutFiles[0];
         }
     }
-    if (loadPath == "")
+    if (loadPath.IsEmpty())
     {
         NS_SLUA::Log::Log("DeserializeSave no select file");
         return;
@@ -361,7 +361,7 @@ void SProfilerInspector::OnLoadFileBtnClicked()
 
     OnClearBtnClicked();
     NS_SLUA::Log::Log("DeserializeSave filePath:%s", *loadPath);
-    SluaProfilerDataManager::LoadData(CompressData, cpuViewBeginIndex, memViewBeginIndex, allProfileData, allLuaMemNodeList);
+    SluaProfilerDataManager::LoadData(loadPath, cpuViewBeginIndex, memViewBeginIndex, allProfileData, allLuaMemNodeList);
     RefreshBarValue();
 }
 

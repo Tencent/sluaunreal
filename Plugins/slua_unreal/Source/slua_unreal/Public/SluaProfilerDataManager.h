@@ -27,7 +27,9 @@ public:
     void ReceiveMemoryData(int hookEvent, TArray<NS_SLUA::LuaMemInfo>& memInfoList);
 
     //用外部数据存储数据
-    void SaveDataWithData(int inCpuViewBeginIndex, int inMemViewBeginIndex,ProfileNodeArrayArray& inProfileData, const MemNodeInfoList& inLuaMemNodeList, FString inSavePath = "");
+    void SaveDataWithData(int inCpuViewBeginIndex, int inMemViewBeginIndex,ProfileNodeArrayArray& inProfileData, const MemNodeInfoList& inLuaMemNodeList);
+
+    static FString GenerateStatFilePath();
 
     //存储数据
     void SaveData();
@@ -44,7 +46,7 @@ public:
 
 private:
     void SerializeFrameData(FArchive& ar, TArray<TSharedPtr<FunctionProfileNode>>& frameFuncRootArr, TSharedPtr<FProflierMemNode>& frameMemNode);
-
+    static constexpr int32 CompressedSize = 1024 * 1024;
     FRunnableThread* WorkerThread;
 
     bool bIsRecording = false;
@@ -69,8 +71,10 @@ private:
     FArchive* frameArchive = nullptr;
     bool bCanStartFrameRecord = false;
     bool bFrameFirstRecord = false;
+    TArray<uint8> dataToCompress;
 
     void PreProcessData(TSharedPtr<FunctionProfileNode> funcInfoRoot, TMap<int64, NS_SLUA::LuaMemInfo>& memoryInfoMap, MemoryFramePtr memoryFrame);
+    void SerializeCompreesedDataToFile();
 
     void CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& memoryInfoMap, MemoryFramePtr memoryFrame);
 
@@ -78,8 +82,8 @@ private:
     void initLuaMemChartList();
     void ClearCurProfiler();
 
-    void SerializeSave(FArchive* inAR, int inCpuViewBeginIndex, int inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, const MemNodeInfoList& inLuaMemNodeList);
-    void SerializeLoad(FArchive* inAR, int& inCpuViewBeginIndex, int& inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, MemNodeInfoList& inLuaMemNodeList);
+    void SerializeSave(FArchive& inAR, int inCpuViewBeginIndex, int inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, const MemNodeInfoList& inLuaMemNodeList);
+    void SerializeLoad(FArchive& inAR, int& inCpuViewBeginIndex, int& inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, MemNodeInfoList& inLuaMemNodeList);
 };
 
 class SLUA_UNREAL_API SluaProfilerDataManager
@@ -95,7 +99,7 @@ public:
 	static void ReceiveMemoryData(int hookEvent, TArray<NS_SLUA::LuaMemInfo>& memInfoList);
 
     //用外部数据存储数据
-    static void SaveDataWithData(int inCpuViewBeginIndex, int inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, const MemNodeInfoList& inLuaMemNodeList, FString inSavePath = "");
+    static void SaveDataWithData(int inCpuViewBeginIndex, int inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, const MemNodeInfoList& inLuaMemNodeList);
 
     //开始录制
     static void BeginRecord();

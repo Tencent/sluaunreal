@@ -352,13 +352,6 @@ void SProfilerInspector::OnLoadFileBtnClicked()
         return;
     }
 
-    FBufferArchive BufAr;
-    TArray<uint8> CompressData;
-    if (!FFileHelper::LoadFileToArray(CompressData, *loadPath))
-    {
-        return;
-    }
-
     OnClearBtnClicked();
     NS_SLUA::Log::Log("DeserializeSave filePath:%s", *loadPath);
     SluaProfilerDataManager::LoadData(loadPath, cpuViewBeginIndex, memViewBeginIndex, allProfileData, allLuaMemNodeList);

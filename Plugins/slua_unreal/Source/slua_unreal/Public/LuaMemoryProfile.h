@@ -17,7 +17,6 @@
 
 namespace NS_SLUA {
 
-//#if WITH_EDITOR
     struct LuaMemInfo {
         FString hint;
         int size;
@@ -39,20 +38,18 @@ namespace NS_SLUA {
     }
 
     typedef TMap<void*, LuaMemInfo> MemoryDetail;
-//#endif
 
     class SLUA_UNREAL_API LuaMemoryProfile { 
     public:
         static void* alloc (void *ud, void *ptr, size_t osize, size_t nsize);
         static size_t total();
-//#if WITH_EDITOR
+
         static void start();
         static void onStart();
         static void stop();
         static void tick(class LuaState* LS);
         static const MemoryDetail& memDetail(class LuaState* LS);
         static TArray<LuaMemInfo>& memIncreaceThisFrame(class LuaState* LS);
-        //#endif
     };
 
 }

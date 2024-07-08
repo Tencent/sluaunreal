@@ -169,18 +169,18 @@ local function replaceCoroutineFuncs()
     end
 end
 
--- 本地记录性能数据的接口，true代表开始记录，false代表停止记录并保存
-function this.changeRecordState(RecordState)
-    if RecordState then
-        print("[Slua Profile] changeHookState true")
-        this.changeHookState(HookState.HOOK)
-        this.onChangeRecordState(true)
-    else
-        print("[Slua Profile] changeHookState false")
-        this.changeHookState(HookState.UNHOOK)
-        this.onChangeRecordState(false)
+-- 本地记录性能数据启动
+function this.startLocalRecord()
+    print("[Slua Profile] startLocalRecord")
+    this.changeHookState(HookState.HOOK)
+    this.onChangeRecordState(true)
+end
 
-    end
+-- 本地记录性能数据停止
+function this.stopLocalRecord()
+    print("[Slua Profile] stopLocalRecord")
+    this.changeHookState(HookState.UNHOOK)
+    this.onChangeRecordState(false)
 end
 
 replaceCoroutineFuncs()

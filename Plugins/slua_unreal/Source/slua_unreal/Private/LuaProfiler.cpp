@@ -406,6 +406,18 @@ namespace NS_SLUA {
             }
             return 0;
         }
+
+        int startMemoryTrack(lua_State* L)
+        {
+            LuaMemoryProfile::start();
+            return 0;
+        }
+
+        int stopMemoryTrack(lua_State* L)
+        {
+            LuaMemoryProfile::stop();
+            return 0;
+        }
     }
 
     lua_CFunction LuaProfiler::resumeFunc = nullptr;
@@ -431,6 +443,10 @@ namespace NS_SLUA {
         lua_setfield(L, -2, "setHookLevel");
         lua_pushcfunction(L, onChangeRecordState);
         lua_setfield(L, -2, "onChangeRecordState");
+        lua_pushcfunction(L, startMemoryTrack);
+        lua_setfield(L, -2, "startMemoryTrack");
+        lua_pushcfunction(L, stopMemoryTrack);
+        lua_setfield(L, -2, "stopMemoryTrack");
         // using native hook instead of lua hook for performance
         // set selfProfiler to global as slua_profiler
         lua_setglobal(L, "slua_profile");

@@ -44,9 +44,9 @@ namespace NS_SLUA {
         static void* alloc (void *ud, void *ptr, size_t osize, size_t nsize);
         static size_t total();
 
-        static void start();
-        static void onStart();
-        static void stop();
+        static void start(lua_State* L);
+        static void onStart(class LuaState* LS);
+        static void stop(lua_State* L);
         static void tick(class LuaState* LS);
         static const MemoryDetail& memDetail(class LuaState* LS);
         static TArray<LuaMemInfo>& memIncreaceThisFrame(class LuaState* LS);

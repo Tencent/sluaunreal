@@ -498,7 +498,8 @@ namespace NS_SLUA {
         if(L) {
 #ifdef ENABLE_PROFILER
 #if !UE_BUILD_SHIPPING
-             LuaProfiler::clean(this);
+            LuaMemoryProfile::stop(L);
+            LuaProfiler::clean(this);
 #endif
 #endif
             lua_close(L);
@@ -514,8 +515,6 @@ namespace NS_SLUA {
             delete deadLoopCheck;
             deadLoopCheck = nullptr;
         }
-
-        LuaMemoryProfile::stop();
 
         if (!mainState)
         {

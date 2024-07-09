@@ -570,7 +570,7 @@ void FProfileDataProcessRunnable::SerializeFrameData(FArchive& ar, TArray<TShare
             }
         }
         ParentFileMap& parentFileMap = memNode->parentFileMap;
-        int32 parentFileMapNum = infoMap.Num();;
+        int32 parentFileMapNum = parentFileMap.Num();;
         ar << parentFileMapNum;
         for (auto Iter = parentFileMap.CreateIterator(); Iter; ++Iter)
         {

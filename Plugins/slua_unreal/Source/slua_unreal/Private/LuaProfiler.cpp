@@ -322,6 +322,7 @@ namespace NS_SLUA {
         }
 
         int changeHookState(lua_State* L) {
+            auto LS = LuaState::get(L);
             HookState state = (HookState)lua_tointeger(L, 1);
             currentHookState = state;
             if (state == HookState::UNHOOK) {
@@ -329,9 +330,9 @@ namespace NS_SLUA {
             }
             else if (state == HookState::HOOKED) {
                 profileTotalCost = 0;
-                LuaMemoryProfile::onStart();
+                LuaMemoryProfile::onStart(LS);
 
-                auto& memoryDetail = LuaMemoryProfile::memDetail(LuaState::get(L));
+                auto& memoryDetail = LuaMemoryProfile::memDetail(LS);
                 TArray<LuaMemInfo> memoryInfoList;
                 memoryInfoList.Reserve(memoryDetail.Num());
                 for (auto& memInfo : memoryDetail) {
@@ -349,7 +350,7 @@ namespace NS_SLUA {
             else
                 luaL_error(L, "Set error value to hook state");
 
-            auto& profiler = selfProfiler.FindChecked(LuaState::get(L));
+            auto& profiler = selfProfiler.FindChecked(LS);
             profiler.callField("changeCoroutinesHookState", profiler);
             return 0;
         }
@@ -419,13 +420,13 @@ namespace NS_SLUA {
 
         int startMemoryTrack(lua_State* L)
         {
-            LuaMemoryProfile::start();
+            LuaMemoryProfile::start(L);
             return 0;
         }
 
         int stopMemoryTrack(lua_State* L)
         {
-            LuaMemoryProfile::stop();
+            LuaMemoryProfile::stop(L);
             return 0;
         }
     }

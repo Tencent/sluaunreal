@@ -25,7 +25,6 @@ namespace NS_SLUA {
     // not include alloc from lua vm
     size_t totalMemory;
     
-    int memTrack = 0;
     TMap<LuaState*, MemoryDetail> memoryRecord;
     TMap<LuaState*, TArray<LuaMemInfo>> memoryIncreaseThisFrame;
 
@@ -52,7 +51,7 @@ namespace NS_SLUA {
     }
 
     inline void addRecord(LuaState* LS, void* ptr, size_t size, LuaMemInfo &memInfo) {
-        if (!memTrack) return;
+        if (!LS->memTrack) return;
         // skip if lua_State is null, lua_State hadn't binded to LS
         lua_State* L = LS->getLuaState();
         if (!L) return;
@@ -70,7 +69,7 @@ namespace NS_SLUA {
     }
 
     inline void removeRecord(LuaState* LS, void* ptr, size_t osize) {
-        if (!memTrack) return;
+        if (!LS->memTrack) return;
         // if ptr record
 
         auto* memoryRecordDetail = TryGetMemoryRecord(LS);
@@ -112,21 +111,31 @@ namespace NS_SLUA {
         return totalMemory;
     }
 
-    void LuaMemoryProfile::start()
+    void LuaMemoryProfile::start(lua_State* L)
     {
-        memTrack = 1;
-        onStart();
+        auto LS = LuaState::get(L);
+        if (LS)
+        {
+            LS->memTrack = 1;
+            onStart(LS);
+        }
     }
 
-    void LuaMemoryProfile::onStart()
+    void LuaMemoryProfile::onStart(LuaState* LS)
     {
-        memoryRecord.Empty();
-        memoryIncreaseThisFrame.Empty();
+        auto *memoryRecord = TryGetMemoryRecord(LS);
+        auto *memoryIncrease = TryGetMemoryIncrease(LS);
+        memoryRecord->Empty();
+        memoryIncrease->Empty();
     }
 
-    void LuaMemoryProfile::stop()
+    void LuaMemoryProfile::stop(lua_State* L)
     {
-        memTrack = 0;
+        auto LS = LuaState::get(L);
+        if (LS)
+        {
+            LS->memTrack = 0;
+        }
     }
 
     void LuaMemoryProfile::tick(LuaState* LS)
@@ -166,7 +175,7 @@ namespace NS_SLUA {
     }
 
     bool getMemInfo(LuaState* ls, size_t size, LuaMemInfo& info) {
-        if (!memTrack) return false;
+        if (!ls->memTrack) return false;
         // skip if lua_State is null, lua_State hadn't binded to LS
         lua_State* L = ls->getLuaState();
         if (!L) return false;
@@ -252,23 +261,5 @@ namespace NS_SLUA {
         TEXT("slua.DumpMemoryDetail"),
         TEXT("Dump memory datail information"),
         FConsoleCommandWithOutputDeviceDelegate::CreateStatic(dumpMemoryDetail),
-        ECVF_Default);
-
-    static FAutoConsoleCommand CVarStopMemTrack(
-        TEXT("slua.StopMemoryTrack"),
-        TEXT("Stop track memory info"),
-        FConsoleCommandDelegate::CreateStatic(LuaMemoryProfile::stop),
-        ECVF_Cheat);
-
-    static FAutoConsoleCommand CVarStartMemTrack(
-        TEXT("slua.StartMemoryTrack"),
-        TEXT("Start track memory info"),
-        FConsoleCommandDelegate::CreateStatic(LuaMemoryProfile::start),
-        ECVF_Cheat);
-
-    static FAutoConsoleVariableRef CVarIsMemTrack(
-        TEXT("slua.IsMemTrack"),
-        memTrack,
-        TEXT("track memory info"),
         ECVF_Default);
 }

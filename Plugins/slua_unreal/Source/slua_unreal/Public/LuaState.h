@@ -270,6 +270,8 @@ namespace NS_SLUA {
 
     public:
         static FLuaStateInitEvent onInitEvent;
+        int memTrack = 0;
+
     protected:
         friend class NewObjectRecorder;
 

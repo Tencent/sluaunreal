@@ -270,7 +270,7 @@ uint32 FProfileDataProcessRunnable::Run()
     {
         ProcessCommands();
 
-        while (bCanStartFrameRecord && !funcProfilerNodeQueue.IsEmpty())
+        while (bCanStartFrameRecord && frameArchive && !funcProfilerNodeQueue.IsEmpty())
         {
             MemoryFramePtr memoryFrame;
             memoryQueue.Dequeue(memoryFrame);
@@ -502,13 +502,14 @@ void FProfileDataProcessRunnable::SerializeFrameData(FArchive& ar, TArray<TShare
 
     if (ar.IsLoading())
     {
-        float memNodeTotalSize;
+        double memNodeTotalSize;
         ar << memNodeTotalSize;
 
         int32 infoMapNum;
         ar << infoMapNum;
 
         MemFileInfoMap infoMap;
+        infoMap.Reserve(infoMapNum);
         for (int j = 0; j < infoMapNum; ++j)
         {
             uint32 infoMapKey;
@@ -518,6 +519,7 @@ void FProfileDataProcessRunnable::SerializeFrameData(FArchive& ar, TArray<TShare
             ar << innerMapNum;
 
             TMap<int, TSharedPtr<FileMemInfo>> innerMap;
+            innerMap.Reserve(innerMapNum);
             for (int k = 0; k < innerMapNum; ++k)
             {
                 int innerMapKey;
@@ -534,6 +536,7 @@ void FProfileDataProcessRunnable::SerializeFrameData(FArchive& ar, TArray<TShare
         ar << parentFileMapNum;
 
         ParentFileMap parentFileMap;
+        parentFileMap.Reserve(parentFileMapNum);
         for (int j = 0; j < parentFileMapNum; ++j)
         {
             uint32 parentFileMapKey;
@@ -651,6 +654,9 @@ void FProfileDataProcessRunnable::LoadData(const FString& filePath, int& inCpuVi
             return;
         }
 
+        inProfileData.Empty();
+        inLuaMemNodeList.Empty();
+
         TArray<uint8> uncompressedBuffer;
         
         while (!ar->AtEnd())
@@ -764,7 +770,7 @@ void FProfileDataProcessRunnable::SerializeLoad(FArchive& inAR, int& inCpuViewBe
 
         int32 allDataLen = 0;
         inAR << allDataLen;
-        inProfileData.Empty(allDataLen);
+        inProfileData.Reserve(allDataLen);
         //cpu
         for (int i = 0; i < allDataLen; i++) {
             TArray<TSharedPtr<FunctionProfileNode>> arr;
@@ -785,10 +791,10 @@ void FProfileDataProcessRunnable::SerializeLoad(FArchive& inAR, int& inCpuViewBe
         int32 memNodeCount;
         inAR << memNodeCount;
         inAR << inMemViewBeginIndex;
-        inLuaMemNodeList.Empty();
+        inLuaMemNodeList.Reserve(memNodeCount);
         for (int32 i = 0; i < memNodeCount; ++i)
         {
-            float memNodeTotalSize;
+            double memNodeTotalSize;
             inAR << memNodeTotalSize;
 
             int32 infoMapNum;
@@ -868,12 +874,12 @@ void FProfileDataProcessRunnable::initLuaMemChartList()
     for (int32 i = 0; i < cMaxSampleNum; i++)
     {
         TSharedPtr<FProflierMemNode> memNode = MakeShared<FProflierMemNode>();
-        memNode->totalSize = -1.0f;
+        memNode->totalSize = -1.0;
         allLuaMemNodeList.Add(memNode);
     }
 
     TSharedPtr<FProflierMemNode> memNode = MakeShared<FProflierMemNode>();
-    memNode->totalSize = 0.0f;
+    memNode->totalSize = 0.0;
     allLuaMemNodeList.Add(memNode);
     memViewBeginIndex = 0;
 }

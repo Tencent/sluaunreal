@@ -152,7 +152,7 @@ struct SLUA_UNREAL_API FProflierMemNode {
 public:
     MemFileInfoMap infoList;
 	ParentFileMap parentFileMap;
-    float totalSize;
+    double totalSize;
 
     void Serialize(FArchive& Ar);
 };

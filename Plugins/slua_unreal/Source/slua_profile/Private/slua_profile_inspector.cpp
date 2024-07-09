@@ -100,12 +100,12 @@ void SProfilerInspector::initLuaMemChartList()
     for(int32 i = 0; i < cMaxSampleNum; i++)
     {
         TSharedPtr<FProflierMemNode> memNode = MakeShareable(new FProflierMemNode);
-        memNode->totalSize = -1.0f;
+        memNode->totalSize = -1.0;
         allLuaMemNodeList.Add(memNode);
     }
 
     TSharedPtr<FProflierMemNode> memNode = MakeShareable(new FProflierMemNode);
-    memNode->totalSize = 0.0f;
+    memNode->totalSize = 0.0;
     allLuaMemNodeList.Add(memNode);
     memViewBeginIndex = 0;
 }
@@ -191,7 +191,7 @@ void SProfilerInspector::RefreshBarValue()
 {
     QUICK_SCOPE_CYCLE_COUNTER(SProfilerInspector_RefreshBarValue)
     int nodeSize = 0;
-    float totalMemory = 0.0f;
+    double totalMemory = 0.0f;
     float totalSampleValue = 0.0f;
 
     maxLuaMemory = 0.0f;
@@ -210,7 +210,7 @@ void SProfilerInspector::RefreshBarValue()
             }
             
             float totalValue = 0.0f;
-            float memorySize = 0.0f;
+            double memorySize = 0.0;
             
             // replace tmp samples and update memory node list
             for (int sampleIdx = 0; sampleIdx<sampleNum; sampleIdx++)

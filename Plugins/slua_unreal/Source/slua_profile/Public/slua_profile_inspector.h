@@ -87,8 +87,8 @@ private:
     
     float maxLuaMemory;
     float avgLuaMemory;
-    float luaTotalMemSize;
-    float lastLuaTotalMemSize;
+    double luaTotalMemSize;
+    double lastLuaTotalMemSize;
     float maxProfileSamplesCostTime;
     float avgProfileSamplesCostTime;
     bool hasCleared;

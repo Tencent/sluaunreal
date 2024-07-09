@@ -85,7 +85,7 @@ private:
 
     int cpuViewBeginIndex;
     int memViewBeginIndex;
-    float lastLuaTotalMemSize;
+    double lastLuaTotalMemSize;
 
     ProfileNodeArrayArray allProfileData;
     TArray<TSharedPtr<FunctionProfileNode>> profileRootArr;

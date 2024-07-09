@@ -23,8 +23,9 @@ public:
 
     //接收性能数据
     void ReceiveProfileData(int hookEvent, int64 time, int lineDefined, const FString& funcName, const FString& shortSrc);
+
     //接收内存数据
-    void ReceiveMemoryData(int hookEvent, TArray<NS_SLUA::LuaMemInfo>& memInfoList);
+    void ReceiveMemoryData(int hookEvent, const TArray<NS_SLUA::LuaMemInfo>& memInfoList);
 
     //用外部数据存储数据
     void SaveDataWithData(int inCpuViewBeginIndex, int inMemViewBeginIndex,ProfileNodeArrayArray& inProfileData, const MemNodeInfoList& inLuaMemNodeList);
@@ -44,10 +45,40 @@ public:
     void StartRecord();
     void StopRecord();
 
+    bool IsRecording() const;
+
 private:
     void SerializeFrameData(FArchive& ar, TArray<TSharedPtr<FunctionProfileNode>>& frameFuncRootArr, TSharedPtr<FProflierMemNode>& frameMemNode);
     static constexpr int32 CompressedSize = 1024 * 1024;
     FRunnableThread* WorkerThread;
+
+    struct FCPUCommand
+    {
+        int hookEvent;
+        int64 time;
+        int lineDefined;
+        FString funcName;
+        FString shortSrc;
+    };
+    TQueue<FCPUCommand, EQueueMode::Mpsc> cpuCommandQueue;
+
+    struct FMemoryCommand
+    {
+        int hookEvent;
+        TArray<NS_SLUA::LuaMemInfo> memInfoList;
+    };
+    TQueue<FMemoryCommand, EQueueMode::Mpsc> memoryCommandQueue;
+
+    enum FCommandType
+    {
+        ECPU,
+        EMemory,
+    };
+    TQueue<FCommandType, EQueueMode::Mpsc> commandTypeQueue;
+
+    void ProcessCommands();
+    void ProcessCPUCommand(const FCPUCommand& cpuCommand);
+    void ProcessMemoryCommand(const FMemoryCommand& memoryCommand) const;
 
     bool bIsRecording = false;
     bool RunnableStart = false;
@@ -96,7 +127,7 @@ public:
     //接收性能数据
     static void ReceiveProfileData(int hookEvent, int64 time, int lineDefined, const FString& funcName, const FString& shortSrc);
     //接收内存数据
-	static void ReceiveMemoryData(int hookEvent, TArray<NS_SLUA::LuaMemInfo>& memInfoList);
+	static void ReceiveMemoryData(int hookEvent, const TArray<NS_SLUA::LuaMemInfo>& memInfoList);
 
     //用外部数据存储数据
     static void SaveDataWithData(int inCpuViewBeginIndex, int inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, const MemNodeInfoList& inLuaMemNodeList);
@@ -106,6 +137,8 @@ public:
 
     //结束录制
     static void EndRecord();
+
+    static bool IsRecording();
 
     //存储数据
     static void SaveData();

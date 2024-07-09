@@ -48,7 +48,7 @@ void SluaProfilerDataManager::ReceiveProfileData(int hookEvent, int64 time, int 
     }
 }
 
-void SluaProfilerDataManager::ReceiveMemoryData(int hookEvent, TArray<slua::LuaMemInfo>& memInfoList)
+void SluaProfilerDataManager::ReceiveMemoryData(int hookEvent, const TArray<NS_SLUA::LuaMemInfo>& memInfoList)
 {
     if (ProcessRunnable)
     {
@@ -104,6 +104,16 @@ void SluaProfilerDataManager::EndRecord()
         ProcessRunnable->StopRecord();
 
     }
+}
+
+bool SluaProfilerDataManager::IsRecording()
+{
+    if (ProcessRunnable)
+    {
+        return ProcessRunnable->IsRecording();
+    }
+
+    return false;
 }
 
 void SluaProfilerDataManager::SaveData()
@@ -258,6 +268,8 @@ uint32 FProfileDataProcessRunnable::Run()
 {
     while (RunnableStart)
     {
+        ProcessCommands();
+
         while (bCanStartFrameRecord && !funcProfilerNodeQueue.IsEmpty())
         {
             MemoryFramePtr memoryFrame;
@@ -292,60 +304,18 @@ void FProfileDataProcessRunnable::ReceiveProfileData(int hookEvent, int64 time, 
     {
         return;
     }
-    if (hookEvent == NS_SLUA::ProfilerHookEvent::PHE_CALL)
-    {
-        if (lineDefined == -1 && funcName.IsEmpty())
-        {
-            return;
-        }
-
-        SluaProfilerDataManager::WatchBegin(shortSrc, lineDefined, funcName, time, funcProfilerRoot, profilerStack);
-    }
-    else if (hookEvent == NS_SLUA::ProfilerHookEvent::PHE_RETURN)
-    {
-        if (lineDefined == -1 && funcName.IsEmpty())
-        {
-            return;
-        }
-
-        SluaProfilerDataManager::WatchEnd(shortSrc, lineDefined, funcName, time, profilerStack);
-    }
-    else if (hookEvent == NS_SLUA::ProfilerHookEvent::PHE_TICK)
-    {
-        funcProfilerNodeQueue.Enqueue(funcProfilerRoot);
-        memoryQueue.Enqueue(currentMemory);
-
-        ClearCurProfiler();
-    }
-    else if (hookEvent == NS_SLUA::ProfilerHookEvent::PHE_ENTER_COROUTINE)
-    {
-        //UE_LOG(Slua, Log, TEXT("Profile CoBegin %s"), *functionName);
-
-        SluaProfilerDataManager::CoroutineBegin(lineDefined, funcName, time, funcProfilerRoot, profilerStack);
-    }
-    else if (hookEvent == NS_SLUA::ProfilerHookEvent::PHE_EXIT_COROUTINE)
-    {
-        //UE_LOG(Slua, Log, TEXT("Profile CoEnd"));
-        SluaProfilerDataManager::CoroutineEnd(time, profilerStack);
-    }
+    cpuCommandQueue.Enqueue({hookEvent, time, lineDefined, funcName, shortSrc});
+    commandTypeQueue.Enqueue(FCommandType::ECPU);
 }
 
-void FProfileDataProcessRunnable::ReceiveMemoryData(int hookEvent, TArray<slua::LuaMemInfo>& memInfoList)
+void FProfileDataProcessRunnable::ReceiveMemoryData(int hookEvent, const TArray<NS_SLUA::LuaMemInfo>& memInfoList)
 {
     if (!bIsRecording)
     {
         return;
     }
-
-    if (hookEvent == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK)
-    {
-        currentMemory->memoryInfoList = memInfoList;
-        currentMemory->bMemoryTick = true;
-    }
-    else if (hookEvent == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_INCREACE)
-    {
-        currentMemory->memoryIncrease = memInfoList;
-    }
+    memoryCommandQueue.Enqueue({hookEvent, memInfoList});
+    commandTypeQueue.Enqueue(FCommandType::EMemory);
 }
 
 void FProfileDataProcessRunnable::OnClearDataWithCallBack(TFunction<void()>&& Callback)
@@ -388,6 +358,99 @@ void FProfileDataProcessRunnable::StartRecord()
 void FProfileDataProcessRunnable::StopRecord()
 {
     bIsRecording = false;
+}
+
+bool FProfileDataProcessRunnable::IsRecording() const
+{
+    return bIsRecording;
+}
+
+void FProfileDataProcessRunnable::ProcessCommands()
+{
+    while (!commandTypeQueue.IsEmpty())
+    {
+        FCommandType commandType;
+        commandTypeQueue.Dequeue(commandType);
+        switch (commandType)
+        {
+        case ECPU:
+            {
+                FCPUCommand cpuCommand;
+                cpuCommandQueue.Dequeue(cpuCommand);
+                ProcessCPUCommand(cpuCommand);
+            }
+            break;
+        case EMemory:
+            {
+                FMemoryCommand memoryCommand;
+                memoryCommandQueue.Dequeue(memoryCommand);
+                ProcessMemoryCommand(memoryCommand);
+            }
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+void FProfileDataProcessRunnable::ProcessCPUCommand(const FCPUCommand& cpuCommand)
+{
+    auto hookEvent = cpuCommand.hookEvent;
+    auto time = cpuCommand.time;
+    auto lineDefined = cpuCommand.lineDefined;
+    auto& funcName = cpuCommand.funcName;
+    auto& shortSrc = cpuCommand.shortSrc;
+
+    if (hookEvent == NS_SLUA::ProfilerHookEvent::PHE_CALL)
+    {
+        if (lineDefined == -1 && funcName.IsEmpty())
+        {
+            return;
+        }
+
+        SluaProfilerDataManager::WatchBegin(shortSrc, lineDefined, funcName, time, funcProfilerRoot, profilerStack);
+    }
+    else if (hookEvent == NS_SLUA::ProfilerHookEvent::PHE_RETURN)
+    {
+        if (lineDefined == -1 && funcName.IsEmpty())
+        {
+            return;
+        }
+
+        SluaProfilerDataManager::WatchEnd(shortSrc, lineDefined, funcName, time, profilerStack);
+    }
+    else if (hookEvent == NS_SLUA::ProfilerHookEvent::PHE_TICK)
+    {
+        funcProfilerNodeQueue.Enqueue(funcProfilerRoot);
+        memoryQueue.Enqueue(currentMemory);
+
+        ClearCurProfiler();
+    }
+    else if (hookEvent == NS_SLUA::ProfilerHookEvent::PHE_ENTER_COROUTINE)
+    {
+        //UE_LOG(Slua, Log, TEXT("Profile CoBegin %s"), *functionName);
+        SluaProfilerDataManager::CoroutineBegin(lineDefined, funcName, time, funcProfilerRoot, profilerStack);
+    }
+    else if (hookEvent == NS_SLUA::ProfilerHookEvent::PHE_EXIT_COROUTINE)
+    {
+        //UE_LOG(Slua, Log, TEXT("Profile CoEnd"));
+        SluaProfilerDataManager::CoroutineEnd(time, profilerStack);
+    }
+}
+
+void FProfileDataProcessRunnable::ProcessMemoryCommand(const FMemoryCommand& memoryCommand) const
+{
+    auto hookEvent = memoryCommand.hookEvent;
+    auto& memInfoList = memoryCommand.memInfoList;
+    if (hookEvent == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_TICK)
+    {
+        currentMemory->memoryInfoList = memInfoList;
+        currentMemory->bMemoryTick = true;
+    }
+    else if (hookEvent == NS_SLUA::ProfilerHookEvent::PHE_MEMORY_INCREACE)
+    {
+        currentMemory->memoryIncrease = memInfoList;
+    }
 }
 
 void FProfileDataProcessRunnable::SerializeFrameData(FArchive& ar, TArray<TSharedPtr<FunctionProfileNode>>& frameFuncRootArr, TSharedPtr<FProflierMemNode>& frameMemNode)

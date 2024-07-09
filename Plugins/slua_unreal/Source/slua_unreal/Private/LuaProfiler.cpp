@@ -221,26 +221,36 @@ namespace NS_SLUA {
 
         void takeSample(int event,int line,const char* funcname,const char* shortsrc, int64 startTime, lua_State* L) {
             QUICK_SCOPE_CYCLE_COUNTER(LuaProfiler_takeSample)
-            // clear writer;
-            static FArrayWriter s_messageWriter;
-            s_messageWriter.Empty();
-            s_messageWriter.Seek(0);
-            makeProfilePackage(s_messageWriter, event, startTime - profileTotalCost, line, funcname, shortsrc);
-            sendMessage(s_messageWriter, L);
-
-            SluaProfilerDataManager::ReceiveProfileData(event, startTime - profileTotalCost, line, funcname, shortsrc);
+            if (!SluaProfilerDataManager::IsRecording())
+            {
+                // clear writer;
+                static FArrayWriter s_messageWriter;
+                s_messageWriter.Empty();
+                s_messageWriter.Seek(0);
+                makeProfilePackage(s_messageWriter, event, startTime - profileTotalCost, line, funcname, shortsrc);
+                sendMessage(s_messageWriter, L);
+            }
+            else
+            {
+                SluaProfilerDataManager::ReceiveProfileData(event, startTime - profileTotalCost, line, funcname, shortsrc);
+            }
         }
 
         void takeMemorySample(int event, TArray<LuaMemInfo>& memoryDetail, lua_State* L) {
             QUICK_SCOPE_CYCLE_COUNTER(LuaProfiler_takeMemorySample)
-            // clear writer;
-            static FArrayWriter s_memoryMessageWriter;
-            s_memoryMessageWriter.Empty();
-            s_memoryMessageWriter.Seek(0);
-            makeMemoryProfilePackage(s_memoryMessageWriter, event, memoryDetail);
-            sendMessage(s_memoryMessageWriter, L);
-
-            SluaProfilerDataManager::ReceiveMemoryData(event, memoryDetail);
+            if (!SluaProfilerDataManager::IsRecording())
+            {
+                // clear writer;
+                static FArrayWriter s_memoryMessageWriter;
+                s_memoryMessageWriter.Empty();
+                s_memoryMessageWriter.Seek(0);
+                makeMemoryProfilePackage(s_memoryMessageWriter, event, memoryDetail);
+                sendMessage(s_memoryMessageWriter, L);
+            }
+            else
+            {
+                SluaProfilerDataManager::ReceiveMemoryData(event, memoryDetail);
+            }
         }
 
         void debug_hook(lua_State* L, lua_Debug* ar) {

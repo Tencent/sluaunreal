@@ -32,8 +32,6 @@ public:
 
     static FString GenerateStatFilePath();
 
-    //存储数据
-    void SaveData();
     //解压数据
     void LoadData(const FString& filePath, int& inCpuViewBeginIndex, int& inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, MemNodeInfoList& inLuaMemNodeList);
 
@@ -83,15 +81,12 @@ private:
     bool bIsRecording = false;
     bool RunnableStart = false;
 
-    int cpuViewBeginIndex;
-    int memViewBeginIndex;
     double lastLuaTotalMemSize;
 
     ProfileNodeArrayArray allProfileData;
     TArray<TSharedPtr<FunctionProfileNode>> profileRootArr;
     TQueue<TSharedPtr<FunctionProfileNode>, EQueueMode::Mpsc> funcProfilerNodeQueue;
     TSharedPtr<FProflierMemNode> lastLuaMemNode;
-    MemNodeInfoList allLuaMemNodeList;
 
     MemoryFrameQueue memoryQueue;
     ProfileNodePtr funcProfilerRoot;
@@ -110,7 +105,6 @@ private:
     void CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& memoryInfoMap, MemoryFramePtr memoryFrame);
 
     void RestartMemoryStatistis();
-    void initLuaMemChartList();
     void ClearCurProfiler();
 
     void SerializeSave(FArchive& inAR, int inCpuViewBeginIndex, int inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, const MemNodeInfoList& inLuaMemNodeList);
@@ -140,8 +134,6 @@ public:
 
     static bool IsRecording();
 
-    //存储数据
-    static void SaveData();
     //解压数据
     static void LoadData(const FString& filePath, int& inCpuViewBeginIndex, int& inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, MemNodeInfoList& inLuaMemNodeList);
 

@@ -172,8 +172,8 @@ end
 -- 本地记录性能数据启动
 function this.startLocalRecord()
     print("[Slua Profile] startLocalRecord")
-    this.changeHookState(HookState.HOOK)
     this.onChangeRecordState(true)
+    this.changeHookState(HookState.HOOK)
 end
 
 -- 本地记录性能数据停止

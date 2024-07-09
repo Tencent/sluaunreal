@@ -116,14 +116,6 @@ bool SluaProfilerDataManager::IsRecording()
     return false;
 }
 
-void SluaProfilerDataManager::SaveData()
-{
-    if (ProcessRunnable)
-    {
-        ProcessRunnable->SaveData();
-    }
-}
-
 //打开保存的sluastat文件
 void SluaProfilerDataManager::LoadData(const FString& filePath, int& inCpuViewBeginIndex, int& inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, MemNodeInfoList& inLuaMemNodeList)
 {
@@ -241,8 +233,6 @@ FProfileDataProcessRunnable::FProfileDataProcessRunnable()
 {
     currentMemory = MakeShared<MemoryFrame>();
     RunnableStart = true;
-    cpuViewBeginIndex = 0;
-    memViewBeginIndex = 0;
     SluaProfilerDataManager::InitProfileNode(funcProfilerRoot, *FLuaFunctionDefine::Root, 0);
     WorkerThread = FRunnableThread::Create(this, TEXT("FProfileDataProcessRunnable"));
 }
@@ -332,8 +322,6 @@ void FProfileDataProcessRunnable::ClearData()
     RestartMemoryStatistis();
     profileRootArr.Empty();
     allProfileData.Empty();
-    cpuViewBeginIndex = 0;
-    memViewBeginIndex = 0;
     funcProfilerNodeQueue.Empty();
 }
 
@@ -346,6 +334,10 @@ void FProfileDataProcessRunnable::StartRecord()
 
     bCanStartFrameRecord = false;
     bIsRecording = true;
+    memoryInfo.Empty();
+    lastLuaMemNode.Reset();
+    memoryQueue.Empty();
+    funcProfilerNodeQueue.Empty();
     
     FString filePath = GenerateStatFilePath();
     frameArchive = IFileManager::Get().CreateFileWriter(*filePath);
@@ -555,15 +547,37 @@ void FProfileDataProcessRunnable::SerializeFrameData(FArchive& ar, TArray<TShare
         FProflierMemNode* memNode = frameMemNode.Get();
         ar << memNode->totalSize;
 
-        MemFileInfoMap& infoMap = memNode->infoList;
-        int32 infoMapNum = infoMap.Num();
+        ParentFileMap& parentFileMap = memNode->parentFileMap;
+
+        // Only saved MaxMemoryFileSave top max of memory information.
+        ShownMemInfoList savedMemoryFileList;
+        savedMemoryFileList.Reserve(parentFileMap.Num());
+        for (auto& iter : parentFileMap)
+        {
+            auto& parentMemInfo = iter.Value;
+            savedMemoryFileList.Add(parentMemInfo);
+        }
+
+        if (savedMemoryFileList.Num() > FProflierMemNode::MaxMemoryFileSave)
+        {
+            savedMemoryFileList.StableSort([](const TSharedPtr<FileMemInfo>& lhs, const TSharedPtr<FileMemInfo>& rhs)
+            {
+                return lhs->size > rhs->size;
+            });
+
+            savedMemoryFileList.RemoveAt(FProflierMemNode::MaxMemoryFileSave, savedMemoryFileList.Num() - FProflierMemNode::MaxMemoryFileSave, false);
+        }
+
+        int32 infoMapNum = savedMemoryFileList.Num();
         ar << infoMapNum;
 
-        for (auto Iter = infoMap.CreateIterator(); Iter; ++Iter)
+        MemFileInfoMap& infoMap = memNode->infoList;
+        for (auto &item : savedMemoryFileList)
         {
-            ar << Iter->Key;
+            auto fileNameIndex = item->fileNameIndex;
+            ar << fileNameIndex;
 
-            TMap<int, TSharedPtr<FileMemInfo>>& innerMap = Iter->Value;
+            auto &innerMap = infoMap.FindChecked(fileNameIndex);
             int32 InnerMapNum = innerMap.Num();
             ar << InnerMapNum;
             for (auto innerIter = innerMap.CreateIterator(); innerIter; ++innerIter)
@@ -572,20 +586,19 @@ void FProfileDataProcessRunnable::SerializeFrameData(FArchive& ar, TArray<TShare
                 innerIter->Value->Serialize(ar);
             }
         }
-        ParentFileMap& parentFileMap = memNode->parentFileMap;
-        int32 parentFileMapNum = parentFileMap.Num();;
+
+        int32 parentFileMapNum = savedMemoryFileList.Num();;
         ar << parentFileMapNum;
-        for (auto Iter = parentFileMap.CreateIterator(); Iter; ++Iter)
+
+        for (auto &item : savedMemoryFileList)
         {
-            ar << Iter->Key;
-            Iter->Value->Serialize(ar);
+            auto fileNameIndex = item->fileNameIndex;
+            ar << fileNameIndex;
+
+            auto &fileMemInfo = parentFileMap.FindChecked(fileNameIndex);
+            fileMemInfo->Serialize(ar);
         }
     }
-}
-
-void FProfileDataProcessRunnable::SaveData()
-{
-    SaveDataWithData(cpuViewBeginIndex, memViewBeginIndex, allProfileData, allLuaMemNodeList);
 }
 
 
@@ -869,28 +882,9 @@ void FProfileDataProcessRunnable::ClearCurProfiler()
     profilerStack.Empty();
 }
 
-void FProfileDataProcessRunnable::initLuaMemChartList()
-{
-    for (int32 i = 0; i < cMaxSampleNum; i++)
-    {
-        TSharedPtr<FProflierMemNode> memNode = MakeShared<FProflierMemNode>();
-        memNode->totalSize = -1.0;
-        allLuaMemNodeList.Add(memNode);
-    }
-
-    TSharedPtr<FProflierMemNode> memNode = MakeShared<FProflierMemNode>();
-    memNode->totalSize = 0.0;
-    allLuaMemNodeList.Add(memNode);
-    memViewBeginIndex = 0;
-}
-
 void FProfileDataProcessRunnable::RestartMemoryStatistis()
 {
-    allLuaMemNodeList.Empty();
-    memViewBeginIndex = 0;
     lastLuaTotalMemSize = 0.0f;
-
-    initLuaMemChartList();
 }
 
 void FProfileDataProcessRunnable::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& memoryInfoMap, MemoryFramePtr memoryFrame)

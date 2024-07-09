@@ -146,10 +146,10 @@ public:
 };
 
 
-USTRUCT()
-struct SLUA_UNREAL_API FProflierMemNode {
-    GENERATED_BODY();
-public:
+struct SLUA_UNREAL_API FProflierMemNode 
+{
+    static constexpr int32 MaxMemoryFileSave = 30;
+
     MemFileInfoMap infoList;
 	ParentFileMap parentFileMap;
     double totalSize;

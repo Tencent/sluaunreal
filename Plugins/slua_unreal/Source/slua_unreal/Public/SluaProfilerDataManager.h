@@ -46,7 +46,7 @@ public:
     bool IsRecording() const;
 
 private:
-    void SerializeFrameData(FArchive& ar, TArray<TSharedPtr<FunctionProfileNode>>& frameFuncRootArr, TSharedPtr<FProflierMemNode>& frameMemNode);
+    void SerializeFrameData(FArchive& ar, TArray<TSharedPtr<FunctionProfileNode>>& frameFuncRootArr, TSharedPtr<FProflierMemNode>& frameMemNode, const TSharedPtr<FProflierMemNode>& preFrameMemNode);
     static constexpr int32 CompressedSize = 1024 * 1024;
     FRunnableThread* WorkerThread;
 
@@ -93,6 +93,7 @@ private:
     ProfileCallInfoArray profilerStack;
     MemoryFramePtr currentMemory;
     LuaMemInfoMap memoryInfo;
+    int32 memoryFrameNum = -1;
 
     FArchive* frameArchive = nullptr;
     bool bCanStartFrameRecord = false;

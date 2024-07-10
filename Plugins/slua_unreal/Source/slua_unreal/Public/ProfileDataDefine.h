@@ -148,9 +148,10 @@ public:
 
 struct SLUA_UNREAL_API FProflierMemNode 
 {
-    static constexpr int32 MaxMemoryFileSave = 30;
+    static constexpr int32 CheckPointSize = 60;
 
     MemFileInfoMap infoList;
+    MemFileInfoMap changeInfoList;
 	ParentFileMap parentFileMap;
     double totalSize;
 

@@ -333,6 +333,7 @@ void FProfileDataProcessRunnable::StartRecord()
     }
 
     bCanStartFrameRecord = false;
+    memoryFrameNum = -1;
     bIsRecording = true;
     memoryInfo.Empty();
     lastLuaMemNode.Reset();
@@ -445,7 +446,7 @@ void FProfileDataProcessRunnable::ProcessMemoryCommand(const FMemoryCommand& mem
     }
 }
 
-void FProfileDataProcessRunnable::SerializeFrameData(FArchive& ar, TArray<TSharedPtr<FunctionProfileNode>>& frameFuncRootArr, TSharedPtr<FProflierMemNode>& frameMemNode)
+void FProfileDataProcessRunnable::SerializeFrameData(FArchive& ar, TArray<TSharedPtr<FunctionProfileNode>>& frameFuncRootArr, TSharedPtr<FProflierMemNode>& frameMemNode, const TSharedPtr<FProflierMemNode>& preFrameMemNode)
 {
     auto& profileNameSet = *FProfileNameSet::GlobalProfileNameSet;
     {
@@ -492,6 +493,7 @@ void FProfileDataProcessRunnable::SerializeFrameData(FArchive& ar, TArray<TShare
         node->Serialize(ar);
     }
 
+    bool bCheckPoint = memoryFrameNum % FProflierMemNode::CheckPointSize == 0;
     if (ar.IsLoading())
     {
         double memNodeTotalSize;
@@ -538,7 +540,53 @@ void FProfileDataProcessRunnable::SerializeFrameData(FArchive& ar, TArray<TShare
             parentFileMap.Add(parentFileMapKey, MakeShareable(info));
         }
 
-        frameMemNode->infoList = infoMap;
+        if (bCheckPoint)
+        {
+            frameMemNode->infoList = infoMap;
+        }
+        else
+        {
+            //copy lastLuaMemNode to memNode
+            FProflierMemNode& last = *preFrameMemNode;
+            FProflierMemNode& current = *frameMemNode;
+            
+            current.infoList.Reserve(last.infoList.Num());
+            for (auto& fileInfoIter : last.infoList)
+            {
+                auto& newInfoList = current.infoList.Add(fileInfoIter.Key);
+                newInfoList.Reserve(fileInfoIter.Value.Num());
+                for (auto& lineInfo : fileInfoIter.Value)
+                {
+                    FileMemInfo* memInfo = new FileMemInfo();
+                    *memInfo = *lineInfo.Value;
+                    newInfoList.Add(lineInfo.Key, MakeShareable(memInfo));
+                }
+            }
+            
+            for (auto Iter = infoMap.CreateIterator(); Iter; ++Iter)
+            {
+                uint32 fileNameIndex = Iter->Key;
+                auto& fileMemInfoMap =  current.infoList.FindOrAdd(fileNameIndex);
+
+                TMap<int, TSharedPtr<FileMemInfo>>& innerMap = Iter->Value;
+                for (auto innerIter = innerMap.CreateIterator(); innerIter; ++innerIter)
+                {
+                    int lineNumber = innerIter->Key;
+                    auto& lineInfo = fileMemInfoMap.FindOrAdd(lineNumber);
+                    if (!lineInfo.IsValid())
+                    {
+                        lineInfo = MakeShared<FileMemInfo>();
+                    }
+                    lineInfo->fileNameIndex = fileNameIndex;
+                    lineInfo->lineNumber = lineNumber;
+                    lineInfo->size += innerIter->Value->size;
+                    if (lineInfo->size <= 0)
+                    {
+                        fileMemInfoMap.Remove(lineNumber);
+                    }
+                }
+            }
+        }
         frameMemNode->parentFileMap = parentFileMap;
         frameMemNode->totalSize = memNodeTotalSize;
     }
@@ -547,37 +595,16 @@ void FProfileDataProcessRunnable::SerializeFrameData(FArchive& ar, TArray<TShare
         FProflierMemNode* memNode = frameMemNode.Get();
         ar << memNode->totalSize;
 
-        ParentFileMap& parentFileMap = memNode->parentFileMap;
+        MemFileInfoMap& infoMap = bCheckPoint ? memNode->infoList : memNode->changeInfoList;
 
-        // Only saved MaxMemoryFileSave top max of memory information.
-        ShownMemInfoList savedMemoryFileList;
-        savedMemoryFileList.Reserve(parentFileMap.Num());
-        for (auto& iter : parentFileMap)
-        {
-            auto& parentMemInfo = iter.Value;
-            savedMemoryFileList.Add(parentMemInfo);
-        }
-
-        if (savedMemoryFileList.Num() > FProflierMemNode::MaxMemoryFileSave)
-        {
-            savedMemoryFileList.StableSort([](const TSharedPtr<FileMemInfo>& lhs, const TSharedPtr<FileMemInfo>& rhs)
-            {
-                return lhs->size > rhs->size;
-            });
-
-            savedMemoryFileList.RemoveAt(FProflierMemNode::MaxMemoryFileSave, savedMemoryFileList.Num() - FProflierMemNode::MaxMemoryFileSave, false);
-        }
-
-        int32 infoMapNum = savedMemoryFileList.Num();
+        int32 infoMapNum = infoMap.Num();
         ar << infoMapNum;
 
-        MemFileInfoMap& infoMap = memNode->infoList;
-        for (auto &item : savedMemoryFileList)
+        for (auto Iter = infoMap.CreateIterator(); Iter; ++Iter)
         {
-            auto fileNameIndex = item->fileNameIndex;
-            ar << fileNameIndex;
+            ar << Iter->Key;
 
-            auto &innerMap = infoMap.FindChecked(fileNameIndex);
+            TMap<int, TSharedPtr<FileMemInfo>>& innerMap = Iter->Value;
             int32 InnerMapNum = innerMap.Num();
             ar << InnerMapNum;
             for (auto innerIter = innerMap.CreateIterator(); innerIter; ++innerIter)
@@ -586,17 +613,13 @@ void FProfileDataProcessRunnable::SerializeFrameData(FArchive& ar, TArray<TShare
                 innerIter->Value->Serialize(ar);
             }
         }
-
-        int32 parentFileMapNum = savedMemoryFileList.Num();;
+        ParentFileMap& parentFileMap = memNode->parentFileMap;
+        int32 parentFileMapNum = parentFileMap.Num();;
         ar << parentFileMapNum;
-
-        for (auto &item : savedMemoryFileList)
+        for (auto Iter = parentFileMap.CreateIterator(); Iter; ++Iter)
         {
-            auto fileNameIndex = item->fileNameIndex;
-            ar << fileNameIndex;
-
-            auto &fileMemInfo = parentFileMap.FindChecked(fileNameIndex);
-            fileMemInfo->Serialize(ar);
+            ar << Iter->Key;
+            Iter->Value->Serialize(ar);
         }
     }
 }
@@ -669,6 +692,7 @@ void FProfileDataProcessRunnable::LoadData(const FString& filePath, int& inCpuVi
 
         inProfileData.Empty();
         inLuaMemNodeList.Empty();
+        memoryFrameNum = -1;
 
         TArray<uint8> uncompressedBuffer;
         
@@ -860,15 +884,20 @@ void FProfileDataProcessRunnable::SerializeLoad(FArchive& inAR, int& inCpuViewBe
     }
     else if (saveMode == FSaveMode::Frame)
     {
+        TSharedPtr<FProflierMemNode> preNode;
         while (saveMode != FSaveMode::EndOfFrame && !inAR.AtEnd())
         {
+            memoryFrameNum++;
             TArray<TSharedPtr<FunctionProfileNode>> arr;
             TSharedPtr<FProflierMemNode> node = MakeShareable(new FProflierMemNode());
-            SerializeFrameData(inAR, arr, node);
+            if (inLuaMemNodeList.Num() > 0)
+            {
+                preNode = inLuaMemNodeList.Last();
+            }
+            SerializeFrameData(inAR, arr, node, preNode);
 
             inProfileData.Add(MoveTemp(arr));
             inLuaMemNodeList.Add(node);
-
             inAR << saveMode;
         }
     }
@@ -889,18 +918,15 @@ void FProfileDataProcessRunnable::RestartMemoryStatistis()
 
 void FProfileDataProcessRunnable::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& memoryInfoMap, MemoryFramePtr memoryFrame)
 {
-
     if (!memoryFrame.IsValid())
         return;
 
+    memoryFrameNum++;
     TSharedPtr<FProflierMemNode> memNode = MakeShared<FProflierMemNode>();
 
-    auto OnAllocMemory = [&](const NS_SLUA::LuaMemInfo& memFileInfo)
+    auto OnAlloc = [&](uint32 fileNameIndex, MemFileInfoMap& memFileInfoMap, const NS_SLUA::LuaMemInfo& memFileInfo)
     {
-        memoryInfoMap.Add(memFileInfo.ptr, memFileInfo);
-        lastLuaTotalMemSize += memFileInfo.size;
-        uint32 fileNameIndex = FProfileNameSet::GlobalProfileNameSet->GetOrCreateIndex(memFileInfo.hint);
-        auto* fileInfos = memNode->infoList.Find(fileNameIndex);
+        auto* fileInfos = memFileInfoMap.Find(fileNameIndex);
         if (!fileInfos)
         {
 #if ENGINE_MAJOR_VERSION==5
@@ -908,7 +934,7 @@ void FProfileDataProcessRunnable::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemI
 #else
             TMap<int, TSharedPtr<FileMemInfo, ESPMode::Fast>> newFileInfos;
 #endif
-            fileInfos = &memNode->infoList.Add(fileNameIndex, newFileInfos);
+            fileInfos = &memFileInfoMap.Add(fileNameIndex, newFileInfos);
         }
 
         auto lineInfo = fileInfos->Find(memFileInfo.lineNumber);
@@ -924,6 +950,15 @@ void FProfileDataProcessRunnable::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemI
             fileInfo->size = memFileInfo.size;
             fileInfos->Add(memFileInfo.lineNumber, MakeShareable(fileInfo));
         }
+    };
+
+    auto OnAllocMemory = [&](const NS_SLUA::LuaMemInfo& memFileInfo)
+    {
+        memoryInfoMap.Add(memFileInfo.ptr, memFileInfo);
+        lastLuaTotalMemSize += memFileInfo.size;
+        uint32 fileNameIndex = FProfileNameSet::GlobalProfileNameSet->GetOrCreateIndex(memFileInfo.hint);
+        OnAlloc(fileNameIndex, memNode->infoList, memFileInfo);
+        OnAlloc(fileNameIndex, memNode->changeInfoList, memFileInfo);
 
         auto* parentFileInfo = memNode->parentFileMap.Find(fileNameIndex);
         if (!parentFileInfo)
@@ -940,6 +975,24 @@ void FProfileDataProcessRunnable::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemI
         }
     };
 
+    auto OnFree = [&](uint32 fileNameIndex, MemFileInfoMap& memFileInfoMap, const NS_SLUA::LuaMemInfo& memFileInfo)
+    {
+        auto fileInfos = memFileInfoMap.Find(fileNameIndex);
+        if (fileInfos)
+        {
+            auto* lineInfo = fileInfos->Find(memFileInfo.lineNumber);
+            if (lineInfo)
+            {
+                (*lineInfo)->size -= memFileInfo.size;
+                ensureMsgf((*lineInfo)->size >= 0, TEXT("Error: %s line[%d] size is negative!"), *FProfileNameSet::GlobalProfileNameSet->GetStringByIndex((*lineInfo)->fileNameIndex), memFileInfo.lineNumber);
+                if ((*lineInfo)->size <= 0)
+                {
+                    fileInfos->Remove(memFileInfo.lineNumber);
+                }
+            }
+        }
+    };
+
     auto OnFreeMemory = [&](const NS_SLUA::LuaMemInfo& memFileInfo)
     {
         if (memoryInfoMap.Contains(memFileInfo.ptr))
@@ -948,20 +1001,8 @@ void FProfileDataProcessRunnable::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemI
             lastLuaTotalMemSize -= memFileInfo.size;
 
             uint32 fileNameIndex = FProfileNameSet::GlobalProfileNameSet->GetOrCreateIndex(memFileInfo.hint);
-            auto fileInfos = memNode->infoList.Find(fileNameIndex);
-            if (fileInfos)
-            {
-                auto* lineInfo = fileInfos->Find(memFileInfo.lineNumber);
-                if (lineInfo)
-                {
-                    (*lineInfo)->size -= memFileInfo.size;
-                    ensureMsgf((*lineInfo)->size >= 0, TEXT("Error: %s line[%d] size is negative!"), *FProfileNameSet::GlobalProfileNameSet->GetStringByIndex((*lineInfo)->fileNameIndex), memFileInfo.lineNumber);
-                    if ((*lineInfo)->size <= 0)
-                    {
-                        fileInfos->Remove(memFileInfo.lineNumber);
-                    }
-                }
-            }
+            OnFree(fileNameIndex, memNode->infoList, memFileInfo);
+            OnFree(fileNameIndex, memNode->changeInfoList, memFileInfo);
 
             auto& parentFileInfo = memNode->parentFileMap.FindChecked(fileNameIndex);
             parentFileInfo->size -= memFileInfo.size;
@@ -1048,7 +1089,7 @@ void FProfileDataProcessRunnable::PreProcessData(TSharedPtr<FunctionProfileNode>
     FMemoryWriter memoryWriter(dataToCompress);
     memoryWriter.Seek(dataToCompress.Num());
     memoryWriter << saveMode;
-    SerializeFrameData(memoryWriter, tempProfileRootArr, lastLuaMemNode);
+    SerializeFrameData(memoryWriter, tempProfileRootArr, lastLuaMemNode, nullptr);
 
     if (dataToCompress.Num() > CompressedSize)
     {

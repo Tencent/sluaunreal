@@ -53,6 +53,8 @@ public:
     {
         needProfilerCleared = needClear;
     }
+
+    MemFileInfoMap GetMemoryFrameInfo(int32 memoryFrameIndex) const;
     
     TSharedPtr<NS_SLUA::FProfileServer> ProfileServer;
     
@@ -121,7 +123,7 @@ private:
     void OnClearBtnClicked();
     void CalcPointMemdiff(int beginIndex, int endIndex);
     void CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& memoryInfoMap, MemoryFramePtr memoryFrame);
-    void CombineSameFileInfo(FProflierMemNode& proflierMemNode);
+    void CombineSameFileInfo(FProflierMemNode& proflierMemNode, int32 memoryFrameIndex);
     int ContainsFile(FString& fileName, MemInfoIndexMap &list);
     FString ChooseMemoryUnit(float memorySize);
 

@@ -250,7 +250,10 @@ void SProfilerInspector::RefreshBarValue()
     if(totalMemory >= 0 && nodeSize > 0) avgLuaMemory = totalMemory / nodeSize;
     memProfilerWidget->SetArrayValue(memChartValArray, maxProfileSamplesCostTime, maxLuaMemory);
 
-    CombineSameFileInfo(*allLuaMemNodeList.Top());
+    if (allLuaMemNodeList.Num() > 0)
+    {
+        CombineSameFileInfo(*allLuaMemNodeList.Top(), 0);
+    }
 }
 
 void SProfilerInspector::CheckBoxChanged(ECheckBoxState newState)
@@ -475,7 +478,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
         if (mouseDownMemIdx >= 0 && mouseDownMemIdx < allLuaMemNodeList.Num())
         {
             mouseDownPoint = cursorPos;
-            CombineSameFileInfo(*allLuaMemNodeList[mouseDownMemIdx]);
+            CombineSameFileInfo(*allLuaMemNodeList[mouseDownMemIdx], mouseDownMemIdx);
             luaTotalMemSize = allLuaMemNodeList[mouseDownMemIdx]->totalSize;
             memTreeView->RequestTreeRefresh();
         }
@@ -509,7 +512,7 @@ TSharedRef<class SDockTab>  SProfilerInspector::GetSDockTab()
                 mouseUpMemIdx = sampleIdx;
                 mouseUpPoint = cursorPos;
                 memProfilerWidget->SetMouseMovePoint(mouseUpPoint);
-                CombineSameFileInfo(*allLuaMemNodeList[sampleIdx]);
+                CombineSameFileInfo(*allLuaMemNodeList[sampleIdx], sampleIdx);
                 luaTotalMemSize = allLuaMemNodeList[sampleIdx]->totalSize;
                 memTreeView->RequestTreeRefresh();
             }
@@ -989,8 +992,16 @@ TSharedRef<ITableRow> SProfilerInspector::OnGenerateMemRowForList(TSharedPtr<Fil
 
 void SProfilerInspector::OnGetMemChildrenForTree(TSharedPtr<FileMemInfo> Parent, TArray<TSharedPtr<FileMemInfo>>& OutChildren)
 {
-    if (Parent->lineNumber != -1) return;
-    FString fileName = FProfileNameSet::GlobalProfileNameSet->GetStringByIndex(Parent->fileNameIndex);
+    if (Parent->lineNumber != -1)
+    {
+        return;
+    }
+    
+    if (!shownFileInfo.Contains(Parent->fileNameIndex))
+    {
+        return;
+    }
+
     auto &fileInfos = shownFileInfo.FindChecked(Parent->fileNameIndex);
     for (auto &line:fileInfos)
     {
@@ -1068,15 +1079,13 @@ void SProfilerInspector::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& mem
         return;
     
     TSharedPtr<FProflierMemNode> memNode = MakeShareable(new FProflierMemNode());
+    int32 memoryFrameNum = allLuaMemNodeList.Num();
+    bool bCheckPoint = memoryFrameNum % FProflierMemNode::CheckPointSize == 0;
 
-    auto OnAllocMemory = [&](const NS_SLUA::LuaMemInfo& memFileInfo)
+    auto OnAlloc = [&](uint32 fileNameIndex, MemFileInfoMap& memFileInfoMap, const NS_SLUA::LuaMemInfo& memFileInfo)
     {
-        memoryInfoMap.Add(memFileInfo.ptr, memFileInfo);
-        lastLuaTotalMemSize += memFileInfo.size;
+        auto& fileInfos = memFileInfoMap.FindOrAdd(fileNameIndex);
 
-        uint32 fileNameIndex = FProfileNameSet::GlobalProfileNameSet->GetOrCreateIndex(memFileInfo.hint);
-        auto& fileInfos = memNode->infoList.FindOrAdd(fileNameIndex);
-        
         auto lineInfo = fileInfos.Find(memFileInfo.lineNumber);
         if (lineInfo)
         {
@@ -1089,6 +1098,21 @@ void SProfilerInspector::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& mem
             fileInfo->lineNumber = memFileInfo.lineNumber;
             fileInfo->size = memFileInfo.size;
             fileInfos.Add(memFileInfo.lineNumber, MakeShareable(fileInfo));
+        }
+    };
+
+    auto OnAllocMemory = [&](const NS_SLUA::LuaMemInfo& memFileInfo)
+    {
+        memoryInfoMap.Add(memFileInfo.ptr, memFileInfo);
+        lastLuaTotalMemSize += memFileInfo.size;
+        uint32 fileNameIndex = FProfileNameSet::GlobalProfileNameSet->GetOrCreateIndex(memFileInfo.hint);
+        if (bCheckPoint)
+        {
+            OnAlloc(fileNameIndex, memNode->infoList, memFileInfo);
+        }
+        else
+        {
+            OnAlloc(fileNameIndex, memNode->changeInfoList, memFileInfo);
         }
 
         auto* parentFileInfo = memNode->parentFileMap.Find(fileNameIndex);
@@ -1106,6 +1130,27 @@ void SProfilerInspector::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& mem
         }
     };
 
+    auto OnFree = [&](uint32 fileNameIndex, MemFileInfoMap& memFileInfoMap, const NS_SLUA::LuaMemInfo& memFileInfo, bool bCheckSize)
+    {
+        auto fileInfos = memFileInfoMap.Find(fileNameIndex);
+        if (fileInfos)
+        {
+            auto* lineInfo = fileInfos->Find(memFileInfo.lineNumber);
+            if (lineInfo)
+            {
+                (*lineInfo)->size -= memFileInfo.size;
+                if (bCheckSize)
+                {
+                    ensureMsgf((*lineInfo)->size >= 0, TEXT("Error: %s line[%d] size is negative!"), *FProfileNameSet::GlobalProfileNameSet->GetStringByIndex((*lineInfo)->fileNameIndex), memFileInfo.lineNumber);
+                    if ((*lineInfo)->size <= 0)
+                    {
+                        fileInfos->Remove(memFileInfo.lineNumber);
+                    }
+                }
+            }
+        }
+    };
+
     auto OnFreeMemory = [&](const NS_SLUA::LuaMemInfo& memFileInfo)
     {
         if (memoryInfoMap.Contains(memFileInfo.ptr))
@@ -1114,19 +1159,13 @@ void SProfilerInspector::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& mem
             lastLuaTotalMemSize -= memFileInfo.size;
 
             uint32 fileNameIndex = FProfileNameSet::GlobalProfileNameSet->GetOrCreateIndex(memFileInfo.hint);
-            auto fileInfos = memNode->infoList.Find(fileNameIndex);
-            if (fileInfos)
+            if (bCheckPoint)
             {
-                auto* lineInfo = fileInfos->Find(memFileInfo.lineNumber);
-                if (lineInfo)
-                {
-                    (*lineInfo)->size -= memFileInfo.size;
-                    ensureMsgf((*lineInfo)->size >= 0, TEXT("Error: %s line[%d] size is negative!"), *FProfileNameSet::GlobalProfileNameSet->GetStringByIndex((*lineInfo)->fileNameIndex), memFileInfo.lineNumber);
-                    if ((*lineInfo)->size <= 0)
-                    {
-                        fileInfos->Remove(memFileInfo.lineNumber);
-                    }
-                }
+                OnFree(fileNameIndex, memNode->infoList, memFileInfo, true);
+            }
+            else
+            {
+                OnFree(fileNameIndex, memNode->changeInfoList, memFileInfo, false);
             }
 
             auto& parentFileInfo = memNode->parentFileMap.FindChecked(fileNameIndex);
@@ -1148,7 +1187,6 @@ void SProfilerInspector::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& mem
     else if (lastLuaMemNode.IsValid())
     {
         //copy lastLuaMemNode to memNode
-        // *(memNode.Get()) = *(lastLuaMemNode.Get());
         QUICK_SCOPE_CYCLE_COUNTER(SProfilerInspector_CollectMemoryNode_CopyLastLuaMemNode)
         FProflierMemNode &last = *lastLuaMemNode;
         FProflierMemNode &current = *memNode;
@@ -1174,6 +1212,13 @@ void SProfilerInspector::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& mem
             *memInfo = *parentFileIter.Value;
             current.parentFileMap.Add(parentFileIter.Key, MakeShareable(memInfo));
         }
+
+        // Important: save huge memory of infoList!
+        bool bPreFrameCheckPoint = (memoryFrameNum - 1) % FProflierMemNode::CheckPointSize == 0;
+        if (!bPreFrameCheckPoint)
+        {
+            last.infoList.Empty();
+        }
     }
 
     for (auto& memoInfo : memoryFrame->memoryIncrease)
@@ -1193,13 +1238,75 @@ void SProfilerInspector::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& mem
     lastLuaMemNode = memNode;
 }
 
-void SProfilerInspector::CombineSameFileInfo(FProflierMemNode& proflierMemNode)
+MemFileInfoMap SProfilerInspector::GetMemoryFrameInfo(int32 memoryFrameIndex) const
+{
+    MemFileInfoMap resultFileInfoMap;
+    bool bCheckPoint = memoryFrameIndex % FProflierMemNode::CheckPointSize == 0;
+    
+    int32 checkPointIndex = memoryFrameIndex - memoryFrameIndex % FProflierMemNode::CheckPointSize;
+    auto &checkPointInfoList = allLuaMemNodeList[checkPointIndex]->infoList;
+
+    // Copy checkPointInfoList to currentFileInfoMap
+    resultFileInfoMap.Reserve(checkPointInfoList.Num());
+    for (auto &fileInfoIter : checkPointInfoList)
+    {
+        auto& newInfoList = resultFileInfoMap.Add(fileInfoIter.Key);
+        newInfoList.Reserve(fileInfoIter.Value.Num());
+        for (auto& lineInfo : fileInfoIter.Value)
+        {
+            FileMemInfo* memInfo = new FileMemInfo();
+            *memInfo = *lineInfo.Value;
+            newInfoList.Add(lineInfo.Key, MakeShareable(memInfo));
+        }
+    }
+
+    if (!bCheckPoint)
+    {
+        for (int32 index = checkPointIndex + 1; index <= memoryFrameIndex; ++index)
+        {
+            auto& infoMap = allLuaMemNodeList[index]->changeInfoList;
+            for (auto Iter = infoMap.CreateIterator(); Iter; ++Iter)
+            {
+                uint32 fileNameIndex = Iter->Key;
+                auto& fileMemInfoMap = resultFileInfoMap.FindOrAdd(fileNameIndex);
+
+                TMap<int, TSharedPtr<FileMemInfo>>& innerMap = Iter->Value;
+                for (auto innerIter = innerMap.CreateIterator(); innerIter; ++innerIter)
+                {
+                    int lineNumber = innerIter->Key;
+                    auto& lineInfo = fileMemInfoMap.FindOrAdd(lineNumber);
+                    if (!lineInfo.IsValid())
+                    {
+                        lineInfo = MakeShared<FileMemInfo>();
+                    }
+                    lineInfo->fileNameIndex = fileNameIndex;
+                    lineInfo->lineNumber = lineNumber;
+                    lineInfo->size += innerIter->Value->size;
+                    if (lineInfo->size <= 0)
+                    {
+                        fileMemInfoMap.Remove(lineNumber);
+                    }
+                }
+            }
+        }
+    }
+    
+    return resultFileInfoMap;
+}
+
+void SProfilerInspector::CombineSameFileInfo(FProflierMemNode& proflierMemNode, int32 memoryFrameIndex)
 {
     QUICK_SCOPE_CYCLE_COUNTER(SProfilerInspector_CombineSameFileInfo)
 
     {
         QUICK_SCOPE_CYCLE_COUNTER(SProfilerInspector_CombineSameFileInfo_CopyInfoList)
         shownFileInfo = proflierMemNode.infoList;
+        bool bCheckPoint = memoryFrameIndex % FProflierMemNode::CheckPointSize == 0;
+        // Is not check point, calculate proflierMemNode.infoList from pre check point
+        if (!bCheckPoint && shownFileInfo.Num() == 0)
+        {
+            shownFileInfo = GetMemoryFrameInfo(memoryFrameIndex);
+        }
     }
 
     {
@@ -1236,7 +1343,7 @@ void SProfilerInspector::CalcPointMemdiff(int beginIndex, int endIndex)
         beginIndex = endIndex;
         endIndex = temp;
         
-        CombineSameFileInfo(*allLuaMemNodeList[endIndex]);
+        CombineSameFileInfo(*allLuaMemNodeList[endIndex], endIndex);
     }
 
     for (auto& fileInfoIter : shownFileInfo)
@@ -1247,7 +1354,8 @@ void SProfilerInspector::CalcPointMemdiff(int beginIndex, int endIndex)
         }
     }
 
-    for (auto& fileInfoIter : allLuaMemNodeList[beginIndex]->infoList)
+    auto beginMemInfoList = GetMemoryFrameInfo(beginIndex);
+    for (auto& fileInfoIter : beginMemInfoList)
     {
         auto fileNameIndex = fileInfoIter.Key;
         auto *showInfo = shownFileInfo.Find(fileNameIndex);

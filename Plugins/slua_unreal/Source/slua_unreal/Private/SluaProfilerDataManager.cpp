@@ -549,47 +549,9 @@ void FProfileDataProcessRunnable::SerializeFrameData(FArchive& ar, TArray<TShare
         }
         else
         {
-            //copy lastLuaMemNode to memNode
-            FProflierMemNode& last = *preFrameMemNode;
-            FProflierMemNode& current = *frameMemNode;
-            
-            current.infoList.Reserve(last.infoList.Num());
-            for (auto& fileInfoIter : last.infoList)
-            {
-                auto& newInfoList = current.infoList.Add(fileInfoIter.Key);
-                newInfoList.Reserve(fileInfoIter.Value.Num());
-                for (auto& lineInfo : fileInfoIter.Value)
-                {
-                    FileMemInfo* memInfo = new FileMemInfo();
-                    *memInfo = *lineInfo.Value;
-                    newInfoList.Add(lineInfo.Key, MakeShareable(memInfo));
-                }
-            }
-            
-            for (auto Iter = infoMap.CreateIterator(); Iter; ++Iter)
-            {
-                uint32 fileNameIndex = Iter->Key;
-                auto& fileMemInfoMap =  current.infoList.FindOrAdd(fileNameIndex);
-
-                TMap<int, TSharedPtr<FileMemInfo>>& innerMap = Iter->Value;
-                for (auto innerIter = innerMap.CreateIterator(); innerIter; ++innerIter)
-                {
-                    int lineNumber = innerIter->Key;
-                    auto& lineInfo = fileMemInfoMap.FindOrAdd(lineNumber);
-                    if (!lineInfo.IsValid())
-                    {
-                        lineInfo = MakeShared<FileMemInfo>();
-                    }
-                    lineInfo->fileNameIndex = fileNameIndex;
-                    lineInfo->lineNumber = lineNumber;
-                    lineInfo->size += innerIter->Value->size;
-                    if (lineInfo->size <= 0)
-                    {
-                        fileMemInfoMap.Remove(lineNumber);
-                    }
-                }
-            }
+            frameMemNode->changeInfoList = infoMap;
         }
+
         frameMemNode->parentFileMap = parentFileMap;
         frameMemNode->totalSize = memNodeTotalSize;
     }

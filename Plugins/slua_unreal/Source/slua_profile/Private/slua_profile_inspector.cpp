@@ -49,6 +49,7 @@ SProfilerInspector::SProfilerInspector()
 {
     stopChartRolling = false;
     cpuViewBeginIndex = 0;
+    memViewBeginIndex = 0;
     maxLuaMemory = 0.0f;
     avgLuaMemory = 0.0f;
     luaTotalMemSize = 0.0f;
@@ -60,10 +61,9 @@ SProfilerInspector::SProfilerInspector()
     needProfilerCleared = false;
     mouseUpPoint = FVector2D(-1.0f, 0.0f);
     mouseDownPoint = FVector2D(-1.0f, 0.0f);
-    initLuaMemChartList();
+    
     chartValArray.SetNumUninitialized(sampleNum);
     memChartValArray.SetNumUninitialized(sampleNum);
-    allLuaMemNodeList.SetNumUninitialized(sampleNum);
 }
 
 SProfilerInspector::~SProfilerInspector()
@@ -95,24 +95,8 @@ FString SProfilerInspector::GenBrevFuncName(const FLuaFunctionDefine &functionDe
     return brevName;
 }
 
-void SProfilerInspector::initLuaMemChartList()
-{
-    for(int32 i = 0; i < cMaxSampleNum; i++)
-    {
-        TSharedPtr<FProflierMemNode> memNode = MakeShareable(new FProflierMemNode);
-        memNode->totalSize = -1.0;
-        allLuaMemNodeList.Add(memNode);
-    }
-
-    TSharedPtr<FProflierMemNode> memNode = MakeShareable(new FProflierMemNode);
-    memNode->totalSize = 0.0;
-    allLuaMemNodeList.Add(memNode);
-    memViewBeginIndex = 0;
-}
-
 void SProfilerInspector::RestartMemoryStatistis()
 {
-    allLuaMemNodeList.Empty();
     shownFileInfo.Empty();
     memViewBeginIndex = 0;
     shownParentFileName.Empty();
@@ -120,8 +104,6 @@ void SProfilerInspector::RestartMemoryStatistis()
     lastLuaTotalMemSize = 0.0f;
     maxLuaMemory = 0.0f;
     avgLuaMemory = 0.0f;
-
-    initLuaMemChartList();
 }
 
 void SProfilerInspector::Refresh(TSharedPtr<FunctionProfileNode> funcInfoRoot, TMap<int64, NS_SLUA::LuaMemInfo>& memoryInfoMap, MemoryFramePtr memoryFrame)
@@ -341,7 +323,7 @@ void SProfilerInspector::OnLoadFileBtnClicked()
     {
         FString Filter = TEXT("slua stat file|*.sluastat");
         TArray<FString> OutFiles;
-        if (DesktopPlatform->OpenFileDialog(nullptr, TEXT("open slua stat file"), FPaths::ProjectSavedDir(), TEXT(""), Filter, EFileDialogFlags::None, OutFiles))
+        if (DesktopPlatform->OpenFileDialog(nullptr, TEXT("open slua stat file"), FPaths::ProfilingDir() + "/Sluastats/", TEXT(""), Filter, EFileDialogFlags::None, OutFiles))
         {
             loadPath = OutFiles[0];
         }
@@ -376,6 +358,7 @@ void SProfilerInspector::OnClearBtnClicked()
     
     RestartMemoryStatistis();
     profileRootArr.Empty();
+    allLuaMemNodeList.Empty();
     allProfileData.Empty();
     cpuViewBeginIndex = 0;
     if (treeview.IsValid())
@@ -1092,18 +1075,9 @@ void SProfilerInspector::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& mem
         lastLuaTotalMemSize += memFileInfo.size;
 
         uint32 fileNameIndex = FProfileNameSet::GlobalProfileNameSet->GetOrCreateIndex(memFileInfo.hint);
-        auto* fileInfos = memNode->infoList.Find(fileNameIndex);
-        if (!fileInfos)
-        {
-#if ENGINE_MAJOR_VERSION==5
-            TMap<int, TSharedPtr<FileMemInfo, ESPMode::ThreadSafe>> newFileInfos;
-#else
-            TMap<int, TSharedPtr<FileMemInfo, ESPMode::Fast>> newFileInfos;
-#endif
-            fileInfos = &memNode->infoList.Add(fileNameIndex, newFileInfos);
-        }
-
-        auto lineInfo = fileInfos->Find(memFileInfo.lineNumber);
+        auto& fileInfos = memNode->infoList.FindOrAdd(fileNameIndex);
+        
+        auto lineInfo = fileInfos.Find(memFileInfo.lineNumber);
         if (lineInfo)
         {
             (*lineInfo)->size += memFileInfo.size;
@@ -1114,7 +1088,7 @@ void SProfilerInspector::CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& mem
             fileInfo->fileNameIndex = fileNameIndex;
             fileInfo->lineNumber = memFileInfo.lineNumber;
             fileInfo->size = memFileInfo.size;
-            fileInfos->Add(memFileInfo.lineNumber, MakeShareable(fileInfo));
+            fileInfos.Add(memFileInfo.lineNumber, MakeShareable(fileInfo));
         }
 
         auto* parentFileInfo = memNode->parentFileMap.Find(fileNameIndex);

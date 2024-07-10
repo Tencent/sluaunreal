@@ -110,7 +110,6 @@ private:
     /* store the file name as the parent item in memory treeview */
     ShownMemInfoList shownParentFileName;
     
-    void initLuaMemChartList();
     void RefreshBarValue();
     
     void ShowProfilerTree(TArray<TSharedPtr<FunctionProfileNode>>&selectedProfiler);

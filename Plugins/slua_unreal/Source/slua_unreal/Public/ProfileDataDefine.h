@@ -29,7 +29,6 @@ static int32 ProfileVersion = 4;
 
 enum SLUA_UNREAL_API FSaveMode
 {
-    AllInOne,
     Frame,
     EndOfFrame,
 };

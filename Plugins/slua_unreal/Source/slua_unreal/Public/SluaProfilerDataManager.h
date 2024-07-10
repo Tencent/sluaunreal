@@ -101,14 +101,13 @@ private:
     TArray<uint8> dataToCompress;
 
     void PreProcessData(TSharedPtr<FunctionProfileNode> funcInfoRoot, TMap<int64, NS_SLUA::LuaMemInfo>& memoryInfoMap, MemoryFramePtr memoryFrame);
-    void SerializeCompreesedDataToFile();
+    void SerializeCompreesedDataToFile(FArchive& ar);
 
     void CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& memoryInfoMap, MemoryFramePtr memoryFrame);
 
     void RestartMemoryStatistis();
     void ClearCurProfiler();
 
-    void SerializeSave(FArchive& inAR, int inCpuViewBeginIndex, int inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, const MemNodeInfoList& inLuaMemNodeList);
     void SerializeLoad(FArchive& inAR, int& inCpuViewBeginIndex, int& inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, MemNodeInfoList& inLuaMemNodeList);
 };
 

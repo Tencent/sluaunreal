@@ -132,6 +132,9 @@ private:
     void OnSaveFileBtnClicked();
     void OnCpuSliderValueChanged(float Value);
     void OnMemSliderValueChanged(float Value);
+
+    void ShowNotificationDialog(const FString& message);
+    TWeakPtr<class SNotificationItem> notification;
 };
 
 class SLUA_PROFILE_API SProfilerWidget : public SCompoundWidget

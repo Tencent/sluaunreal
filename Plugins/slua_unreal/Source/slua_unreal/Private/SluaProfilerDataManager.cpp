@@ -596,8 +596,10 @@ void FProfileDataProcessRunnable::SerializeFrameData(FArchive& ar, TArray<TShare
 
 void FProfileDataProcessRunnable::SaveDataWithData(int inCpuViewBeginIndex, int inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, const MemNodeInfoList& inLuaMemNodeList)
 {
-    bool tempRecording = bIsRecording;
-    bIsRecording = false;
+    if (bIsRecording)
+    {
+        return;
+    }
     FString filePath = GenerateStatFilePath();
 
     FArchive* ar = IFileManager::Get().CreateFileWriter(*filePath);
@@ -635,8 +637,6 @@ void FProfileDataProcessRunnable::SaveDataWithData(int inCpuViewBeginIndex, int 
     delete ar;
 
     memoryFrameNum = -1;
-
-    bIsRecording = tempRecording;
     UE_LOG(Slua, Log, TEXT("END SAVE DATA %s"), *filePath);
 }
 
@@ -652,10 +652,12 @@ FString FProfileDataProcessRunnable::GenerateStatFilePath()
 
 void FProfileDataProcessRunnable::LoadData(const FString& filePath, int& inCpuViewBeginIndex, int& inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, MemNodeInfoList& inLuaMemNodeList)
 {
+    if (bIsRecording)
+    {
+        return;
+    }
     if (RunnableStart)
     {
-        bool tempRecording = bIsRecording;
-        bIsRecording = false;
         FArchive* ar = IFileManager::Get().CreateFileReader(*filePath);
 
         int32 version;
@@ -697,8 +699,6 @@ void FProfileDataProcessRunnable::LoadData(const FString& filePath, int& inCpuVi
         }
         ar->Close();
         delete ar;
-
-        bIsRecording = tempRecording;
     }
 }
 

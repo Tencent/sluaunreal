@@ -33,6 +33,8 @@
 #if WITH_EDITOR
 #include "EditorStyleSet.h"
 #endif
+#include "NotificationManager.h"
+#include "SNotificationList.h"
 #include "Serialization/ArrayWriter.h"
 #include "Misc/FileHelper.h"
 #include "HAL/FileManager.h"
@@ -273,6 +275,11 @@ void SProfilerInspector::CheckBoxChanged(ECheckBoxState newState)
 
 void SProfilerInspector::OnSaveFileBtnClicked()
 {
+    if (SluaProfilerDataManager::IsRecording())
+    {
+        ShowNotificationDialog(TEXT("Not support for save sluastat while recording!"));
+        return;
+    }
     SluaProfilerDataManager::SaveDataWithData(cpuViewBeginIndex, memViewBeginIndex, allProfileData, allLuaMemNodeList);
 }
 
@@ -318,6 +325,32 @@ void SProfilerInspector::OnMemSliderValueChanged(float Value)
     RefreshBarValue();
 }
 
+void SProfilerInspector::ShowNotificationDialog(const FString& message)
+{
+    auto DismissNotification = [this]()
+    {
+        TSharedPtr<SNotificationItem> notificationPin = notification.Pin();
+        if (notificationPin.IsValid())
+        {
+            notificationPin->SetCompletionState(SNotificationItem::CS_None);
+            notificationPin->ExpireAndFadeout();
+            notification.Reset();
+        }
+    };
+
+    FNotificationInfo info(FText::FromString(message));
+    info.bFireAndForget = false;
+    info.Image = FCoreStyle::Get().GetBrush(TEXT("MessageLog.Error"));
+    const FNotificationButtonInfo okButton(FText::FromString(TEXT("OK")), FText::GetEmpty(), FSimpleDelegate::CreateLambda(DismissNotification), SNotificationItem::ECompletionState::CS_None);
+    info.ButtonDetails.Add(okButton);
+
+    if (notification.IsValid())
+    {
+        notification.Pin()->ExpireAndFadeout();
+    }
+    notification = FSlateNotificationManager::Get().AddNotification(info);
+}
+
 void SProfilerInspector::OnLoadFileBtnClicked()
 {
     FString loadPath;
@@ -334,6 +367,12 @@ void SProfilerInspector::OnLoadFileBtnClicked()
     if (loadPath.IsEmpty())
     {
         NS_SLUA::Log::Log("DeserializeSave no select file");
+        return;
+    }
+
+    if (SluaProfilerDataManager::IsRecording())
+    {
+        ShowNotificationDialog(TEXT("Not support for load sluastat while recording!"));
         return;
     }
 

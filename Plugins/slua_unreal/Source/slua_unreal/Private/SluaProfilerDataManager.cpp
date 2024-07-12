@@ -675,6 +675,9 @@ void FProfileDataProcessRunnable::LoadData(const FString& filePath, int& inCpuVi
         memoryFrameNum = -1;
 
         TArray<uint8> uncompressedBuffer;
+        FScopedSlowTask slowTask(ar->TotalSize());
+        slowTask.MakeDialogDelayed(1.0f);
+        int64 prePos = 0;
         
         while (!ar->AtEnd())
         {
@@ -696,6 +699,8 @@ void FProfileDataProcessRunnable::LoadData(const FString& filePath, int& inCpuVi
 
             FMemoryReader memoryReader(uncompressedBuffer);
             SerializeLoad(memoryReader, inCpuViewBeginIndex, inMemViewBeginIndex, inProfileData, inLuaMemNodeList);
+            slowTask.EnterProgressFrame(ar->Tell() - prePos, FText::FromString(TEXT("Loading slua stat...")));
+            prePos = ar->Tell();
         }
         ar->Close();
         delete ar;

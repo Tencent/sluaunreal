@@ -270,7 +270,11 @@ namespace NS_SLUA {
             lua_State* co = NULL;
             lua_Debug co_ar;
             if (ar->what && strcmp(ar->what, "C") == 0) {
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                StkId o = L->ci ? L->ci->func.p : nullptr;
+#else
                 StkId o = L->ci ? L->ci->func : nullptr;
+#endif
 #if LUA_VERSION_NUM > 503
                 if (ttislcf(s2v(o)) && fvalue(s2v(o)) == LuaProfiler::resumeFunc) {
 #else

@@ -77,7 +77,11 @@ namespace NS_SLUA
             lua_pop(L, 1);
             lua_newtable(L);
             lua_setuservalue(L, 1);
+#if LUA_VERSION_RELEASE_NUM >= 50406
+            L->top.p++;
+#else
             L->top++;
+#endif
         }
         lua_pushvalue(L, 2);
         lua_pushvalue(L, -3);

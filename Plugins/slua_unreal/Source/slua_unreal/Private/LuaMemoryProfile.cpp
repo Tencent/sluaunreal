@@ -187,7 +187,11 @@ namespace NS_SLUA {
         for (int i = 0;;i++) {
             lua_Debug ar;
             AutoStack as(L);
+#if LUA_VERSION_RELEASE_NUM >= 50406
+            if (lua_getstack(L, i, &ar) && L->base_ci.func.p != nullptr && lua_getinfo(L, "nSlf", &ar)) {
+#else
             if (lua_getstack(L, i, &ar) && lua_getinfo(L, "nSlf", &ar)) {
+#endif
                 if (strcmp(ar.what, "C") == 0) {
                     if (ar.name) {
                         firstCName += UTF8_TO_TCHAR(ar.name);

@@ -536,19 +536,31 @@ namespace NS_SLUA {
                     lua_pop(L, 1);
                     lua_newtable(L);
                     lua_setuservalue(L, 1);
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                    L->top.p++;
+#else
                     L->top++;
+#endif
                     setUservalueMeta(L, cls);
                 }
 
                 lua_pushvalue(L, 2); // push key
                 lua_pushvalue(L, -3); // push reference value
                 lua_rawset(L, -3);
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                L->top.p--;
+#else
                 L->top--;
+#endif
             }
             else if (selfType == LUA_TTABLE) {
                 lua_pushstring(L, LuaOverrider::CACHE_NAME);
                 if (lua_rawget(L, 1) == LUA_TNIL) {
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                    L->top.p--;
+#else
                     L->top--;
+#endif
                     lua_newtable(L);
                     setUservalueMeta(L, cls);
                     lua_pushstring(L, LuaOverrider::CACHE_NAME);
@@ -558,7 +570,11 @@ namespace NS_SLUA {
                 lua_pushvalue(L, 2); // push key
                 lua_pushvalue(L, -3); // push reference value
                 lua_rawset(L, -3);
-                L->top--;
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                    L->top.p--;
+#else
+                    L->top--;
+#endif
             }
         }
         return ret;
@@ -663,7 +679,11 @@ namespace NS_SLUA {
                     lua_pop(L, 1);
                     lua_newtable(L);
                     lua_setuservalue(L, 1);
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                    L->top.p++;
+#else
                     L->top++;
+#endif
                 }
                 lua_pushvalue(L, 2);
                 lua_pushvalue(L, -3);
@@ -699,14 +719,22 @@ namespace NS_SLUA {
                 lua_pop(L, 1);
                 lua_newtable(L);
                 lua_setuservalue(L, 1);
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                L->top.p++;
+#else
                 L->top++;
+#endif
                 LuaObject::setUservalueMeta(L, cls);
             }
 
             lua_pushvalue(L, 2); // push key
             lua_pushvalue(L, -3); // push reference value
             lua_rawset(L, -3);
+#if LUA_VERSION_RELEASE_NUM >= 50406
+            L->top.p--;
+#else
             L->top--;
+#endif
         }
     }
 
@@ -899,13 +927,26 @@ namespace NS_SLUA {
             {
                 // get metatable __index function's upvalue[0]
 #if LUA_VERSION_NUM >= 504
-#define G(L) (L->l_G)
+    #define G(L) (L->l_G)
+    #if LUA_VERSION_RELEASE_NUM >= 50406
+                TValue* v = s2v(L->top.p - 1);
+    #else
                 TValue* v = s2v(L->top - 1);
+    #endif
                 CClosure* f = clCvalue(v);
-                setobj2s(L, L->top - 1, &f->upvalue[0]);
-#undef G
+    #undef G
 #else
                 CClosure* f = clCvalue(L->top - 1);
+#endif
+#if LUA_VERSION_NUM >= 504
+    #define G(L) (L->l_G)
+    #if LUA_VERSION_RELEASE_NUM >= 50406
+                setobj2s(L, L->top.p - 1, &f->upvalue[0]);
+    #else
+                setobj2s(L, L->top - 1, &f->upvalue[0]);
+    #endif
+    #undef G
+#else
                 setobj2s(L, L->top - 1, &f->upvalue[0]);
 #endif
 
@@ -961,15 +1002,23 @@ namespace NS_SLUA {
                 {
                     return 1;
                 }
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                L->top.p--;
+#else
                 L->top--;
+#endif
             
                 if (lua_getmetatable(L, -1)) 
                 {
                     lua_pushvalue(L, 2);
                     int cacheType = lua_rawget(L, -2);
                     if (cacheType == LUA_TFUNCTION) {
-#if LUA_VERSION_NUM > 503
+#if LUA_VERSION_NUM >= 504
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                        TValue* v = s2v(L->top.p - 1);
+#else
                         TValue* v = s2v(L->top - 1);
+#endif
                         CClosure* f = clCvalue(v);
 #else
                         CClosure* f = clCvalue(L->top - 1);
@@ -1010,15 +1059,23 @@ namespace NS_SLUA {
                 {
                     return 1;
                 }
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                L->top.p--;
+#else
                 L->top--;
+#endif
 
                 if (lua_getmetatable(L, -1))
                 {
                     lua_pushvalue(L, 2);
                     int cacheType = lua_rawget(L, -2);
                     if (cacheType == LUA_TFUNCTION) {
-#if LUA_VERSION_NUM > 503
+#if LUA_VERSION_NUM >= 504
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                        TValue* v = s2v(L->top.p - 1);
+#else
                         TValue* v = s2v(L->top - 1);
+#endif
                         CClosure* f = clCvalue(v);
 #else
                         CClosure* f = clCvalue(L->top - 1);
@@ -1069,7 +1126,11 @@ namespace NS_SLUA {
                     int cacheType = lua_rawget(L, -2);
                     if (cacheType == LUA_TFUNCTION) {
 #if LUA_VERSION_NUM > 503
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                        TValue* v = s2v(L->top.p - 1);
+#else
                         TValue* v = s2v(L->top - 1);
+#endif
                         CClosure* f = clCvalue(v);
 #else
                         CClosure* f = clCvalue(L->top - 1);
@@ -1097,7 +1158,11 @@ namespace NS_SLUA {
                     int cacheType = lua_rawget(L, -2);
                     if (cacheType == LUA_TFUNCTION) {
 #if LUA_VERSION_NUM > 503
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                        TValue* v = s2v(L->top.p - 1);
+#else
                         TValue* v = s2v(L->top - 1);
+#endif
                         CClosure* f = clCvalue(v);
 #else
                         CClosure* f = clCvalue(L->top - 1);
@@ -1193,7 +1258,11 @@ namespace NS_SLUA {
                 lua_pop(L, 1);
                 lua_newtable(L);
                 lua_setuservalue(L, 1);
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                L->top.p++;
+#else
                 L->top++;
+#endif
                 LuaObject::setUservalueMeta(L, cls);
             }
 
@@ -1211,7 +1280,11 @@ namespace NS_SLUA {
         else if (selfType == LUA_TTABLE) {
             lua_pushstring(L, LuaOverrider::CACHE_NAME);
             if (lua_rawget(L, 1) == LUA_TNIL) {
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                L->top.p--;
+#else
                 L->top--;
+#endif
                 lua_newtable(L);
                 LuaObject::setUservalueMeta(L, cls);
                 lua_pushstring(L, LuaOverrider::CACHE_NAME);
@@ -2642,7 +2715,11 @@ namespace NS_SLUA {
         // avoid lua table resize
         if (lua_rawget(L, -2) != LUA_TNIL)
         {
-            L->top -= 1;
+#if LUA_VERSION_RELEASE_NUM >= 50406
+            L->top.p--;
+#else
+            L->top--;
+#endif
             lua_pushlightuserdata(L, const_cast<void*>(obj));
             lua_pushnil(L);
             // cache[obj] = nil
@@ -2651,10 +2728,18 @@ namespace NS_SLUA {
         else
         {
             // pop nil
-            L->top -= 1;
+#if LUA_VERSION_RELEASE_NUM >= 50406
+            L->top.p--;
+#else
+            L->top--;
+#endif
         }
         // pop cache table;
-        L->top -= 1;
+#if LUA_VERSION_RELEASE_NUM >= 50406
+        L->top.p--;
+#else
+        L->top--;
+#endif
     }
     
     ULatentDelegate* LuaObject::getLatentDelegate(lua_State* L)
@@ -2841,7 +2926,11 @@ namespace NS_SLUA {
                     while (lua_next(L, -2) != 0) 
                     {
                         lua_settable(L, -4);
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                        L->top.p++;
+#else
                         L->top++;
+#endif
                     }
                     lua_pushstring(L, "__index");
                     lua_pushvalue(L, -3);

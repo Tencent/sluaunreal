@@ -62,7 +62,11 @@ namespace NS_SLUA {
             return;
 
         if (ar->what && strcmp(ar->what, "C") == 0) {
+#if LUA_VERSION_RELEASE_NUM >= 50406
+            StkId o = L->ci ? L->ci->func.p : nullptr;
+#else
             StkId o = L->ci ? L->ci->func : nullptr;
+#endif
 #if LUA_VERSION_NUM > 503
             if (ttislcf(s2v(o)) && fvalue(s2v(o)) == LuaProfiler::yieldFunc) {
                 stateYield = event;
@@ -196,7 +200,11 @@ namespace NS_SLUA {
 
         int resumeEvent = 0;
         if (ar->what && strcmp(ar->what, "C") == 0) {
+#if LUA_VERSION_RELEASE_NUM >= 50406
+            StkId o = L->ci ? L->ci->func.p : nullptr;
+#else
             StkId o = L->ci ? L->ci->func : nullptr;
+#endif
 #if LUA_VERSION_NUM > 503
             if (ttislcf(s2v(o)) && fvalue(s2v(o)) == LuaProfiler::resumeFunc) {
 #else

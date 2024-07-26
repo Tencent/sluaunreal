@@ -451,9 +451,14 @@ namespace NS_SLUA {
             CallInfo* ci = L->ci;
             if (index > 0)
             {
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                StkId o = ci->func.p + index;
+                if (o >= L->top.p)
+#else
                 StkId o = ci->func + index;
                 check(index <= L->ci->top - (ci->func + 1));
                 if (o >= L->top)
+#endif
                 {
                     return &L->l_G->nilvalue;
                 }
@@ -464,8 +469,13 @@ namespace NS_SLUA {
             }
             else if (LUA_REGISTRYINDEX < index)
             {  /* negative index */
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                check(index != 0 && -index <= L->top.p - (ci->func.p + 1));
+                return s2v(L->top.p + index);
+#else
                 check(index != 0 && -index <= L->top - (ci->func + 1));
                 return s2v(L->top + index);
+#endif
             }
             else if (index == LUA_REGISTRYINDEX)
             {
@@ -474,15 +484,23 @@ namespace NS_SLUA {
             else
             {  /* upvalues */
                 index = LUA_REGISTRYINDEX - index;
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                if (ttislcf(s2v(ci->func.p)))
+#else
                 check(index <= MAXUPVAL + 1);
                 if (ttislcf(s2v(ci->func)))
+#endif
                 {
                     /* light C function? */
                     return &L->l_G->nilvalue;  /* it has no upvalues */
                 }
                 else
                 {
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                    CClosure* func = clCvalue(s2v(ci->func.p));
+#else
                     CClosure* func = clCvalue(s2v(ci->func));
+#endif
                     return (index <= func->nupvalues) ? &func->upvalue[index - 1] : &L->l_G->nilvalue;
                 }
             }
@@ -506,7 +524,9 @@ namespace NS_SLUA {
             else                                            // upvalues
             {
                 index = LUA_REGISTRYINDEX - index;
+#if LUA_VERSION_RELEASE_NUM < 50406
                 check(index <= MAXUPVAL + 1);
+#endif
                 if (ttislcf(ci->func))
                 {
                     return (TValue*)NULL;                   // light C function has no upvalues
@@ -546,15 +566,21 @@ namespace NS_SLUA {
                 Table* mt = U->metatable;
                 if (mt)
                 {
-#if LUA_VERSION_NUM > 503
+#if LUA_VERSION_NUM >= 504
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                    val_(s2v(L->top.p)).gc = obj2gco(mt);
+                    settt_(s2v(L->top.p), ctb(LUA_VTABLE));
+                    L->top.p++;
+#else
                     val_(s2v(L->top)).gc = obj2gco(mt);
                     settt_(s2v(L->top), ctb(LUA_VTABLE));
+                    L->top++;
+#endif
 #else
                     val_(L->top).gc = obj2gco(mt);
                     settt_((L->top), ctb(LUA_TTABLE));
-#endif
-
                     L->top++;
+#endif
                     lua_pushstring(L, "__name");
                     int tt = lua_rawget(L, -2);
                     if (tt != LUA_TNIL)

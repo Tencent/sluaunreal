@@ -1,44 +1,12 @@
 ﻿#include "ProfileDataDefine.h"
 
-void FProfileNodeArray::Serialize(FArchive& Ar)
-{
-    if (Ar.IsLoading())
-    {
-        int32 childNum = 0;
-        Ar << childNum;
-        NodeArray.Reserve(childNum);
-
-        for (int i = 0; i < childNum; ++i)
-        {
-            FString name;
-            TSharedPtr<FunctionProfileNode> node = MakeShared<FunctionProfileNode>();
-            node->Serialize(Ar);
-            NodeArray.Add(node);
-        }
-    }
-    else if (Ar.IsSaving())
-    {
-        int32 childNum = NodeArray.Num();
-        Ar << childNum;
-
-        for (auto node : NodeArray)
-        {
-            if(node.IsValid())
-            {
-                node->Serialize(Ar);
-            }
-            else
-            {
-                TSharedPtr<FunctionProfileNode> emptyNode = MakeShared<FunctionProfileNode>();
-                emptyNode->Serialize(Ar);
-            }
-        }
-    }
-}
+FProfileNameSet* FProfileNameSet::GlobalProfileNameSet = nullptr;
+FLuaFunctionDefine* FLuaFunctionDefine::Root = new FLuaFunctionDefine();
+FLuaFunctionDefine* FLuaFunctionDefine::Other = new FLuaFunctionDefine();
 
 void FileMemInfo::Serialize(FArchive& Ar)
 {
-    Ar << hint;
+    Ar << fileNameIndex;
     Ar << lineNumber;
     Ar << size;
     Ar << difference;
@@ -69,7 +37,7 @@ void FProflierMemNode::Serialize(FArchive& Ar)
 
                 node.Add(key, fielMemInfo);
             }
-            FString outKey;
+            uint32 outKey;
             Ar << outKey;
             infoList.Add(outKey, node);
         }
@@ -128,24 +96,24 @@ void FProflierMemNode::Serialize(FArchive& Ar)
 
 void FunctionProfileNode::Serialize(FArchive& Ar)
 {
-    Ar << functionName;
+    Ar << functionDefine;
     Ar << costTime;
     Ar << countOfCalls;
     Ar << layerIdx;
 
     if (Ar.IsLoading())
     {
-        childNode = MakeShared<TMap<FString, TSharedPtr<FunctionProfileNode>>>();
+        childNode = MakeShared<FChildNode>();
         int32 childNum = 0;
         Ar << childNum;
 
         for (int i = 0; i < childNum; ++i)
         {
-            FString name;
+            FLuaFunctionDefine childFuncDefine;
             TSharedPtr<FunctionProfileNode> node = MakeShared<FunctionProfileNode>();
-            Ar << name;
+            Ar << childFuncDefine;
             node->Serialize(Ar);
-            childNode->Add(name, node);
+            childNode->Add(childFuncDefine, node);
         }
     }
     else if (Ar.IsSaving() && childNode.IsValid())
@@ -155,9 +123,9 @@ void FunctionProfileNode::Serialize(FArchive& Ar)
 
         for (auto iter : *childNode)
         {
-            auto name = iter.Key;
+            auto childFuncDefine = iter.Key;
             auto node = iter.Value;
-            Ar << name;
+            Ar << childFuncDefine;
             if (iter.Value.IsValid())
             {
                 node->Serialize(Ar);
@@ -173,7 +141,7 @@ void FunctionProfileNode::Serialize(FArchive& Ar)
 
 void FunctionProfileNode::CopyData(TSharedPtr<FunctionProfileNode> NewData)
 {
-    NewData->functionName = this->functionName;
+    NewData->functionDefine = this->functionDefine;
     NewData->costTime = this->costTime;
     NewData->countOfCalls = this->countOfCalls;
     NewData->layerIdx = this->layerIdx;

@@ -22,59 +22,93 @@ public:
     virtual uint32 Run() override;
 
     //接收性能数据
-    void ReceiveProfileData(int hookEvent, int64 time, int lineDefined, FString funcName, FString shortSrc);
+    void ReceiveProfileData(int hookEvent, int64 time, int lineDefined, const FString& funcName, const FString& shortSrc);
+
     //接收内存数据
-    void ReceiveMemoryData(int hookEvent, TArray<NS_SLUA::LuaMemInfo>& memInfoList);
+    void ReceiveMemoryData(int hookEvent, const TArray<NS_SLUA::LuaMemInfo>& memInfoList);
 
     //用外部数据存储数据
-    void SaveDataWithData(int CpuViewBeginIndex, int MemViewBeginIndex,ProfileNodeArrayArray& ProfileData, MemNodeInfoList& LuaMemNodeList, FString SavePath = "");
+    void SaveDataWithData(int inCpuViewBeginIndex, int inMemViewBeginIndex,ProfileNodeArrayArray& inProfileData, const MemNodeInfoList& inLuaMemNodeList);
 
-    //存储数据
-    void SaveData();
+    static FString GenerateStatFilePath();
+
     //解压数据
-    void LoadData(const TArray<uint8>& FileData, int& CpuViewBeginIndex, int& MemViewBeginIndex, ProfileNodeArrayArray& ProfileData, MemNodeInfoList& LuaMemNodeList);
+    void LoadData(const FString& filePath, int& inCpuViewBeginIndex, int& inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, MemNodeInfoList& inLuaMemNodeList);
 
-    //每帧组合以及发送数据
-    bool Tick(slua::LuaState* LS);
     //清除数据
     void OnClearDataWithCallBack(TFunction<void()>&& Callback);
 
     void ClearData();
 
-    bool bIsRecording = false;
+    void StartRecord();
+    void StopRecord();
+
+    bool IsRecording() const;
+
 private:
+    void SerializeFrameData(FArchive& ar, TArray<TSharedPtr<FunctionProfileNode>>& frameFuncRootArr, TSharedPtr<FProflierMemNode>& frameMemNode, const TSharedPtr<FProflierMemNode>& preFrameMemNode);
+    static constexpr int32 CompressedSize = 1024 * 1024;
     FRunnableThread* WorkerThread;
 
+    struct FCPUCommand
+    {
+        int hookEvent;
+        int64 time;
+        int lineDefined;
+        FString funcName;
+        FString shortSrc;
+    };
+    TQueue<FCPUCommand, EQueueMode::Mpsc> cpuCommandQueue;
+
+    struct FMemoryCommand
+    {
+        int hookEvent;
+        TArray<NS_SLUA::LuaMemInfo> memInfoList;
+    };
+    TQueue<FMemoryCommand, EQueueMode::Mpsc> memoryCommandQueue;
+
+    enum FCommandType
+    {
+        ECPU,
+        EMemory,
+    };
+    TQueue<FCommandType, EQueueMode::Mpsc> commandTypeQueue;
+
+    void ProcessCommands();
+    void ProcessCPUCommand(const FCPUCommand& cpuCommand);
+    void ProcessMemoryCommand(const FMemoryCommand& memoryCommand) const;
+
+    bool bIsRecording = false;
     bool RunnableStart = false;
 
-    int cpuViewBeginIndex;
-    int memViewBeginIndex;
-    float lastLuaTotalMemSize;
+    double lastLuaTotalMemSize;
 
     ProfileNodeArrayArray allProfileData;
     TArray<TSharedPtr<FunctionProfileNode>> profileRootArr;
     TQueue<TSharedPtr<FunctionProfileNode>, EQueueMode::Mpsc> funcProfilerNodeQueue;
     TSharedPtr<FProflierMemNode> lastLuaMemNode;
-    MemNodeInfoList allLuaMemNodeList;
 
     MemoryFrameQueue memoryQueue;
     ProfileNodePtr funcProfilerRoot;
     ProfileCallInfoArray profilerStack;
     MemoryFramePtr currentMemory;
     LuaMemInfoMap memoryInfo;
+    int32 memoryFrameNum = -1;
+
+    FArchive* frameArchive = nullptr;
+    bool bCanStartFrameRecord = false;
+    bool bFrameFirstRecord = false;
+    TArray<uint8> dataToCompress;
 
     void PreProcessData(TSharedPtr<FunctionProfileNode> funcInfoRoot, TMap<int64, NS_SLUA::LuaMemInfo>& memoryInfoMap, MemoryFramePtr memoryFrame);
+    void SerializeCompreesedDataToFile(FArchive& ar);
 
     void CollectMemoryNode(TMap<int64, NS_SLUA::LuaMemInfo>& memoryInfoMap, MemoryFramePtr memoryFrame);
 
     void RestartMemoryStatistis();
-    void initLuaMemChartList();
     void ClearCurProfiler();
 
-    //压缩存储及解压部分 BEGIN
-    void SerializeSave(FBufferArchive* BufferArchive, int CpuViewBeginIndex, int MemViewBeginIndex, ProfileNodeArrayArray& ProfileData, MemNodeInfoList& LuaMemNodeList);
-    void DeserializeCompressedSave(FBufferArchive* BufAr, int& CpuViewBeginIndex, int& MemViewBeginIndex, ProfileNodeArrayArray& ProfileData, MemNodeInfoList& LuaMemNodeList);
-    //压缩存储及解压部分 END
+    void SerializeLoad(FArchive& inAR, int& inCpuViewBeginIndex, int& inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, MemNodeInfoList& inLuaMemNodeList);
 };
 
 class SLUA_UNREAL_API SluaProfilerDataManager
@@ -85,12 +119,12 @@ public:
     static void StopManager();
 
     //接收性能数据
-    static void ReceiveProfileData(int hookEvent, int64 time, int lineDefined, FString funcName, FString shortSrc);
+    static void ReceiveProfileData(int hookEvent, int64 time, int lineDefined, const FString& funcName, const FString& shortSrc);
     //接收内存数据
-	static void ReceiveMemoryData(int hookEvent, TArray<NS_SLUA::LuaMemInfo>& memInfoList);
+	static void ReceiveMemoryData(int hookEvent, const TArray<NS_SLUA::LuaMemInfo>& memInfoList);
 
     //用外部数据存储数据
-    static void SaveDataWithData(int CpuViewBeginIndex, int MemViewBeginIndex, ProfileNodeArrayArray& ProfileData, MemNodeInfoList LuaMemNodeList, FString SavePath = "");
+    static void SaveDataWithData(int inCpuViewBeginIndex, int inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, const MemNodeInfoList& inLuaMemNodeList);
 
     //开始录制
     static void BeginRecord();
@@ -98,23 +132,25 @@ public:
     //结束录制
     static void EndRecord();
 
-    //存储数据
-    static void SaveData();
+    static bool IsRecording();
+
     //解压数据
-    static void LoadData(const TArray<uint8>& FileData, int& CpuViewBeginIndex, int& MemViewBeginIndex, ProfileNodeArrayArray& ProfileData, MemNodeInfoList& LuaMemNodeList);
+    static void LoadData(const FString& filePath, int& inCpuViewBeginIndex, int& inMemViewBeginIndex, ProfileNodeArrayArray& inProfileData, MemNodeInfoList& inLuaMemNodeList);
 
     //清除数据
     static void OnClearDataWithCallBack(TFunction<void()>&& Callback);
 
     static void ClearData();
 
-    static void WatchBegin(const FString& funcName, double nanoseconds, ProfileNodePtr funcProfilerRoot, ProfileCallInfoArray& profilerStack);
-    static void WatchEnd(const FString& functionName, double nanoseconds, ProfileCallInfoArray& profilerStack);
-    static void CoroutineBegin(const FString& funcName, double nanoseconds, ProfileNodePtr funcProfilerRoot, ProfileCallInfoArray& profilerStack);
+    static void WatchBegin(const FString& fileName, int32 lineDefined, const FString& funcName, double nanoseconds, ProfileNodePtr funcProfilerRoot, ProfileCallInfoArray& profilerStack);
+    static void WatchEnd(const FString& fileName, int32 lineDefined, const FString& functionName, double nanoseconds, ProfileCallInfoArray& profilerStack);
+    static void CoroutineBegin(int32 lineDefined, const FString& funcName, double nanoseconds, ProfileNodePtr funcProfilerRoot, ProfileCallInfoArray& profilerStack);
     static void CoroutineEnd(double nanoseconds, ProfileCallInfoArray& profilerStack);
 
-    static void InitProfileNode(TSharedPtr<FunctionProfileNode>& funcNode, const FString& funcName, int32 layerIdx);
+    static void InitProfileNode(TSharedPtr<FunctionProfileNode>& funcNode, const FLuaFunctionDefine& funcDefine, int32 layerIdx);
     static void AddToParentNode(TSharedPtr<FunctionProfileNode> patentNode, TSharedPtr<FunctionProfileCallInfo> callInfo);
+    
+    static FProfileNameSet* ProfileNameSet;
 private:
     static FProfileDataProcessRunnable* ProcessRunnable;
 };

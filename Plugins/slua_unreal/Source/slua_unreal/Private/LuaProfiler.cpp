@@ -221,26 +221,36 @@ namespace NS_SLUA {
 
         void takeSample(int event,int line,const char* funcname,const char* shortsrc, int64 startTime, lua_State* L) {
             QUICK_SCOPE_CYCLE_COUNTER(LuaProfiler_takeSample)
-            // clear writer;
-            static FArrayWriter s_messageWriter;
-            s_messageWriter.Empty();
-            s_messageWriter.Seek(0);
-            makeProfilePackage(s_messageWriter, event, startTime - profileTotalCost, line, funcname, shortsrc);
-            sendMessage(s_messageWriter, L);
-
-            SluaProfilerDataManager::ReceiveProfileData(event, startTime - profileTotalCost, line, funcname, shortsrc);
+            if (!SluaProfilerDataManager::IsRecording())
+            {
+                // clear writer;
+                static FArrayWriter s_messageWriter;
+                s_messageWriter.Empty();
+                s_messageWriter.Seek(0);
+                makeProfilePackage(s_messageWriter, event, startTime - profileTotalCost, line, funcname, shortsrc);
+                sendMessage(s_messageWriter, L);
+            }
+            else
+            {
+                SluaProfilerDataManager::ReceiveProfileData(event, startTime - profileTotalCost, line, funcname, shortsrc);
+            }
         }
 
         void takeMemorySample(int event, TArray<LuaMemInfo>& memoryDetail, lua_State* L) {
             QUICK_SCOPE_CYCLE_COUNTER(LuaProfiler_takeMemorySample)
-            // clear writer;
-            static FArrayWriter s_memoryMessageWriter;
-            s_memoryMessageWriter.Empty();
-            s_memoryMessageWriter.Seek(0);
-            makeMemoryProfilePackage(s_memoryMessageWriter, event, memoryDetail);
-            sendMessage(s_memoryMessageWriter, L);
-
-            SluaProfilerDataManager::ReceiveMemoryData(event, memoryDetail);
+            if (!SluaProfilerDataManager::IsRecording())
+            {
+                // clear writer;
+                static FArrayWriter s_memoryMessageWriter;
+                s_memoryMessageWriter.Empty();
+                s_memoryMessageWriter.Seek(0);
+                makeMemoryProfilePackage(s_memoryMessageWriter, event, memoryDetail);
+                sendMessage(s_memoryMessageWriter, L);
+            }
+            else
+            {
+                SluaProfilerDataManager::ReceiveMemoryData(event, memoryDetail);
+            }
         }
 
         void debug_hook(lua_State* L, lua_Debug* ar) {
@@ -260,7 +270,11 @@ namespace NS_SLUA {
             lua_State* co = NULL;
             lua_Debug co_ar;
             if (ar->what && strcmp(ar->what, "C") == 0) {
+#if LUA_VERSION_RELEASE_NUM >= 50406
+                StkId o = L->ci ? L->ci->func.p : nullptr;
+#else
                 StkId o = L->ci ? L->ci->func : nullptr;
+#endif
 #if LUA_VERSION_NUM > 503
                 if (ttislcf(s2v(o)) && fvalue(s2v(o)) == LuaProfiler::resumeFunc) {
 #else
@@ -312,6 +326,7 @@ namespace NS_SLUA {
         }
 
         int changeHookState(lua_State* L) {
+            auto LS = LuaState::get(L);
             HookState state = (HookState)lua_tointeger(L, 1);
             currentHookState = state;
             if (state == HookState::UNHOOK) {
@@ -319,9 +334,9 @@ namespace NS_SLUA {
             }
             else if (state == HookState::HOOKED) {
                 profileTotalCost = 0;
-                LuaMemoryProfile::onStart();
+                LuaMemoryProfile::onStart(LS);
 
-                auto& memoryDetail = LuaMemoryProfile::memDetail(LuaState::get(L));
+                auto& memoryDetail = LuaMemoryProfile::memDetail(LS);
                 TArray<LuaMemInfo> memoryInfoList;
                 memoryInfoList.Reserve(memoryDetail.Num());
                 for (auto& memInfo : memoryDetail) {
@@ -339,7 +354,7 @@ namespace NS_SLUA {
             else
                 luaL_error(L, "Set error value to hook state");
 
-            auto& profiler = selfProfiler.FindChecked(LuaState::get(L));
+            auto& profiler = selfProfiler.FindChecked(LS);
             profiler.callField("changeCoroutinesHookState", profiler);
             return 0;
         }
@@ -406,6 +421,18 @@ namespace NS_SLUA {
             }
             return 0;
         }
+
+        int startMemoryTrack(lua_State* L)
+        {
+            LuaMemoryProfile::start(L);
+            return 0;
+        }
+
+        int stopMemoryTrack(lua_State* L)
+        {
+            LuaMemoryProfile::stop(L);
+            return 0;
+        }
     }
 
     lua_CFunction LuaProfiler::resumeFunc = nullptr;
@@ -431,6 +458,10 @@ namespace NS_SLUA {
         lua_setfield(L, -2, "setHookLevel");
         lua_pushcfunction(L, onChangeRecordState);
         lua_setfield(L, -2, "onChangeRecordState");
+        lua_pushcfunction(L, startMemoryTrack);
+        lua_setfield(L, -2, "startMemoryTrack");
+        lua_pushcfunction(L, stopMemoryTrack);
+        lua_setfield(L, -2, "stopMemoryTrack");
         // using native hook instead of lua hook for performance
         // set selfProfiler to global as slua_profiler
         lua_setglobal(L, "slua_profile");
@@ -482,6 +513,9 @@ namespace NS_SLUA {
             profiler.callField("stop", profiler);
             selfProfiler.Remove(LS);
         }
+
+        SluaProfilerDataManager::EndRecord();
+
         tcpSocket = nullptr;
         ignoreHook = false;
         currentHookState = HookState::UNHOOK;

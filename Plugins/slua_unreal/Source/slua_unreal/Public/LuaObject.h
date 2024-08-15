@@ -618,7 +618,7 @@ namespace NS_SLUA {
             if(checkfree && !typearg)
                 luaL_error(L,"expect userdata at %d, if you passed an UObject, maybe it's unreachable",p);
 
-            if (LuaObject::isBaseTypeOf(L, typearg, TypeName<T>::value().c_str())) {
+            if (typearg && LuaObject::isBaseTypeOf(L, typearg, TypeName<T>::value().c_str())) {
                 UserData<T*> *udptr = reinterpret_cast<UserData<T*>*>(lua_touserdata(L, p));
                 CHECK_UD_VALID(udptr);
                 return udptr->ud;

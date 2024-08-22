@@ -104,7 +104,7 @@ int ULuaDelegate::removeLuaDelegate(NS_SLUA::lua_State* L, ULuaDelegate* obj)
     return 0;
 }
 
-int ULuaDelegate::removeLuaDelegateByHandle(slua::lua_State* L, int64 handle)
+int ULuaDelegate::removeLuaDelegateByHandle(NS_SLUA::lua_State* L, int64 handle)
 {
     auto objPtr = DelegateHandleToObjectMap.Find(handle);
     if (!objPtr)

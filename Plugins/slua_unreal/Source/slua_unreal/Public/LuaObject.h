@@ -140,10 +140,9 @@ namespace NS_SLUA {
     #define UD_THREADSAFEPTR 1<<5 // it's a TSharedptr with thread-safe mode in userdata instead of raw pointer
     #define UD_UOBJECT 1<<6 // flag it's an UObject
     #define UD_USTRUCT 1<<7 // flag it's an UStruct
-    #define UD_WEAKUPTR 1<<8 // flag it's a weak UObject ptr
-    #define UD_REFERENCE 1<<9
-    #define UD_VALUETYPE 1<<10 // flag it's a valuetype, don't cache value by ptr
-    #define UD_NETTYPE 1<<11 // flag it's a net replicate property
+    #define UD_REFERENCE 1<<8
+    #define UD_VALUETYPE 1<<9 // flag it's a valuetype, don't cache value by ptr
+    #define UD_NETTYPE 1<<10 // flag it's a net replicate property
 
     struct UDBase {
         uint32 flag;
@@ -219,21 +218,6 @@ namespace NS_SLUA {
         }
     };
 
-    struct WeakUObjectUD {
-        FWeakObjectPtr ud;
-        WeakUObjectUD(FWeakObjectPtr ptr):ud(ptr) {
-
-        }
-
-        bool isValid() {
-            return ud.IsValid();
-        }
-
-        UObject* get() {
-            return ud.Get();
-        }
-    };
-
     class SLUA_UNREAL_API LuaObject
     {
     private:
@@ -269,14 +253,7 @@ namespace NS_SLUA {
             UserData<UObject*>* ptr = (UserData<UObject*>*)getUserdataFast(L, p, "UObject", isnil);
             if (isnil) { return nullptr; }
             CHECK_UD_VALID(ptr);
-            T* t;
-            // if it's a weak UObject, rawget it
-            if (ptr && ptr->flag&UD_WEAKUPTR) {
-                auto wptr = (UserData<WeakUObjectUD*>*)ptr;
-                t = Cast<T>(wptr->ud->get());
-            }
-            else t = ptr?Cast<T>(ptr->ud):nullptr;
-
+            T* t = ptr?Cast<T>(ptr->ud):nullptr;
             if (!t && lua_isuserdata(L, p)) {
                 luaL_getmetafield(L, p, "__name");
                 if (lua_isnil(L, -1)) {
@@ -306,14 +283,12 @@ namespace NS_SLUA {
             auto ptr = (UserData<UObject*>*)getUserdataFast(L, p, "UObject", isnil);
             if (isnil) { return nullptr; }
             CHECK_UD_VALID(ptr);
-            if (!ptr) return maybeAnUDTable<T>(L, p, checkfree);
-            // if it's a weak UObject ptr
-            if (ptr->flag&UD_WEAKUPTR) {
-                auto wptr = (UserData<WeakUObjectUD*>*)ptr;
-                return wptr->ud->get();
+            if (!ptr) {
+                return maybeAnUDTable<T>(L, p, checkfree);
             }
-            else if (isUObjectValid(ptr->ud) || !checkfree)
+            if (isUObjectValid(ptr->ud) || !checkfree) {
                 return ptr->ud;
+            }
             return nullptr;
         }
 
@@ -853,31 +828,6 @@ namespace NS_SLUA {
         }
 
         static const char* getType(lua_State* L, int p);
-
-        // for weak UObject
-
-        static int gcWeakUObject(lua_State* L) {
-            luaL_checktype(L, 1, LUA_TUSERDATA);
-            UserData<WeakUObjectUD*>* ud = reinterpret_cast<UserData<WeakUObjectUD*>*>(lua_touserdata(L, 1));
-            ensure(ud->flag&UD_WEAKUPTR);
-            ud->flag |= UD_HADFREE;
-            delete ud->ud;
-            return 0;
-        }
-
-        static int pushWeakType(lua_State* L, WeakUObjectUD* cls) {
-#if LUA_VERSION_NUM > 503 
-            UserData<WeakUObjectUD*>* ud = reinterpret_cast<UserData<WeakUObjectUD*>*>(lua_newuserdatauv(L, sizeof(UserData<WeakUObjectUD*>), 0));
-#else
-            UserData<WeakUObjectUD*>* ud = reinterpret_cast<UserData<WeakUObjectUD*>*>(lua_newuserdata(L, sizeof(UserData<WeakUObjectUD*>)));
-#endif
-            
-            ud->parent = nullptr;
-            ud->ud = cls;
-            ud->flag = UD_WEAKUPTR | UD_AUTOGC;
-            setupMetaTable(L, "UObject", setupInstanceMT, gcWeakUObject);
-            return 1;
-        }
 
         // for TSharePtr version
 

@@ -335,10 +335,6 @@ namespace NS_SLUA {
                                : obj = LuaObject::checkUD<UClass>(L, 1, false);
             bIsValid = LuaObject::isUObjectValid(obj);
         }
-        else if (gud->flag&UD_WEAKUPTR) {
-            UserData<WeakUObjectUD*>* wud = (UserData<WeakUObjectUD*>*)gud;
-            bIsValid = wud->ud->isValid();
-        }
         return LuaObject::push(L, bIsValid);
     }
 

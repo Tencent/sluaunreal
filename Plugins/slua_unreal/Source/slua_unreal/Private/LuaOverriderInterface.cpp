@@ -6,9 +6,9 @@ ULuaOverriderInterface::ULuaOverriderInterface(const class FObjectInitializer& O
 {
 }
 
-NS_SLUA::LuaVar ILuaOverriderInterface::GetSelfTable() const
+NS_SLUA::LuaVar ILuaOverriderInterface::GetSelfTable(NS_SLUA::LuaState* L/* = nullptr*/) const
 {
-    NS_SLUA::LuaVar* luaSelfTable = ULuaOverrider::getObjectLuaTable(Cast<UObject>(this));
+    NS_SLUA::LuaVar* luaSelfTable = ULuaOverrider::getObjectLuaTable(Cast<UObject>(this), L ? L->getLuaState() : nullptr);
     if (luaSelfTable)
     {
         return *luaSelfTable;

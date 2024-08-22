@@ -771,7 +771,10 @@ namespace NS_SLUA {
         lua_pushstring(L, fn);
         
         if (lua_pcall(L, 1, 1, top))
-            lua_pop(L, 1);
+        {
+            lua_pop(L, 2);
+            return LuaVar();
+        }
 
         lua_remove(L, top);
 

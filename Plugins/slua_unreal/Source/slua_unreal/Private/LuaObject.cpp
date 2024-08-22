@@ -1750,7 +1750,7 @@ namespace NS_SLUA {
         ensure(p);
         auto p2 = p->GetUnderlyingProperty();
         ensure(p2);
-        int e = p2->GetSignedIntPropertyValue(parms);
+        auto e = p2->GetSignedIntPropertyValue(parms);
         return LuaObject::push(L, e);
     }
 

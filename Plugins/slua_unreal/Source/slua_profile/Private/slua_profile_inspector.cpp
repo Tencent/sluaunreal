@@ -33,8 +33,8 @@
 #if WITH_EDITOR
 #include "EditorStyleSet.h"
 #endif
-#include "NotificationManager.h"
-#include "SNotificationList.h"
+#include "Framework/Notifications/NotificationManager.h"
+#include "Widgets/Notifications/SNotificationList.h"
 #include "Serialization/ArrayWriter.h"
 #include "Misc/FileHelper.h"
 #include "HAL/FileManager.h"

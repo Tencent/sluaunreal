@@ -6,6 +6,7 @@
 #include "LuaProfiler.h"
 #include "Serialization/MemoryReader.h"
 #include "Misc/Paths.h"
+#include "Misc/ScopedSlowTask.h"
 #include <LuaState.h>
 
 #include "HAL/RunnableThread.h"

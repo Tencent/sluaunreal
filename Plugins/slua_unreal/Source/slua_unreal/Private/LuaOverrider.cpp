@@ -467,7 +467,7 @@ NS_SLUA::LuaVar* ULuaOverrider::getObjectLuaTable(const UObject* obj, NS_SLUA::l
     return nullptr;
 }
 
-ULuaOverrider::FObjectTable* ULuaOverrider::getObjectTable(const UObject* obj, slua::lua_State* L)
+ULuaOverrider::FObjectTable* ULuaOverrider::getObjectTable(const UObject* obj, NS_SLUA::lua_State* L)
 {
     if (L)
     {

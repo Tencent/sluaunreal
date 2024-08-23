@@ -115,7 +115,7 @@ namespace NS_SLUA
         luaRPCTypeMap.Add(rpcType, netFlag);
     }
 
-    ClassLuaReplicated* LuaNet::addClassReplicatedProps(slua::lua_State* L, UObject* obj, const slua::LuaVar& luaModule)
+    ClassLuaReplicated* LuaNet::addClassReplicatedProps(NS_SLUA::lua_State* L, UObject* obj, const NS_SLUA::LuaVar& luaModule)
     {
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         typedef NS_SLUA::EPropertyClass EPropertyClass;
@@ -348,8 +348,8 @@ namespace NS_SLUA
         }
     }
 
-    void LuaNet::initLuaReplicatedProps(slua::lua_State* L, UObject* obj, const ClassLuaReplicated& classReplicated,
-        const slua::LuaVar& luaTable)
+    void LuaNet::initLuaReplicatedProps(NS_SLUA::lua_State* L, UObject* obj, const ClassLuaReplicated& classReplicated,
+        const NS_SLUA::LuaVar& luaTable)
     {
         auto prop = classReplicated.ownerProperty.Get();
         if (!prop)

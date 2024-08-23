@@ -450,7 +450,7 @@ void FLuaNetSerialization::ReadItem(FNetDeltaSerializeInfo& deltaParms, NS_SLUA:
         auto &arrayPropInfo = classReplicated->flatArrayPropInfos[flatOffset];
         auto &flatReplicateProperties = arrayPropInfo.properties;
         auto innerPropNum = arrayPropInfo.innerPropertyNum;
-        auto innerProp = CastField<slua::FArrayProperty>(flatPropInfo.prop)->Inner;
+        auto innerProp = CastField<NS_SLUA::FArrayProperty>(flatPropInfo.prop)->Inner;
         auto arrayHelper = FScriptArrayHelper::CreateHelperFormInnerProperty(innerProp, data + flatOffset);
 
         int32 arrayNum = 0;
@@ -1077,7 +1077,7 @@ bool FLuaNetSerialization::IsSupportSharedSerialize(NS_SLUA::FProperty* prop)
 }
 
 
-void FLuaNetSerialization::CallOnRep(NS_SLUA::lua_State* L, const slua::LuaVar& luaTable, const FString& propName, NS_SLUA::FProperty* prop, uint8* oldData)
+void FLuaNetSerialization::CallOnRep(NS_SLUA::lua_State* L, const NS_SLUA::LuaVar& luaTable, const FString& propName, NS_SLUA::FProperty* prop, uint8* oldData)
 {
     QUICK_SCOPE_CYCLE_COUNTER(LuaNetDeltaSerialization_CallOnRep);
     const FString funcName = "OnRep_" + propName;

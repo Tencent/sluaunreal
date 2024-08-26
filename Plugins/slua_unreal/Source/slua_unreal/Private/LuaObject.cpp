@@ -2384,7 +2384,7 @@ namespace NS_SLUA {
     void* checkUProperty<FEnumProperty>(lua_State* L, FProperty* prop, uint8* parms, int i, bool bForceCopy) {
         auto p = CastField<FEnumProperty>(prop);
         ensure(p);
-        auto v = (int64)LuaObject::checkValue<int>(L, i);
+        auto v = (int64)LuaObject::checkValue<int64>(L, i);
         p->CopyCompleteValue(parms, &v);
         return nullptr;
     }

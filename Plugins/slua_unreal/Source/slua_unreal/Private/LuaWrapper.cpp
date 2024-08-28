@@ -14,6 +14,8 @@
 #include "LuaWrapper.h"
 #include "LuaObject.h"
 #include "LuaNetSerialization.h"
+#include "UObject/Package.h"
+#include "Misc/FrameTime.h"
 
 #define SLUA_GCSTRUCT(typeName) auto flag = udptr->flag; \
                     if (udptr->parent) { \

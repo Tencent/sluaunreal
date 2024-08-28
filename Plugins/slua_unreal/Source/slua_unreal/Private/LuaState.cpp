@@ -20,7 +20,7 @@
 #include "SluaLib.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/Package.h"
-#include "Blueprint/UserWidget.h"
+#include "Engine/GameInstance.h"
 #include "Misc/AssertionMacros.h"
 #include "Misc/SecureHash.h"
 #include "Log.h"

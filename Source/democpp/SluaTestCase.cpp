@@ -16,6 +16,7 @@
 #include "UObject/UObjectGlobals.h"
 #include "UObject/Package.h"
 #include "Misc/AssertionMacros.h"
+#include "Engine/HitResult.h"
 #include "HttpModule.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"

@@ -15,7 +15,9 @@
 #include "LuaOverrider.h"
 #include "LuaOverriderInterface.h"
 #include "LuaNetSerialization.h"
+#include "UObject/Package.h"
 #include "Engine/NetDriver.h"
+#include "Engine/GameInstance.h"
 
 namespace NS_SLUA
 {

@@ -16,6 +16,7 @@
 #include <functional>
 #include <string.h>
 #include "Layout/Margin.h"
+#include "Layout/Geometry.h"
 #include "Styling/SlateColor.h"
 #include "Styling/SlateBrush.h"
 #include "Widgets/Layout/Anchors.h"

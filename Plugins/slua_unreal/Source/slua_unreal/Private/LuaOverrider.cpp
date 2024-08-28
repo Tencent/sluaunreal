@@ -8,6 +8,7 @@
 #include "UObject/Script.h"
 #include "LuaVar.h"
 #include "LuaNet.h"
+#include "UObject/Package.h"
 #include "UObject/UObjectBaseUtility.h"
 #include "UObject/UObjectThreadContext.h"
 #include "LuaOverriderInterface.h"
@@ -15,6 +16,8 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Engine/GameEngine.h"
 #include "Engine/NetDriver.h"
+#include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerController.h"
 

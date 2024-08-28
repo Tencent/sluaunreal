@@ -35,7 +35,7 @@
 #include <chrono>
 
 #include "LuaOverrider.h"
-#include "Engine/GameEngine.h"
+#include "Engine/GameInstance.h"
 
 #if UE_BUILD_DEVELOPMENT
 #include "GenericPlatform/GenericPlatformMisc.h"

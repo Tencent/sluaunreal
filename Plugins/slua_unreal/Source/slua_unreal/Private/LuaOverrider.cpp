@@ -74,6 +74,7 @@ void ULuaOverrider::luaOverrideFunc(UObject* Context, FFrame& Stack, RESULT_DECL
     bool bCallFromNative = false;
     bool bContextOp = false;
     
+    FMemMark MemMark(FMemStack::Get());
     TArray<FProperty*, TMemStackAllocator<>> propertyToDestructList;
 
     if (Stack.CurrentNativeFunction)
@@ -719,6 +720,7 @@ namespace NS_SLUA
         {
             FRWScopeLock lock(classHookMutex, SLT_Write);
             UClass::ClassConstructorType *classConstructorFuncPtr = nullptr;
+            FMemMark MemMark(FMemStack::Get());
             TArray<UClass*, TMemStackAllocator<>> handleClasses;
             auto superCls = cls;
             while (classConstructorFuncPtr == nullptr && superCls)

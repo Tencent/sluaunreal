@@ -935,7 +935,7 @@ namespace NS_SLUA
 #if WITH_EDITOR
     void clearSuperFuncCache(UClass* cls)
     {
-        if (!cls->IsValidLowLevel() || !IsValid(cls))
+        if (!cls || !cls->IsValidLowLevel() || !IsValid(cls))
         {
             return;
         }

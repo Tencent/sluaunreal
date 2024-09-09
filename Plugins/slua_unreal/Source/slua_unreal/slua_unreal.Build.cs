@@ -28,8 +28,8 @@ public class slua_unreal : ModuleRules
 #endif
         bEnableUndefinedIdentifierWarnings = false;
 
-        var externalSource = Path.Combine(ModuleDirectory, "../../External");
-        var externalLib = Path.Combine(ModuleDirectory, "../../Library");
+        var externalSource = Path.Combine(PluginDirectory, "External");
+        var externalLib = Path.Combine(PluginDirectory, "Library");
 
         PublicIncludePaths.AddRange(
             new string[] {

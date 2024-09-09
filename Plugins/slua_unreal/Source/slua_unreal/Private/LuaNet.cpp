@@ -26,7 +26,7 @@ namespace NS_SLUA
     LuaNet::ClassLuaReplicatedMap LuaNet::classLuaReplicatedMap;
     LuaNet::LuaNetSerializationMap LuaNet::luaNetSerializationMap;
     LuaNet::ObjectToLuaNetAddressMap LuaNet::objectToLuaNetAddressMap;
-    TArray<const UClass*> LuaNet::luaReplicateClasses;
+    TArray<const UClass*, TAlignedHeapAllocator<16>> LuaNet::luaReplicateClasses;
     TSet<TWeakObjectPtr<UClass>> LuaNet::addedRPCClasses;
 #if WITH_EDITOR
     TSet<TWeakObjectPtr<UFunction>> LuaNet::luaRPCFuncs;

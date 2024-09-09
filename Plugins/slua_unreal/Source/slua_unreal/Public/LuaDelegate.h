@@ -74,7 +74,7 @@ namespace NS_SLUA {
         static int Add(lua_State* L);
         static int Remove(lua_State* L);
         static int Clear(lua_State* L);
-        static int BroadCast(lua_State* L);
+        static int Broadcast(lua_State* L);
         static int gc(lua_State* L);
     };
 

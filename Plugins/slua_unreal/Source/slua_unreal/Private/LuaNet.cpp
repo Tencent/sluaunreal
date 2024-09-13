@@ -15,7 +15,9 @@
 #include "LuaOverrider.h"
 #include "LuaOverriderInterface.h"
 #include "LuaNetSerialization.h"
+#include "UObject/Package.h"
 #include "Engine/NetDriver.h"
+#include "Engine/GameInstance.h"
 
 namespace NS_SLUA
 {
@@ -24,7 +26,7 @@ namespace NS_SLUA
     LuaNet::ClassLuaReplicatedMap LuaNet::classLuaReplicatedMap;
     LuaNet::LuaNetSerializationMap LuaNet::luaNetSerializationMap;
     LuaNet::ObjectToLuaNetAddressMap LuaNet::objectToLuaNetAddressMap;
-    TArray<const UClass*> LuaNet::luaReplicateClasses;
+    TArray<const UClass*, TAlignedHeapAllocator<16>> LuaNet::luaReplicateClasses;
     TSet<TWeakObjectPtr<UClass>> LuaNet::addedRPCClasses;
 #if WITH_EDITOR
     TSet<TWeakObjectPtr<UFunction>> LuaNet::luaRPCFuncs;
@@ -115,7 +117,7 @@ namespace NS_SLUA
         luaRPCTypeMap.Add(rpcType, netFlag);
     }
 
-    ClassLuaReplicated* LuaNet::addClassReplicatedProps(slua::lua_State* L, UObject* obj, const slua::LuaVar& luaModule)
+    ClassLuaReplicated* LuaNet::addClassReplicatedProps(NS_SLUA::lua_State* L, UObject* obj, const NS_SLUA::LuaVar& luaModule)
     {
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         typedef NS_SLUA::EPropertyClass EPropertyClass;
@@ -348,8 +350,8 @@ namespace NS_SLUA
         }
     }
 
-    void LuaNet::initLuaReplicatedProps(slua::lua_State* L, UObject* obj, const ClassLuaReplicated& classReplicated,
-        const slua::LuaVar& luaTable)
+    void LuaNet::initLuaReplicatedProps(NS_SLUA::lua_State* L, UObject* obj, const ClassLuaReplicated& classReplicated,
+        const NS_SLUA::LuaVar& luaTable)
     {
         auto prop = classReplicated.ownerProperty.Get();
         if (!prop)

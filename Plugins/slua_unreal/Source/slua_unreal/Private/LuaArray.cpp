@@ -309,7 +309,9 @@ namespace NS_SLUA {
             prop = PropertyProto::createProperty(PropertyProto(type));
             break;
         }
-        
+        if (!prop) {
+            luaL_error(L, "Unsupported type[%d] of LuaArray!", type);
+        }
         auto array = FScriptArray();
         return push(L, prop, &array, true);
     }

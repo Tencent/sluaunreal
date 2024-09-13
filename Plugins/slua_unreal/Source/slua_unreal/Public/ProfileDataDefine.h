@@ -104,10 +104,10 @@ struct SLUA_UNREAL_API FProfileNameSet
         Ar << profileNameSet.indexSet;
         if (Ar.IsLoading())
         {
-            auto& stringToIndex = profileNameSet.stringToIndex;
+            auto& strToIndex = profileNameSet.stringToIndex;
             for (auto iter = profileNameSet.indexToString.CreateConstIterator(); iter; ++iter)
             {
-                stringToIndex.Emplace(iter.Value(), iter.Key());
+                strToIndex.Emplace(iter.Value(), iter.Key());
             }
         }
         profileNameSet.increaseString.Empty();

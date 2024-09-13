@@ -35,7 +35,7 @@
 #include <chrono>
 
 #include "LuaOverrider.h"
-#include "Engine/GameEngine.h"
+#include "Engine/GameInstance.h"
 
 #if UE_BUILD_DEVELOPMENT
 #include "GenericPlatform/GenericPlatformMisc.h"
@@ -334,10 +334,6 @@ namespace NS_SLUA {
                                ? LuaObject::checkUD<UObject>(L, 1, false)
                                : obj = LuaObject::checkUD<UClass>(L, 1, false);
             bIsValid = LuaObject::isUObjectValid(obj);
-        }
-        else if (gud->flag&UD_WEAKUPTR) {
-            UserData<WeakUObjectUD*>* wud = (UserData<WeakUObjectUD*>*)gud;
-            bIsValid = wud->ud->isValid();
         }
         return LuaObject::push(L, bIsValid);
     }

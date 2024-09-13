@@ -1750,7 +1750,7 @@ namespace NS_SLUA {
         ensure(p);
         auto p2 = p->GetUnderlyingProperty();
         ensure(p2);
-        int e = p2->GetSignedIntPropertyValue(parms);
+        auto e = p2->GetSignedIntPropertyValue(parms);
         return LuaObject::push(L, e);
     }
 
@@ -1846,7 +1846,7 @@ namespace NS_SLUA {
     int pushUWeakProperty(lua_State* L, FProperty* prop, uint8* parms, int i, NewObjectRecorder* objRecorder) {
         auto p = CastField<FWeakObjectProperty>(prop);
         ensure(p);
-        FWeakObjectPtr v = p->GetPropertyValue(parms);
+        const FWeakObjectPtr& v = p->GetPropertyValue(parms);
         return LuaObject::push(L, v);
     }
 
@@ -2384,7 +2384,7 @@ namespace NS_SLUA {
     void* checkUProperty<FEnumProperty>(lua_State* L, FProperty* prop, uint8* parms, int i, bool bForceCopy) {
         auto p = CastField<FEnumProperty>(prop);
         ensure(p);
-        auto v = (int64)LuaObject::checkValue<int>(L, i);
+        auto v = (int64)LuaObject::checkValue<int64>(L, i);
         p->CopyCompleteValue(parms, &v);
         return nullptr;
     }
@@ -2955,12 +2955,7 @@ namespace NS_SLUA {
             return 1;
         }
         if (getObjCache(L, obj, "UObject")) return 1;
-        int r = pushWeakType(L, new WeakUObjectUD(ptr));
-        if (r) {
-            addLink(L, obj);
-            cacheObj(L, obj);
-        }
-        return r;
+        return push(L, obj);
     }
 
     template<typename T>

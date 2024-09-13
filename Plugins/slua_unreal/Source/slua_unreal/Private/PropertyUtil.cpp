@@ -291,6 +291,12 @@ namespace NS_SLUA {
         case EPropertyClass::Str:
             p = newProperty(owner, FStrProperty::StaticClass(), propName);
             break;
+        case EPropertyClass::Name:
+            p = newProperty(owner, FNameProperty::StaticClass(), propName);
+            break;
+        case EPropertyClass::Text:
+            p = newProperty(owner, FTextProperty::StaticClass(), propName);
+            break;
         case EPropertyClass::Object: {
             auto op = newProperty<FObjectPropertyBase>(owner, FObjectProperty::StaticClass(), propName);
             op->SetPropertyClass(proto.cls);

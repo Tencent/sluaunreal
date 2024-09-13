@@ -8,6 +8,7 @@
 #include "UObject/Script.h"
 #include "LuaVar.h"
 #include "LuaNet.h"
+#include "UObject/Package.h"
 #include "UObject/UObjectBaseUtility.h"
 #include "UObject/UObjectThreadContext.h"
 #include "LuaOverriderInterface.h"
@@ -15,6 +16,8 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Engine/GameEngine.h"
 #include "Engine/NetDriver.h"
+#include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerController.h"
 
@@ -468,7 +471,7 @@ NS_SLUA::LuaVar* ULuaOverrider::getObjectLuaTable(const UObject* obj, NS_SLUA::l
     return nullptr;
 }
 
-ULuaOverrider::FObjectTable* ULuaOverrider::getObjectTable(const UObject* obj, slua::lua_State* L)
+ULuaOverrider::FObjectTable* ULuaOverrider::getObjectTable(const UObject* obj, NS_SLUA::lua_State* L)
 {
     if (L)
     {

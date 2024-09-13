@@ -51,32 +51,33 @@ function Class(base, static, classImplement)
         __index = class_index,
     }
 
+    local function recursiveCtor(r, impl, ...)
+        local superImpl = impl.__super_impl
+        if superImpl then
+            recursiveCtor(r, superImpl, ...)
+        end
+        local ctor = impl.ctor
+        if ctor then
+            ctor(r, ...)
+        end
+    end
+
     setmetatable(class,
         {
             __index = class_index,
 
-            __newindex = function ()
-                error("Prevent __newindex with class!")
+            __newindex = function (t, k, v)
+                error(string_format("Prevent __newindex with class! k=%s", k))
             end,
 
-            __call = function(...)
-                local r = base_mt.__call(...)
+            __call = function(_, ...)
+                local r = {}
                 setmetatable(r, instance_metatable)
-
-                if classImplement.ctor then
-                    classImplement.ctor(r, ...)
-                end
-
+                recursiveCtor(r, classImplement, ...)
                 return r
             end,
         }
     )
     return class
 end
-
-local base = {}
-setmetatable(base, {__call = function () return {} end})
-
-CBase = Class(base, nil, nil)
-
 )code";

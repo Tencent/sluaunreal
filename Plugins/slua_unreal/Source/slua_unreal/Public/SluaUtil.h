@@ -16,6 +16,7 @@
 #include <functional>
 #include <string.h>
 #include "Layout/Margin.h"
+#include "Layout/Geometry.h"
 #include "Styling/SlateColor.h"
 #include "Styling/SlateBrush.h"
 #include "Widgets/Layout/Anchors.h"
@@ -163,13 +164,13 @@ namespace NS_SLUA {
 
         friend int32 GetTypeHash(const SimpleString& simpleString)
         {
-            auto &data = simpleString.data;
-            uint32 Len = data.Num() - 1;
+            auto &strData = simpleString.data;
+            uint32 Len = strData.Num() - 1;
 		    uint32 H = Seed ^ Len;
 		    uint32 Step = (Len >> 2) + 1;
 		    for (; Len >= Step; Len -= Step)
 		    {
-		        H ^= (H << 5) + (H >> 2) + TChar<ANSICHAR>::ToUpper(data[Len - 1]);
+		        H ^= (H << 5) + (H >> 2) + TChar<ANSICHAR>::ToUpper(strData[Len - 1]);
 		    }
 
             return H;

@@ -5,6 +5,10 @@
     #undef G
 #endif
 
+#ifndef LUA_VERSION_RELEASE_NUM
+#define LUA_VERSION_RELEASE_NUM (LUA_VERSION_NUM * 100 + 0)
+#endif
+
 #include "CoreMinimal.h"
 #include "UObject/CoreNative.h"
 #include "Runtime/Launch/Resources/Version.h"

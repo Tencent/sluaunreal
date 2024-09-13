@@ -72,7 +72,7 @@ namespace NS_SLUA
         static LuaNetSerializationMap luaNetSerializationMap;
         static ObjectToLuaNetAddressMap objectToLuaNetAddressMap;
 
-        static TArray<const UClass*> luaReplicateClasses;
+        static TArray<const UClass*, TAlignedHeapAllocator<16>> luaReplicateClasses;
 
         static TMap<FString, EFunctionFlags> luaRPCTypeMap;
         static TSet<TWeakObjectPtr<UClass>> addedRPCClasses;

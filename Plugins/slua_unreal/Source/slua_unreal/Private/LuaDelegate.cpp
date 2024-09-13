@@ -104,7 +104,7 @@ int ULuaDelegate::removeLuaDelegate(NS_SLUA::lua_State* L, ULuaDelegate* obj)
     return 0;
 }
 
-int ULuaDelegate::removeLuaDelegateByHandle(slua::lua_State* L, int64 handle)
+int ULuaDelegate::removeLuaDelegateByHandle(NS_SLUA::lua_State* L, int64 handle)
 {
     auto objPtr = DelegateHandleToObjectMap.Find(handle);
     if (!objPtr)
@@ -321,7 +321,7 @@ namespace NS_SLUA {
         return 0;
     }
 
-    int LuaMultiDelegate::BroadCast(lua_State* L) {
+    int LuaMultiDelegate::Broadcast(lua_State* L) {
         CheckUD(LuaMultiDelegateWrap,L,1);
 
         auto callBroadcast = [UD, L](const FMulticastScriptDelegate* delegate)
@@ -378,7 +378,7 @@ namespace NS_SLUA {
         RegMetaMethod(L,Add);
         RegMetaMethod(L,Remove);
         RegMetaMethod(L,Clear);
-        RegMetaMethod(L,BroadCast);
+        RegMetaMethod(L,Broadcast);
         return 0;
     }
 

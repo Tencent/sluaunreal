@@ -377,11 +377,7 @@ namespace NS_SLUA {
 
         // check UObject is valid
         static bool isUObjectValid(UObject* obj) {
-#if ENGINE_MAJOR_VERSION >= 5
-            return IsValid(obj);
-#else
-            return obj && !obj->IsUnreachable() && !obj->IsPendingKill();
-#endif
+            return IsValid(obj) && !obj->IsUnreachable();
         }
 
         static inline bool isBinStringProperty(FProperty* inner)

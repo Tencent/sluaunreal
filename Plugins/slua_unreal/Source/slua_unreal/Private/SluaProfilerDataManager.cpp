@@ -693,6 +693,8 @@ void FProfileDataProcessRunnable::LoadData(const FString& filePath, int& inCpuVi
             ar->Serialize(compressedBuffer, compressedSize);
 #if (ENGINE_MINOR_VERSION<=21) && (ENGINE_MAJOR_VERSION==4)
             FCompression::UncompressMemory(COMPRESS_ZLIB, uncompressedBuffer.GetData(), uncompressedSize, compressedBuffer, compressedSize);
+#elif (ENGINE_MINOR_VERSION<=26) && (ENGINE_MAJOR_VERSION==4)
+            FCompression::UncompressMemory(NAME_Zlib, uncompressedBuffer.GetData(), uncompressedSize, compressedBuffer, compressedSize);
 #else
             FCompression::UncompressMemory(NAME_Oodle, uncompressedBuffer.GetData(), uncompressedSize, compressedBuffer, compressedSize);
 #endif
@@ -927,12 +929,16 @@ void FProfileDataProcessRunnable::SerializeCompreesedDataToFile(FArchive& ar)
     int32 uncompressedSize = dataToCompress.Num();
 #if (ENGINE_MINOR_VERSION<=21) && (ENGINE_MAJOR_VERSION==4)
     int32 compressedSize = FCompression::CompressMemoryBound(COMPRESS_ZLIB, uncompressedSize);
+#elif (ENGINE_MINOR_VERSION<=26) && (ENGINE_MAJOR_VERSION==4)
+    int32 compressedSize = FCompression::CompressMemoryBound(NAME_Zlib, uncompressedSize);
 #else
     int32 compressedSize = FCompression::CompressMemoryBound(NAME_Oodle, uncompressedSize);
 #endif
     auto compressedBuffer = (uint8*)FMemory::Malloc(compressedSize);
 #if (ENGINE_MINOR_VERSION<=21) && (ENGINE_MAJOR_VERSION==4)
     FCompression::CompressMemory(COMPRESS_ZLIB, compressedBuffer, compressedSize, dataToCompress.GetData(), uncompressedSize);
+#elif (ENGINE_MINOR_VERSION<=26) && (ENGINE_MAJOR_VERSION==4)
+    FCompression::CompressMemory(NAME_Zlib, compressedBuffer, compressedSize, dataToCompress.GetData(), uncompressedSize);
 #else
     FCompression::CompressMemory(NAME_Oodle, compressedBuffer, compressedSize, dataToCompress.GetData(), uncompressedSize);
 #endif

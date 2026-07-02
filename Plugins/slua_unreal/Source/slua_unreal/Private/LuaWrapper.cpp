@@ -16,6 +16,9 @@
 #include "LuaNetSerialization.h"
 #include "UObject/Package.h"
 #include "Misc/FrameTime.h"
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>=5
+#include "Misc/FallbackStruct.h"
+#endif
 
 #define SLUA_GCSTRUCT(typeName) auto flag = udptr->flag; \
                     if (udptr->parent) { \
@@ -63,6 +66,14 @@ namespace NS_SLUA {
 #elif ((ENGINE_MINOR_VERSION==3) && (ENGINE_MAJOR_VERSION==5))
     #include "LuaWrapper5.3.inc"
 #elif ((ENGINE_MINOR_VERSION==4) && (ENGINE_MAJOR_VERSION==5))
+    #include "LuaWrapper5.4.inc"
+#elif ((ENGINE_MINOR_VERSION==5) && (ENGINE_MAJOR_VERSION==5))
+    #include "LuaWrapper5.4.inc"
+#elif ((ENGINE_MINOR_VERSION==6) && (ENGINE_MAJOR_VERSION==5))
+    #include "LuaWrapper5.4.inc"
+#elif ((ENGINE_MINOR_VERSION==7) && (ENGINE_MAJOR_VERSION==5))
+    #include "LuaWrapper5.4.inc"
+#elif ((ENGINE_MINOR_VERSION>=8) && (ENGINE_MAJOR_VERSION==5))
     #include "LuaWrapper5.4.inc"
 #endif
 

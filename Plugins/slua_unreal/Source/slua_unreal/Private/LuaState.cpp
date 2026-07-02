@@ -120,7 +120,11 @@ namespace NS_SLUA {
     void LuaState::decreaseCallStack()
     {
         currentCallStack--;
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>=5
+        newObjectsInCallStack.Pop(EAllowShrinking::No);
+#else
         newObjectsInCallStack.Pop(false);
+#endif
     }
 
     bool LuaState::hasObjectInStack(const UObject* obj, int stackLayer)
@@ -199,12 +203,35 @@ namespace NS_SLUA {
                 }
             }
 
-#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>0
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>=5
+            // FindObject with AnyPackage sentinel was removed; use FindFirstObject below.
+#elif ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>0
             static UPackage* AnyPackage = (UPackage*)-1;
 #else
             static UPackage* AnyPackage = ANY_PACKAGE;
 #endif
             FString path = UTF8_TO_TCHAR(name);
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>=5
+            if (!FindFirstObject<UObject>(*path, EFindFirstObjectOptions::None, ELogVerbosity::Warning)) {
+                // Try to load object if not found!
+                LoadObject<UObject>(NULL, *path);
+            }
+
+            UClass* uclass = FindFirstObject<UClass>(*path, EFindFirstObjectOptions::None, ELogVerbosity::Warning);
+            if (uclass) {
+                LuaObject::pushClass(L, uclass);
+                state->cacheImportedMap.Add(name, ImportedObjectCache {uclass, ImportedClass});
+                return 1;
+            }
+            UScriptStruct* ustruct = FindFirstObject<UScriptStruct>(*path, EFindFirstObjectOptions::None, ELogVerbosity::Warning);
+            if (ustruct) {
+                LuaObject::pushStruct(L, ustruct);
+                state->cacheImportedMap.Add(name, ImportedObjectCache {ustruct, ImportedStruct});
+                return 1;
+            }
+
+            UEnum* uenum = FindFirstObject<UEnum>(*path, EFindFirstObjectOptions::None, ELogVerbosity::Warning);
+#else
             if (!FindObject<UObject>(AnyPackage, *path)) {
                 // Try to load object if not found!
                 LoadObject<UObject>(NULL, *path);
@@ -224,6 +251,7 @@ namespace NS_SLUA {
             }
 
             UEnum* uenum = FindObject<UEnum>(AnyPackage, *path);
+#endif
             if (uenum) {
                 LuaObject::pushEnum(L, uenum);
                 state->cacheImportedMap.Add(name, ImportedObjectCache{ uenum, ImportedEnum });
@@ -704,6 +732,8 @@ namespace NS_SLUA {
         auto& propList = *propLinksPtr;
 #if (ENGINE_MINOR_VERSION<25) && (ENGINE_MAJOR_VERSION==4)
         propList.RemoveSwap(propud);
+#elif ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>=5
+        propList.RemoveSwap(propud, EAllowShrinking::No);
 #else
         propList.RemoveSwap(propud, false);
 #endif

@@ -608,16 +608,25 @@ namespace NS_SLUA
                 break;
             }
 
-            if (!temp1.isTable())
+            bool temp1Exhausted = !temp1.isTable();
+            if (temp1Exhausted)
             {
                 temp1 = B;
             }
-            
+
             impl = getLuaImpl(L, temp2);
             temp2 = impl.isTable() ? impl.getFromTable<LuaVar>("__super") : LuaVar();
-            if (!temp2.isTable())
+            bool temp2Exhausted = !temp2.isTable();
+            if (temp2Exhausted)
             {
                 temp2 = A;
+            }
+
+            // Both walkers exhausted their __super chains without meeting.
+            // No common ancestor exists (e.g. both classes come from Class(nil, ...)).
+            if (temp1Exhausted && temp2Exhausted)
+            {
+                return LuaVar();
             }
         }
 

@@ -1368,7 +1368,11 @@ void SProfilerInspector::CombineSameFileInfo(FProflierMemNode& proflierMemNode, 
 
     if (shownParentFileName.Num() > maxMemoryFile)
     {
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>=5
+        shownParentFileName.RemoveAt(maxMemoryFile, shownParentFileName.Num() - maxMemoryFile, EAllowShrinking::No);
+#else
         shownParentFileName.RemoveAt(maxMemoryFile, shownParentFileName.Num() - maxMemoryFile, false);
+#endif
     }
 }
 

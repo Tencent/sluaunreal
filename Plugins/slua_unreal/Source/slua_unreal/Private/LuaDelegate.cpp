@@ -333,7 +333,11 @@ namespace NS_SLUA {
 
             auto callback = [delegate](uint8* params, PTRINT* outParams, NewObjectRecorder *objectRecorder)
             {
+#if ENGINE_MAJOR_VERSION==5 && ENGINE_MINOR_VERSION>=5
+                delegate->ProcessDelegate<UObject>(params);
+#else
                 delegate->ProcessMulticastDelegate<UObject>(params);
+#endif
             };
             bool isLatentFunction;
             UD->funcAcc->fillParam(L, 2, nullptr, callback, isLatentFunction);

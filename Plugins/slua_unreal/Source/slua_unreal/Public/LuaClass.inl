@@ -23,8 +23,10 @@ function Class(base, static, classImplement)
         base = CBase
     end
     classImplement = classImplement or {}
-    classImplement.__super_impl = base.__inner_impl
-    classImplement.__super = base
+    if base ~= nil then
+        classImplement.__super_impl = base.__inner_impl
+        classImplement.__super = base
+    end
 
     local base_mt = getmetatable(base)
     local class = static or {}
